@@ -1,0 +1,21 @@
+﻿<Window x:Class="TidyMind.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TidyMind"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <StackPanel Margin="20">
+            <TextBox x:Name="ProjectInput" Height="30"/>
+            <Button x:Name="AddButton" Content="Add" Click="AddButton_Click"/>
+            <Button x:Name="DeleteButton" Content="Delete" Click="DeleteButton_Click"/>
+            <Button x:Name="EditButton" Content="Edit" Click="EditButton_Click"/>
+            <ListBox x:Name="ProjectList" Height="250" Margin="0,10,0,0" DisplayMemberPath="Name" MouseDoubleClick="ProjectList_MouseDoubleClick"/>
+        </StackPanel>
+
+
+
+    </Grid>
+</Window>
