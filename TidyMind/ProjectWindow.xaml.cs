@@ -38,6 +38,8 @@ namespace TidyMind
             {
                 TaskList.Items.Add(task);
             }
+
+            UpdateNoteDisplay();
         }
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
@@ -47,17 +49,6 @@ namespace TidyMind
             currentProject.Status = StatusBox.Text;
 
             this.Close();
-        }
-
-        private void DeleteTaskButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (TaskList.SelectedItem != null)
-            {
-                TaskItem selectedTask = (TaskItem)TaskList.SelectedItem;
-
-                currentProject.Tasks.Remove(selectedTask);
-                TaskList.Items.Remove(selectedTask);
-            }
         }
 
         private void AddTaskButton_Click(object sender, RoutedEventArgs e)
@@ -74,6 +65,44 @@ namespace TidyMind
             TaskList.Items.Add(newTask);
 
             TaskInput.Clear();
+        }
+
+        private void DeleteTaskButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (TaskList.SelectedItem != null)
+            {
+                TaskItem selectedTask = (TaskItem)TaskList.SelectedItem;
+
+                currentProject.Tasks.Remove(selectedTask);
+                TaskList.Items.Remove(selectedTask);
+            }
+        }
+
+        private void NoteButton_Click(object sender, RoutedEventArgs e)
+        {
+            string note = Microsoft.VisualBasic.Interaction.InputBox(
+                "Write your note:",
+                "Note",
+                currentProject.Notes ?? "");
+
+            currentProject.Notes = note;
+            UpdateNoteDisplay();
+        }
+
+        private void UpdateNoteDisplay()
+        {
+            if (string.IsNullOrWhiteSpace(currentProject.Notes))
+            {
+                NoteText.Text = "No notes";
+                NoteText.Foreground = System.Windows.Media.Brushes.Gray;
+                NoteButton.Content = "Add Note";
+            }
+            else
+            {
+                NoteText.Text = currentProject.Notes;
+                NoteText.Foreground = System.Windows.Media.Brushes.Black;
+                NoteButton.Content = "Edit Note";
+            }
         }
     }
 }

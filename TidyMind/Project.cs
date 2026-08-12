@@ -10,7 +10,7 @@ namespace TidyMind
         public string Description { get; set; }
         public string Status { get; set; }
         public List<TaskItem> Tasks { get; set; }
-        public List<string> Notes { get; set; }
+        public string Notes { get; set; }
 
     }
 }

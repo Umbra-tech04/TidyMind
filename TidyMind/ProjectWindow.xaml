@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TidyMind"
         mc:Ignorable="d"
-        Title="ProjectWindow" Height="600" Width="500">
+        Title="Project Details" Height="600" Width="500">
     <Grid>
         <ScrollViewer>
             <StackPanel Margin="20">
@@ -27,13 +27,31 @@
                             Height="30" Margin="10,0,0,0" Click="AddTaskButton_Click"/>
                 </StackPanel>
 
-                <ListBox x:Name="TaskList" Height="120" Margin="0,10,0,0" DisplayMemberPath="Title"/>
+                <ListBox x:Name="TaskList" Height="120" Margin="0,10,0,0">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <CheckBox Content="{Binding Title}" IsChecked="{Binding IsDone}"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
 
                 <Button x:Name="DeleteTaskButton" Content="Delete Task"
-                        Height="30" Margin="0,10,0,0" Click="DeleteTaskButton_Click"/>
+        Height="30" Margin="0,10,0,0" Click="DeleteTaskButton_Click"/>
+
+                <Label Content="Note:" Margin="0,10,0,0"/>
+
+                <TextBlock x:Name="NoteText" Text="No notes"
+                           FontSize="14" Foreground="Gray"
+                           TextWrapping="Wrap" MinHeight="60"
+                           Margin="0,0,0,10"/>
+
+                <Button x:Name="NoteButton" Content="Add Note"
+                        Width="100" Height="24" HorizontalAlignment="Left"
+                        Click="NoteButton_Click"/>
 
                 <Button x:Name="SaveButton" Content="Save"
-                        Height="35" Margin="0,20,0,0"
+                        Width="120" Height="35" HorizontalAlignment="Left"
+                        Margin="0,20,0,0"
                         Click="SaveButton_Click"/>
             </StackPanel>
         </ScrollViewer>
