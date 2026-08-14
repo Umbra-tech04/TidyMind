@@ -13,18 +13,22 @@ using System.Text.Json;
 
 namespace TidyMind
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
-        public MainWindow()
+        private string profileName;
+
+        public MainWindow(string profileName)
         {
             InitializeComponent();
 
-            if (File.Exists("projects.json"))
+            this.profileName = profileName;
+            this.Title = profileName + " - TidyMind";
+
+            string fileName = profileName + ".json";
+
+            if (File.Exists(fileName))
             {
-                string json = File.ReadAllText("projects.json");
+                string json = File.ReadAllText(fileName);
                 List<Project> projects = JsonSerializer.Deserialize<List<Project>>(json);
                 foreach (Project project in projects)
                 {
@@ -35,7 +39,6 @@ namespace TidyMind
 
         private void AddButton_Click(object sender, RoutedEventArgs e)
         {
-
             if (string.IsNullOrWhiteSpace(ProjectInput.Text))
             {
                 return;
@@ -84,8 +87,12 @@ namespace TidyMind
                     ProjectList.Items.Refresh();
                     SaveProjects();
                 }
-
             }
+        }
+
+        private void SwitchProfileButton_Click(object sender, RoutedEventArgs e)
+        {
+            ((App)Application.Current).SwitchProfile(this);
         }
 
         private void ProjectList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -104,9 +111,10 @@ namespace TidyMind
 
         private void SaveProjects()
         {
+            string fileName = profileName + ".json";
             var projects = ProjectList.Items.Cast<Project>().ToList();
             string json = JsonSerializer.Serialize(projects);
-            File.WriteAllText("projects.json", json);
+            File.WriteAllText(fileName, json);
         }
     }
 }
