@@ -5,23 +5,29 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TidyMind"
         mc:Ignorable="d"
-        Title="ProfileWindow" Height="450" Width="800">
+        Title="ProfileWindow" Height="450" Width="800"
+        WindowStartupLocation="CenterScreen">
     <Grid>
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
 
             <TextBlock Text="TidyMind" FontSize="32" FontWeight="Bold"
                HorizontalAlignment="Center" Margin="0,0,0,5"/>
 
-            <TextBlock Text="Choose your profile" FontSize="16"
+            <TextBlock Text="Choose your memory" FontSize="16"
                HorizontalAlignment="Center" Foreground="Gray"
                Margin="0,0,0,30"/>
 
             <WrapPanel x:Name="ProfilePanel" HorizontalAlignment="Center"
                Margin="0,0,0,20"/>
 
-            <Button x:Name="AddProfileButton" Content="+ Add Profile"
-            Width="150" Height="35" HorizontalAlignment="Center"
-            Click="AddProfileButton_Click"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button x:Name="AddProfileButton" Content="+ Add memory"
+                        Width="150" Height="35" Margin="0,0,15,0"
+                        Click="AddProfileButton_Click"/>
+                <TextBlock Text="Right-click a memory to edit"
+                           FontSize="11" Foreground="DarkGray"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
 
         </StackPanel>
 

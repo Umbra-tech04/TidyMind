@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -44,6 +46,23 @@ namespace TidyMind
                 name.TextAlignment = TextAlignment.Center;
 
                 card.Content = name;
+
+                ContextMenu menu = new ContextMenu();
+
+                MenuItem renameItem = new MenuItem();
+                renameItem.Header = "Rename";
+                renameItem.Tag = profile.Name;
+                renameItem.Click += RenameProfile_Click;
+
+                MenuItem deleteItem = new MenuItem();
+                deleteItem.Header = "Delete";
+                deleteItem.Tag = profile.Name;
+                deleteItem.Click += DeleteProfile_Click;
+
+                menu.Items.Add(renameItem);
+                menu.Items.Add(deleteItem);
+                card.ContextMenu = menu;
+
                 ProfilePanel.Children.Add(card);
             }
         }
@@ -56,17 +75,57 @@ namespace TidyMind
             this.Close();
         }
 
+        private void RenameProfile_Click(object sender, RoutedEventArgs e)
+        {
+            string oldName = (string)((MenuItem)sender).Tag;
+            Profile profile = profiles.FirstOrDefault(p => p.Name == oldName);
+            if (profile == null) return;
+
+            string newName = Microsoft.VisualBasic.Interaction.InputBox(
+                "New name:", "Rename Profile", oldName);
+
+            if (string.IsNullOrWhiteSpace(newName) || newName == oldName) return;
+
+            string oldFile = oldName + ".json";
+            string newFile = newName + ".json";
+            if (File.Exists(oldFile))
+                File.Move(oldFile, newFile);
+
+            profile.Name = newName;
+            ProfileManager.SaveProfiles(profiles);
+            RenderProfiles();
+        }
+
+        private void DeleteProfile_Click(object sender, RoutedEventArgs e)
+        {
+            string name = (string)((MenuItem)sender).Tag;
+            Profile profile = profiles.FirstOrDefault(p => p.Name == name);
+            if (profile == null) return;
+
+            var result = MessageBox.Show(
+                $"Delete '{name}'? This will delete all its data.",
+                "Confirm Delete",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                string filePath = name + ".json";
+                if (File.Exists(filePath))
+                    File.Delete(filePath);
+
+                profiles.Remove(profile);
+                ProfileManager.SaveProfiles(profiles);
+                RenderProfiles();
+            }
+        }
+
         private void AddProfileButton_Click(object sender, RoutedEventArgs e)
         {
             string name = Microsoft.VisualBasic.Interaction.InputBox(
-                "Profile name:",
-                "Add Profile",
-                "");
+                "Memory name:", "Add Memory", "");
 
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                return;
-            }
+            if (string.IsNullOrWhiteSpace(name)) return;
 
             string[] colors = {
                 "#E74C3C", "#E67E22", "#F1C40F",

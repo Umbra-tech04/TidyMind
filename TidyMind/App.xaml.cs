@@ -39,11 +39,14 @@ namespace TidyMind
             {
                 MainWindow mainWindow = new MainWindow(profileWindow.SelectedProfileName);
                 this.MainWindow = mainWindow;
+                this.ShutdownMode = ShutdownMode.OnMainWindowClose;
+                currentWindow.Close();
                 mainWindow.Show();
             }
-
-            this.ShutdownMode = ShutdownMode.OnMainWindowClose;
-            currentWindow.Close();
+            else
+            {
+                this.ShutdownMode = ShutdownMode.OnMainWindowClose;
+            }
         }
     }
 }

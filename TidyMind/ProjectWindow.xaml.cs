@@ -12,9 +12,6 @@ using System.Windows.Shapes;
 
 namespace TidyMind
 {
-    /// <summary>
-    /// Interaction logic for ProjectWindow.xaml
-    /// </summary>
     public partial class ProjectWindow : Window
     {
         private Project currentProject;
@@ -27,7 +24,7 @@ namespace TidyMind
 
             NameBox.Text = currentProject.Name;
             DescriptionBox.Text = currentProject.Description;
-            StatusBox.Text = currentProject.Status;
+            StatusBox.SelectedItem = currentProject.Status;
 
             if (currentProject.Tasks == null)
             {
@@ -46,7 +43,7 @@ namespace TidyMind
         {
             currentProject.Name = NameBox.Text;
             currentProject.Description = DescriptionBox.Text;
-            currentProject.Status = StatusBox.Text;
+            currentProject.Status = (ProjectStatus)StatusBox.SelectedItem;
 
             this.Close();
         }
@@ -67,15 +64,37 @@ namespace TidyMind
             TaskInput.Clear();
         }
 
-        private void DeleteTaskButton_Click(object sender, RoutedEventArgs e)
+        private void TaskList_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
-            if (TaskList.SelectedItem != null)
-            {
-                TaskItem selectedTask = (TaskItem)TaskList.SelectedItem;
+            var item = ItemsControl.ContainerFromElement(TaskList, e.OriginalSource as DependencyObject) as ListBoxItem;
+            if (item == null) return;
 
-                currentProject.Tasks.Remove(selectedTask);
-                TaskList.Items.Remove(selectedTask);
-            }
+            TaskItem task = (TaskItem)item.DataContext;
+
+            ContextMenu menu = new ContextMenu();
+
+            MenuItem renameItem = new MenuItem();
+            renameItem.Header = "Rename";
+            renameItem.Click += (s, args) =>
+            {
+                string newTitle = Microsoft.VisualBasic.Interaction.InputBox(
+                    "New task name:", "Rename Task", task.Title);
+                if (string.IsNullOrWhiteSpace(newTitle) || newTitle == task.Title) return;
+                task.Title = newTitle;
+                TaskList.Items.Refresh();
+            };
+
+            MenuItem deleteItem = new MenuItem();
+            deleteItem.Header = "Delete";
+            deleteItem.Click += (s, args) =>
+            {
+                currentProject.Tasks.Remove(task);
+                TaskList.Items.Remove(task);
+            };
+
+            menu.Items.Add(renameItem);
+            menu.Items.Add(deleteItem);
+            menu.IsOpen = true;
         }
 
         private void NoteButton_Click(object sender, RoutedEventArgs e)
