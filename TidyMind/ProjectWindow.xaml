@@ -5,37 +5,49 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TidyMind"
         mc:Ignorable="d"
-        Title="Project Details" Height="600" Width="500"
+        Title="Project Details" Height="620" Width="540"
         WindowStartupLocation="CenterScreen">
     <Grid>
-        <ScrollViewer>
-            <StackPanel Margin="20">
-                <Label Content="Project Name:"/>
-                <TextBox x:Name="NameBox" Height="30" FontSize="14"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
-                <Label Content="Description:" Margin="0,10,0,0"/>
-                <TextBox x:Name="DescriptionBox" Height="80" FontSize="14"
-         TextWrapping="Wrap" AcceptsReturn="True"
-         VerticalScrollBarVisibility="Auto"/>
+        <Border Grid.Row="0" Background="#252526" Padding="20,14">
+            <TextBlock Text="Project Details" FontSize="18" FontWeight="Bold"
+                       Foreground="#569CD6"/>
+        </Border>
 
-                <Label Content="Status:" Margin="0,10,0,0"/>
-                <ComboBox x:Name="StatusBox" Height="30" FontSize="14"
+        <ScrollViewer Grid.Row="1" Padding="20,14" Background="#1E1E1E">
+            <StackPanel>
+                <TextBlock Text="Project Name" Foreground="#858585" FontSize="11" Margin="0,0,0,4"/>
+                <TextBox x:Name="NameBox" Height="32" VerticalContentAlignment="Center"/>
+
+                <TextBlock Text="Description" Foreground="#858585" FontSize="11" Margin="0,12,0,4"/>
+                <TextBox x:Name="DescriptionBox" Height="120"
+                         TextWrapping="Wrap" AcceptsReturn="True"
+                         VerticalScrollBarVisibility="Auto"/>
+
+                <TextBlock Text="Status" Foreground="#858585" FontSize="11" Margin="0,12,0,4"/>
+                <ComboBox x:Name="StatusBox" Height="32"
                           ItemsSource="{Binding Source={x:Static local:ProjectStatusItems.All}}"/>
 
-                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                    <Label Content="Tasks:" Padding="0"/>
-                </StackPanel>
-
-                <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                    <TextBox x:Name="TaskInput" Width="250" Height="30" FontSize="14"/>
+                <TextBlock Text="Tasks" Foreground="#858585" FontSize="11" Margin="0,12,0,4"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <TextBox x:Name="TaskInput" Width="270" Height="32"
+                             VerticalContentAlignment="Center"/>
                     <Button x:Name="AddTaskButton" Content="Add Task"
-                            Height="30" Margin="10,0,0,0" Click="AddTaskButton_Click"/>
+                            Height="32" Margin="10,0,0,0" Padding="12,0"
+                            Click="AddTaskButton_Click"/>
                     <TextBlock Text="Right-click to edit"
-                               FontSize="11" Foreground="DarkGray"
+                               FontSize="11" Foreground="#858585"
                                VerticalAlignment="Center" Margin="10,0,0,0"/>
                 </StackPanel>
 
-                <ListBox x:Name="TaskList" Height="Auto" Margin="0,10,0,0"
+                <ListBox x:Name="TaskList" MinHeight="80"
+                         ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                         PreviewMouseWheel="TaskList_PreviewMouseWheel"
                          PreviewMouseRightButtonUp="TaskList_PreviewMouseRightButtonUp">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
@@ -44,22 +56,23 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
 
-                <Label Content="Note:" Margin="0,10,0,0"/>
-
-                <TextBlock x:Name="NoteText" Text="No notes"
-                           FontSize="14" Foreground="Gray"
-                           TextWrapping="Wrap" MinHeight="60"
-                           Margin="0,0,0,10"/>
-
+                <TextBlock Text="Notes" Foreground="#858585" FontSize="11" Margin="0,12,0,4"/>
+                <Border Background="#252526" CornerRadius="4" Padding="12" Margin="0,0,0,8">
+                    <TextBlock x:Name="NoteText" Text="No notes"
+                               FontSize="13" Foreground="#858585"
+                               TextWrapping="Wrap" MinHeight="50"/>
+                </Border>
                 <Button x:Name="NoteButton" Content="Add Note"
-                        Width="100" Height="24" HorizontalAlignment="Left"
+                        Width="110" Height="30" HorizontalAlignment="Left"
                         Click="NoteButton_Click"/>
-
-                <Button x:Name="SaveButton" Content="Save"
-                        Width="120" Height="35" HorizontalAlignment="Left"
-                        Margin="0,20,0,0"
-                        Click="SaveButton_Click"/>
             </StackPanel>
         </ScrollViewer>
+
+        <Border Grid.Row="2" Background="#252526" Padding="20,10">
+            <Button x:Name="SaveButton" Content="Save"
+                    Width="120" Height="34" HorizontalAlignment="Right"
+                    Background="#0E639C" Foreground="#FFFFFF" FontWeight="Bold"
+                    Click="SaveButton_Click"/>
+        </Border>
     </Grid>
 </Window>

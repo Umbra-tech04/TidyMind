@@ -23,6 +23,7 @@ namespace TidyMind
 
             this.profileName = profileName;
             this.Title = profileName + " - TidyMind";
+            ProfileTitle.Text = profileName;
 
             string fileName = profileName + ".json";
 
@@ -40,15 +41,12 @@ namespace TidyMind
         private void AddButton_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(ProjectInput.Text))
-            {
                 return;
-            }
 
             Project newProject = new Project();
             newProject.Name = ProjectInput.Text;
             ProjectList.Items.Add(newProject);
             ProjectInput.Clear();
-
             SaveProjects();
         }
 
@@ -107,6 +105,28 @@ namespace TidyMind
                 ProjectList.Items.Refresh();
                 SaveProjects();
             }
+        }
+
+        private void ProjectList_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            var item = ItemsControl.ContainerFromElement(ProjectList, e.OriginalSource as DependencyObject) as ListBoxItem;
+            if (item == null) return;
+
+            ProjectList.SelectedItem = item.DataContext;
+
+            ContextMenu menu = new ContextMenu();
+
+            MenuItem renameItem = new MenuItem();
+            renameItem.Header = "Rename";
+            renameItem.Click += (s, args) => EditButton_Click(s, args);
+
+            MenuItem deleteItem = new MenuItem();
+            deleteItem.Header = "Delete";
+            deleteItem.Click += (s, args) => DeleteButton_Click(s, args);
+
+            menu.Items.Add(renameItem);
+            menu.Items.Add(deleteItem);
+            menu.IsOpen = true;
         }
 
         private void SaveProjects()

@@ -5,9 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TidyMind"
         mc:Ignorable="d"
-        Title="ProfileWindow" Height="450" Width="800"
+        Title="TidyMind" Height="700" Width="1200"
         WindowStartupLocation="CenterScreen">
-    <Grid>
+    <Grid Background="#1E1E1E">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -16,23 +16,73 @@
         </Grid.RowDefinitions>
 
         <TextBlock Grid.Row="0" Text="TidyMind" FontSize="32" FontWeight="Bold"
-                   HorizontalAlignment="Center" Margin="0,20,0,5"/>
+                   Foreground="#569CD6"
+                   HorizontalAlignment="Center" Margin="0,24,0,6"/>
 
-        <TextBlock Grid.Row="1" Text="Choose your memory" FontSize="16"
-                   HorizontalAlignment="Center" Foreground="Gray"
+        <TextBlock Grid.Row="1" Text="Choose your memory" FontSize="14"
+                   HorizontalAlignment="Center" Foreground="#858585"
                    Margin="0,0,0,20"/>
 
-        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="20,0,20,10">
-            <WrapPanel x:Name="ProfilePanel" HorizontalAlignment="Center"/>
-        </ScrollViewer>
+        <!-- Két oszlop -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
-            <Button x:Name="AddProfileButton" Content="+ Add memory"
-                    Width="150" Height="35" Margin="0,0,15,0"
-                    Click="AddProfileButton_Click"/>
-            <TextBlock Text="Right-click a memory to edit"
-                       FontSize="11" Foreground="DarkGray"
-                       VerticalAlignment="Center"/>
-        </StackPanel>
+            <!-- Bal: Projects -->
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="Projects"
+                           FontSize="13" Foreground="#858585"
+                           HorizontalAlignment="Center" Margin="0,0,0,12"/>
+
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                              Background="#1E1E1E">
+                    <WrapPanel x:Name="ProjectPanel" HorizontalAlignment="Center"/>
+                </ScrollViewer>
+
+                <Button Grid.Row="2" x:Name="AddProjectButton" Content="+ Add Project Memory"
+                        Width="180" Height="34" Margin="0,10,0,10"
+                        HorizontalAlignment="Center"
+                        Click="AddProjectButton_Click"/>
+            </Grid>
+
+            <!-- Elválasztó vonal -->
+            <Rectangle Grid.Column="1" Width="1" Fill="#3C3C3C" Margin="10,0"/>
+
+            <!-- Jobb: Collections -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="Collections"
+                           FontSize="13" Foreground="#858585"
+                           HorizontalAlignment="Center" Margin="0,0,0,12"/>
+
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                              Background="#1E1E1E">
+                    <WrapPanel x:Name="CollectionPanel" HorizontalAlignment="Center"/>
+                </ScrollViewer>
+
+                <Button Grid.Row="2" x:Name="AddCollectionButton" Content="+ Add Collection"
+                        Width="180" Height="34" Margin="0,10,0,10"
+                        HorizontalAlignment="Center"
+                        Click="AddCollectionButton_Click"/>
+            </Grid>
+        </Grid>
+
+        <TextBlock Grid.Row="3" Text="Right-click a memory to edit"
+                   FontSize="11" Foreground="#858585"
+                   HorizontalAlignment="Center" Margin="0,0,0,16"/>
     </Grid>
 </Window>

@@ -1,12 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace TidyMind
+﻿namespace TidyMind
 {
+    public enum ProfileType
+    {
+        Project,
+        Collection
+    }
+
     public class Profile
     {
         public string Name { get; set; }
         public string Color { get; set; }
+        public ProfileType Type { get; set; } = ProfileType.Project;
     }
 }

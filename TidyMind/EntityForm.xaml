@@ -1,0 +1,34 @@
+﻿<Window x:Class="TidyMind.EntityForm"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TidyMind"
+        mc:Ignorable="d"
+        Title="Add Entity" Height="650" Width="480"
+        WindowStartupLocation="CenterScreen">
+    <Grid Background="#1E1E1E">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="#252526" Padding="20,14">
+            <TextBlock x:Name="FormTitle" Text="Add Entity" FontSize="18" FontWeight="Bold"
+                       Foreground="#569CD6"/>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" Background="#1E1E1E" Padding="20,14"
+                      PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
+            <StackPanel x:Name="FormPanel"/>
+        </ScrollViewer>
+
+        <Border Grid.Row="2" Background="#252526" Padding="20,10">
+            <Button x:Name="SaveButton" Content="Save"
+                    Width="120" Height="34" HorizontalAlignment="Right"
+                    Background="#0E639C" Foreground="#FFFFFF" FontWeight="Bold"
+                    Click="SaveButton_Click"/>
+        </Border>
+    </Grid>
+</Window>

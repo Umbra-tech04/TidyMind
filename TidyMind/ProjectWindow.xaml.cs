@@ -27,14 +27,10 @@ namespace TidyMind
             StatusBox.SelectedItem = currentProject.Status;
 
             if (currentProject.Tasks == null)
-            {
                 currentProject.Tasks = new List<TaskItem>();
-            }
 
             foreach (TaskItem task in currentProject.Tasks)
-            {
                 TaskList.Items.Add(task);
-            }
 
             UpdateNoteDisplay();
         }
@@ -44,24 +40,26 @@ namespace TidyMind
             currentProject.Name = NameBox.Text;
             currentProject.Description = DescriptionBox.Text;
             currentProject.Status = (ProjectStatus)StatusBox.SelectedItem;
-
             this.Close();
         }
 
         private void AddTaskButton_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(TaskInput.Text))
-            {
-                return;
-            }
+            if (string.IsNullOrWhiteSpace(TaskInput.Text)) return;
 
             TaskItem newTask = new TaskItem();
             newTask.Title = TaskInput.Text;
-
             currentProject.Tasks.Add(newTask);
             TaskList.Items.Add(newTask);
-
             TaskInput.Clear();
+        }
+
+        private void TaskList_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            e.Handled = true;
+            var event2 = new MouseWheelEventArgs(e.MouseDevice, e.Timestamp, e.Delta);
+            event2.RoutedEvent = UIElement.MouseWheelEvent;
+            ((UIElement)sender).RaiseEvent(event2);
         }
 
         private void TaskList_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
@@ -100,10 +98,7 @@ namespace TidyMind
         private void NoteButton_Click(object sender, RoutedEventArgs e)
         {
             string note = Microsoft.VisualBasic.Interaction.InputBox(
-                "Write your note:",
-                "Note",
-                currentProject.Notes ?? "");
-
+                "Write your note:", "Note", currentProject.Notes ?? "");
             currentProject.Notes = note;
             UpdateNoteDisplay();
         }
@@ -113,13 +108,13 @@ namespace TidyMind
             if (string.IsNullOrWhiteSpace(currentProject.Notes))
             {
                 NoteText.Text = "No notes";
-                NoteText.Foreground = System.Windows.Media.Brushes.Gray;
+                NoteText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#858585"));
                 NoteButton.Content = "Add Note";
             }
             else
             {
                 NoteText.Text = currentProject.Notes;
-                NoteText.Foreground = System.Windows.Media.Brushes.Black;
+                NoteText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
                 NoteButton.Content = "Edit Note";
             }
         }
