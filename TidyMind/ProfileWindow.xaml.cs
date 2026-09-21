@@ -19,6 +19,19 @@ namespace TidyMind
             InitializeComponent();
             profiles = ProfileManager.LoadProfiles();
             RenderProfiles();
+
+            this.Activated += ProfileWindow_Activated;
+            this.Deactivated += ProfileWindow_Deactivated;
+        }
+
+        private void ProfileWindow_Activated(object sender, EventArgs e)
+        {
+            QuickNotesButton.Visibility = Visibility.Visible;
+        }
+
+        private void ProfileWindow_Deactivated(object sender, EventArgs e)
+        {
+            QuickNotesButton.Visibility = Visibility.Collapsed;
         }
 
         private void RenderProfiles()
@@ -26,8 +39,14 @@ namespace TidyMind
             ProjectPanel.Children.Clear();
             CollectionPanel.Children.Clear();
 
+            string filter = SearchBox.Text == "Search..." ? "" : SearchBox.Text.Trim();
+
             foreach (Profile profile in profiles)
             {
+                if (!string.IsNullOrEmpty(filter) &&
+                    profile.Name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) < 0)
+                    continue;
+
                 Button card = CreateCard(profile);
 
                 if (profile.Type == ProfileType.Collection)
@@ -35,6 +54,30 @@ namespace TidyMind
                 else
                     ProjectPanel.Children.Add(card);
             }
+        }
+
+        private void SearchBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            if (SearchBox.Text == "Search...")
+            {
+                SearchBox.Text = "";
+                SearchBox.Foreground = Brushes.White;
+            }
+        }
+
+        private void SearchBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(SearchBox.Text))
+            {
+                SearchBox.Text = "Search...";
+                SearchBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#858585"));
+            }
+        }
+
+        private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (SearchBox.Text == "Search...") return;
+            RenderProfiles();
         }
 
         private Button CreateCard(Profile profile)
@@ -142,6 +185,11 @@ namespace TidyMind
         private void AddCollectionButton_Click(object sender, RoutedEventArgs e)
         {
             AddProfile(ProfileType.Collection);
+        }
+
+        private void QuickNotesButton_Click(object sender, RoutedEventArgs e)
+        {
+            QuickNotesWindow.ShowOrFocus();
         }
 
         private void AddProfile(ProfileType type)

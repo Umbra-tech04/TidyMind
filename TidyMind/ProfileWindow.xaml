@@ -11,6 +11,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -23,8 +24,20 @@
                    HorizontalAlignment="Center" Foreground="#858585"
                    Margin="0,0,0,20"/>
 
+        <TextBox x:Name="SearchBox" Grid.Row="2"
+                 Width="400" Height="32"
+                 HorizontalAlignment="Center"
+                 VerticalContentAlignment="Center"
+                 Margin="0,0,0,16"
+                 Background="#3C3C3C" Foreground="#858585"
+                 BorderBrush="#474747"
+                 Text="Search..."
+                 GotFocus="SearchBox_GotFocus"
+                 LostFocus="SearchBox_LostFocus"
+                 TextChanged="SearchBox_TextChanged"/>
+
         <!-- Két oszlop -->
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
@@ -81,8 +94,17 @@
             </Grid>
         </Grid>
 
-        <TextBlock Grid.Row="3" Text="Right-click a memory to edit"
+        <TextBlock Grid.Row="4" Text="Right-click a memory to edit"
                    FontSize="11" Foreground="#858585"
                    HorizontalAlignment="Center" Margin="0,0,0,16"/>
+
+        <Button x:Name="QuickNotesButton" Grid.RowSpan="5"
+                Style="{StaticResource IconButtonStyle}"
+                Content="📝" ToolTip="Quick Notes (Ctrl+Shift+N)"
+                Width="36" Height="36" FontSize="16" Padding="0,0,6,0"
+                Background="#3C3C3C"
+                HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                Margin="0,0,16,16" Panel.ZIndex="100"
+                Click="QuickNotesButton_Click"/>
     </Grid>
 </Window>

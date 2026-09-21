@@ -23,6 +23,19 @@ namespace TidyMind
             CollectionTitle.Text = profileName;
             LoadEntities();
             RenderEntities();
+
+            this.Activated += CollectionWindow_Activated;
+            this.Deactivated += CollectionWindow_Deactivated;
+        }
+
+        private void CollectionWindow_Activated(object sender, EventArgs e)
+        {
+            QuickNotesButton.Visibility = Visibility.Visible;
+        }
+
+        private void CollectionWindow_Deactivated(object sender, EventArgs e)
+        {
+            QuickNotesButton.Visibility = Visibility.Collapsed;
         }
 
         private void LoadEntities()
@@ -49,11 +62,42 @@ namespace TidyMind
         private void RenderEntities()
         {
             EntityPanel.Children.Clear();
+
+            string filter = SearchBox.Text == "Search..." ? "" : SearchBox.Text.Trim();
+
             foreach (Entity entity in entities)
             {
+                if (!string.IsNullOrEmpty(filter) &&
+                    entity.Name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) < 0)
+                    continue;
+
                 Border card = CreateEntityCard(entity);
                 EntityPanel.Children.Add(card);
             }
+        }
+
+        private void SearchBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            if (SearchBox.Text == "Search...")
+            {
+                SearchBox.Text = "";
+                SearchBox.Foreground = Brushes.White;
+            }
+        }
+
+        private void SearchBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(SearchBox.Text))
+            {
+                SearchBox.Text = "Search...";
+                SearchBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#858585"));
+            }
+        }
+
+        private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (SearchBox.Text == "Search...") return;
+            RenderEntities();
         }
 
         private Border CreateEntityCard(Entity entity)
@@ -92,14 +136,6 @@ namespace TidyMind
             name.TextAlignment = TextAlignment.Center;
             name.Margin = new Thickness(8, 8, 8, 2);
 
-            TextBlock typeTag = new TextBlock();
-            typeTag.Text = entity.EntityType ?? "";
-            typeTag.Foreground = new SolidColorBrush(
-                (Color)ColorConverter.ConvertFromString("#569CD6"));
-            typeTag.FontSize = 10;
-            typeTag.HorizontalAlignment = HorizontalAlignment.Center;
-            typeTag.Margin = new Thickness(8, 0, 8, 2);
-
             TextBlock details = new TextBlock();
             details.Text = GetCardSubtitle(entity);
             details.Foreground = new SolidColorBrush(
@@ -112,7 +148,6 @@ namespace TidyMind
 
             stack.Children.Add(imgBorder);
             stack.Children.Add(name);
-            stack.Children.Add(typeTag);
             stack.Children.Add(details);
             card.Child = stack;
 
@@ -139,39 +174,10 @@ namespace TidyMind
 
         private string GetCardSubtitle(Entity e)
         {
-            switch (e.EntityType)
-            {
-                case "Clothing":
-                    string color = e.Color ?? "";
-                    string sizes = e.Sizes != null && e.Sizes.Count > 0 ? e.Sizes.Count + " size(s)" : "";
-                    return string.IsNullOrEmpty(color) || string.IsNullOrEmpty(sizes)
-                        ? color + sizes : color + " - " + sizes;
-                case "Car":
-                case "Motorcycle":
-                    return string.Join(" ", new[] { e.Brand, e.Model, e.Year }).Trim();
-                case "Book":
-                    return e.Author ?? "";
-                case "Game":
-                    return e.Platform ?? "";
-                case "Movie":
-                    return e.Year ?? "";
-                case "Electronics":
-                    return string.Join(" ", new[] { e.Brand, e.DeviceType }).Trim();
-                case "Pet":
-                    return string.Join(" ", new[] { e.Species, e.Breed }).Trim();
-                case "Plant":
-                    return e.Species ?? "";
-                case "Property":
-                    return e.PropertyType ?? "";
-                case "Medicine":
-                    return e.MedicineType ?? "";
-                case "Artwork":
-                    return e.Artist ?? "";
-                case "Custom":
-                    return "Custom";
-                default:
-                    return "";
-            }
+            string color = e.Color ?? "";
+            string sizes = e.Sizes != null && e.Sizes.Count > 0 ? e.Sizes.Count + " size(s)" : "";
+            return string.IsNullOrEmpty(color) || string.IsNullOrEmpty(sizes)
+                ? color + sizes : color + " - " + sizes;
         }
 
         private void OpenDetail(Entity entity)
@@ -186,128 +192,14 @@ namespace TidyMind
             DetailName.Text = entity.Name;
             DetailPanel.Children.Clear();
 
-            AddDetailRow("Type", entity.EntityType);
-
-            switch (entity.EntityType)
-            {
-                case "Clothing":
-                    AddDetailRow("Brand", entity.Brand);
-                    AddDetailRow("Color", entity.Color);
-                    AddDetailRow("Material", entity.Material);
-                    AddDetailRow("Season", entity.Season);
-                    AddDetailRow("Purchase Price", entity.PurchasePrice);
-                    AddSizesDetail(entity);
-                    break;
-
-                case "Car":
-                case "Motorcycle":
-                    AddDetailRow("Brand", entity.Brand);
-                    AddDetailRow("Model", entity.Model);
-                    AddDetailRow("Year", entity.Year);
-                    AddDetailRow("Color", entity.Color);
-                    AddDetailRow("License Plate", entity.LicensePlate);
-                    AddDetailRow("Mileage", entity.Mileage);
-                    AddDetailRow("Fuel Type", entity.FuelType);
-                    AddDetailRow("Insurance Expiry", entity.InsuranceExpiry);
-                    AddDetailRow("Tech Inspection Expiry", entity.TechExpiry);
-                    AddDetailRow("Purchase Price", entity.PurchasePrice);
-                    break;
-
-                case "Book":
-                    AddDetailRow("Author", entity.Author);
-                    AddDetailRow("Publisher", entity.Publisher);
-                    AddDetailRow("Year", entity.Year);
-                    AddDetailRow("ISBN", entity.ISBN);
-                    AddDetailRow("Genre", entity.Genre);
-                    AddDetailRow("Language", entity.Language);
-                    AddDetailRow("Condition", entity.Condition);
-                    AddDetailRow("Purchase Price", entity.PurchasePrice);
-                    break;
-
-                case "Game":
-                    AddDetailRow("Platform", entity.Platform);
-                    AddDetailRow("Genre", entity.Genre);
-                    AddDetailRow("Publisher", entity.Publisher);
-                    AddDetailRow("Year", entity.Year);
-                    AddDetailRow("Condition", entity.Condition);
-                    AddDetailRow("Purchase Price", entity.PurchasePrice);
-                    break;
-
-                case "Movie":
-                    AddDetailRow("Director", entity.Director);
-                    AddDetailRow("Genre", entity.Genre);
-                    AddDetailRow("Year", entity.Year);
-                    AddDetailRow("Format", entity.Format);
-                    AddDetailRow("Condition", entity.Condition);
-                    AddDetailRow("Purchase Price", entity.PurchasePrice);
-                    break;
-
-                case "Electronics":
-                    AddDetailRow("Device Type", entity.DeviceType);
-                    AddDetailRow("Brand", entity.Brand);
-                    AddDetailRow("Model", entity.Model);
-                    AddDetailRow("Serial Number", entity.SerialNumber);
-                    AddDetailRow("Condition", entity.Condition);
-                    AddDetailRow("Purchase Price", entity.PurchasePrice);
-                    AddDetailRow("Purchase Date", entity.PurchaseDate);
-                    AddDetailRow("Warranty Expiry", entity.WarrantyExpiry);
-                    break;
-
-                case "Pet":
-                    AddDetailRow("Species", entity.Species);
-                    AddDetailRow("Breed", entity.Breed);
-                    AddDetailRow("Color", entity.Color);
-                    AddDetailRow("Gender", entity.Gender);
-                    AddDetailRow("Birth Date", entity.BirthDate);
-                    AddDetailRow("Chip Number", entity.ChipNumber);
-                    AddDetailRow("Vaccine Expiry", entity.VaccineExpiry);
-                    AddDetailRow("Vet", entity.Vet);
-                    break;
-
-                case "Plant":
-                    AddDetailRow("Species", entity.Species);
-                    AddDetailRow("Location", entity.Location);
-                    AddDetailRow("Watering Frequency", entity.WateringFrequency);
-                    AddDetailRow("Last Repotted", entity.LastRepotted);
-                    break;
-
-                case "Property":
-                    AddDetailRow("Address", entity.Address);
-                    AddDetailRow("Type", entity.PropertyType);
-                    AddDetailRow("Area", entity.Area);
-                    AddDetailRow("Rooms", entity.Rooms);
-                    AddDetailRow("Purchase Price", entity.PurchasePrice);
-                    AddDetailRow("Rent Price", entity.RentPrice);
-                    break;
-
-                case "Medicine":
-                    AddDetailRow("Type", entity.MedicineType);
-                    AddDetailRow("Manufacturer", entity.Manufacturer);
-                    AddDetailRow("Dosage", entity.Dosage);
-                    AddDetailRow("Expiry Date", entity.ExpiryDate);
-                    AddDetailRow("Condition", entity.Condition);
-                    AddDetailRow("Purchase Price", entity.PurchasePrice);
-                    break;
-
-                case "Artwork":
-                    AddDetailRow("Artist", entity.Artist);
-                    AddDetailRow("Type", entity.ArtworkType);
-                    AddDetailRow("Material", entity.ArtMaterial);
-                    AddDetailRow("Size", entity.Size);
-                    AddDetailRow("Condition", entity.Condition);
-                    AddDetailRow("Purchase Price", entity.PurchasePrice);
-                    break;
-
-                case "Custom":
-                    if (entity.CustomFields != null)
-                        foreach (var cf in entity.CustomFields)
-                            AddDetailRow(cf.FieldName, cf.Value);
-                    break;
-            }
-
+            AddDetailRow("Brand", entity.Brand);
+            AddDetailRow("Color", entity.Color);
+            AddDetailRow("Material", entity.Material);
+            AddDetailRow("Season", entity.Season);
+            AddDetailRow("Purchase Price", entity.PurchasePrice);
+            AddSizesDetail(entity);
             AddDetailRow("Notes", entity.Notes);
 
-            // Animáció
             OverlayGrid.Visibility = Visibility.Visible;
             OverlayGrid.Opacity = 0;
             DetailCard.RenderTransform = new System.Windows.Media.TranslateTransform(0, 20);
@@ -466,6 +358,11 @@ namespace TidyMind
         private void SwitchProfileButton_Click(object sender, RoutedEventArgs e)
         {
             ((App)Application.Current).SwitchProfile(this);
+        }
+
+        private void QuickNotesButton_Click(object sender, RoutedEventArgs e)
+        {
+            QuickNotesWindow.ShowOrFocus();
         }
     }
 }

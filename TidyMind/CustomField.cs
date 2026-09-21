@@ -1,4 +1,5 @@
-﻿namespace TidyMind
+﻿/*
+namespace TidyMind
 {
     public class CustomField
     {
@@ -6,3 +7,4 @@
         public string Value { get; set; }
     }
 }
+*/

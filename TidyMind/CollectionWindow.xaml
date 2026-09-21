@@ -10,6 +10,7 @@
     <Grid Background="#1E1E1E">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -27,8 +28,20 @@
             </Grid>
         </Border>
 
+        <!-- Kereső -->
+        <Border Grid.Row="1" Background="#1E1E1E" Padding="20,12,20,0">
+            <TextBox x:Name="SearchBox" Height="32"
+                     VerticalContentAlignment="Center"
+                     Background="#3C3C3C" Foreground="#858585"
+                     BorderBrush="#474747"
+                     Text="Search..."
+                     GotFocus="SearchBox_GotFocus"
+                     LostFocus="SearchBox_LostFocus"
+                     TextChanged="SearchBox_TextChanged"/>
+        </Border>
+
         <!-- Entitás kártyák -->
-        <ScrollViewer Grid.Row="1" Background="#1E1E1E"
+        <ScrollViewer Grid.Row="2" Background="#1E1E1E"
                       VerticalScrollBarVisibility="Auto">
             <WrapPanel x:Name="EntityPanel"
                        HorizontalAlignment="Center"
@@ -36,7 +49,7 @@
         </ScrollViewer>
 
         <!-- Footer -->
-        <Border Grid.Row="2" Background="#252526" Padding="20,12">
+        <Border Grid.Row="3" Background="#252526" Padding="20,12">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                 <Button x:Name="AddEntityButton" Content="+ Add Entity"
                         Width="140" Height="34" Margin="0,0,16,0"
@@ -47,8 +60,17 @@
             </StackPanel>
         </Border>
 
+        <Button x:Name="QuickNotesButton" Grid.RowSpan="4"
+                Style="{StaticResource IconButtonStyle}"
+                Content="📝" ToolTip="Quick Notes (Ctrl+Shift+N)"
+                Width="36" Height="36" FontSize="16" Padding="0,0,6,0"
+                Background="#3C3C3C"
+                HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                Margin="0,0,16,74" Panel.ZIndex="100"
+                Click="QuickNotesButton_Click"/>
+
         <!-- Overlay -->
-        <Grid x:Name="OverlayGrid" Grid.RowSpan="3"
+        <Grid x:Name="OverlayGrid" Grid.RowSpan="4"
               Background="#AA000000"
               Visibility="Collapsed"
               MouseLeftButtonDown="OverlayGrid_MouseLeftButtonDown">

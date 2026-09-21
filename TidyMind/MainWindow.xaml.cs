@@ -16,6 +16,7 @@ namespace TidyMind
     public partial class MainWindow : Window
     {
         private string profileName;
+        private List<Project> allProjects;
 
         public MainWindow(string profileName)
         {
@@ -30,12 +31,67 @@ namespace TidyMind
             if (File.Exists(fileName))
             {
                 string json = File.ReadAllText(fileName);
-                List<Project> projects = JsonSerializer.Deserialize<List<Project>>(json);
-                foreach (Project project in projects)
-                {
-                    ProjectList.Items.Add(project);
-                }
+                allProjects = JsonSerializer.Deserialize<List<Project>>(json);
             }
+            else
+            {
+                allProjects = new List<Project>();
+            }
+
+            RenderProjectList();
+
+            this.Activated += MainWindow_Activated;
+            this.Deactivated += MainWindow_Deactivated;
+        }
+
+        private void RenderProjectList()
+        {
+            ProjectList.Items.Clear();
+
+            string filter = SearchBox.Text == "Search..." ? "" : SearchBox.Text.Trim();
+
+            foreach (Project project in allProjects)
+            {
+                if (!string.IsNullOrEmpty(filter) &&
+                    project.Name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) < 0)
+                    continue;
+
+                ProjectList.Items.Add(project);
+            }
+        }
+
+        private void SearchBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            if (SearchBox.Text == "Search...")
+            {
+                SearchBox.Text = "";
+                SearchBox.Foreground = Brushes.White;
+            }
+        }
+
+        private void SearchBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(SearchBox.Text))
+            {
+                SearchBox.Text = "Search...";
+                SearchBox.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#858585"));
+            }
+        }
+
+        private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (SearchBox.Text == "Search...") return;
+            RenderProjectList();
+        }
+
+        private void MainWindow_Activated(object sender, EventArgs e)
+        {
+            QuickNotesButton.Visibility = Visibility.Visible;
+        }
+
+        private void MainWindow_Deactivated(object sender, EventArgs e)
+        {
+            QuickNotesButton.Visibility = Visibility.Collapsed;
         }
 
         private void AddButton_Click(object sender, RoutedEventArgs e)
@@ -45,8 +101,9 @@ namespace TidyMind
 
             Project newProject = new Project();
             newProject.Name = ProjectInput.Text;
-            ProjectList.Items.Add(newProject);
+            allProjects.Add(newProject);
             ProjectInput.Clear();
+            RenderProjectList();
             SaveProjects();
         }
 
@@ -62,7 +119,8 @@ namespace TidyMind
 
                 if (result == MessageBoxResult.Yes)
                 {
-                    ProjectList.Items.Remove(ProjectList.SelectedItem);
+                    allProjects.Remove((Project)ProjectList.SelectedItem);
+                    RenderProjectList();
                     SaveProjects();
                 }
             }
@@ -82,7 +140,7 @@ namespace TidyMind
                 if (newName != "")
                 {
                     selectedProject.Name = newName;
-                    ProjectList.Items.Refresh();
+                    RenderProjectList();
                     SaveProjects();
                 }
             }
@@ -91,6 +149,11 @@ namespace TidyMind
         private void SwitchProfileButton_Click(object sender, RoutedEventArgs e)
         {
             ((App)Application.Current).SwitchProfile(this);
+        }
+
+        private void QuickNotesButton_Click(object sender, RoutedEventArgs e)
+        {
+            QuickNotesWindow.ShowOrFocus();
         }
 
         private void ProjectList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -102,7 +165,7 @@ namespace TidyMind
                 ProjectWindow projectWindow = new ProjectWindow(selectedProject);
                 projectWindow.ShowDialog();
 
-                ProjectList.Items.Refresh();
+                RenderProjectList();
                 SaveProjects();
             }
         }
@@ -132,8 +195,7 @@ namespace TidyMind
         private void SaveProjects()
         {
             string fileName = profileName + ".json";
-            var projects = ProjectList.Items.Cast<Project>().ToList();
-            string json = JsonSerializer.Serialize(projects);
+            string json = JsonSerializer.Serialize(allProjects);
             File.WriteAllText(fileName, json);
         }
     }

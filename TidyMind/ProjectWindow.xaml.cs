@@ -33,6 +33,19 @@ namespace TidyMind
                 TaskList.Items.Add(task);
 
             UpdateNoteDisplay();
+
+            this.Activated += ProjectWindow_Activated;
+            this.Deactivated += ProjectWindow_Deactivated;
+        }
+
+        private void ProjectWindow_Activated(object sender, EventArgs e)
+        {
+            QuickNotesButton.Visibility = Visibility.Visible;
+        }
+
+        private void ProjectWindow_Deactivated(object sender, EventArgs e)
+        {
+            QuickNotesButton.Visibility = Visibility.Collapsed;
         }
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
@@ -101,6 +114,11 @@ namespace TidyMind
                 "Write your note:", "Note", currentProject.Notes ?? "");
             currentProject.Notes = note;
             UpdateNoteDisplay();
+        }
+
+        private void QuickNotesButton_Click(object sender, RoutedEventArgs e)
+        {
+            QuickNotesWindow.ShowOrFocus();
         }
 
         private void UpdateNoteDisplay()

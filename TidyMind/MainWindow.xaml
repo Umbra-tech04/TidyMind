@@ -11,6 +11,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -42,14 +43,34 @@
             </StackPanel>
         </Border>
 
-        <ListBox x:Name="ProjectList" Grid.Row="2"
+        <Border Grid.Row="2" Background="#1E1E1E" Padding="20,0,20,10">
+            <TextBox x:Name="SearchBox" Height="32"
+                     VerticalContentAlignment="Center"
+                     Background="#3C3C3C" Foreground="#858585"
+                     BorderBrush="#474747"
+                     Text="Search..."
+                     GotFocus="SearchBox_GotFocus"
+                     LostFocus="SearchBox_LostFocus"
+                     TextChanged="SearchBox_TextChanged"/>
+        </Border>
+
+        <ListBox x:Name="ProjectList" Grid.Row="3"
                  Margin="20,12,20,0"
                  DisplayMemberPath="Name"
                  MouseDoubleClick="ProjectList_MouseDoubleClick"
                  PreviewMouseRightButtonUp="ProjectList_PreviewMouseRightButtonUp"/>
 
-        <TextBlock Grid.Row="3" Text="Double-click to open a project"
+        <TextBlock Grid.Row="4" Text="Double-click to open a project"
                    Foreground="#858585" FontSize="11"
                    HorizontalAlignment="Center" Margin="0,8,0,10"/>
+
+        <Button x:Name="QuickNotesButton" Grid.RowSpan="5"
+                Style="{StaticResource IconButtonStyle}"
+                Content="📝" ToolTip="Quick Notes (Ctrl+Shift+N)"
+                Width="36" Height="36" FontSize="16" Padding="0,0,6,0"
+                Background="#3C3C3C"
+                HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                Margin="0,0,16,16" Panel.ZIndex="100"
+                Click="QuickNotesButton_Click"/>
     </Grid>
 </Window>

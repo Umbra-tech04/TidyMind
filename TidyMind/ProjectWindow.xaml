@@ -74,5 +74,14 @@
                     Background="#0E639C" Foreground="#FFFFFF" FontWeight="Bold"
                     Click="SaveButton_Click"/>
         </Border>
+
+        <Button x:Name="QuickNotesButton" Grid.RowSpan="3"
+                Style="{StaticResource IconButtonStyle}"
+                Content="📝" ToolTip="Quick Notes (Ctrl+Shift+N)"
+                Width="36" Height="36" FontSize="16" Padding="0,0,6,0"
+                Background="#3C3C3C"
+                HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                Margin="0,0,16,74" Panel.ZIndex="100"
+                Click="QuickNotesButton_Click"/>
     </Grid>
 </Window>

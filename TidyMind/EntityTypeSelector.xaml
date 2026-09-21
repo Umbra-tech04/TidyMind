@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TidyMind"
         mc:Ignorable="d"
-        Title="Add Entity" Height="420" Width="500"
+        Title="Add Entity" Height="220" Width="300"
         WindowStartupLocation="CenterScreen">
     <Grid Background="#1E1E1E">
         <Grid.RowDefinitions>
@@ -19,22 +19,8 @@
                        Foreground="#569CD6"/>
         </Border>
 
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="#1E1E1E">
-            <WrapPanel HorizontalAlignment="Center" Margin="20,20,20,20">
-                <Button Content="👕 Clothing"   Width="130" Height="70" Margin="8" FontSize="13" Tag="Clothing"    Click="TypeButton_Click"/>
-                <Button Content="🚗 Car"         Width="130" Height="70" Margin="8" FontSize="13" Tag="Car"         Click="TypeButton_Click"/>
-                <Button Content="🏍️ Motorcycle"  Width="130" Height="70" Margin="8" FontSize="13" Tag="Motorcycle"  Click="TypeButton_Click"/>
-                <Button Content="📚 Book"        Width="130" Height="70" Margin="8" FontSize="13" Tag="Book"        Click="TypeButton_Click"/>
-                <Button Content="🎮 Game"        Width="130" Height="70" Margin="8" FontSize="13" Tag="Game"        Click="TypeButton_Click"/>
-                <Button Content="🎬 Movie"       Width="130" Height="70" Margin="8" FontSize="13" Tag="Movie"       Click="TypeButton_Click"/>
-                <Button Content="💻 Electronics" Width="130" Height="70" Margin="8" FontSize="13" Tag="Electronics" Click="TypeButton_Click"/>
-                <Button Content="🐾 Pet"         Width="130" Height="70" Margin="8" FontSize="13" Tag="Pet"         Click="TypeButton_Click"/>
-                <Button Content="🌱 Plant"       Width="130" Height="70" Margin="8" FontSize="13" Tag="Plant"       Click="TypeButton_Click"/>
-                <Button Content="🏠 Property"    Width="130" Height="70" Margin="8" FontSize="13" Tag="Property"    Click="TypeButton_Click"/>
-                <Button Content="💊 Medicine"    Width="130" Height="70" Margin="8" FontSize="13" Tag="Medicine"    Click="TypeButton_Click"/>
-                <Button Content="🎨 Artwork"     Width="130" Height="70" Margin="8" FontSize="13" Tag="Artwork"     Click="TypeButton_Click"/>
-                <Button Content="⚙️ Custom"      Width="130" Height="70" Margin="8" FontSize="13" Tag="Custom"      Click="TypeButton_Click"/>
-            </WrapPanel>
-        </ScrollViewer>
+        <WrapPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Button Content="👕 Clothing" Width="160" Height="70" Margin="8" FontSize="13" Tag="Clothing" Click="TypeButton_Click"/>
+        </WrapPanel>
     </Grid>
 </Window>

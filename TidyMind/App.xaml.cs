@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using System.Windows.Input;
 
 namespace TidyMind
 {
@@ -9,6 +10,9 @@ namespace TidyMind
             base.OnStartup(e);
 
             this.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
+            EventManager.RegisterClassHandler(typeof(Window), Window.PreviewKeyDownEvent,
+                new KeyEventHandler(GlobalPreviewKeyDown));
 
             ProfileWindow profileWindow = new ProfileWindow();
             bool? result = profileWindow.ShowDialog();
@@ -43,6 +47,15 @@ namespace TidyMind
             {
                 currentWindow.Close();
                 Shutdown();
+            }
+        }
+
+        private void GlobalPreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.N && Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+            {
+                QuickNotesWindow.ShowOrFocus();
+                e.Handled = true;
             }
         }
 
