@@ -163,8 +163,14 @@ namespace TidyMind
             deleteItem.Tag = entity;
             deleteItem.Click += DeleteEntity_Click;
 
+            MenuItem reminderItem = new MenuItem();
+            reminderItem.Header = "Add Reminder";
+            reminderItem.Tag = entity;
+            reminderItem.Click += AddReminder_Click;
+
             menu.Items.Add(editItem);
             menu.Items.Add(deleteItem);
+            menu.Items.Add(reminderItem);
             card.ContextMenu = menu;
 
             card.MouseLeftButtonUp += (s, e) => OpenDetail(entity);
@@ -358,6 +364,18 @@ namespace TidyMind
         private void SwitchProfileButton_Click(object sender, RoutedEventArgs e)
         {
             ((App)Application.Current).SwitchProfile(this);
+        }
+
+        private void RemindersButton_Click(object sender, RoutedEventArgs e)
+        {
+            RemindersWindow.ShowOrFocus();
+        }
+
+        private void AddReminder_Click(object sender, RoutedEventArgs e)
+        {
+            Entity entity = (Entity)((MenuItem)sender).Tag;
+            AddReminderWindow reminderWindow = new AddReminderWindow(entity.Name);
+            reminderWindow.ShowDialog();
         }
 
         private void QuickNotesButton_Click(object sender, RoutedEventArgs e)

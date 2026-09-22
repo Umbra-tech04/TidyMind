@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Input;
 
 namespace TidyMind
@@ -8,6 +9,12 @@ namespace TidyMind
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
+            if (TryHandleRemindArgument(e.Args))
+            {
+                Shutdown();
+                return;
+            }
 
             this.ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
@@ -50,11 +57,35 @@ namespace TidyMind
             }
         }
 
+        // Handles "TidyMind.exe --remind {reminderId}", which is how the
+        // Windows Task Scheduler task for a reminder fires it. In that case we
+        // only show the notification and exit — no window is ever opened.
+        private bool TryHandleRemindArgument(string[] args)
+        {
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (args[i] == "--remind" && i + 1 < args.Length)
+                {
+                    if (Guid.TryParse(args[i + 1], out Guid reminderId))
+                        ReminderManager.FireReminder(reminderId);
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private void GlobalPreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.N && Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
             {
                 QuickNotesWindow.ShowOrFocus();
+                e.Handled = true;
+            }
+            else if (e.Key == Key.R && Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+            {
+                RemindersWindow.ShowOrFocus();
                 e.Handled = true;
             }
         }

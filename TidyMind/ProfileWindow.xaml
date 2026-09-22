@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TidyMind"
         mc:Ignorable="d"
-        Title="TidyMind" Height="700" Width="1200"
+        Title="TidyMind" Height="700" Width="1050"
         WindowStartupLocation="CenterScreen">
     <Grid Background="#1E1E1E">
         <Grid.RowDefinitions>
@@ -19,6 +19,12 @@
         <TextBlock Grid.Row="0" Text="TidyMind" FontSize="32" FontWeight="Bold"
                    Foreground="#569CD6"
                    HorizontalAlignment="Center" Margin="0,24,0,6"/>
+
+        <Button x:Name="RemindersButton" Grid.Row="0" Content="🔔 Reminders"
+                Width="120" Height="30"
+                HorizontalAlignment="Right" VerticalAlignment="Top"
+                Margin="0,24,20,0"
+                Click="RemindersButton_Click"/>
 
         <TextBlock Grid.Row="1" Text="Choose your memory" FontSize="14"
                    HorizontalAlignment="Center" Foreground="#858585"
@@ -94,9 +100,11 @@
             </Grid>
         </Grid>
 
-        <TextBlock Grid.Row="4" Text="Right-click a memory to edit"
-                   FontSize="11" Foreground="#858585"
-                   HorizontalAlignment="Center" Margin="0,0,0,16"/>
+        <Grid Grid.Row="4" Margin="0,0,0,16">
+            <TextBlock Text="Right-click a memory to edit"
+                       FontSize="11" Foreground="#858585"
+                       HorizontalAlignment="Center"/>
+        </Grid>
 
         <Button x:Name="QuickNotesButton" Grid.RowSpan="5"
                 Style="{StaticResource IconButtonStyle}"
@@ -104,7 +112,54 @@
                 Width="36" Height="36" FontSize="16" Padding="0,0,6,0"
                 Background="#3C3C3C"
                 HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                Margin="0,0,16,16" Panel.ZIndex="100"
+                Margin="0,0,16,60" Panel.ZIndex="100"
                 Click="QuickNotesButton_Click"/>
+
+        <Button x:Name="ExportAllButton"
+                Grid.RowSpan="5"
+                Style="{StaticResource IconButtonStyle}"
+                Content="📤" ToolTip="Export All"
+                Width="36" Height="36" FontSize="16" Padding="0,0,6,0"
+                Background="#2ECC71"
+                HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                Margin="0,0,16,16" Panel.ZIndex="100"
+                Click="ExportAllButton_Click"/>
+
+        <Button x:Name="HelpButton" Grid.RowSpan="5"
+                Style="{StaticResource IconButtonStyle}"
+                Content="?" ToolTip="Keyboard Shortcuts" FontWeight="Bold"
+                Width="36" Height="36" FontSize="16"
+                Background="#3C3C3C"
+                HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                Margin="16,0,0,16" Panel.ZIndex="100"
+                Click="HelpButton_Click"/>
+
+        <Popup x:Name="HelpPopup" PlacementTarget="{Binding ElementName=HelpButton}"
+               Placement="Top" StaysOpen="False" AllowsTransparency="True">
+            <Border Background="#252526" BorderBrush="#474747" BorderThickness="1" Padding="14">
+                <StackPanel>
+                    <TextBlock Text="Keyboard Shortcuts" FontWeight="Bold" FontSize="13"
+                               Foreground="#569CD6" Margin="0,0,0,10"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Ctrl+Shift+N" FontFamily="Consolas"
+                                   FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,10,4"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="— Quick Notes"
+                                   Foreground="#CCCCCC" Margin="0,0,0,4"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Ctrl+Shift+R" FontFamily="Consolas"
+                                   FontWeight="Bold" Foreground="#FFFFFF"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="— Reminders"
+                                   Foreground="#CCCCCC"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Popup>
     </Grid>
 </Window>

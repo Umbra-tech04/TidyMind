@@ -22,16 +22,22 @@
                            FontSize="20" FontWeight="Bold"
                            Foreground="#569CD6"
                            VerticalAlignment="Center"/>
-                <Button x:Name="SwitchProfileButton" Content="Switch Memory"
-                        Width="130" Height="30" HorizontalAlignment="Right"
-                        Click="SwitchProfileButton_Click"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="RemindersButton" Content="🔔 Reminders"
+                            Width="120" Height="30" Margin="0,0,10,0"
+                            Click="RemindersButton_Click"/>
+                    <Button x:Name="SwitchProfileButton" Content="Switch Memory"
+                            Width="130" Height="30"
+                            Click="SwitchProfileButton_Click"/>
+                </StackPanel>
             </Grid>
         </Border>
 
         <Border Grid.Row="1" Background="#1E1E1E" Padding="20,10">
             <StackPanel Orientation="Horizontal">
                 <TextBox x:Name="ProjectInput" Width="380" Height="32"
-                         VerticalContentAlignment="Center"/>
+                         VerticalContentAlignment="Center"
+                         KeyDown="ProjectInput_KeyDown"/>
                 <Button x:Name="AddButton" Content="+ Add"
                         Height="32" Margin="10,0,0,0" Padding="14,0"
                         Click="AddButton_Click"/>

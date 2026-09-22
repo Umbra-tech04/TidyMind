@@ -6,8 +6,23 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
 	<EnableVBRuntime>true</EnableVBRuntime>
 	<ApplicationIcon>fej.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <!-- UseWindowsForms adds a project-wide implicit "using System.Windows.Forms;"
+       which collides with WPF types (TextBox, ComboBox, Button, Application, KeyEventArgs, ...).
+       We only need System.Windows.Forms explicitly in ReminderManager.cs, so drop the global one. -->
+  <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.105.1" />
+    <PackageReference Include="DocX" Version="5.2.0" />
+    <PackageReference Include="QuestPDF" Version="2026.9.0" />
+    <PackageReference Include="TaskScheduler" Version="2.12.2" />
+  </ItemGroup>
 
 </Project>

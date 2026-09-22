@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Microsoft.Win32;
 
 namespace TidyMind
 {
@@ -115,11 +116,99 @@ namespace TidyMind
             deleteItem.Tag = profile.Name;
             deleteItem.Click += DeleteProfile_Click;
 
+            MenuItem reminderItem = new MenuItem();
+            reminderItem.Header = "Add Reminder";
+            reminderItem.Tag = profile.Name;
+            reminderItem.Click += AddReminderToProfile_Click;
+
+            MenuItem exportItem = new MenuItem();
+            exportItem.Header = "Export";
+            exportItem.Tag = profile.Name;
+            exportItem.Click += ExportProfile_Click;
+
             menu.Items.Add(renameItem);
             menu.Items.Add(deleteItem);
+            menu.Items.Add(reminderItem);
+            menu.Items.Add(exportItem);
             card.ContextMenu = menu;
 
             return card;
+        }
+
+        private void AddReminderToProfile_Click(object sender, RoutedEventArgs e)
+        {
+            string name = (string)((MenuItem)sender).Tag;
+            AddReminderWindow reminderWindow = new AddReminderWindow(name);
+            reminderWindow.ShowDialog();
+        }
+
+        private void RemindersButton_Click(object sender, RoutedEventArgs e)
+        {
+            RemindersWindow.ShowOrFocus();
+        }
+
+        private void ExportProfile_Click(object sender, RoutedEventArgs e)
+        {
+            string name = (string)((MenuItem)sender).Tag;
+            Profile profile = profiles.FirstOrDefault(p => p.Name == name);
+            if (profile == null) return;
+
+            ExportFormatWindow formatWindow = new ExportFormatWindow();
+            if (formatWindow.ShowDialog() != true) return;
+
+            ExportFormat format = formatWindow.SelectedFormat;
+
+            SaveFileDialog dialog = new SaveFileDialog();
+            dialog.FileName = profile.Name + "_export." + GetExtension(format);
+            dialog.Filter = GetFilter(format);
+
+            if (dialog.ShowDialog() == true)
+            {
+                ExportService.ExportMemory(profile, dialog.FileName, format);
+                MessageBox.Show("Export complete.", "Export",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
+        private void ExportAllButton_Click(object sender, RoutedEventArgs e)
+        {
+            ExportFormatWindow formatWindow = new ExportFormatWindow();
+            if (formatWindow.ShowDialog() != true) return;
+
+            ExportFormat format = formatWindow.SelectedFormat;
+
+            SaveFileDialog dialog = new SaveFileDialog();
+            dialog.FileName = "TidyMind_export." + GetExtension(format);
+            dialog.Filter = GetFilter(format);
+
+            if (dialog.ShowDialog() == true)
+            {
+                ExportService.ExportAll(profiles, dialog.FileName, format);
+                MessageBox.Show("Export complete.", "Export",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
+        private static string GetExtension(ExportFormat format)
+        {
+            switch (format)
+            {
+                case ExportFormat.Excel: return "xlsx";
+                case ExportFormat.Docx: return "docx";
+                case ExportFormat.Pdf: return "pdf";
+                default: return "xlsx";
+            }
+        }
+
+        private static string GetFilter(ExportFormat format)
+        {
+            switch (format)
+            {
+                case ExportFormat.Excel: return "Excel files (*.xlsx)|*.xlsx";
+                case ExportFormat.Docx: return "Word documents (*.docx)|*.docx";
+                case ExportFormat.Pdf: return "PDF files (*.pdf)|*.pdf";
+                default: return "All files (*.*)|*.*";
+            }
         }
 
         private void ProfileCard_Click(object sender, RoutedEventArgs e)
@@ -190,6 +279,11 @@ namespace TidyMind
         private void QuickNotesButton_Click(object sender, RoutedEventArgs e)
         {
             QuickNotesWindow.ShowOrFocus();
+        }
+
+        private void HelpButton_Click(object sender, RoutedEventArgs e)
+        {
+            HelpPopup.IsOpen = !HelpPopup.IsOpen;
         }
 
         private void AddProfile(ProfileType type)

@@ -94,6 +94,12 @@ namespace TidyMind
             QuickNotesButton.Visibility = Visibility.Collapsed;
         }
 
+        private void ProjectInput_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+                AddButton_Click(sender, e);
+        }
+
         private void AddButton_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(ProjectInput.Text))
@@ -151,6 +157,11 @@ namespace TidyMind
             ((App)Application.Current).SwitchProfile(this);
         }
 
+        private void RemindersButton_Click(object sender, RoutedEventArgs e)
+        {
+            RemindersWindow.ShowOrFocus();
+        }
+
         private void QuickNotesButton_Click(object sender, RoutedEventArgs e)
         {
             QuickNotesWindow.ShowOrFocus();
@@ -187,8 +198,18 @@ namespace TidyMind
             deleteItem.Header = "Delete";
             deleteItem.Click += (s, args) => DeleteButton_Click(s, args);
 
+            MenuItem reminderItem = new MenuItem();
+            reminderItem.Header = "Add Reminder";
+            reminderItem.Click += (s, args) =>
+            {
+                Project selectedProject = (Project)item.DataContext;
+                AddReminderWindow reminderWindow = new AddReminderWindow(selectedProject.Name);
+                reminderWindow.ShowDialog();
+            };
+
             menu.Items.Add(renameItem);
             menu.Items.Add(deleteItem);
+            menu.Items.Add(reminderItem);
             menu.IsOpen = true;
         }
 
