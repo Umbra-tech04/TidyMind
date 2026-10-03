@@ -11,7 +11,10 @@ namespace TidyMind
     {
         private static RemindersWindow instance;
 
-        public RemindersWindow()
+        private Guid? highlightedId;
+        private Border highlightedRow;
+
+        private RemindersWindow()
         {
             InitializeComponent();
             RenderReminders();
@@ -34,6 +37,24 @@ namespace TidyMind
             }
         }
 
+        // Marks one reminder (opened from the dashboard) until the window closes; kept across re-renders.
+        public static void Highlight(Guid id)
+        {
+            if (instance == null) return;
+
+            instance.highlightedId = id;
+            instance.RenderReminders();
+
+            // Scrolled to once, here: re-renders on every activation shouldn't keep yanking the list back.
+            Border row = instance.highlightedRow;
+            if (row != null)
+                instance.Dispatcher.BeginInvoke(new Action(row.BringIntoView), System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+
+        public static bool IsOpen => instance != null;
+
+        public static void CloseIfOpen() => instance?.Close();
+
         protected override void OnClosed(EventArgs e)
         {
             base.OnClosed(e);
@@ -49,6 +70,7 @@ namespace TidyMind
         private void RenderReminders()
         {
             RemindersPanel.Children.Clear();
+            highlightedRow = null;
 
             List<Reminder> reminders = ReminderManager.LoadReminders();
             reminders.Sort((a, b) => a.NextFireTime.CompareTo(b.NextFireTime));
@@ -57,7 +79,7 @@ namespace TidyMind
             {
                 TextBlock empty = new TextBlock();
                 empty.Text = "No reminders yet.";
-                empty.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#858585"));
+                empty.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8A8A87"));
                 empty.HorizontalAlignment = HorizontalAlignment.Center;
                 empty.Margin = new Thickness(0, 20, 0, 0);
                 RemindersPanel.Children.Add(empty);
@@ -66,14 +88,24 @@ namespace TidyMind
 
             foreach (Reminder reminder in reminders)
             {
-                RemindersPanel.Children.Add(CreateReminderRow(reminder));
+                Border row = CreateReminderRow(reminder);
+                RemindersPanel.Children.Add(row);
+
+                if (reminder.Id == highlightedId)
+                {
+                    row.Background = (Brush)FindResource("AccentSoft");
+                    row.BorderBrush = (Brush)FindResource("Accent");
+                    highlightedRow = row;
+                }
             }
         }
 
         private Border CreateReminderRow(Reminder reminder)
         {
             Border row = new Border();
-            row.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#252526"));
+            row.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
+            row.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E0E0DE"));
+            row.BorderThickness = new Thickness(1);
             row.CornerRadius = new CornerRadius(6);
             row.Padding = new Thickness(14, 10, 14, 10);
             row.Margin = new Thickness(0, 0, 0, 8);
@@ -84,28 +116,17 @@ namespace TidyMind
 
             StackPanel info = new StackPanel();
 
-            TextBlock message = new TextBlock();
-            message.Text = reminder.Message;
-            message.Foreground = Brushes.White;
-            message.FontSize = 14;
-            message.FontWeight = FontWeights.Bold;
-            message.TextWrapping = TextWrapping.Wrap;
-            info.Children.Add(message);
+            info.Children.Add(TextCopy.Selectable(reminder.Message, 14, (Brush)FindResource("TextMain"), FontWeights.Bold));
 
             if (!string.IsNullOrWhiteSpace(reminder.Title))
             {
-                TextBlock forText = new TextBlock();
-                forText.Text = "For: " + reminder.Title;
-                forText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#569CD6"));
-                forText.FontSize = 11;
+                TextBox forText = TextCopy.Selectable("For: " + reminder.Title, 11, (Brush)FindResource("Accent"));
                 forText.Margin = new Thickness(0, 4, 0, 0);
                 info.Children.Add(forText);
             }
 
-            TextBlock details = new TextBlock();
-            details.Text = reminder.NextFireTime.ToString("yyyy-MM-dd HH:mm") + "   •   " + reminder.RepeatType;
-            details.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#858585"));
-            details.FontSize = 11;
+            TextBox details = TextCopy.Selectable(reminder.NextFireTime.ToString("yyyy-MM-dd HH:mm") + "   •   " + reminder.RepeatType,
+                11, (Brush)FindResource("TextSub"));
             details.Margin = new Thickness(0, 4, 0, 0);
             info.Children.Add(details);
 
@@ -116,7 +137,8 @@ namespace TidyMind
             deleteButton.Content = "Delete";
             deleteButton.Width = 80;
             deleteButton.Height = 30;
-            deleteButton.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8B1A1A"));
+            deleteButton.Style = (Style)Application.Current.FindResource("GhostButtonStyle");
+            deleteButton.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#C0392B"));
             deleteButton.VerticalAlignment = VerticalAlignment.Center;
             deleteButton.Tag = reminder.Id;
             deleteButton.Click += DeleteReminder_Click;
@@ -146,11 +168,8 @@ namespace TidyMind
 
         private void AddReminderButton_Click(object sender, RoutedEventArgs e)
         {
-            AddReminderWindow addReminderWindow = new AddReminderWindow();
-            bool? result = addReminderWindow.ShowDialog();
-
-            if (result == true)
-                RenderReminders();
+            // Activated re-renders the list once the dialog hands focus back.
+            new AddReminderWindow { Owner = this }.ShowDialog();
         }
     }
 }

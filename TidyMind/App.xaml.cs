@@ -1,6 +1,8 @@
-﻿using System;
+using System;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media.Animation;
 
 namespace TidyMind
 {
@@ -10,56 +12,26 @@ namespace TidyMind
         {
             base.OnStartup(e);
 
+            // Launched by a Task Scheduler reminder: show the toast and exit, no UI.
             if (TryHandleRemindArgument(e.Args))
             {
                 Shutdown();
                 return;
             }
 
-            this.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            QuickTodoService.RemoveOldCompleted(DateTime.Today);
 
             EventManager.RegisterClassHandler(typeof(Window), Window.PreviewKeyDownEvent,
                 new KeyEventHandler(GlobalPreviewKeyDown));
+            EventManager.RegisterClassHandler(typeof(Window), FrameworkElement.LoadedEvent,
+                new RoutedEventHandler(AnimateWindowOpen));
 
-            ProfileWindow profileWindow = new ProfileWindow();
-            bool? result = profileWindow.ShowDialog();
-
-            if (result == true)
-            {
-                OpenMemoryWindow(profileWindow, null);
-            }
-            else
-            {
-                Shutdown();
-            }
+            MainWindow window = new MainWindow();
+            this.MainWindow = window;
+            this.ShutdownMode = ShutdownMode.OnMainWindowClose;
+            window.Show();
         }
 
-        public void SwitchProfile(Window currentWindow)
-        {
-            this.ShutdownMode = ShutdownMode.OnExplicitShutdown;
-
-            currentWindow.Hide();
-
-            ProfileWindow profileWindow = new ProfileWindow();
-            profileWindow.Width = currentWindow.ActualWidth;
-            profileWindow.Height = currentWindow.ActualHeight;
-            bool? result = profileWindow.ShowDialog();
-
-            if (result == true)
-            {
-                currentWindow.Close();
-                OpenMemoryWindow(profileWindow, null);
-            }
-            else
-            {
-                currentWindow.Close();
-                Shutdown();
-            }
-        }
-
-        // Handles "TidyMind.exe --remind {reminderId}", which is how the
-        // Windows Task Scheduler task for a reminder fires it. In that case we
-        // only show the notification and exit — no window is ever opened.
         private bool TryHandleRemindArgument(string[] args)
         {
             for (int i = 0; i < args.Length; i++)
@@ -76,40 +48,44 @@ namespace TidyMind
             return false;
         }
 
-        private void GlobalPreviewKeyDown(object sender, KeyEventArgs e)
+        // Fades the content, not the window: top-level Opacity needs AllowsTransparency. All windows share the
+        // BgMain background, so the fade never shows a colour change.
+        private void AnimateWindowOpen(object sender, RoutedEventArgs e)
         {
-            if (e.Key == Key.N && Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+            if (sender is MainWindow || !(sender is Window window) || !(window.Content is UIElement content))
+                return;
+
+            // Hidden from the very first frame; the fade starts only once the window has actually drawn,
+            // otherwise a slow first render (e.g. ProjectWindow) flashes at full opacity or eats the animation.
+            content.Opacity = 0;
+
+            window.ContentRendered += (s, args) =>
             {
-                QuickNotesWindow.ShowOrFocus();
-                e.Handled = true;
-            }
-            else if (e.Key == Key.R && Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
-            {
-                RemindersWindow.ShowOrFocus();
-                e.Handled = true;
-            }
+                DoubleAnimation fade = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(400))
+                {
+                    EasingFunction = new SineEase { EasingMode = EasingMode.EaseOut }
+                };
+                fade.Completed += (o, done) =>
+                {
+                    content.Opacity = 1;
+                    content.BeginAnimation(UIElement.OpacityProperty, null);
+                };
+                content.BeginAnimation(UIElement.OpacityProperty, fade);
+            };
         }
 
-        private void OpenMemoryWindow(ProfileWindow profileWindow, Window previousWindow)
+        // The selection if there is one, otherwise the whole text.
+        private void SelectableTextCopy_Click(object sender, RoutedEventArgs e)
         {
-            if (profileWindow.SelectedProfileType == ProfileType.Collection)
-            {
-                CollectionWindow collectionWindow = new CollectionWindow(profileWindow.SelectedProfileName);
-                collectionWindow.Width = profileWindow.ActualWidth;
-                collectionWindow.Height = profileWindow.ActualHeight;
-                this.MainWindow = collectionWindow;
-                this.ShutdownMode = ShutdownMode.OnMainWindowClose;
-                collectionWindow.Show();
-            }
-            else
-            {
-                MainWindow mainWindow = new MainWindow(profileWindow.SelectedProfileName);
-                mainWindow.Width = profileWindow.ActualWidth;
-                mainWindow.Height = profileWindow.ActualHeight;
-                this.MainWindow = mainWindow;
-                this.ShutdownMode = ShutdownMode.OnMainWindowClose;
-                mainWindow.Show();
-            }
+            if (((ContextMenu)((MenuItem)sender).Parent).PlacementTarget is TextBox box)
+                TextCopy.Copy(box.SelectionLength > 0 ? box.SelectedText : box.Text);
+        }
+
+        // Registered on the Window class, so this sees every key press in every window — one place for all shortcuts.
+        private void GlobalPreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (OverlayManager.TryHandleShortcut(e))
+                e.Handled = true;
         }
     }
 }

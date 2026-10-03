@@ -8,19 +8,20 @@
         Title="Add Reminder" Height="560" Width="380"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
-        Background="#1E1E1E">
+        Background="{StaticResource BgMain}">
     <Window.Resources>
-        <!-- Kereső TextBox-hoz hasonló, sötét témás DatePicker szövegdoboz -->
+        <!-- Light-themed DatePicker text box -->
         <Style TargetType="DatePickerTextBox">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="DatePickerTextBox">
-                        <Border Background="#3C3C3C" BorderBrush="#474747" BorderThickness="1">
+                        <Border Background="{StaticResource BgInput}" BorderBrush="{StaticResource Border}"
+                                BorderThickness="1" CornerRadius="4">
                             <Grid>
                                 <TextBox x:Name="PART_TextBox"
                                          Background="Transparent"
-                                         Foreground="#FFFFFF"
-                                         CaretBrush="#FFFFFF"
+                                         Foreground="{StaticResource TextMain}"
+                                         CaretBrush="{StaticResource TextMain}"
                                          BorderThickness="0"
                                          Padding="8,4"
                                          VerticalContentAlignment="Center"
@@ -33,9 +34,9 @@
         </Style>
 
         <Style TargetType="DatePicker">
-            <Setter Property="Background" Value="#3C3C3C"/>
-            <Setter Property="BorderBrush" Value="#474747"/>
-            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="Background" Value="{StaticResource BgInput}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Border}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextMain}"/>
             <Setter Property="Height" Value="32"/>
         </Style>
     </Window.Resources>
@@ -47,19 +48,20 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Fejléc -->
-        <Border Grid.Row="0" Background="#252526" Padding="20,14">
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
+                BorderThickness="0,0,0,1" Padding="20,16">
             <TextBlock Text="Add Reminder" FontSize="18" FontWeight="Bold"
-                       Foreground="#569CD6"/>
+                       Foreground="{StaticResource TextMain}"/>
         </Border>
 
-        <!-- Tartalom -->
+        <!-- Content -->
         <StackPanel Grid.Row="1" Margin="20,16">
             <TextBlock x:Name="SubtitleText"
-                       FontSize="12" Foreground="#858585"
+                       FontSize="12" Foreground="{StaticResource TextSub}"
                        TextWrapping="Wrap" Margin="0,0,0,16"/>
 
-            <TextBlock Text="Message" Foreground="#858585" FontSize="11" Margin="0,0,0,4"/>
+            <TextBlock Text="Message" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,0,0,4"/>
             <TextBox x:Name="MessageInput" Height="80"
                      TextWrapping="Wrap" AcceptsReturn="True"
                      VerticalScrollBarVisibility="Auto"
@@ -67,7 +69,7 @@
                      GotFocus="MessageInput_GotFocus"
                      LostFocus="MessageInput_LostFocus"/>
 
-            <TextBlock Text="Date" Foreground="#858585" FontSize="11" Margin="0,0,0,4"/>
+            <TextBlock Text="Date" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,0,0,4"/>
             <DatePicker x:Name="ReminderDatePicker" Margin="0,0,0,16"/>
 
             <Grid Margin="0,0,0,16">
@@ -78,17 +80,17 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0">
-                    <TextBlock Text="Hour" Foreground="#858585" FontSize="11" Margin="0,0,0,4"/>
+                    <TextBlock Text="Hour" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,0,0,4"/>
                     <ComboBox x:Name="HourBox" Height="32"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="2">
-                    <TextBlock Text="Minute" Foreground="#858585" FontSize="11" Margin="0,0,0,4"/>
+                    <TextBlock Text="Minute" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,0,0,4"/>
                     <ComboBox x:Name="MinuteBox" Height="32"/>
                 </StackPanel>
             </Grid>
 
-            <TextBlock Text="Repeat" Foreground="#858585" FontSize="11" Margin="0,0,0,4"/>
+            <TextBlock Text="Repeat" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,0,0,4"/>
             <ComboBox x:Name="RepeatBox" Height="32" SelectedIndex="0">
                 <ComboBoxItem Content="Once"/>
                 <ComboBoxItem Content="Daily"/>
@@ -98,11 +100,12 @@
             </ComboBox>
         </StackPanel>
 
-        <!-- Lábléc -->
-        <Border Grid.Row="2" Background="#252526" Padding="20,10">
+        <!-- Footer -->
+        <Border Grid.Row="2" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
+                BorderThickness="0,1,0,0" Padding="20,10">
             <Button x:Name="SaveButton" Content="Save Reminder"
                     Width="150" Height="34" HorizontalAlignment="Right"
-                    Background="#0E639C" Foreground="#FFFFFF" FontWeight="Bold"
+                    FontWeight="Bold"
                     Click="SaveButton_Click"/>
         </Border>
     </Grid>

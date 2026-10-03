@@ -11,7 +11,8 @@ namespace TidyMind
 
         private readonly string title;
 
-        public AddReminderWindow(string title = null)
+        // date: pre-selects that day (from the calendar's right-click "Add Reminder").
+        public AddReminderWindow(string title = null, DateTime? date = null)
         {
             InitializeComponent();
 
@@ -22,11 +23,17 @@ namespace TidyMind
                 : "Reminder for: " + title;
 
             MessageInput.Text = MessagePlaceholder;
-            MessageInput.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#858585"));
-
-            ReminderDatePicker.SelectedDate = DateTime.Today;
+            MessageInput.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8A8A87"));
 
             PopulateHourAndMinute();
+
+            // A future day starts at 09:00; today keeps the "next minute" default.
+            if (date.HasValue && date.Value.Date > DateTime.Today)
+            {
+                ReminderDatePicker.SelectedDate = date.Value.Date;
+                HourBox.SelectedIndex = 9;
+                MinuteBox.SelectedIndex = 0;
+            }
         }
 
         private void PopulateHourAndMinute()
@@ -34,11 +41,14 @@ namespace TidyMind
             for (int hour = 0; hour <= 23; hour++)
                 HourBox.Items.Add(new ComboBoxItem { Content = hour.ToString("00") });
 
-            for (int minute = 0; minute <= 55; minute += 5)
+            for (int minute = 0; minute <= 59; minute++)
                 MinuteBox.Items.Add(new ComboBoxItem { Content = minute.ToString("00") });
 
-            HourBox.SelectedIndex = DateTime.Now.Hour;
-            MinuteBox.SelectedIndex = DateTime.Now.Minute / 5;
+            // Default to the next minute, so saving without changes still lands in the future.
+            DateTime next = DateTime.Now.AddMinutes(1);
+            ReminderDatePicker.SelectedDate = next.Date;
+            HourBox.SelectedIndex = next.Hour;
+            MinuteBox.SelectedIndex = next.Minute;
         }
 
         private void MessageInput_GotFocus(object sender, RoutedEventArgs e)
@@ -46,7 +56,7 @@ namespace TidyMind
             if (MessageInput.Text == MessagePlaceholder)
             {
                 MessageInput.Text = "";
-                MessageInput.Foreground = Brushes.White;
+                MessageInput.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1C1B19"));
             }
         }
 
@@ -55,7 +65,7 @@ namespace TidyMind
             if (string.IsNullOrWhiteSpace(MessageInput.Text))
             {
                 MessageInput.Text = MessagePlaceholder;
-                MessageInput.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#858585"));
+                MessageInput.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8A8A87"));
             }
         }
 
@@ -89,6 +99,13 @@ namespace TidyMind
             int minute = int.Parse((string)((ComboBoxItem)MinuteBox.SelectedItem).Content);
 
             DateTime fireTime = new DateTime(date.Year, date.Month, date.Day, hour, minute, 0, DateTimeKind.Local);
+
+            if (fireTime <= DateTime.Now)
+            {
+                MessageBox.Show("That time has already passed. Please pick a time in the future.", "Time in the Past",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             string repeatText = ((ComboBoxItem)RepeatBox.SelectedItem).Content.ToString();
             RepeatType repeatType = (RepeatType)Enum.Parse(typeof(RepeatType), repeatText);

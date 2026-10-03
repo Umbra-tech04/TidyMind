@@ -123,7 +123,7 @@ namespace TidyMind
                 qty.Width = 24;
                 qty.TextAlignment = TextAlignment.Center;
                 qty.VerticalAlignment = VerticalAlignment.Center;
-                qty.Foreground = Brushes.White;
+                qty.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1C1B19"));
                 qty.FontSize = 14;
 
                 Button plusBtn = new Button();

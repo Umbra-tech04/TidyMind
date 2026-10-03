@@ -20,11 +20,15 @@ namespace TidyMind
             Loaded += (s, e) => FocusNotesTextBox();
         }
 
+        public static bool IsOpen => instance != null;
+
         public static void ShowOrFocus()
         {
             if (instance == null)
             {
-                instance = new QuickNotesWindow();
+                // Owned by the main window: Windows hides it while the main window is minimized and brings it
+                // back on restore (it has no taskbar button of its own to restore it from).
+                instance = new QuickNotesWindow { Owner = Application.Current.MainWindow };
                 instance.Show();
             }
             else
@@ -36,6 +40,8 @@ namespace TidyMind
                 instance.FocusNotesTextBox();
             }
         }
+
+        public static void CloseIfOpen() => instance?.Close();
 
         private void FocusNotesTextBox()
         {

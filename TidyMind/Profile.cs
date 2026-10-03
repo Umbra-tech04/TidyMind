@@ -11,5 +11,6 @@
         public string Name { get; set; }
         public string Color { get; set; }
         public ProfileType Type { get; set; } = ProfileType.Project;
+        public int Order { get; set; }
     }
 }

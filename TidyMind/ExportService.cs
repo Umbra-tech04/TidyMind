@@ -56,7 +56,7 @@ namespace TidyMind
             }
             else
             {
-                items = BuildProjectItems(LoadProjects(profile.Name));
+                items = BuildProjectItems(profile.Name);
                 title = profile.Name + " — Project Export";
             }
 
@@ -83,7 +83,7 @@ namespace TidyMind
                 if (profile.Type == ProfileType.Collection)
                     items.AddRange(BuildEntityItems(LoadEntities(profile.Name), profile.Name));
                 else
-                    items.AddRange(BuildProjectItems(LoadProjects(profile.Name), profile.Name));
+                    items.AddRange(BuildProjectItems(profile.Name, profile.Name));
             }
 
             WriteExport(items, "TidyMind — Export All", filePath, format);
@@ -95,7 +95,8 @@ namespace TidyMind
             if (!File.Exists(fileName))
                 return new List<Project>();
 
-            return JsonSerializer.Deserialize<List<Project>>(File.ReadAllText(fileName));
+            List<Project> projects = JsonSerializer.Deserialize<List<Project>>(File.ReadAllText(fileName)) ?? new List<Project>();
+            return projects.OrderBy(p => p.Order).ToList();
         }
 
         private static List<Entity> LoadEntities(string profileName)
@@ -104,21 +105,27 @@ namespace TidyMind
             if (!File.Exists(fileName))
                 return new List<Entity>();
 
-            return JsonSerializer.Deserialize<List<Entity>>(File.ReadAllText(fileName));
+            List<Entity> entities = JsonSerializer.Deserialize<List<Entity>>(File.ReadAllText(fileName)) ?? new List<Entity>();
+            return entities.OrderBy(e => e.Order).ToList();
         }
 
-        private static List<ExportItem> BuildProjectItems(List<Project> projects, string group = null)
+        // The memory's inline to-do list (if it has one) comes first, then its projects.
+        private static List<ExportItem> BuildProjectItems(string profileName, string group = null)
         {
             List<ExportItem> items = new List<ExportItem>();
 
-            foreach (Project project in projects)
+            List<TodoEntry> todos = LoadTodos(profileName);
+            if (todos.Count > 0)
+                items.Add(new ExportItem { Group = group, Name = "To-do", Fields = new List<(string, string)> { ("Items", FormatTodos(todos)) } });
+
+            foreach (Project project in LoadProjects(profileName))
             {
                 ExportItem item = new ExportItem();
                 item.Group = group;
                 item.Name = project.Name;
                 item.Fields = new List<(string, string)>
                 {
-                    ("Description", project.Description ?? ""),
+                    ("Description", RichTextHelper.ToPlainText(project.Description)),
                     ("Status", project.Status.ToString()),
                     ("Tasks", FormatTasks(project.Tasks)),
                     ("Notes", project.Notes ?? "")
@@ -170,6 +177,17 @@ namespace TidyMind
             return string.Join("; ", parts);
         }
 
+        private static string FormatTodos(List<TodoEntry> todos)
+        {
+            return string.Join("; ", todos.Select(t => t.Text + " (" + (t.IsDone ? "done" : "undone") + ")"));
+        }
+
+        // An unreadable file just leaves the to-do list out of the export.
+        private static List<TodoEntry> LoadTodos(string profileName)
+        {
+            return MemoryTodoService.TryLoad(profileName, out List<TodoEntry> todos) ? todos : new List<TodoEntry>();
+        }
+
         private static string FormatSizes(List<SizeQuantity> sizes)
         {
             if (sizes == null || sizes.Count == 0)
@@ -204,7 +222,7 @@ namespace TidyMind
             if (profile.Type == ProfileType.Collection)
                 AddEntitySheet(workbook, profile.Name, LoadEntities(profile.Name));
             else
-                AddProjectSheet(workbook, profile.Name, LoadProjects(profile.Name));
+                AddProjectSheet(workbook, profile.Name);
         }
 
         // Card layout: each entity/project is its own vertical block — a merged,
@@ -233,16 +251,24 @@ namespace TidyMind
             FinalizeCardSheet(sheet);
         }
 
-        private static void AddProjectSheet(XLWorkbook workbook, string sheetTitle, List<Project> projects)
+        private static void AddProjectSheet(XLWorkbook workbook, string profileName)
         {
-            IXLWorksheet sheet = workbook.Worksheets.Add(SanitizeSheetName(workbook, sheetTitle));
+            IXLWorksheet sheet = workbook.Worksheets.Add(SanitizeSheetName(workbook, profileName));
             int row = 1;
 
-            foreach (Project project in projects)
+            List<TodoEntry> todos = LoadTodos(profileName);
+            if (todos.Count > 0)
+            {
+                WriteCardHeader(sheet, ref row, "To-do");
+                WriteCardField(sheet, ref row, "Items", FormatTodos(todos));
+                row += 2;
+            }
+
+            foreach (Project project in LoadProjects(profileName))
             {
                 WriteCardHeader(sheet, ref row, project.Name);
 
-                WriteCardField(sheet, ref row, "Description", project.Description);
+                WriteCardField(sheet, ref row, "Description", RichTextHelper.ToPlainText(project.Description));
                 WriteCardField(sheet, ref row, "Status", project.Status.ToString());
                 WriteCardField(sheet, ref row, "Tasks", FormatTasks(project.Tasks));
                 WriteCardField(sheet, ref row, "Notes", project.Notes);

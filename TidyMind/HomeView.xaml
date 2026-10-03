@@ -1,0 +1,83 @@
+<UserControl x:Class="TidyMind.HomeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="clr-namespace:TidyMind"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="1000">
+    <!-- Home reads like the opening spread of a daybook, not an admin panel. Three materials carry the hierarchy:
+         the to-do list is the one white sheet you write on, the week is printed straight onto the page, and projects
+         are the app's own ring cards in miniature. Numbers appear inside sentences, never as stat tiles. -->
+    <UserControl.Resources>
+        <FontFamily x:Key="DisplayFont">Segoe UI Variable Display, Segoe UI</FontFamily>
+        <SolidColorBrush x:Key="TextBody" Color="#3A3936"/>
+        <SolidColorBrush x:Key="Hairline" Color="#E4E4E1"/>
+
+        <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource TextMain}"/>
+        </Style>
+        <!-- The sentence that sits beside a section title and says what's in it -->
+        <Style x:Key="SectionLedeStyle" TargetType="TextBox" BasedOn="{StaticResource SelectableTextStyle}">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSub}"/>
+            <Setter Property="Margin" Value="12,0,0,1"/>
+            <Setter Property="VerticalAlignment" Value="Bottom"/>
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer Background="{StaticResource BgMain}" VerticalScrollBarVisibility="Auto">
+        <!-- Bottom margin clears the floating corner buttons -->
+        <StackPanel x:Name="Page" Margin="48,40,48,88" MaxWidth="1040">
+
+            <!-- Masthead: date, greeting, and the one sentence worth reading today -->
+            <TextBox x:Name="DateText" Style="{StaticResource SelectableTextStyle}"
+                     FontSize="13" Foreground="{StaticResource TextSub}"/>
+            <TextBox x:Name="GreetingText" Style="{StaticResource SelectableTextStyle}"
+                     FontFamily="{StaticResource DisplayFont}" FontSize="40" FontWeight="Light"
+                     Foreground="{StaticResource TextMain}" Margin="0,2,0,0"/>
+            <TextBox x:Name="SummaryText" Style="{StaticResource SelectableTextStyle}"
+                     FontSize="17" Foreground="{StaticResource TextBody}"
+                     MaxWidth="620" HorizontalAlignment="Left" Margin="0,10,0,0"/>
+
+            <!-- The day: to-do sheet beside the week. Stacks on narrow windows (see ApplyWidth). -->
+            <Grid x:Name="DayGrid" Margin="0,40,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="44"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Border x:Name="TodoSheet" Background="{StaticResource BgPanel}" CornerRadius="16"
+                        Padding="24,20,24,18">
+                    <Border.Effect>
+                        <DropShadowEffect Color="Black" Direction="270" ShadowDepth="2" BlurRadius="12" Opacity="0.08"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <TextBlock Text="To-do" Style="{StaticResource SectionTitleStyle}" Margin="0,0,0,14"/>
+                        <local:QuickTodoListControl x:Name="QuickTodos"/>
+                    </StackPanel>
+                </Border>
+
+                <StackPanel x:Name="WeekPanel" Grid.Column="2">
+                    <TextBlock Text="This week" Style="{StaticResource SectionTitleStyle}" Margin="0,20,0,6"/>
+                    <StackPanel x:Name="Daybook"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Projects: only the ones that need a look (almost done, stalled), as the project view's ring cards.
+                 Groups are added in code, and only when something qualifies. -->
+            <StackPanel Orientation="Horizontal" Margin="0,52,0,12">
+                <TextBlock Text="Projects" Style="{StaticResource SectionTitleStyle}"/>
+                <TextBox x:Name="ProjectsLede" Style="{StaticResource SectionLedeStyle}"/>
+            </StackPanel>
+            <StackPanel x:Name="ProjectSignals"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

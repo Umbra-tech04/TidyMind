@@ -10,16 +10,18 @@
         WindowStartupLocation="CenterScreen"
         ShowInTaskbar="False"
         Topmost="True"
-        PreviewKeyDown="Window_PreviewKeyDown">
-    <Grid Background="#1E1E1E">
+        PreviewKeyDown="Window_PreviewKeyDown"
+        Background="{StaticResource BgMain}">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Background="#252526" Padding="16,10">
+        <Border Grid.Row="0" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
+                BorderThickness="0,0,0,1" Padding="16,12">
             <TextBlock Text="📝 Quick Notes" FontSize="14" FontWeight="Bold"
-                       Foreground="#569CD6"/>
+                       Foreground="{StaticResource TextMain}"/>
         </Border>
 
         <TextBox x:Name="NotesTextBox" Grid.Row="1"

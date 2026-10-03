@@ -21,7 +21,20 @@ namespace TidyMind
                 return new List<Reminder>();
 
             string json = File.ReadAllText(RemindersFile);
-            return JsonSerializer.Deserialize<List<Reminder>>(json);
+            return JsonSerializer.Deserialize<List<Reminder>>(json) ?? new List<Reminder>();
+        }
+
+        // For views that only display reminders: an unreadable file shows as none instead of crashing them.
+        public static List<Reminder> TryLoadReminders()
+        {
+            try
+            {
+                return LoadReminders();
+            }
+            catch (Exception)
+            {
+                return new List<Reminder>();
+            }
         }
 
         public static void SaveReminders(List<Reminder> reminders)

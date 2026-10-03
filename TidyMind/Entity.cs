@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace TidyMind
 {
@@ -8,6 +9,11 @@ namespace TidyMind
         public string Name { get; set; }
         public string ImagePath { get; set; }
         public string Notes { get; set; }
+        public Guid TabId { get; set; }
+        public int Order { get; set; }
+
+        // Set when the item is added (DateTime.MinValue for items from before this existed).
+        public DateTime CreatedDate { get; set; }
 
         // Clothing
         public string Brand { get; set; }

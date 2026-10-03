@@ -9,29 +9,30 @@
         SizeToContent="Height"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
-        Background="#1E1E1E">
+        Background="{StaticResource BgMain}">
     <Window.Resources>
-        <!-- Card-style export option button: icon + title + subtitle, no rounded corners -->
-        <Style x:Key="ExportOptionButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <!-- Card-style export option button: icon + title + subtitle -->
+        <Style x:Key="ExportOptionButton" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource TextMain}"/>
             <Setter Property="Height" Value="60"/>
             <Setter Property="Padding" Value="16,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="border"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="#474747"
+                                Background="{StaticResource BgPanel}"
+                                BorderBrush="{StaticResource Border}"
                                 BorderThickness="1"
+                                CornerRadius="6"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Left"
                                               VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="{StaticResource BtnHover}"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="{StaticResource Accent}"/>
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource AccentSoft}"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Accent}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -47,47 +48,45 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Background="#252526" Padding="20,14">
+        <Border Grid.Row="0" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
+                BorderThickness="0,0,0,1" Padding="20,16">
             <TextBlock Text="Export" FontSize="18" FontWeight="Bold"
-                       Foreground="#569CD6"/>
+                       Foreground="{StaticResource TextMain}"/>
         </Border>
 
         <StackPanel Grid.Row="1" Margin="20,20,20,10">
-            <TextBlock Text="Choose export format" Foreground="#858585"
+            <TextBlock Text="Choose export format" Foreground="{StaticResource TextSub}"
                        FontSize="11" Margin="0,0,0,14"/>
 
             <Button x:Name="ExcelButton" Style="{StaticResource ExportOptionButton}"
-                    Background="#0E639C" Margin="0,0,0,10"
-                    Click="ExcelButton_Click">
+                    Margin="0,0,0,10" Click="ExcelButton_Click">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="📊" FontSize="22" VerticalAlignment="Center" Margin="0,0,14,0"/>
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Excel (XLSX)" FontSize="14" FontWeight="Bold" Foreground="#FFFFFF"/>
-                        <TextBlock Text="Native Excel spreadsheet" FontSize="10" Foreground="#CFE8FF"/>
+                        <TextBlock Text="Excel (XLSX)" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextMain}"/>
+                        <TextBlock Text="Native Excel spreadsheet" FontSize="10" Foreground="{StaticResource TextSub}"/>
                     </StackPanel>
                 </StackPanel>
             </Button>
 
             <Button x:Name="DocxButton" Style="{StaticResource ExportOptionButton}"
-                    Background="#0E639C" Margin="0,0,0,10"
-                    Click="DocxButton_Click">
+                    Margin="0,0,0,10" Click="DocxButton_Click">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="📝" FontSize="22" VerticalAlignment="Center" Margin="0,0,14,0"/>
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Word (DOCX)" FontSize="14" FontWeight="Bold" Foreground="#FFFFFF"/>
-                        <TextBlock Text="Formatted document with images" FontSize="10" Foreground="#CFE8FF"/>
+                        <TextBlock Text="Word (DOCX)" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextMain}"/>
+                        <TextBlock Text="Formatted document with images" FontSize="10" Foreground="{StaticResource TextSub}"/>
                     </StackPanel>
                 </StackPanel>
             </Button>
 
             <Button x:Name="PdfButton" Style="{StaticResource ExportOptionButton}"
-                    Background="#0E639C"
                     Click="PdfButton_Click">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="📄" FontSize="22" VerticalAlignment="Center" Margin="0,0,14,0"/>
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="PDF" FontSize="14" FontWeight="Bold" Foreground="#FFFFFF"/>
-                        <TextBlock Text="Printable document with images" FontSize="10" Foreground="#CFE8FF"/>
+                        <TextBlock Text="PDF" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextMain}"/>
+                        <TextBlock Text="Printable document with images" FontSize="10" Foreground="{StaticResource TextSub}"/>
                     </StackPanel>
                 </StackPanel>
             </Button>
@@ -95,8 +94,8 @@
 
         <Border Grid.Row="2" Padding="20,10">
             <Button x:Name="CancelButton" Content="Cancel"
+                    Style="{StaticResource GhostButtonStyle}"
                     Height="30" Width="90" HorizontalAlignment="Right"
-                    Background="#3C3C3C"
                     Click="CancelButton_Click"/>
         </Border>
     </Grid>

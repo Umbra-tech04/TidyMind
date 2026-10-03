@@ -1,0 +1,94 @@
+<UserControl x:Class="TidyMind.CalendarPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Visibility="Collapsed"
+             KeyboardNavigation.TabNavigation="Cycle"
+             PreviewKeyDown="Panel_PreviewKeyDown">
+    <Grid>
+        <!-- Dims the app behind; a click here closes the panel -->
+        <Border x:Name="Backdrop" Background="#40000000" Opacity="0"
+                MouseLeftButtonDown="Backdrop_MouseLeftButtonDown"/>
+
+        <Grid x:Name="Sheet" Width="400" HorizontalAlignment="Right"
+              Focusable="True" FocusVisualStyle="{x:Null}">
+            <Grid.RenderTransform>
+                <TranslateTransform x:Name="Slide" X="440"/>
+            </Grid.RenderTransform>
+
+            <!-- Background on its own layer so the left-edge shadow doesn't re-render the content -->
+            <Border Background="{StaticResource BgMain}" BorderBrush="{StaticResource Border}" BorderThickness="1,0,0,0">
+                <Border.Effect>
+                    <DropShadowEffect Direction="180" ShadowDepth="2" BlurRadius="24" Opacity="0.18" Color="#000000"/>
+                </Border.Effect>
+            </Border>
+
+            <DockPanel Margin="22,22,22,18">
+                <!-- Title -->
+                <Grid DockPanel.Dock="Top">
+                    <TextBlock Text="Calendar" FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextMain}"
+                               VerticalAlignment="Center"/>
+                    <Button Content="✕" ToolTip="Close  (Esc)" Width="30" Height="30"
+                            Style="{StaticResource IconButtonStyle}" HorizontalAlignment="Right"
+                            Click="CloseButton_Click"/>
+                </Grid>
+
+                <!-- Month navigation: « year  ‹ month  [Month Year]  month ›  year » -->
+                <Grid DockPanel.Dock="Top" Margin="0,18,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" Content="«" ToolTip="Previous year" Width="30" Height="30" FontSize="15"
+                            Style="{StaticResource IconButtonStyle}" Foreground="{StaticResource Accent}"
+                            Click="PrevYear_Click"/>
+                    <Button Grid.Column="1" Content="‹" ToolTip="Previous month" Width="30" Height="30" FontSize="17"
+                            Style="{StaticResource IconButtonStyle}" Foreground="{StaticResource Accent}"
+                            Margin="6,0,0,0" Click="PrevMonth_Click"/>
+                    <Button Grid.Column="2" x:Name="MonthLabel" ToolTip="Back to today"
+                            HorizontalAlignment="Center" Cursor="Hand"
+                            Click="MonthLabel_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="border" Background="Transparent" CornerRadius="6" Padding="12,5">
+                                    <ContentPresenter/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="border" Property="Background" Value="{StaticResource AccentSoft}"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                        <TextBlock x:Name="MonthText" FontSize="15" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextMain}"/>
+                    </Button>
+                    <Button Grid.Column="3" Content="›" ToolTip="Next month" Width="30" Height="30" FontSize="17"
+                            Style="{StaticResource IconButtonStyle}" Foreground="{StaticResource Accent}"
+                            Margin="0,0,6,0" Click="NextMonth_Click"/>
+                    <Button Grid.Column="4" Content="»" ToolTip="Next year" Width="30" Height="30" FontSize="15"
+                            Style="{StaticResource IconButtonStyle}" Foreground="{StaticResource Accent}"
+                            Click="NextYear_Click"/>
+                </Grid>
+
+                <!-- Weekday headers + the 6x7 day grid -->
+                <UniformGrid x:Name="WeekdayRow" DockPanel.Dock="Top" Columns="7" Margin="0,0,0,4"/>
+                <UniformGrid x:Name="DayGrid" DockPanel.Dock="Top" Columns="7" Rows="6"
+                             Background="Transparent" MouseWheel="DayGrid_MouseWheel"/>
+
+                <TextBlock DockPanel.Dock="Top" FontSize="11" Foreground="{StaticResource TextSub}"
+                           Margin="2,10,0,0" TextWrapping="Wrap"
+                           Text="Click a day for a color or note  ·  right-click to add a reminder"/>
+
+                <!-- What's on in the shown month -->
+                <TextBlock x:Name="MonthListHeader" DockPanel.Dock="Top" FontSize="10" FontWeight="SemiBold"
+                           Foreground="{StaticResource TextSub}" Margin="2,22,0,8"/>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="MonthList"/>
+                </ScrollViewer>
+            </DockPanel>
+        </Grid>
+    </Grid>
+</UserControl>

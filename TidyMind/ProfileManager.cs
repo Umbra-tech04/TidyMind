@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 
 namespace TidyMind
@@ -16,7 +17,10 @@ namespace TidyMind
             }
 
             string json = File.ReadAllText(ProfilesFile);
-            return JsonSerializer.Deserialize<List<Profile>>(json);
+            List<Profile> profiles = JsonSerializer.Deserialize<List<Profile>>(json) ?? new List<Profile>();
+
+            // Stable sort: files from before Order existed (all 0) keep their saved order.
+            return profiles.OrderBy(p => p.Order).ToList();
         }
 
         public static void SaveProfiles(List<Profile> profiles)
