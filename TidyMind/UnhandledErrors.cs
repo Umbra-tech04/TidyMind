@@ -101,8 +101,16 @@ namespace TidyMind
             return recentErrors.Count >= MaxErrorsInWindow;
         }
 
+        // For problems handled where they happen (nothing to show the user, e.g. background upkeep), but worth a
+        // line in error.log.
+        public static void LogQuietly(string where, Exception exception) => Log(where, exception?.ToString());
+
+        public static void LogQuietly(string where, string message) => Log(where, message);
+
+        private static void Log(string where, Exception exception) => Log(where, exception?.ToString());
+
         // Best effort: logging must never throw from inside the error handler. Rolled over at 1 MB (one old copy kept).
-        private static void Log(string where, Exception exception)
+        private static void Log(string where, string details)
         {
             try
             {
@@ -114,7 +122,7 @@ namespace TidyMind
                         File.Move(LogPath, AppPaths.Data("error.old.log"), overwrite: true);
 
                     File.AppendAllText(LogPath, DateTime.Now.ToString("u") + "  (" + where + ")" + Environment.NewLine
-                        + exception + Environment.NewLine + Environment.NewLine);
+                        + details + Environment.NewLine + Environment.NewLine);
                 }
             }
             catch (Exception)

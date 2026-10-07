@@ -74,6 +74,10 @@ namespace TidyMind
 
             QuickTodoService.RemoveOldCompleted(DateTime.Today);
 
+            // Tasks pointing at an exe that moved, missing, or left over for deleted reminders get fixed (off the UI
+            // thread), so every reminder the app shows will also fire.
+            ReminderManager.RepairTasksInBackground(force: true);
+
             EventManager.RegisterClassHandler(typeof(Window), Window.PreviewKeyDownEvent,
                 new KeyEventHandler(GlobalPreviewKeyDown));
             EventManager.RegisterClassHandler(typeof(Window), FrameworkElement.LoadedEvent,

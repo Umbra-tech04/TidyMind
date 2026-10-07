@@ -81,6 +81,7 @@ namespace TidyMind
             try
             {
                 reminders = ReminderManager.LoadReminders();
+                ReminderManager.RepairTasksInBackground(); // throttled; shown reminders should also fire
             }
             catch (Exception e) when (e is IOException || e is JsonException || e is UnauthorizedAccessException)
             {

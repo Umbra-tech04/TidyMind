@@ -15,6 +15,10 @@ namespace TidyMind
         private readonly string title;
         private readonly Reminder editing; // null when adding a new one
 
+        // A new reminder's Id, fixed for this window: saving again after a failure updates it rather than adding a
+        // second one.
+        private readonly Guid newId = Guid.NewGuid();
+
         // Edit mode: the same form, filled in with an existing reminder; saving updates it (same Id) instead of adding.
         public AddReminderWindow(Reminder existing) : this(existing.Title)
         {
@@ -30,7 +34,8 @@ namespace TidyMind
             ReminderDatePicker.SelectedDate = existing.NextFireTime.Date;
             HourBox.SelectedIndex = existing.NextFireTime.Hour;
             MinuteBox.SelectedIndex = existing.NextFireTime.Minute;
-            RepeatBox.SelectedIndex = (int)existing.RepeatType;
+            // A repeat type this version doesn't know is treated as a one-off, as when it fires.
+            RepeatBox.SelectedIndex = Enum.IsDefined(existing.RepeatType) ? (int)existing.RepeatType : (int)RepeatType.Once;
         }
 
         // date: pre-selects that day (from the calendar's right-click "Add Reminder").
@@ -84,7 +89,7 @@ namespace TidyMind
                 return;
             }
 
-            reminder.Id = editing?.Id ?? Guid.NewGuid();
+            reminder.Id = editing?.Id ?? newId;
             reminder.Title = this.title;
 
             // The window stays open on failure, so nothing typed is lost and saving can be tried again.

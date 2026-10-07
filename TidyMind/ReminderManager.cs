@@ -26,11 +26,14 @@ namespace TidyMind
         }
 
         // For views that only display reminders: an unreadable file shows as none instead of crashing them.
+        // Showing reminders is also when their tasks get checked (throttled, in the background).
         public static List<Reminder> TryLoadReminders()
         {
             try
             {
-                return LoadReminders();
+                List<Reminder> reminders = LoadReminders();
+                RepairTasksInBackground();
+                return reminders;
             }
             catch (Exception)
             {
@@ -39,52 +42,253 @@ namespace TidyMind
         }
 
         // Written via a temporary file, so a crash or full disk mid-save can't truncate every reminder at once.
-        // Throws IOException if it couldn't be written (the file is then unchanged); callers that schedule a task
-        // save first, so a failed save never leaves a task behind for a reminder that isn't stored.
-        public static void SaveReminders(List<Reminder> reminders)
+        // Throws IOException if it couldn't be written (the file is then unchanged). Only called under Locked.
+        private static void SaveReminders(List<Reminder> reminders)
         {
             string json = JsonSerializer.Serialize(reminders);
             if (!AtomicFile.TryWriteAllText(RemindersFile, json))
                 throw new IOException("reminders.json couldn't be written.");
         }
 
-        public static void AddReminder(Reminder reminder)
+        public static void AddReminder(Reminder reminder) => SaveAndSchedule(reminder);
+
+        public static void UpdateReminder(Reminder reminder) => SaveAndSchedule(reminder);
+
+        // Adds the reminder, or replaces the stored one with the same Id (so retrying an add never duplicates it).
+        // The task is scheduled first and the file saved second; if the save fails, the task is put back the way
+        // the file still has it. So a reminder is never stored without its task, and a failure leaves both as they
+        // were. Registering under the same name overwrites the old trigger.
+        private static void SaveAndSchedule(Reminder reminder)
         {
-            List<Reminder> reminders = LoadReminders();
-            reminders.Add(reminder);
-            SaveReminders(reminders);
-
-            RegisterReminderTask(reminder);
-        }
-
-        // Replaces the stored reminder with the same Id and reschedules its task (registering under the same
-        // name overwrites the old trigger).
-        public static void UpdateReminder(Reminder reminder)
-        {
-            List<Reminder> reminders = LoadReminders();
-            int index = reminders.FindIndex(r => r.Id == reminder.Id);
-            if (index < 0)
+            Locked(() =>
             {
-                reminders.Add(reminder);
-            }
-            else
-            {
-                // The form builds a new Reminder: fields this version doesn't know come over from the stored one.
-                reminder.ExtensionData ??= reminders[index].ExtensionData;
-                reminders[index] = reminder;
-            }
-            SaveReminders(reminders);
+                List<Reminder> reminders = LoadReminders();
+                int index = reminders.FindIndex(r => r.Id == reminder.Id);
+                Reminder previous = index >= 0 ? reminders[index] : null;
+                if (previous == null)
+                {
+                    reminders.Add(reminder);
+                }
+                else
+                {
+                    // The form builds a new Reminder: fields this version doesn't know come over from the stored one.
+                    reminder.ExtensionData ??= previous.ExtensionData;
+                    reminders[index] = reminder;
+                }
 
-            RegisterReminderTask(reminder);
+                RegisterReminderTask(reminder);
+                try
+                {
+                    SaveReminders(reminders);
+                }
+                catch (IOException)
+                {
+                    TrySchedule(() =>
+                    {
+                        if (previous != null)
+                            RegisterReminderTask(previous);
+                        else
+                            RemoveReminderTask(reminder.Id);
+                    });
+                    Note("save failed for " + reminder.Id + "; its task was put back");
+                    throw;
+                }
+                Note((previous == null ? "added " : "updated ") + Describe(reminder) + "; file now has " + reminders.Count);
+            });
         }
 
         public static void DeleteReminder(Guid id)
         {
-            List<Reminder> reminders = LoadReminders();
-            reminders.RemoveAll(r => r.Id == id);
-            SaveReminders(reminders);
+            Locked(() =>
+            {
+                List<Reminder> reminders = LoadReminders();
+                reminders.RemoveAll(r => r.Id == id);
+                SaveReminders(reminders);
+                Note("deleted " + id + "; file now has " + reminders.Count);
 
-            RemoveReminderTask(id);
+                RemoveReminderTask(id);
+            });
+        }
+
+        // ---- What happened (reminders.log) ---------------------------------
+
+        // One line per decision about a reminder, from the app and from every "--remind" process: ids, repeat types
+        // and times only, never the message. So a reminder that did something unexpected can be traced afterwards.
+        // Best effort, rolled over at 256 KB (one old copy kept).
+        private const long MaxNoteBytes = 256 * 1024;
+
+        private static void Note(string text)
+        {
+            try
+            {
+                string path = AppPaths.Data("reminders.log");
+                FileInfo log = new FileInfo(path);
+                if (log.Exists && log.Length > MaxNoteBytes)
+                    File.Move(path, AppPaths.Data("reminders.old.log"), overwrite: true);
+                File.AppendAllText(path, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") + "  pid " + Environment.ProcessId
+                    + "  " + text + Environment.NewLine);
+            }
+            catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
+            {
+            }
+        }
+
+        private static string Describe(Reminder reminder) =>
+            reminder.Id + " (" + reminder.RepeatType + ", due " + reminder.NextFireTime.ToString("yyyy-MM-dd HH:mm") + ")";
+
+        // ---- Cross-process lock -------------------------------------------
+
+        // The open app and every "--remind" process (two reminders due the same minute start two) change
+        // reminders.json. Each change is load, modify, save (and the task change that goes with it) under this one
+        // lock, with the file read again inside it, so no writer can save over another's change.
+        private const string LockName = @"Local\TidyMind_Reminders";
+        private static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(10);
+
+        // Throws IOException if the lock isn't free within the timeout (callers already report that as "can't be
+        // read or written"; the reminder process retries later).
+        private static void Locked(System.Action change)
+        {
+            using (Mutex gate = new Mutex(false, LockName))
+            {
+                bool owned;
+                try
+                {
+                    owned = gate.WaitOne(LockTimeout);
+                }
+                catch (AbandonedMutexException)
+                {
+                    owned = true; // its last holder died mid-change; the file itself is intact (AtomicFile)
+                }
+                if (!owned)
+                    throw new IOException("reminders.json is busy: another TidyMind process is changing it.");
+
+                try
+                {
+                    change();
+                }
+                finally
+                {
+                    gate.ReleaseMutex();
+                }
+            }
+        }
+
+        // ---- Keeping the tasks right ---------------------------------------
+
+        private static readonly TimeSpan RepairInterval = TimeSpan.FromMinutes(10);
+        private static readonly object repairGate = new object();
+        private static DateTime lastRepair = DateTime.MinValue;
+        private static bool repairRunning;
+
+        // Checks every reminder's task off the UI thread: at app start (force), and at most every few minutes when
+        // reminders are shown. Best effort: a failure is logged and tried again next time.
+        public static void RepairTasksInBackground(bool force = false)
+        {
+            lock (repairGate)
+            {
+                if (repairRunning || (!force && DateTime.UtcNow - lastRepair < RepairInterval))
+                    return;
+                repairRunning = true;
+                lastRepair = DateTime.UtcNow;
+            }
+
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                try
+                {
+                    RepairTasks();
+                }
+                catch (Exception e)
+                {
+                    // Background upkeep must never take the app down.
+                    UnhandledErrors.LogQuietly("reminder task repair", e);
+                }
+                finally
+                {
+                    lock (repairGate)
+                        repairRunning = false;
+                }
+            });
+        }
+
+        // A task can be missing (scheduling failed, or the app was reinstalled), point at an exe that isn't there
+        // any more (the TidyMind folder moved, another build), or be left over for a deleted reminder. Each
+        // reminder gets a task that starts this exe at its time (one already due fires within a minute); tasks
+        // without a reminder go.
+        private static void RepairTasks()
+        {
+            string exePath = Environment.ProcessPath;
+            if (string.IsNullOrEmpty(exePath))
+                return;
+
+            Locked(() =>
+            {
+                List<Reminder> reminders = LoadReminders();
+                Dictionary<Guid, Reminder> byId = reminders.GroupBy(r => r.Id).ToDictionary(g => g.Key, g => g.First());
+                HashSet<Guid> healthy = new HashSet<Guid>();
+                List<Guid> orphaned = new List<Guid>();
+
+                using (TaskService taskService = new TaskService())
+                {
+                    foreach (Microsoft.Win32.TaskScheduler.Task task in taskService.RootFolder.Tasks)
+                    {
+                        using (task)
+                        {
+                            if (!task.Name.StartsWith(TaskNamePrefix, StringComparison.OrdinalIgnoreCase)
+                                || !Guid.TryParse(task.Name.Substring(TaskNamePrefix.Length), out Guid id))
+                                continue;
+
+                            if (!byId.TryGetValue(id, out Reminder reminder))
+                                orphaned.Add(id);
+                            else if (IsHealthy(task.Definition, reminder, exePath))
+                                healthy.Add(id);
+                        }
+                    }
+                }
+
+                foreach (Guid id in orphaned)
+                {
+                    Note("repair: task for " + id + " has no reminder; removed");
+                    TrySchedule(() => RemoveReminderTask(id));
+                }
+
+                DateTime soon = DateTime.Now.AddMinutes(1);
+                foreach (Reminder reminder in byId.Values.Where(r => !healthy.Contains(r.Id)))
+                {
+                    DateTime when = reminder.NextFireTime > soon ? reminder.NextFireTime : soon;
+                    Note("repair: " + Describe(reminder) + " had no task or a wrong one; scheduled for "
+                        + when.ToString("yyyy-MM-dd HH:mm"));
+                    TrySchedule(() => RegisterTask(reminder.Id, when, "TidyMind reminder: " + reminder.Title));
+                }
+            });
+        }
+
+        // Starts this exe for this reminder at its stored time. One whose time has passed counts as right when the
+        // task otherwise is: it has run or will (StartWhenAvailable), and moving the reminder on is its job.
+        private static bool IsHealthy(TaskDefinition definition, Reminder reminder, string exePath)
+        {
+            ExecAction action = definition.Actions.OfType<ExecAction>().FirstOrDefault();
+            if (action == null || !SamePath(action.Path, exePath)
+                || action.Arguments == null || !action.Arguments.Contains(reminder.Id.ToString(), StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            if (reminder.NextFireTime <= DateTime.Now)
+                return true;
+
+            TimeTrigger trigger = definition.Triggers.OfType<TimeTrigger>().FirstOrDefault();
+            return trigger != null && Math.Abs((trigger.StartBoundary - reminder.NextFireTime).TotalSeconds) < 1;
+        }
+
+        private static bool SamePath(string a, string b)
+        {
+            try
+            {
+                return string.Equals(Path.GetFullPath(a.Trim('"')), Path.GetFullPath(b), StringComparison.OrdinalIgnoreCase);
+            }
+            catch (Exception e) when (e is ArgumentException || e is NotSupportedException || e is PathTooLongException)
+            {
+                return false;
+            }
         }
 
         // Called by the app when it is launched as "TidyMind.exe --remind {id}"
@@ -94,49 +298,22 @@ namespace TidyMind
         // retried; if it still can't be read, the task is put back a few minutes later instead of being dropped.
         public static void FireReminder(Guid id)
         {
-            List<Reminder> reminders;
+            Reminder due = null;
             try
             {
-                reminders = WithRetries(LoadReminders);
+                Locked(() => due = MoveOn(id));
             }
             catch (Exception e) when (e is IOException || e is UnauthorizedAccessException || e is JsonException)
             {
+                Note("fire " + id + ": " + e.Message + "; trying again in 5 minutes");
                 RetryLater(id);
                 return;
             }
 
-            Reminder reminder = reminders.Find(r => r.Id == id);
-            if (reminder == null)
-            {
-                TrySchedule(() => RemoveReminderTask(id));
+            if (due == null)
                 return;
-            }
 
-            // A trigger left over from before the reminder was moved to a later time: just put the task back on time.
-            if (reminder.NextFireTime > DateTime.Now.AddMinutes(1))
-            {
-                TrySchedule(() => RegisterReminderTask(reminder));
-                return;
-            }
-
-            ShowToast(reminder.Title, reminder.Message);
-
-            bool once = reminder.RepeatType == RepeatType.Once;
-            if (once)
-                reminders.Remove(reminder);
-            else
-                reminder.NextFireTime = NextFutureFireTime(reminder.NextFireTime, reminder.RepeatType, DateTime.Now);
-
-            // Scheduled even if the save fails: a repeating reminder then still fires next time (and is stepped on
-            // from its old stored time); a finished one-off is left in the list rather than shown twice.
-            try
-            {
-                SaveReminders(reminders);
-            }
-            catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
-            {
-            }
-            TrySchedule(once ? () => RemoveReminderTask(id) : () => RegisterReminderTask(reminder));
+            ShowToast(due.Title, due.Message);
 
             // Keep the process (and the tray icon) alive long enough for the
             // balloon/toast to actually render before we exit.
@@ -149,6 +326,59 @@ namespace TidyMind
                 trayIcon = null;
             }
         }
+
+        // Under the lock: the reminder this task is for, with the file and its task already moved on (a one-off
+        // removed, a repeating one stepped to its next time); null if there's nothing to show.
+        private static Reminder MoveOn(Guid id)
+        {
+            List<Reminder> reminders = WithRetries(LoadReminders);
+            Reminder reminder = reminders.Find(r => r.Id == id);
+            if (reminder == null)
+            {
+                Note("fire " + id + ": not in reminders.json (" + reminders.Count + " there); task removed, nothing shown");
+                TrySchedule(() => RemoveReminderTask(id));
+                return null;
+            }
+
+            // A trigger left over from before the reminder was moved to a later time: just put the task back on time.
+            if (reminder.NextFireTime > DateTime.Now.AddMinutes(1))
+            {
+                Note("fire " + Describe(reminder) + ": not due yet; task put back, nothing shown");
+                TrySchedule(() => RegisterReminderTask(reminder));
+                return null;
+            }
+
+            // A repeat type this version doesn't know (from a newer TidyMind, or an edited file) has no next time
+            // it could compute: it fires as a one-off instead of looping.
+            bool once = !Repeats(reminder.RepeatType);
+            if (once && reminder.RepeatType != RepeatType.Once)
+                UnhandledErrors.LogQuietly("reminder", "Unknown repeat type " + (int)reminder.RepeatType + " on reminder "
+                    + reminder.Id + "; it was treated as a one-off.");
+
+            string before = Describe(reminder);
+            if (once)
+                reminders.Remove(reminder);
+            else
+                reminder.NextFireTime = NextFutureFireTime(reminder.NextFireTime, reminder.RepeatType, DateTime.Now);
+
+            // Scheduled even if the save fails: a repeating reminder then still fires next time (and is stepped on
+            // from its old stored time); a finished one-off is left in the list rather than shown twice.
+            try
+            {
+                SaveReminders(reminders);
+                Note("fire " + before + ": " + (once ? "one-off done, removed" : "moved on to "
+                    + reminder.NextFireTime.ToString("yyyy-MM-dd HH:mm")) + "; file now has " + reminders.Count);
+            }
+            catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
+            {
+                Note("fire " + before + ": shown, but the save failed (" + e.Message + ")");
+            }
+            TrySchedule(once ? () => RemoveReminderTask(id) : () => RegisterReminderTask(reminder));
+            return reminder;
+        }
+
+        private static bool Repeats(RepeatType repeat) =>
+            repeat == RepeatType.Daily || repeat == RepeatType.Weekly || repeat == RepeatType.Monthly || repeat == RepeatType.Yearly;
 
         // The reminder couldn't be handled now (its file unreadable, or the data folder not ready): run its task
         // again in a few minutes rather than lose it.
@@ -183,7 +413,7 @@ namespace TidyMind
             {
                 change();
             }
-            catch (Exception e) when (e is COMException || e is UnauthorizedAccessException)
+            catch (Exception e) when (e is COMException || e is UnauthorizedAccessException || e is IOException)
             {
             }
         }
@@ -193,8 +423,8 @@ namespace TidyMind
         // month ends step the way CalendarService.OccursOn expects (Jan 31 -> Feb 28 -> Mar 28).
         private static DateTime NextFutureFireTime(DateTime previous, RepeatType repeat, DateTime now)
         {
-            if (repeat == RepeatType.Once)
-                return previous;
+            if (!Repeats(repeat))
+                return previous; // no step to take: looping on it would never end
 
             DateTime next = previous;
             do
@@ -246,11 +476,12 @@ namespace TidyMind
             RegisterTask(reminder.Id, reminder.NextFireTime, "TidyMind reminder: " + reminder.Title);
         }
 
+        // Throws if it can't be scheduled, so callers never take an unscheduled reminder for a scheduled one.
         private static void RegisterTask(Guid id, DateTime fireTime, string description)
         {
             string exePath = Environment.ProcessPath;
             if (string.IsNullOrEmpty(exePath))
-                return;
+                throw new IOException("TidyMind's own location couldn't be found, so the reminder can't be scheduled.");
 
             using (TaskService taskService = new TaskService())
             {
@@ -269,7 +500,9 @@ namespace TidyMind
                 taskDefinition.Settings.DisallowStartIfOnBatteries = false;
                 taskDefinition.Settings.StopIfGoingOnBatteries = false;
                 taskDefinition.Settings.StartWhenAvailable = true;
-                taskDefinition.Settings.ExecutionTimeLimit = TimeSpan.Zero;
+                // Firing takes seconds; the limit only stops a process that got stuck (it can't loop on a reminder,
+                // see Repeats, but nothing else should run forever either).
+                taskDefinition.Settings.ExecutionTimeLimit = TimeSpan.FromMinutes(10);
 
                 taskService.RootFolder.RegisterTaskDefinition(GetTaskName(id), taskDefinition);
             }
