@@ -1,4 +1,6 @@
 using System;
+using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -8,13 +10,39 @@ namespace TidyMind
 {
     public partial class App : Application
     {
+        private const string InstanceMutexName = @"Local\TidyMind_SingleInstance";
+        private const string ActivateEventName = @"Local\TidyMind_Activate";
+        private const int ASFW_ANY = -1;
+
+        // Held for the app's whole life; static so it's never collected (which would release it).
+        private static Mutex instanceMutex;
+        private static EventWaitHandle activateSignal;
+        private static RegisteredWaitHandle activateWait;
+
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
-            // Launched by a Task Scheduler reminder: show the toast and exit, no UI.
+            // Launched by a Task Scheduler reminder: show the toast and exit, no UI. Checked before the one-copy
+            // rule, so reminders still fire while the app is open.
             if (TryHandleRemindArgument(e.Args))
             {
+                Shutdown();
+                return;
+            }
+
+            if (!ClaimSingleInstance())
+            {
+                Shutdown();
+                return;
+            }
+
+            if (!LegacyDataMigration.TryRun(out string problem))
+            {
+                MessageBox.Show("TidyMind couldn't copy your data into its new folder:\n" + AppPaths.DataFolder
+                    + "\n\n" + problem + "\n\nYour existing data was left untouched. Free up disk space or check the "
+                    + "folder's permissions, then start TidyMind again.", "Couldn't Start", MessageBoxButton.OK,
+                    MessageBoxImage.Error);
                 Shutdown();
                 return;
             }
@@ -39,7 +67,14 @@ namespace TidyMind
                 if (args[i] == "--remind" && i + 1 < args.Length)
                 {
                     if (Guid.TryParse(args[i + 1], out Guid reminderId))
-                        ReminderManager.FireReminder(reminderId);
+                    {
+                        // The same data folder as the app; if it isn't ready yet (first start of this version,
+                        // copy failed), the reminder is tried again later rather than dropped.
+                        if (LegacyDataMigration.TryRun(out _))
+                            ReminderManager.FireReminder(reminderId);
+                        else
+                            ReminderManager.RetryLater(reminderId);
+                    }
 
                     return true;
                 }
@@ -47,6 +82,53 @@ namespace TidyMind
 
             return false;
         }
+
+        // One copy of the app at a time: each view keeps its lists in memory and writes them back whole, so a second
+        // copy would silently overwrite the first one's changes. Starting TidyMind again brings the open one forward.
+        private bool ClaimSingleInstance()
+        {
+            instanceMutex = new Mutex(true, InstanceMutexName, out bool createdNew);
+            if (!createdNew)
+            {
+                instanceMutex.Dispose();
+                instanceMutex = null;
+
+                // This process was just started by the user, so it may hand the foreground to the running copy.
+                AllowSetForegroundWindow(ASFW_ANY);
+                if (EventWaitHandle.TryOpenExisting(ActivateEventName, out EventWaitHandle signal))
+                {
+                    using (signal)
+                        signal.Set();
+                }
+                return false;
+            }
+
+            activateSignal = new EventWaitHandle(false, EventResetMode.AutoReset, ActivateEventName);
+            activateWait = ThreadPool.RegisterWaitForSingleObject(activateSignal,
+                (state, timedOut) => Dispatcher.BeginInvoke(new Action(BringToFront)),
+                null, Timeout.Infinite, executeOnlyOnce: false);
+            return true;
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            activateWait?.Unregister(null);
+            base.OnExit(e);
+        }
+
+        private void BringToFront()
+        {
+            Window window = this.MainWindow;
+            if (window == null)
+                return; // still starting up: it'll come up on its own
+
+            if (window.WindowState == WindowState.Minimized)
+                window.WindowState = WindowState.Normal;
+            window.Activate();
+        }
+
+        [DllImport("user32.dll")]
+        private static extern bool AllowSetForegroundWindow(int processId);
 
         // Fades the content, not the window: top-level Opacity needs AllowsTransparency. All windows share the
         // BgMain background, so the fade never shows a colour change.

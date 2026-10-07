@@ -45,8 +45,9 @@ namespace TidyMind
 
         private void Save()
         {
-            if (readable)
-                MemoryTodoService.Save(memoryName, todos);
+            if (readable && !MemoryTodoService.TrySave(memoryName, todos))
+                MessageBox.Show("Couldn't save: " + MemoryTodoService.FileName(memoryName) + " can't be written. "
+                    + "Your last change wasn't saved.", "Couldn't Save", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         // ---- Input --------------------------------------------------------

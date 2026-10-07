@@ -156,12 +156,13 @@ namespace TidyMind
         // A missing or unreadable file contributes nothing; the dashboard must never crash the app.
         private static List<T> Load<T>(string fileName)
         {
-            if (!File.Exists(fileName))
+            string path = AppPaths.Data(fileName);
+            if (!File.Exists(path))
                 return new List<T>();
 
             try
             {
-                return JsonSerializer.Deserialize<List<T>>(File.ReadAllText(fileName)) ?? new List<T>();
+                return JsonSerializer.Deserialize<List<T>>(File.ReadAllText(path)) ?? new List<T>();
             }
             catch (Exception)
             {

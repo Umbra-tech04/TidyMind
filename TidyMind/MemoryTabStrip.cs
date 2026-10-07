@@ -297,7 +297,9 @@ namespace TidyMind
 
         private void Save()
         {
-            TabStore.Save(memoryName, type, tabs);
+            if (!TabStore.TrySave(memoryName, type, tabs))
+                MessageBox.Show("Couldn't save: " + TabStore.FileName(memoryName, type) + " can't be written. "
+                    + "Your last change to the tabs wasn't saved.", "Couldn't Save", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         private static SolidColorBrush B(string hex)

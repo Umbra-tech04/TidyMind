@@ -71,7 +71,7 @@ namespace TidyMind
 
         private void LoadEntities()
         {
-            string fileName = profileName + "_entities.json";
+            string fileName = AppPaths.Data(profileName + "_entities.json");
             if (File.Exists(fileName))
                 entities = JsonSerializer.Deserialize<List<Entity>>(File.ReadAllText(fileName)) ?? new List<Entity>();
             else
@@ -92,9 +92,14 @@ namespace TidyMind
             RenderEntities();
         }
 
+        // Written via a temporary file, so a crash or full disk mid-save leaves the previous file intact.
+        // If it can't be written (locked, no access), says so; the file is then unchanged.
         private void SaveEntities()
         {
-            File.WriteAllText(profileName + "_entities.json", JsonSerializer.Serialize(entities));
+            string fileName = profileName + "_entities.json";
+            if (!AtomicFile.TryWriteAllText(AppPaths.Data(fileName), JsonSerializer.Serialize(entities)))
+                MessageBox.Show("Couldn't save: " + fileName + " can't be written. Your last change wasn't saved.",
+                    "Couldn't Save", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         private void RenderEntities()

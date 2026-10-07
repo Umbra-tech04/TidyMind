@@ -9,7 +9,7 @@ namespace TidyMind
     // App-wide daily to-dos in quicktodos.json (not tied to any memory, like reminders.json).
     public static class QuickTodoService
     {
-        private const string TodosFile = "quicktodos.json";
+        private static readonly string TodosFile = AppPaths.Data("quicktodos.json");
         private const int KeepCompletedDays = 7;
 
         public static List<QuickTodo> LoadTodos()

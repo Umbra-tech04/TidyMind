@@ -8,7 +8,7 @@ namespace TidyMind
 {
     public static class CalendarService
     {
-        private const string CalendarFile = "calendar.json";
+        private static readonly string CalendarFile = AppPaths.Data("calendar.json");
 
         // For display: an unreadable file just shows as an empty calendar.
         public static List<CalendarDay> LoadDays()

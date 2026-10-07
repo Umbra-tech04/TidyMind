@@ -309,9 +309,9 @@ namespace TidyMind
             }
 
             MoveIfExists(DataFile(oldName, profile.Type), DataFile(newName, profile.Type));
-            MoveIfExists(TabStore.FileName(oldName, profile.Type), TabStore.FileName(newName, profile.Type));
+            MoveIfExists(TabStore.PathOf(oldName, profile.Type), TabStore.PathOf(newName, profile.Type));
             if (profile.Type == ProfileType.Project)
-                MoveIfExists(MemoryTodoService.FileName(oldName), MemoryTodoService.FileName(newName));
+                MoveIfExists(MemoryTodoService.PathOf(oldName), MemoryTodoService.PathOf(newName));
 
             profile.Name = newName;
             ProfileManager.SaveProfiles(profiles);
@@ -331,9 +331,9 @@ namespace TidyMind
             if (profile.BackgroundType == BackgroundFill.Image)
                 ImageStore.Backgrounds.Delete(profile.BackgroundImagePath); // its page background picture
             DeleteIfExists(DataFile(profile.Name, profile.Type));
-            DeleteIfExists(TabStore.FileName(profile.Name, profile.Type));
+            DeleteIfExists(TabStore.PathOf(profile.Name, profile.Type));
             if (profile.Type == ProfileType.Project)
-                DeleteIfExists(MemoryTodoService.FileName(profile.Name));
+                DeleteIfExists(MemoryTodoService.PathOf(profile.Name));
 
             profiles.Remove(profile);
             ProfileManager.SaveProfiles(profiles);
@@ -355,7 +355,7 @@ namespace TidyMind
 
         private static string DataFile(string name, ProfileType type)
         {
-            return type == ProfileType.Collection ? name + "_entities.json" : name + ".json";
+            return AppPaths.Data(type == ProfileType.Collection ? name + "_entities.json" : name + ".json");
         }
 
         private static string KeyOf(Profile profile)

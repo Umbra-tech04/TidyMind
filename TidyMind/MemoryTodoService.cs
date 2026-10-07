@@ -10,11 +10,13 @@ namespace TidyMind
     {
         public static string FileName(string memoryName) => memoryName + "_todos.json";
 
+        public static string PathOf(string memoryName) => AppPaths.Data(FileName(memoryName));
+
         // False if the file exists but can't be read; the caller must then not save over it.
         public static bool TryLoad(string memoryName, out List<TodoEntry> todos)
         {
             todos = new List<TodoEntry>();
-            string file = FileName(memoryName);
+            string file = PathOf(memoryName);
             if (!File.Exists(file))
                 return true;
 
@@ -29,14 +31,23 @@ namespace TidyMind
             }
         }
 
-        // An emptied list removes its file rather than leaving an empty one behind.
-        public static void Save(string memoryName, List<TodoEntry> todos)
+        // An emptied list removes its file rather than leaving an empty one behind. False if the file couldn't be
+        // written or removed; it is then unchanged.
+        public static bool TrySave(string memoryName, List<TodoEntry> todos)
         {
-            string file = FileName(memoryName);
-            if (todos.Count == 0)
+            string file = PathOf(memoryName);
+            if (todos.Count > 0)
+                return AtomicFile.TryWriteAllText(file, JsonSerializer.Serialize(todos));
+
+            try
+            {
                 File.Delete(file);
-            else
-                File.WriteAllText(file, JsonSerializer.Serialize(todos));
+                return true;
+            }
+            catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
+            {
+                return false;
+            }
         }
     }
 }

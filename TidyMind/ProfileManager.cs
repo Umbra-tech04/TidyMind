@@ -7,7 +7,7 @@ namespace TidyMind
 {
     public class ProfileManager
     {
-        private const string ProfilesFile = "profiles.json";
+        private static readonly string ProfilesFile = AppPaths.Data("profiles.json");
 
         public static List<Profile> LoadProfiles()
         {
@@ -27,7 +27,7 @@ namespace TidyMind
         public static void SaveProfiles(List<Profile> profiles)
         {
             if (!TrySaveProfiles(profiles))
-                throw new IOException(ProfilesFile + " couldn't be written.");
+                throw new IOException("profiles.json couldn't be written.");
         }
 
         // Written via a temporary file, so a crash mid-save can't truncate the list of memories. False if it

@@ -18,10 +18,12 @@ namespace TidyMind
                 : memoryName + "_tabs.json";
         }
 
+        public static string PathOf(string memoryName, ProfileType type) => AppPaths.Data(FileName(memoryName, type));
+
         // Loads the memory's tabs (sorted), creating the default tab first if none exist.
         public static List<MemoryTab> LoadOrCreate(string memoryName, ProfileType type)
         {
-            string file = FileName(memoryName, type);
+            string file = PathOf(memoryName, type);
             List<MemoryTab> tabs = File.Exists(file)
                 ? JsonSerializer.Deserialize<List<MemoryTab>>(File.ReadAllText(file)) ?? new List<MemoryTab>()
                 : new List<MemoryTab>();
@@ -29,15 +31,17 @@ namespace TidyMind
             if (tabs.Count == 0)
             {
                 tabs.Add(new MemoryTab { Id = Guid.NewGuid(), Name = DefaultTabName, Order = 0 });
-                Save(memoryName, type, tabs);
+                TrySave(memoryName, type, tabs);
             }
 
             return tabs.OrderBy(t => t.Order).ToList();
         }
 
-        public static void Save(string memoryName, ProfileType type, List<MemoryTab> tabs)
+        // Written via a temporary file, like the memory's other files. False if it couldn't be written; the file is
+        // then unchanged.
+        public static bool TrySave(string memoryName, ProfileType type, List<MemoryTab> tabs)
         {
-            File.WriteAllText(FileName(memoryName, type), JsonSerializer.Serialize(tabs));
+            return AtomicFile.TryWriteAllText(PathOf(memoryName, type), JsonSerializer.Serialize(tabs));
         }
     }
 }

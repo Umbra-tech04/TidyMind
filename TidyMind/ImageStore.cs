@@ -22,7 +22,7 @@ namespace TidyMind
 
         private ImageStore(string folder, int decodeWidth)
         {
-            Folder = folder;
+            Folder = AppPaths.Data(folder);
             DecodeWidth = decodeWidth;
         }
 

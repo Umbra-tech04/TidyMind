@@ -12,7 +12,7 @@ namespace TidyMind
     {
         public static List<Project> Load(string memoryName)
         {
-            string fileName = memoryName + ".json";
+            string fileName = AppPaths.Data(memoryName + ".json");
             List<Project> projects = File.Exists(fileName)
                 ? JsonSerializer.Deserialize<List<Project>>(File.ReadAllText(fileName)) ?? new List<Project>()
                 : new List<Project>();
@@ -26,7 +26,7 @@ namespace TidyMind
         public static bool SaveOrWarn(string memoryName, List<Project> projects)
         {
             string fileName = memoryName + ".json";
-            if (AtomicFile.TryWriteAllText(fileName, JsonSerializer.Serialize(projects)))
+            if (AtomicFile.TryWriteAllText(AppPaths.Data(fileName), JsonSerializer.Serialize(projects)))
                 return true;
 
             MessageBox.Show("Couldn't save: " + fileName + " can't be written. Your last change wasn't saved.",

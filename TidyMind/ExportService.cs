@@ -126,19 +126,11 @@ namespace TidyMind
             WriteExport(new List<ExportItem> { EntityItem(entity) }, entity.Name + " — Collection Export", filePath, format);
         }
 
-        private static List<Project> LoadProjects(string profileName)
-        {
-            string fileName = profileName + ".json";
-            if (!File.Exists(fileName))
-                return new List<Project>();
-
-            List<Project> projects = JsonSerializer.Deserialize<List<Project>>(File.ReadAllText(fileName)) ?? new List<Project>();
-            return projects.OrderBy(p => p.Order).ToList();
-        }
+        private static List<Project> LoadProjects(string profileName) => ProjectStore.Load(profileName);
 
         private static List<Entity> LoadEntities(string profileName)
         {
-            string fileName = profileName + "_entities.json";
+            string fileName = AppPaths.Data(profileName + "_entities.json");
             if (!File.Exists(fileName))
                 return new List<Entity>();
 

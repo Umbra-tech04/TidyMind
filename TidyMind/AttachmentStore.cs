@@ -12,7 +12,7 @@ namespace TidyMind
     // CardImages/) under a new GUID name, so they don't depend on the original staying put or on any name in the app.
     public static class AttachmentStore
     {
-        public const string Folder = "Attachments";
+        public static readonly string Folder = AppPaths.Data("Attachments");
 
         // Above this, adding a file asks first: copying it takes a while and fills the disk.
         public const long LargeFileBytes = 200L * 1024 * 1024;
