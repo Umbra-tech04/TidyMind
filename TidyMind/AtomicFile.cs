@@ -22,6 +22,8 @@ namespace TidyMind
             string temp = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
             try
             {
+                // A new memory's folder doesn't exist until its first save.
+                Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path)));
                 using (FileStream stream = new FileStream(temp, FileMode.CreateNew, FileAccess.Write, FileShare.None))
                 {
                     byte[] bytes = Utf8NoBom.GetBytes(text);

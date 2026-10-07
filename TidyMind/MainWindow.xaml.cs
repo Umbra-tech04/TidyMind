@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -153,7 +152,8 @@ namespace TidyMind
             for (int i = 0; i < profiles.Count; i++)
                 profiles[i].Order = i;
 
-            ProfileManager.SaveProfiles(profiles);
+            if (!ProfileManager.TrySaveProfiles(profiles))
+                WarnProfilesNotSaved("The new order will be lost when TidyMind closes.");
             BuildNav();
         }
 
@@ -280,17 +280,24 @@ namespace TidyMind
 
             Profile profile = new Profile
             {
+                Id = Guid.NewGuid(),
                 Name = name,
                 Color = MemoryColors[profiles.Count % MemoryColors.Length],
                 Type = type,
                 Order = profiles.Count == 0 ? 0 : profiles.Max(p => p.Order) + 1
             };
             profiles.Add(profile);
-            ProfileManager.SaveProfiles(profiles);
+            if (!ProfileManager.TrySaveProfiles(profiles))
+            {
+                profiles.Remove(profile);
+                WarnProfilesNotSaved("The new " + TypeLabel(type) + " wasn't added.");
+                return;
+            }
 
-            NavigateTo(profile); // the view creates the memory's first tab
+            NavigateTo(profile); // the view creates the memory's folder and first tab
         }
 
+        // Only the name changes: the memory's files are in a folder named by its Id, so nothing on disk moves.
         private void RenameMemory(Profile profile)
         {
             string oldName = profile.Name;
@@ -300,23 +307,26 @@ namespace TidyMind
 
             if (string.IsNullOrWhiteSpace(newName) || newName == oldName) return;
 
-            if (NameTaken(newName, profile.Type))
+            if (NameTaken(newName, profile.Type, except: profile))
             {
                 MessageBox.Show("A " + TypeLabel(profile.Type) + " with that name already exists.", "Rename Memory",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            MoveIfExists(DataFile(oldName, profile.Type), DataFile(newName, profile.Type));
-            MoveIfExists(TabStore.PathOf(oldName, profile.Type), TabStore.PathOf(newName, profile.Type));
-            if (profile.Type == ProfileType.Project)
-                MoveIfExists(MemoryTodoService.PathOf(oldName), MemoryTodoService.PathOf(newName));
-
             profile.Name = newName;
-            ProfileManager.SaveProfiles(profiles);
+            if (!ProfileManager.TrySaveProfiles(profiles))
+            {
+                profile.Name = oldName;
+                WarnProfilesNotSaved("The name wasn't changed.");
+                return;
+            }
             NavigateTo(profile);
         }
 
+        // The memory leaves profiles.json first; only once that's saved are its folder and the pictures and attached
+        // files it owns deleted (best effort: one that can't be deleted is left behind, unused). If the save fails,
+        // nothing is deleted.
         private void DeleteMemory(Profile profile)
         {
             MessageBoxResult result = MessageBox.Show(
@@ -325,17 +335,17 @@ namespace TidyMind
 
             if (result != MessageBoxResult.Yes) return;
 
-            if (profile.Type == ProfileType.Project)
-                DeleteProjectFiles(profile.Name);
-            if (profile.BackgroundType == BackgroundFill.Image)
-                ImageStore.Backgrounds.Delete(profile.BackgroundImagePath); // its page background picture
-            DeleteIfExists(DataFile(profile.Name, profile.Type));
-            DeleteIfExists(TabStore.PathOf(profile.Name, profile.Type));
-            if (profile.Type == ProfileType.Project)
-                DeleteIfExists(MemoryTodoService.PathOf(profile.Name));
-
+            int index = profiles.IndexOf(profile);
             profiles.Remove(profile);
-            ProfileManager.SaveProfiles(profiles);
+            if (!ProfileManager.TrySaveProfiles(profiles))
+            {
+                profiles.Insert(index, profile);
+                WarnProfilesNotSaved("Nothing was deleted.");
+                return;
+            }
+
+            DeleteOwnedFiles(profile);
+            MemoryFiles.DeleteFolder(profile);
 
             if (selectedKey == KeyOf(profile))
                 NavigateHome();
@@ -346,20 +356,24 @@ namespace TidyMind
             }
         }
 
-        // A Project and a Collection may share a name — they live in separate data files.
-        private bool NameTaken(string name, ProfileType type)
+        private static void WarnProfilesNotSaved(string consequence)
         {
-            return profiles.Any(p => p.Type == type && p.Name == name);
+            MessageBox.Show("Couldn't save the list of memories: this file can't be written:\n"
+                + AppPaths.Data("profiles.json") + "\n\n" + consequence, "Couldn't Save",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
-        private static string DataFile(string name, ProfileType type)
+        // Names are only labels now, but two memories of a kind told apart only by capitals would be confusing.
+        // A Project and a Collection may share a name.
+        private bool NameTaken(string name, ProfileType type, Profile except = null)
         {
-            return AppPaths.Data(type == ProfileType.Collection ? name + "_entities.json" : name + ".json");
+            return profiles.Any(p => p != except && p.Type == type && string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase));
         }
 
+        // By Id: stays the same across a rename.
         private static string KeyOf(Profile profile)
         {
-            return profile.Type + ":" + profile.Name;
+            return profile.Id.ToString("N");
         }
 
         private static string TypeLabel(ProfileType type)
@@ -367,32 +381,21 @@ namespace TidyMind
             return type == ProfileType.Collection ? "collection" : "project";
         }
 
-        private static void MoveIfExists(string from, string to)
+        // The page background, card pictures, attached files and item pictures of a memory being deleted, kept in
+        // the app-wide folders, so they aren't left behind there. An unreadable file just means nothing to clean up.
+        private static void DeleteOwnedFiles(Profile memory)
         {
-            if (File.Exists(from))
-                File.Move(from, to);
-        }
+            if (memory.BackgroundType == BackgroundFill.Image)
+                ImageStore.Backgrounds.Delete(memory.BackgroundImagePath);
 
-        private static void DeleteIfExists(string path)
-        {
-            if (File.Exists(path))
-                File.Delete(path);
-        }
-
-        // The card pictures and attached files of a project memory that's being deleted, so they aren't left behind
-        // in CardImages/ and Attachments/. An unreadable projects file just means there's nothing to clean up here.
-        private static void DeleteProjectFiles(string memoryName)
-        {
-            List<Project> projects;
-            try
+            if (memory.Type == ProfileType.Collection)
             {
-                projects = ProjectStore.Load(memoryName);
-            }
-            catch (Exception e) when (e is IOException || e is System.Text.Json.JsonException || e is UnauthorizedAccessException)
-            {
+                foreach (Entity entity in EntityStore.LoadOrEmpty(memory))
+                    EntityImages.DeleteCopy(entity.ImagePath);
                 return;
             }
 
+            List<Project> projects = ProjectStore.LoadOrEmpty(memory);
             foreach (Project project in projects.Where(p => p.CardBackgroundType == BackgroundFill.Image))
                 ImageStore.Cards.Delete(project.CardBackgroundImagePath);
             AttachmentStore.Delete(projects.SelectMany(p => p.Attachments ?? new List<Attachment>()));
@@ -469,9 +472,9 @@ namespace TidyMind
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 if (ContentArea.Content is ProjectView projectView)
-                    projectView.Reveal(result.ItemIndex);
+                    projectView.Reveal(result.ItemId);
                 else if (ContentArea.Content is CollectionView collectionView)
-                    collectionView.Reveal(result.ItemIndex);
+                    collectionView.Reveal(result.ItemId);
             }), System.Windows.Threading.DispatcherPriority.Loaded);
         }
 

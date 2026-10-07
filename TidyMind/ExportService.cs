@@ -51,12 +51,12 @@ namespace TidyMind
 
             if (profile.Type == ProfileType.Collection)
             {
-                items = BuildEntityItems(LoadEntities(profile.Name));
+                items = BuildEntityItems(EntityStore.Load(profile));
                 title = profile.Name + " — Collection Export";
             }
             else
             {
-                items = BuildProjectItems(profile.Name);
+                items = BuildProjectItems(profile);
                 title = profile.Name + " — Project Export";
             }
 
@@ -81,9 +81,9 @@ namespace TidyMind
             foreach (Profile profile in profiles)
             {
                 if (profile.Type == ProfileType.Collection)
-                    items.AddRange(BuildEntityItems(LoadEntities(profile.Name), profile.Name));
+                    items.AddRange(BuildEntityItems(EntityStore.Load(profile), profile.Name));
                 else
-                    items.AddRange(BuildProjectItems(profile.Name, profile.Name));
+                    items.AddRange(BuildProjectItems(profile, profile.Name));
             }
 
             WriteExport(items, "TidyMind — Export All", filePath, format);
@@ -126,20 +126,16 @@ namespace TidyMind
             WriteExport(new List<ExportItem> { EntityItem(entity) }, entity.Name + " — Collection Export", filePath, format);
         }
 
-        private static List<Project> LoadProjects(string profileName) => ProjectStore.Load(profileName);
-
-        private static List<Entity> LoadEntities(string profileName) => EntityStore.Load(profileName);
-
         // The memory's inline to-do list (if it has one) comes first, then its projects.
-        private static List<ExportItem> BuildProjectItems(string profileName, string group = null)
+        private static List<ExportItem> BuildProjectItems(Profile memory, string group = null)
         {
             List<ExportItem> items = new List<ExportItem>();
 
-            List<TodoEntry> todos = LoadTodos(profileName);
+            List<TodoEntry> todos = LoadTodos(memory);
             if (todos.Count > 0)
                 items.Add(new ExportItem { Group = group, Name = "To-do", Fields = new List<(string, string)> { ("Items", FormatTodos(todos)) } });
 
-            foreach (Project project in LoadProjects(profileName))
+            foreach (Project project in ProjectStore.Load(memory))
                 items.Add(ProjectItem(project, group));
 
             return items;
@@ -169,7 +165,7 @@ namespace TidyMind
             ExportItem item = new ExportItem();
             item.Group = group;
             item.Name = entity.Name;
-            item.ImagePath = entity.ImagePath;
+            item.ImagePath = EntityImages.FullPath(entity);
             item.Fields = new List<(string, string)>
             {
                 ("Brand", entity.Brand ?? ""),
@@ -179,7 +175,7 @@ namespace TidyMind
                 ("Purchase Price", entity.PurchasePrice ?? ""),
                 ("Sizes", FormatSizes(entity.Sizes)),
                 ("Notes", entity.Notes ?? ""),
-                ("Image Path", entity.ImagePath ?? "")
+                ("Image Path", item.ImagePath ?? "")
             };
             return item;
         }
@@ -202,9 +198,9 @@ namespace TidyMind
         }
 
         // An unreadable file just leaves the to-do list out of the export.
-        private static List<TodoEntry> LoadTodos(string profileName)
+        private static List<TodoEntry> LoadTodos(Profile memory)
         {
-            return MemoryTodoService.TryLoad(profileName, out List<TodoEntry> todos) ? todos : new List<TodoEntry>();
+            return MemoryTodoService.TryLoad(memory, out List<TodoEntry> todos) ? todos : new List<TodoEntry>();
         }
 
         private static string FormatSizes(List<SizeQuantity> sizes)
@@ -239,9 +235,9 @@ namespace TidyMind
         private static void AddMemorySheet(XLWorkbook workbook, Profile profile)
         {
             if (profile.Type == ProfileType.Collection)
-                AddEntitySheet(workbook, profile.Name, LoadEntities(profile.Name));
+                AddEntitySheet(workbook, profile.Name, EntityStore.Load(profile));
             else
-                AddProjectSheet(workbook, profile.Name);
+                AddProjectSheet(workbook, profile);
         }
 
         // Card layout: each entity/project is its own vertical block — a merged,
@@ -274,12 +270,12 @@ namespace TidyMind
             WriteSizeRows(sheet, ref row, entity.Sizes);
         }
 
-        private static void AddProjectSheet(XLWorkbook workbook, string profileName)
+        private static void AddProjectSheet(XLWorkbook workbook, Profile memory)
         {
-            IXLWorksheet sheet = workbook.Worksheets.Add(SanitizeSheetName(workbook, profileName));
+            IXLWorksheet sheet = workbook.Worksheets.Add(SanitizeSheetName(workbook, memory.Name));
             int row = 1;
 
-            List<TodoEntry> todos = LoadTodos(profileName);
+            List<TodoEntry> todos = LoadTodos(memory);
             if (todos.Count > 0)
             {
                 WriteCardHeader(sheet, ref row, "To-do");
@@ -287,7 +283,7 @@ namespace TidyMind
                 row += 2;
             }
 
-            foreach (Project project in LoadProjects(profileName))
+            foreach (Project project in ProjectStore.Load(memory))
             {
                 WriteProjectCard(sheet, ref row, project);
                 row += 2;
@@ -361,8 +357,11 @@ namespace TidyMind
 
         private static string SanitizeSheetName(XLWorkbook workbook, string name)
         {
+            // Excel also refuses a name starting or ending with an apostrophe, and compares names ignoring case, so
+            // memories called "Work" and "work" need different sheet names.
             char[] invalid = { '\\', '/', '*', '?', ':', '[', ']' };
-            string clean = new string((name ?? "Sheet").Select(c => invalid.Contains(c) ? '_' : c).ToArray());
+            string clean = new string((name ?? "Sheet").Select(c => invalid.Contains(c) || char.IsControl(c) ? '_' : c)
+                .ToArray()).Trim('\'');
 
             if (string.IsNullOrWhiteSpace(clean))
                 clean = "Sheet";
@@ -372,7 +371,7 @@ namespace TidyMind
             string result = clean;
             int suffix = 1;
 
-            while (workbook.Worksheets.Any(ws => ws.Name == result))
+            while (workbook.Worksheets.Any(ws => string.Equals(ws.Name, result, StringComparison.OrdinalIgnoreCase)))
             {
                 string suffixText = " (" + suffix + ")";
                 int baseLength = Math.Min(clean.Length, 31 - suffixText.Length);

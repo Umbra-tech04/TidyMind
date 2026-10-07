@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
 
 namespace TidyMind
 {
@@ -22,8 +20,8 @@ namespace TidyMind
         public string Location { get; set; }
         public Profile Profile { get; set; }
 
-        // Position in the memory's data file (-1 for a memory itself). Views load the file in the same order.
-        public int ItemIndex { get; set; } = -1;
+        // The project's or item's Id (Guid.Empty for a memory itself).
+        public Guid ItemId { get; set; }
     }
 
     public static class SearchIndexBuilder
@@ -71,22 +69,18 @@ namespace TidyMind
                 .ToList();
         }
 
+        // A missing or unreadable file just contributes nothing — search must never crash the app.
         private static void AddProjects(List<SearchResult> index, Profile profile)
         {
-            // Same order ProjectView sorts into, so ItemIndex points at the same project there.
-            List<Project> projects = Load<Project>(profile.Name + ".json").OrderBy(p => p.Order).ToList();
-
-            for (int p = 0; p < projects.Count; p++)
+            foreach (Project project in ProjectStore.LoadOrEmpty(profile))
             {
-                Project project = projects[p];
-
                 index.Add(new SearchResult
                 {
                     Kind = SearchResultKind.Project,
                     Title = project.Name,
                     Location = profile.Name + Arrow + project.Name,
                     Profile = profile,
-                    ItemIndex = p
+                    ItemId = project.Id
                 });
 
                 // Its attached files by name: picking one opens the project they're in.
@@ -98,7 +92,7 @@ namespace TidyMind
                         Title = attachment.DisplayName,
                         Location = profile.Name + Arrow + project.Name,
                         Profile = profile,
-                        ItemIndex = p
+                        ItemId = project.Id
                     });
                 }
             }
@@ -106,36 +100,16 @@ namespace TidyMind
 
         private static void AddEntities(List<SearchResult> index, Profile profile)
         {
-            // Same order CollectionView sorts into, so ItemIndex points at the same item there.
-            List<Entity> entities = Load<Entity>(profile.Name + "_entities.json").OrderBy(e => e.Order).ToList();
-
-            for (int i = 0; i < entities.Count; i++)
+            foreach (Entity entity in EntityStore.LoadOrEmpty(profile))
             {
                 index.Add(new SearchResult
                 {
                     Kind = SearchResultKind.Entity,
-                    Title = entities[i].Name,
-                    Location = profile.Name + Arrow + entities[i].Name,
+                    Title = entity.Name,
+                    Location = profile.Name + Arrow + entity.Name,
                     Profile = profile,
-                    ItemIndex = i
+                    ItemId = entity.Id
                 });
-            }
-        }
-
-        // A missing or unreadable file just contributes nothing — search must never crash the app.
-        private static List<T> Load<T>(string fileName)
-        {
-            string path = AppPaths.Data(fileName);
-            if (!File.Exists(path))
-                return new List<T>();
-
-            try
-            {
-                return JsonSerializer.Deserialize<List<T>>(File.ReadAllText(path)) ?? new List<T>();
-            }
-            catch (Exception)
-            {
-                return new List<T>();
             }
         }
     }

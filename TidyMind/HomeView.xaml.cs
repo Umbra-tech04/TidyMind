@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -359,32 +357,27 @@ namespace TidyMind
         // then, so Rename/Delete change and save the current list rather than the copy Home was drawn from.
         private void AttachProjectMenu(FrameworkElement cell, DashboardProject shown)
         {
-            string memory = shown.Target.Profile.Name;
-            int index = shown.Target.ItemIndex;
+            Profile memory = shown.Target.Profile;
+            Guid projectId = shown.Target.ItemId;
 
             cell.ContextMenu = new ContextMenu(); // placeholder: without one, WPF doesn't raise ContextMenuOpening
             cell.ContextMenuOpening += (s, e) =>
             {
-                List<Project> projects;
-                try
-                {
-                    projects = ProjectStore.Load(memory);
-                }
-                catch (Exception ex) when (ex is IOException || ex is JsonException || ex is UnauthorizedAccessException)
+                if (!ProjectStore.TryLoad(memory, out List<Project> projects, out _))
                 {
                     e.Handled = true;
                     return;
                 }
 
-                // Changed since Home was drawn (renamed, moved or deleted in the meantime): redraw instead.
-                if (index >= projects.Count || projects[index].Name != shown.Name)
+                // Deleted since Home was drawn: redraw instead.
+                Project project = projects.FirstOrDefault(p => p.Id == projectId);
+                if (project == null)
                 {
                     e.Handled = true;
                     Refresh();
                     return;
                 }
 
-                Project project = projects[index];
                 cell.ContextMenu = ProjectMenu.Build(this, project,
                     save: () => ProjectStore.SaveOrWarn(memory, projects),
                     redraw: Refresh,

@@ -13,8 +13,7 @@ namespace TidyMind
     internal class MemoryTabStrip
     {
         private readonly StackPanel strip;
-        private readonly string memoryName;
-        private readonly ProfileType type;
+        private readonly Profile memory;
         private readonly string itemWord;
         private readonly Func<Guid, int> countItemsInTab;
         private readonly Action<Guid, Guid> moveItems;
@@ -32,12 +31,11 @@ namespace TidyMind
         public event Action TabsChanged;
 
         // tabs: the memory's tabs as read by TabStore.TryLoadOrCreate (at least one, sorted).
-        public MemoryTabStrip(FrameworkElement view, StackPanel strip, string memoryName, ProfileType type,
+        public MemoryTabStrip(FrameworkElement view, StackPanel strip, Profile memory,
             List<MemoryTab> tabs, string itemWord, Func<Guid, int> countItemsInTab, Action<Guid, Guid> moveItems)
         {
             this.strip = strip;
-            this.memoryName = memoryName;
-            this.type = type;
+            this.memory = memory;
             this.itemWord = itemWord;
             this.countItemsInTab = countItemsInTab;
             this.moveItems = moveItems;
@@ -298,9 +296,10 @@ namespace TidyMind
 
         private void Save()
         {
-            if (!TabStore.TrySave(memoryName, type, tabs))
-                MessageBox.Show("Couldn't save: " + TabStore.FileName(memoryName, type) + " can't be written. "
-                    + "Your last change to the tabs wasn't saved.", "Couldn't Save", MessageBoxButton.OK, MessageBoxImage.Warning);
+            if (!TabStore.TrySave(memory, tabs))
+                MessageBox.Show("Couldn't save the tabs of '" + memory.Name + "': this file can't be written:\n"
+                    + MemoryFiles.Tabs(memory) + "\n\nYour last change to the tabs wasn't saved.", "Couldn't Save",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         private static SolidColorBrush B(string hex)

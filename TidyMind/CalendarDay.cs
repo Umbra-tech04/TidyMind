@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace TidyMind
 {
@@ -10,6 +13,10 @@ namespace TidyMind
         public string ColorHex { get; set; }
         public string Title { get; set; }
         public string Note { get; set; }
+
+        // Fields this version doesn't know (written by another TidyMind version): kept so saving doesn't drop them.
+        [JsonExtensionData]
+        public Dictionary<string, JsonElement> ExtensionData { get; set; }
 
         // Methods, not properties, so they aren't written to calendar.json.
         public bool HasEntry() => !string.IsNullOrWhiteSpace(Title) || !string.IsNullOrWhiteSpace(Note);

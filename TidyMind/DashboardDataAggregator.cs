@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
 
 namespace TidyMind
 {
@@ -115,20 +113,19 @@ namespace TidyMind
 
             foreach (Profile profile in profiles.Where(p => p.Type == ProfileType.Project))
             {
-                // Same order ProjectView sorts into, so ItemIndex opens the same project there.
-                List<Project> projects = Load<Project>(profile.Name + ".json").OrderBy(p => p.Order).ToList();
-                for (int i = 0; i < projects.Count; i++)
+                // A missing or unreadable file contributes nothing; the dashboard must never crash the app.
+                foreach (Project project in ProjectStore.LoadOrEmpty(profile))
                 {
-                    int total = projects[i].Tasks?.Count ?? 0;
+                    int total = project.Tasks?.Count ?? 0;
                     all.Add(new DashboardProject
                     {
-                        Name = projects[i].Name,
+                        Name = project.Name,
                         MemoryName = profile.Name,
-                        Percent = projects[i].CompletionPercent(),
-                        LastModified = projects[i].LastModified,
-                        TasksLeft = total - (projects[i].Tasks?.Count(t => t.IsDone) ?? 0),
-                        Card = ProjectCardModel.From(projects[i]),
-                        Target = new SearchResult { Kind = SearchResultKind.Project, Title = projects[i].Name, Profile = profile, ItemIndex = i }
+                        Percent = project.CompletionPercent(),
+                        LastModified = project.LastModified,
+                        TasksLeft = total - (project.Tasks?.Count(t => t.IsDone) ?? 0),
+                        Card = ProjectCardModel.From(project),
+                        Target = new SearchResult { Kind = SearchResultKind.Project, Title = project.Name, Profile = profile, ItemId = project.Id }
                     });
                 }
             }
@@ -151,23 +148,6 @@ namespace TidyMind
                                              && p.LastModified != default && (today - p.LastModified.Date).Days >= StalledAfterDays)
                 .OrderBy(p => p.LastModified)
                 .ToList();
-        }
-
-        // A missing or unreadable file contributes nothing; the dashboard must never crash the app.
-        private static List<T> Load<T>(string fileName)
-        {
-            string path = AppPaths.Data(fileName);
-            if (!File.Exists(path))
-                return new List<T>();
-
-            try
-            {
-                return JsonSerializer.Deserialize<List<T>>(File.ReadAllText(path)) ?? new List<T>();
-            }
-            catch (Exception)
-            {
-                return new List<T>();
-            }
         }
     }
 }

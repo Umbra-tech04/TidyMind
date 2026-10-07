@@ -62,6 +62,16 @@ namespace TidyMind
                 return;
             }
 
+            if (!MemoryLayoutMigration.TryRun(profiles, out problem))
+            {
+                MessageBox.Show("TidyMind couldn't copy your memories into their new folders under:\n"
+                    + AppPaths.Data("Memories") + "\n\n" + problem + "\n\nYour existing data was left untouched. Free up "
+                    + "disk space or check the folder's permissions, then start TidyMind again.", "Couldn't Start",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                Shutdown();
+                return;
+            }
+
             QuickTodoService.RemoveOldCompleted(DateTime.Today);
 
             EventManager.RegisterClassHandler(typeof(Window), Window.PreviewKeyDownEvent,

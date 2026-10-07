@@ -14,7 +14,7 @@ namespace TidyMind
 {
     public partial class CollectionView : UserControl
     {
-        private readonly string profileName;
+        private readonly Profile memory;
         private List<Entity> entities;
         private Entity currentDetailEntity;
         private readonly MemoryTabStrip tabStrip;
@@ -28,21 +28,20 @@ namespace TidyMind
         public CollectionView(Profile profile, Func<bool> saveProfiles)
         {
             InitializeComponent();
-            profileName = profile.Name;
+            memory = profile;
             // An open item overlay isn't empty page: no background menu there.
             MemoryPageBackground.Attach(Page, BackgroundLayer, profile, saveProfiles, OverlayGrid);
             TitleText.Text = profile.Name;
 
             // An unreadable file is left alone: the page says why, and nothing on it can change or save items.
-            if (!EntityStore.TryLoad(profileName, out entities, out string problem))
+            if (!EntityStore.TryLoad(memory, out entities, out string problem))
             {
-                ShowUnreadable(EntityStore.FileName(profileName), problem);
+                ShowUnreadable(MemoryFiles.Items(memory), problem);
                 return;
             }
-            if (!TabStore.TryLoadOrCreate(profileName, ProfileType.Collection, entities.Select(e => e.TabId),
-                    out List<MemoryTab> tabs, out problem))
+            if (!TabStore.TryLoadOrCreate(memory, entities.Select(e => e.TabId), out List<MemoryTab> tabs, out problem))
             {
-                ShowUnreadable(TabStore.FileName(profileName, ProfileType.Collection), problem);
+                ShowUnreadable(MemoryFiles.Tabs(memory), problem);
                 return;
             }
 
@@ -55,7 +54,7 @@ namespace TidyMind
             // Cards sit 24px apart (12px margin each side); the drop line goes in the middle of that gap.
             cardDrag = new DragReorder<Entity>(EntityPanel, Orientation.Horizontal, 24, null, MoveEntity);
 
-            tabStrip = new MemoryTabStrip(this, TabStrip, profileName, ProfileType.Collection, tabs, "item",
+            tabStrip = new MemoryTabStrip(this, TabStrip, memory, tabs, "item",
                 tabId => entities.Count(e => e.TabId == tabId),
                 (fromTab, toTab) =>
                 {
@@ -66,8 +65,34 @@ namespace TidyMind
             tabStrip.TabsChanged += RenderEntities;
 
             AssignOrphansToFirstTab();
+            CopyInLegacyImages();
             tabStrip.Render();
             RenderEntities();
+        }
+
+        // Items from before pictures were copied in point at the user's own file: it's copied into EntityImages/ now,
+        // so moving or deleting the original no longer loses it. One whose original is gone keeps its path (and shows
+        // no picture). If the save fails, the copies are removed again and the items keep their old paths.
+        private void CopyInLegacyImages()
+        {
+            List<(Entity Entity, string Original)> copied = new List<(Entity, string)>();
+            foreach (Entity entity in entities.Where(e => EntityImages.IsLegacyPath(e.ImagePath) && File.Exists(e.ImagePath)))
+            {
+                string stored = EntityImages.Store.Import(entity.ImagePath);
+                if (stored == null)
+                    continue;
+                copied.Add((entity, entity.ImagePath));
+                entity.ImagePath = stored;
+            }
+
+            if (copied.Count == 0 || SaveEntities())
+                return;
+
+            foreach ((Entity entity, string original) in copied)
+            {
+                EntityImages.Store.Delete(entity.ImagePath);
+                entity.ImagePath = original;
+            }
         }
 
         // Items from before tabs existed (TabId empty) or pointing at a deleted tab go to the first tab.
@@ -87,15 +112,15 @@ namespace TidyMind
         // Reads the list back from disk, e.g. after a delete whose save failed, so the grid shows what's really stored.
         private void ReloadEntities()
         {
-            if (EntityStore.TryLoad(profileName, out List<Entity> loaded, out string problem))
+            if (EntityStore.TryLoad(memory, out List<Entity> loaded, out string problem))
                 entities = loaded;
             else
-                ShowUnreadable(EntityStore.FileName(profileName), problem);
+                ShowUnreadable(MemoryFiles.Items(memory), problem);
         }
 
         // The page without its items: the reason in place of the cards, and no toolbar or tabs to change anything
         // with. The page background has its own file and keeps working.
-        private void ShowUnreadable(string fileName, string problem)
+        private void ShowUnreadable(string file, string problem)
         {
             unreadable = true;
             selection?.ClearSelection();
@@ -104,7 +129,7 @@ namespace TidyMind
             SelectionBar.Visibility = Visibility.Collapsed;
             TabStrip.Visibility = Visibility.Collapsed;
             SubtitleText.Text = "COLLECTION";
-            EmptyState.Text = "Couldn't read " + fileName + ": " + problem + "\n\nThe file was left as it is. "
+            EmptyState.Text = "Couldn't read " + file + ":\n" + problem + "\n\nThe file was left as it is. "
                 + "Fix it or restore it from a backup, then open this memory again.";
             EmptyState.TextWrapping = TextWrapping.Wrap;
             EmptyState.TextAlignment = TextAlignment.Center;
@@ -125,7 +150,7 @@ namespace TidyMind
 
         private bool SaveEntities()
         {
-            return !unreadable && EntityStore.SaveOrWarn(profileName, entities);
+            return !unreadable && EntityStore.SaveOrWarn(memory, entities);
         }
 
         private void RenderEntities()
@@ -215,7 +240,8 @@ namespace TidyMind
         private FrameworkElement CreateEntityCard(Entity entity)
         {
             double size = CardEffects.CardSize;
-            bool hasImage = !string.IsNullOrEmpty(entity.ImagePath) && File.Exists(entity.ImagePath);
+            BitmapImage picture = EntityImages.Load(entity);
+            bool hasImage = picture != null;
 
             Grid card = new Grid
             {
@@ -246,7 +272,7 @@ namespace TidyMind
                     CornerRadius = new CornerRadius(10),
                     Child = new Image
                     {
-                        Source = new BitmapImage(new Uri(entity.ImagePath)),
+                        Source = picture,
                         Stretch = Stretch.Uniform,
                         Margin = new Thickness(8)
                     }
@@ -316,12 +342,12 @@ namespace TidyMind
 
         // ---- Detail overlay ----------------------------------------------
 
-        // From global search: switch to the item's tab and open its detail card.
-        public void Reveal(int entityIndex)
+        // From global search: switch to the item's tab and open its detail card. Nothing if it's gone since.
+        public void Reveal(Guid entityId)
         {
-            if (unreadable || entityIndex < 0 || entityIndex >= entities.Count) return;
+            Entity entity = unreadable ? null : entities.FirstOrDefault(e => e.Id == entityId);
+            if (entity == null) return;
 
-            Entity entity = entities[entityIndex];
             tabStrip.Select(entity.TabId);
             OpenDetail(entity);
         }
@@ -330,10 +356,7 @@ namespace TidyMind
         {
             currentDetailEntity = entity;
 
-            if (!string.IsNullOrEmpty(entity.ImagePath) && File.Exists(entity.ImagePath))
-                DetailImage.Source = new BitmapImage(new Uri(entity.ImagePath));
-            else
-                DetailImage.Source = null;
+            DetailImage.Source = EntityImages.Load(entity);
 
             DetailName.Text = entity.Name;
             DetailPanel.Children.Clear();
@@ -432,29 +455,71 @@ namespace TidyMind
                 EntityForm form = new EntityForm(selector.SelectedType);
                 if (form.ShowDialog() == true)
                 {
-                    form.ResultEntity.TabId = tabStrip.ActiveTabId;
-                    form.ResultEntity.Order = entities.Count == 0 ? 0 : entities.Max(x => x.Order) + 1;
-                    form.ResultEntity.CreatedDate = DateTime.Now;
-                    entities.Add(form.ResultEntity);
-                    SaveEntities();
+                    Entity added = form.ResultEntity;
+                    added.Id = Guid.NewGuid();
+                    added.TabId = tabStrip.ActiveTabId;
+                    added.Order = entities.Count == 0 ? 0 : entities.Max(x => x.Order) + 1;
+                    added.CreatedDate = DateTime.Now;
+                    bool imported = CopyInPickedImage(added, form.PickedImageFile);
+
+                    entities.Add(added);
+                    if (!SaveEntities())
+                    {
+                        entities.Remove(added);
+                        if (imported)
+                            EntityImages.DeleteCopy(added.ImagePath);
+                    }
                     RenderEntities();
                 }
             }
         }
 
+        // The form edits a copy (Id, tab, place and fields it doesn't show come along). A newly picked picture is
+        // copied in, and the old copy deleted only once the item is saved without it; if the save fails, the item
+        // stays as it was and the new copy goes again.
         private void EditEntity(Entity entity)
         {
             EntityForm form = new EntityForm(entity);
-            if (form.ShowDialog() == true)
+            if (form.ShowDialog() != true)
+                return;
+
+            Entity edited = form.ResultEntity;
+            bool imported = CopyInPickedImage(edited, form.PickedImageFile);
+
+            int index = entities.IndexOf(entity);
+            entities[index] = edited;
+            if (SaveEntities())
             {
-                int index = entities.IndexOf(entity);
-                form.ResultEntity.TabId = entity.TabId; // the form builds a fresh Entity; keep it in its tab and place
-                form.ResultEntity.Order = entity.Order;
-                form.ResultEntity.CreatedDate = entity.CreatedDate;
-                entities[index] = form.ResultEntity;
-                SaveEntities();
-                RenderEntities();
+                if (imported)
+                    EntityImages.DeleteCopy(entity.ImagePath);
             }
+            else
+            {
+                entities[index] = entity;
+                if (imported)
+                    EntityImages.DeleteCopy(edited.ImagePath);
+            }
+            RenderEntities();
+        }
+
+        // Points the item at a copy of the picture picked in the form. False if none was picked, or it couldn't be
+        // copied (said so; the item keeps its old picture).
+        private static bool CopyInPickedImage(Entity entity, string pickedFile)
+        {
+            if (pickedFile == null)
+                return false;
+
+            string stored = EntityImages.Store.Import(pickedFile);
+            if (stored == null)
+            {
+                MessageBox.Show("Couldn't copy that image into " + EntityImages.Store.Folder + ", so the new picture "
+                    + "wasn't added. The rest of the item is saved as usual.", "Couldn't Add Picture",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            entity.ImagePath = stored;
+            return true;
         }
 
         private void DeleteEntity(Entity entity)
@@ -469,14 +534,22 @@ namespace TidyMind
             }
         }
 
-        // Deleting items: one from its menu, or a multi-selection's Delete. If that couldn't be saved, the list is read
-        // back from disk, so the items reappear instead of looking deleted until some later save drops them.
+        // Deleting items: one from its menu, or a multi-selection's Delete. Their pictures go once the list is saved
+        // without them. If that couldn't be saved, the list is read back from disk, so the items reappear instead of
+        // looking deleted until some later save drops them (and leaves their pictures behind).
         private void RemoveEntities(IEnumerable<Entity> doomed)
         {
-            foreach (Entity entity in doomed.ToList())
+            List<Entity> removed = doomed.ToList();
+            foreach (Entity entity in removed)
                 entities.Remove(entity);
+
             if (!SaveEntities())
+            {
                 ReloadEntities();
+                return;
+            }
+            foreach (Entity entity in removed)
+                EntityImages.DeleteCopy(entity.ImagePath);
         }
 
         private static SolidColorBrush B(string hex)

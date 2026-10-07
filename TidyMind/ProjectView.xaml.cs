@@ -14,7 +14,7 @@ namespace TidyMind
 {
     public partial class ProjectView : UserControl
     {
-        private readonly string profileName;
+        private readonly Profile memory;
         private List<Project> allProjects;
         private readonly MemoryTabStrip tabStrip;
 
@@ -31,21 +31,20 @@ namespace TidyMind
         public ProjectView(Profile profile, Func<bool> saveProfiles)
         {
             InitializeComponent();
-            profileName = profile.Name;
+            memory = profile;
             MemoryPageBackground.Attach(Page, BackgroundLayer, profile, saveProfiles);
             TitleText.Text = profile.Name;
-            TodoPanel.Load(profile.Name);
+            TodoPanel.Load(profile);
 
             // An unreadable file is left alone: the page says why, and nothing on it can change or save projects.
-            if (!ProjectStore.TryLoad(profileName, out allProjects, out string problem))
+            if (!ProjectStore.TryLoad(memory, out allProjects, out string problem))
             {
-                ShowUnreadable(profileName + ".json", problem);
+                ShowUnreadable(MemoryFiles.Items(memory), problem);
                 return;
             }
-            if (!TabStore.TryLoadOrCreate(profileName, ProfileType.Project, allProjects.Select(p => p.TabId),
-                    out List<MemoryTab> tabs, out problem))
+            if (!TabStore.TryLoadOrCreate(memory, allProjects.Select(p => p.TabId), out List<MemoryTab> tabs, out problem))
             {
-                ShowUnreadable(TabStore.FileName(profileName, ProfileType.Project), problem);
+                ShowUnreadable(MemoryFiles.Tabs(memory), problem);
                 return;
             }
 
@@ -58,7 +57,7 @@ namespace TidyMind
             // Cards sit 24px apart (12px margin each side); the drop line goes in the middle of that gap.
             cardDrag = new DragReorder<Project>(ProjectPanel, Orientation.Horizontal, 24, null, MoveProject);
 
-            tabStrip = new MemoryTabStrip(this, TabStrip, profileName, ProfileType.Project, tabs, "project",
+            tabStrip = new MemoryTabStrip(this, TabStrip, memory, tabs, "project",
                 tabId => allProjects.Count(p => p.TabId == tabId),
                 (fromTab, toTab) =>
                 {
@@ -76,15 +75,15 @@ namespace TidyMind
         // Reads the list back from disk, e.g. after a delete whose save failed, so the grid shows what's really stored.
         private void ReloadProjects()
         {
-            if (ProjectStore.TryLoad(profileName, out List<Project> projects, out string problem))
+            if (ProjectStore.TryLoad(memory, out List<Project> projects, out string problem))
                 allProjects = projects;
             else
-                ShowUnreadable(profileName + ".json", problem);
+                ShowUnreadable(MemoryFiles.Items(memory), problem);
         }
 
         // The page without its projects: the reason in place of the cards, and no toolbar or tabs to change anything
         // with. The memory's to-do list and page background have their own files and keep working.
-        private void ShowUnreadable(string fileName, string problem)
+        private void ShowUnreadable(string file, string problem)
         {
             unreadable = true;
             selection?.ClearSelection();
@@ -93,7 +92,7 @@ namespace TidyMind
             SelectionBar.Visibility = Visibility.Collapsed;
             TabStrip.Visibility = Visibility.Collapsed;
             SubtitleText.Text = "PROJECTS";
-            EmptyState.Text = "Couldn't read " + fileName + ": " + problem + "\n\nThe file was left as it is. "
+            EmptyState.Text = "Couldn't read " + file + ":\n" + problem + "\n\nThe file was left as it is. "
                 + "Fix it or restore it from a backup, then open this memory again.";
             EmptyState.TextWrapping = TextWrapping.Wrap;
             EmptyState.TextAlignment = TextAlignment.Center;
@@ -114,7 +113,7 @@ namespace TidyMind
 
         private bool SaveProjects()
         {
-            return !unreadable && ProjectStore.SaveOrWarn(profileName, allProjects);
+            return !unreadable && ProjectStore.SaveOrWarn(memory, allProjects);
         }
 
         // Projects from before tabs existed (TabId empty) or pointing at a deleted tab go to the first tab.
@@ -296,6 +295,7 @@ namespace TidyMind
 
             allProjects.Add(new Project
             {
+                Id = Guid.NewGuid(),
                 Name = name,
                 Tasks = new List<TaskItem>(),
                 TabId = tabStrip.ActiveTabId,
@@ -308,12 +308,12 @@ namespace TidyMind
 
         private void AddTodoListButton_Click(object sender, RoutedEventArgs e) => TodoPanel.Reveal();
 
-        // From global search / the dashboard: switch to the project's tab, then open it.
-        public void Reveal(int projectIndex)
+        // From global search / the dashboard: switch to the project's tab, then open it. Nothing if it's gone since.
+        public void Reveal(Guid projectId)
         {
-            if (unreadable || projectIndex < 0 || projectIndex >= allProjects.Count) return;
+            Project project = unreadable ? null : allProjects.FirstOrDefault(p => p.Id == projectId);
+            if (project == null) return;
 
-            Project project = allProjects[projectIndex];
             tabStrip.Select(project.TabId);
             OpenProject(project);
         }

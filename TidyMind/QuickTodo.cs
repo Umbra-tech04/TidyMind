@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace TidyMind
 {
@@ -12,5 +15,9 @@ namespace TidyMind
 
         // When it was ticked: old finished todos are cleared by this, not by their due date.
         public DateTime? CompletedDate { get; set; }
+
+        // Fields this version doesn't know (written by another TidyMind version): kept so saving doesn't drop them.
+        [JsonExtensionData]
+        public Dictionary<string, JsonElement> ExtensionData { get; set; }
     }
 }

@@ -27,13 +27,20 @@ namespace TidyMind
         {
             if (!TryRead(out List<CalendarDay> days))
                 return false;
+            // The stored day is updated rather than replaced, so fields this version doesn't know stay with it.
+            CalendarDay day = GetDay(days, date) ?? new CalendarDay { Date = date.Date };
             days.RemoveAll(d => d.Date.Date == date.Date);
 
             colorHex = string.IsNullOrWhiteSpace(colorHex) ? null : colorHex;
             title = string.IsNullOrWhiteSpace(title) ? null : title.Trim();
             note = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
             if (colorHex != null || title != null || note != null)
-                days.Add(new CalendarDay { Date = date.Date, ColorHex = colorHex, Title = title, Note = note });
+            {
+                day.ColorHex = colorHex;
+                day.Title = title;
+                day.Note = note;
+                days.Add(day);
+            }
 
             return AtomicFile.TryWriteAllText(CalendarFile, JsonSerializer.Serialize(days.OrderBy(d => d.Date).ToList()));
         }

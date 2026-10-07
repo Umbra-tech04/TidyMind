@@ -1,10 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace TidyMind
 {
     public class Project
     {
+        // How views, search and the dashboard point at this project. Projects from before Ids existed get one the
+        // first time their file is read (ProjectStore.Load).
+        public Guid Id { get; set; }
+
         public string Name { get; set; }
         public string Description { get; set; }
         public List<TaskItem> Tasks { get; set; }
@@ -43,5 +49,10 @@ namespace TidyMind
                 ? 100
                 : Math.Min(99, (int)Math.Round(done * 100.0 / total, MidpointRounding.AwayFromZero));
         }
+
+        // Fields this version doesn't know (e.g. the removed Status, or ones from a newer TidyMind): kept so saving
+        // doesn't drop them.
+        [JsonExtensionData]
+        public Dictionary<string, JsonElement> ExtensionData { get; set; }
     }
 }

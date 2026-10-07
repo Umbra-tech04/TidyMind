@@ -1,15 +1,22 @@
 ﻿using Microsoft.Win32;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
 namespace TidyMind
 {
     public partial class EntityForm : Window
     {
+        // When editing: a copy of the item with the form's fields applied, so its Id, tab, place, type and any fields
+        // the form doesn't show stay as they were. When adding: a new item of the chosen type.
         public Entity ResultEntity { get; private set; }
+
+        // A picture picked in this form (the user's own file), or null. The caller copies it in (EntityImages).
+        public string PickedImageFile { get; private set; }
+
+        private readonly Entity existing;
         private string entityType;
 
         // Közös
@@ -36,6 +43,7 @@ namespace TidyMind
         public EntityForm(Entity existing)
         {
             InitializeComponent();
+            this.existing = existing;
             this.entityType = existing.EntityType;
             FormTitle.Text = "Edit " + entityType;
             this.Title = "Edit " + entityType;
@@ -226,9 +234,12 @@ namespace TidyMind
             FormPanel.Children.Add(box);
         }
 
+        // Shows the stored value exactly: one that isn't among the choices (saved by an older version, or typed into
+        // the file) is added as an extra choice, and an empty one stays empty, so saving the item unchanged never
+        // replaces it with the first option.
         private void SetComboBox(ComboBox box, string value)
         {
-            if (string.IsNullOrEmpty(value)) { box.SelectedIndex = 0; return; }
+            if (string.IsNullOrEmpty(value)) { box.SelectedIndex = -1; return; }
             foreach (ComboBoxItem item in box.Items)
             {
                 if (item.Content.ToString() == value)
@@ -237,20 +248,25 @@ namespace TidyMind
                     return;
                 }
             }
-            box.SelectedIndex = 0;
+
+            ComboBoxItem kept = new ComboBoxItem { Content = value };
+            box.Items.Add(kept);
+            box.SelectedItem = kept;
         }
 
         private string GetComboValue(ComboBox box)
             => ((ComboBoxItem)box?.SelectedItem)?.Content.ToString();
 
+        // Only previewed here; it's copied in when the item is saved (CollectionView).
         private void PickImageButton_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog dialog = new OpenFileDialog();
             dialog.Filter = "Image files|*.jpg;*.jpeg;*.png;*.bmp;*.gif";
             if (dialog.ShowDialog() == true)
             {
+                PickedImageFile = dialog.FileName;
                 imagePathText.Text = dialog.FileName;
-                imagePreview.Source = new BitmapImage(new System.Uri(dialog.FileName));
+                imagePreview.Source = EntityImages.Store.Decode(dialog.FileName);
             }
         }
 
@@ -266,10 +282,11 @@ namespace TidyMind
             if (nameBox != null) nameBox.Text = e.Name;
             if (notesBox != null) notesBox.Text = e.Notes;
 
+            // A missing or unreadable picture just shows no preview.
             if (!string.IsNullOrEmpty(e.ImagePath))
             {
-                imagePathText.Text = e.ImagePath;
-                imagePreview.Source = new BitmapImage(new System.Uri(e.ImagePath));
+                imagePathText.Text = EntityImages.IsLegacyPath(e.ImagePath) ? e.ImagePath : "Current picture";
+                imagePreview.Source = EntityImages.Load(e);
             }
 
             if (brandBox != null) brandBox.Text = e.Brand;
@@ -280,7 +297,13 @@ namespace TidyMind
 
             if (e.Sizes != null)
                 foreach (var sq in e.Sizes)
-                    sizes.Add(new SizeQuantity { Size = sq.Size, Condition = sq.Condition, Quantity = sq.Quantity });
+                    sizes.Add(new SizeQuantity
+                    {
+                        Size = sq.Size,
+                        Condition = sq.Condition,
+                        Quantity = sq.Quantity,
+                        ExtensionData = sq.ExtensionData
+                    });
             RenderSizes();
         }
 
@@ -293,11 +316,13 @@ namespace TidyMind
                 return;
             }
 
-            ResultEntity = new Entity();
-            ResultEntity.EntityType = "Clothing";
+            // A copy through JSON carries everything, including fields this version doesn't know (ExtensionData).
+            ResultEntity = existing != null
+                ? JsonSerializer.Deserialize<Entity>(JsonSerializer.Serialize(existing))
+                : new Entity();
+            ResultEntity.EntityType = entityType;
             ResultEntity.Name = nameBox.Text;
             ResultEntity.Notes = notesBox?.Text;
-            ResultEntity.ImagePath = imagePathText.Text == "No image selected" ? null : imagePathText.Text;
             ResultEntity.Brand = brandBox?.Text;
             ResultEntity.Color = colorBox?.Text;
             ResultEntity.PurchasePrice = priceBox?.Text;

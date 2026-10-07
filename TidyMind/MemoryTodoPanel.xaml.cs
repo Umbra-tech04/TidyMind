@@ -13,7 +13,7 @@ namespace TidyMind
     // Shown while it has items; an empty one stays out of the way until "+ To-Do List" reveals it.
     public partial class MemoryTodoPanel : UserControl
     {
-        private string memoryName;
+        private Profile memory;
         private List<TodoEntry> todos = new List<TodoEntry>();
         private bool readable = true;
 
@@ -22,15 +22,15 @@ namespace TidyMind
             InitializeComponent();
         }
 
-        public void Load(string memory)
+        public void Load(Profile memory)
         {
-            memoryName = memory;
+            this.memory = memory;
             readable = MemoryTodoService.TryLoad(memory, out todos);
 
             // An unreadable file is left alone (never saved over), and the list is shown with the reason.
             Input.IsEnabled = readable;
             ErrorText.Visibility = readable ? Visibility.Collapsed : Visibility.Visible;
-            ErrorText.Text = "Couldn't read " + MemoryTodoService.FileName(memory) + ". Fix or remove that file to use this list.";
+            ErrorText.Text = "Couldn't read " + MemoryFiles.Todos(memory) + ". Fix or remove that file to use this list.";
 
             Render();
             Visibility = todos.Count > 0 || !readable ? Visibility.Visible : Visibility.Collapsed;
@@ -45,9 +45,10 @@ namespace TidyMind
 
         private void Save()
         {
-            if (readable && !MemoryTodoService.TrySave(memoryName, todos))
-                MessageBox.Show("Couldn't save: " + MemoryTodoService.FileName(memoryName) + " can't be written. "
-                    + "Your last change wasn't saved.", "Couldn't Save", MessageBoxButton.OK, MessageBoxImage.Warning);
+            if (readable && !MemoryTodoService.TrySave(memory, todos))
+                MessageBox.Show("Couldn't save the to-do list of '" + memory.Name + "': this file can't be written:\n"
+                    + MemoryFiles.Todos(memory) + "\n\nYour last change wasn't saved.", "Couldn't Save",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         // ---- Input --------------------------------------------------------

@@ -20,6 +20,9 @@ namespace TidyMind
         // Memory page backgrounds: they cover the whole view (and are washed out to a faint watermark anyway).
         public static readonly ImageStore Backgrounds = new ImageStore("BackgroundImages", 1000);
 
+        // Collection items' pictures: shown on the card and, larger, in the item's detail card.
+        public static readonly ImageStore Items = new ImageStore("EntityImages", 800);
+
         private ImageStore(string folder, int decodeWidth)
         {
             Folder = AppPaths.Data(folder);
@@ -58,7 +61,7 @@ namespace TidyMind
             return ImageCache.Decode(path, DecodeWidth);
         }
 
-        private string PathOf(string fileName) => Path.Combine(Folder, Path.GetFileName(fileName));
+        public string PathOf(string fileName) => Path.Combine(Folder, Path.GetFileName(fileName));
 
         // Copies the picked file in and returns the new file name, or null if it couldn't be copied. Copied to a
         // temporary name first, so a failed copy never leaves a half-written image under a real name.

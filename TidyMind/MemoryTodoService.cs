@@ -5,18 +5,14 @@ using System.Text.Json;
 
 namespace TidyMind
 {
-    // A project memory's inline to-do list, in {memoryName}_todos.json.
+    // A project memory's inline to-do list (MemoryFiles.Todos).
     public static class MemoryTodoService
     {
-        public static string FileName(string memoryName) => memoryName + "_todos.json";
-
-        public static string PathOf(string memoryName) => AppPaths.Data(FileName(memoryName));
-
         // False if the file exists but can't be read; the caller must then not save over it.
-        public static bool TryLoad(string memoryName, out List<TodoEntry> todos)
+        public static bool TryLoad(Profile memory, out List<TodoEntry> todos)
         {
             todos = new List<TodoEntry>();
-            string file = PathOf(memoryName);
+            string file = MemoryFiles.Todos(memory);
             if (!File.Exists(file))
                 return true;
 
@@ -33,15 +29,16 @@ namespace TidyMind
 
         // An emptied list removes its file rather than leaving an empty one behind. False if the file couldn't be
         // written or removed; it is then unchanged.
-        public static bool TrySave(string memoryName, List<TodoEntry> todos)
+        public static bool TrySave(Profile memory, List<TodoEntry> todos)
         {
-            string file = PathOf(memoryName);
+            string file = MemoryFiles.Todos(memory);
             if (todos.Count > 0)
                 return AtomicFile.TryWriteAllText(file, JsonSerializer.Serialize(todos));
 
             try
             {
-                File.Delete(file);
+                if (File.Exists(file))
+                    File.Delete(file);
                 return true;
             }
             catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)

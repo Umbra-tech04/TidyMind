@@ -64,9 +64,15 @@ namespace TidyMind
             List<Reminder> reminders = LoadReminders();
             int index = reminders.FindIndex(r => r.Id == reminder.Id);
             if (index < 0)
+            {
                 reminders.Add(reminder);
+            }
             else
+            {
+                // The form builds a new Reminder: fields this version doesn't know come over from the stored one.
+                reminder.ExtensionData ??= reminders[index].ExtensionData;
                 reminders[index] = reminder;
+            }
             SaveReminders(reminders);
 
             RegisterReminderTask(reminder);

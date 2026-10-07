@@ -52,12 +52,30 @@ namespace TidyMind
             MessageBox.Show("Export complete.", "Export", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        // Card and memory names can hold characters a file name can't (e.g. "Q1/Q2").
+        private const int MaxNameLength = 100;
+
+        private static readonly string[] ReservedNames =
+        {
+            "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+            "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"
+        };
+
+        // Card and memory names can be anything, but the suggested file name must be one Windows accepts: no
+        // characters a file name can't hold (e.g. "Q1/Q2"), no trailing dots or spaces (Windows drops them), not a
+        // device name like CON, and short enough to leave room for the folder and "_export.xlsx".
         private static string SafeFileName(string name)
         {
             char[] invalid = Path.GetInvalidFileNameChars();
             string clean = new string((name ?? "").Select(c => invalid.Contains(c) ? '_' : c).ToArray()).Trim();
-            return clean.Length == 0 ? "TidyMind" : clean;
+            if (clean.Length > MaxNameLength)
+                clean = clean.Substring(0, MaxNameLength);
+            clean = clean.TrimEnd('.', ' ');
+
+            if (clean.Length == 0)
+                return "TidyMind";
+            if (ReservedNames.Contains(clean, StringComparer.OrdinalIgnoreCase))
+                return clean + "_";
+            return clean;
         }
 
         private static string GetExtension(ExportFormat format)

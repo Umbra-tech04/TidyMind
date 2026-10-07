@@ -7,19 +7,24 @@ using System.Windows;
 
 namespace TidyMind
 {
-    // A collection memory's items (<memory>_entities.json), in card order. Shared by the collection grid and exports,
-    // so an index into this list means the same item in both.
+    // A collection memory's items (MemoryFiles.Items), in card order. Shared by the collection grid, search and exports.
     public static class EntityStore
     {
-        public static string FileName(string memoryName) => memoryName + "_entities.json";
-
         // Throws if the file exists but can't be read.
-        public static List<Entity> Load(string memoryName)
+        public static List<Entity> Load(Profile memory)
         {
-            string fileName = AppPaths.Data(FileName(memoryName));
-            List<Entity> entities = File.Exists(fileName)
-                ? JsonSerializer.Deserialize<List<Entity>>(File.ReadAllText(fileName)) ?? new List<Entity>()
+            string file = MemoryFiles.Items(memory);
+            List<Entity> entities = File.Exists(file)
+                ? JsonSerializer.Deserialize<List<Entity>>(File.ReadAllText(file)) ?? new List<Entity>()
                 : new List<Entity>();
+
+            // Items from before Ids existed get one now, saved straight away so every view that reads this file
+            // afterwards sees the same Ids. Best effort: if it can't be written, they get new ones next time.
+            List<Entity> withoutId = entities.Where(e => e.Id == Guid.Empty).ToList();
+            foreach (Entity entity in withoutId)
+                entity.Id = Guid.NewGuid();
+            if (withoutId.Count > 0)
+                AtomicFile.TryWriteAllText(file, JsonSerializer.Serialize(entities));
 
             // Stable sort: files from before Order existed (all 0) keep their saved order.
             return entities.OrderBy(e => e.Order).ToList();
@@ -27,11 +32,11 @@ namespace TidyMind
 
         // For a view that edits the list: false (with the reason) if the file exists but can't be read, and the
         // view must then not save over it.
-        public static bool TryLoad(string memoryName, out List<Entity> entities, out string problem)
+        public static bool TryLoad(Profile memory, out List<Entity> entities, out string problem)
         {
             try
             {
-                entities = Load(memoryName);
+                entities = Load(memory);
                 problem = null;
                 return true;
             }
@@ -43,16 +48,22 @@ namespace TidyMind
             }
         }
 
+        // For views that only show items (search): an unreadable file contributes none.
+        public static List<Entity> LoadOrEmpty(Profile memory)
+        {
+            return TryLoad(memory, out List<Entity> entities, out _) ? entities : new List<Entity>();
+        }
+
         // Written via a temporary file, so a crash or full disk mid-save leaves the previous file intact.
         // If it can't be written (locked, no access), says so and returns false; the file is then unchanged.
-        public static bool SaveOrWarn(string memoryName, List<Entity> entities)
+        public static bool SaveOrWarn(Profile memory, List<Entity> entities)
         {
-            string fileName = FileName(memoryName);
-            if (AtomicFile.TryWriteAllText(AppPaths.Data(fileName), JsonSerializer.Serialize(entities)))
+            string file = MemoryFiles.Items(memory);
+            if (AtomicFile.TryWriteAllText(file, JsonSerializer.Serialize(entities)))
                 return true;
 
-            MessageBox.Show("Couldn't save: " + fileName + " can't be written. Your last change wasn't saved.",
-                "Couldn't Save", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("Couldn't save the items of '" + memory.Name + "': this file can't be written:\n" + file
+                + "\n\nYour last change wasn't saved.", "Couldn't Save", MessageBoxButton.OK, MessageBoxImage.Warning);
             return false;
         }
     }
