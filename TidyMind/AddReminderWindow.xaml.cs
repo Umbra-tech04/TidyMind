@@ -1,4 +1,7 @@
 using System;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -10,6 +13,25 @@ namespace TidyMind
         private const string MessagePlaceholder = "What should I remind you about?";
 
         private readonly string title;
+        private readonly Reminder editing; // null when adding a new one
+
+        // Edit mode: the same form, filled in with an existing reminder; saving updates it (same Id) instead of adding.
+        public AddReminderWindow(Reminder existing) : this(existing.Title)
+        {
+            editing = existing;
+
+            Title = "Edit Reminder";
+            HeadingText.Text = "Edit Reminder";
+            SaveButton.Content = "Save Changes";
+
+            MessageInput.Text = existing.Message;
+            MessageInput.Foreground = (Brush)FindResource("TextMain");
+
+            ReminderDatePicker.SelectedDate = existing.NextFireTime.Date;
+            HourBox.SelectedIndex = existing.NextFireTime.Hour;
+            MinuteBox.SelectedIndex = existing.NextFireTime.Minute;
+            RepeatBox.SelectedIndex = (int)existing.RepeatType;
+        }
 
         // date: pre-selects that day (from the calendar's right-click "Add Reminder").
         public AddReminderWindow(string title = null, DateTime? date = null)
@@ -25,30 +47,11 @@ namespace TidyMind
             MessageInput.Text = MessagePlaceholder;
             MessageInput.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8A8A87"));
 
-            PopulateHourAndMinute();
-
             // A future day starts at 09:00; today keeps the "next minute" default.
-            if (date.HasValue && date.Value.Date > DateTime.Today)
-            {
-                ReminderDatePicker.SelectedDate = date.Value.Date;
-                HourBox.SelectedIndex = 9;
-                MinuteBox.SelectedIndex = 0;
-            }
-        }
-
-        private void PopulateHourAndMinute()
-        {
-            for (int hour = 0; hour <= 23; hour++)
-                HourBox.Items.Add(new ComboBoxItem { Content = hour.ToString("00") });
-
-            for (int minute = 0; minute <= 59; minute++)
-                MinuteBox.Items.Add(new ComboBoxItem { Content = minute.ToString("00") });
-
-            // Default to the next minute, so saving without changes still lands in the future.
-            DateTime next = DateTime.Now.AddMinutes(1);
-            ReminderDatePicker.SelectedDate = next.Date;
-            HourBox.SelectedIndex = next.Hour;
-            MinuteBox.SelectedIndex = next.Minute;
+            DateTime initial = ReminderForm.DefaultTime(date);
+            ReminderDatePicker.SelectedDate = initial.Date;
+            ReminderForm.FillTimeBoxes(HourBox, MinuteBox, initial);
+            ReminderForm.FillRepeatBox(RepeatBox);
         }
 
         private void MessageInput_GotFocus(object sender, RoutedEventArgs e)
@@ -71,53 +74,34 @@ namespace TidyMind
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            string message = MessageInput.Text == MessagePlaceholder ? "" : MessageInput.Text.Trim();
+            string message = MessageInput.Text == MessagePlaceholder ? "" : MessageInput.Text;
 
-            if (string.IsNullOrWhiteSpace(message))
+            Reminder reminder = ReminderForm.TryCreate(message, ReminderDatePicker.SelectedDate, HourBox, MinuteBox, RepeatBox,
+                out string problemTitle, out string problem);
+            if (reminder == null)
             {
-                MessageBox.Show("Please enter a reminder message.", "Missing Message",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(problem, problemTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            if (ReminderDatePicker.SelectedDate == null)
-            {
-                MessageBox.Show("Please pick a date.", "Missing Date",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (HourBox.SelectedItem == null || MinuteBox.SelectedItem == null)
-            {
-                MessageBox.Show("Please pick an hour and a minute.", "Missing Time",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            DateTime date = ReminderDatePicker.SelectedDate.Value;
-            int hour = int.Parse((string)((ComboBoxItem)HourBox.SelectedItem).Content);
-            int minute = int.Parse((string)((ComboBoxItem)MinuteBox.SelectedItem).Content);
-
-            DateTime fireTime = new DateTime(date.Year, date.Month, date.Day, hour, minute, 0, DateTimeKind.Local);
-
-            if (fireTime <= DateTime.Now)
-            {
-                MessageBox.Show("That time has already passed. Please pick a time in the future.", "Time in the Past",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            string repeatText = ((ComboBoxItem)RepeatBox.SelectedItem).Content.ToString();
-            RepeatType repeatType = (RepeatType)Enum.Parse(typeof(RepeatType), repeatText);
-
-            Reminder reminder = new Reminder();
-            reminder.Id = Guid.NewGuid();
+            reminder.Id = editing?.Id ?? Guid.NewGuid();
             reminder.Title = this.title;
-            reminder.Message = message;
-            reminder.NextFireTime = fireTime;
-            reminder.RepeatType = repeatType;
 
-            ReminderManager.AddReminder(reminder);
+            // The window stays open on failure, so nothing typed is lost and saving can be tried again.
+            try
+            {
+                if (editing != null)
+                    ReminderManager.UpdateReminder(reminder);
+                else
+                    ReminderManager.AddReminder(reminder);
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is JsonException
+                                       || ex is COMException)
+            {
+                MessageBox.Show("Couldn't save the reminder: reminders.json can't be read or written, or Windows "
+                    + "Task Scheduler didn't accept it.", "Couldn't Save", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             DialogResult = true;
             Close();

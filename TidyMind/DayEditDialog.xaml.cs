@@ -9,7 +9,8 @@ using System.Windows.Shapes;
 
 namespace TidyMind
 {
-    // The colour + note editor for one calendar day.
+    // The colour + note (title and what to do) editor for one calendar day. Only ever writes calendar.json:
+    // reminders are a separate thing, added from a day's right-click menu (in the calendar or on Home).
     public partial class DayEditDialog : Window
     {
         public static readonly string[] Palette =
@@ -26,9 +27,11 @@ namespace TidyMind
             InitializeComponent();
             this.date = date.Date;
 
+            // A note from before titles existed opens split: its first line as the title, the rest as the note.
             CalendarDay day = CalendarService.GetDay(CalendarService.LoadDays(), this.date);
             selectedColor = day?.ColorHex;
-            NoteInput.Text = day?.Note ?? "";
+            TitleInput.Text = day?.Heading() ?? "";
+            NoteInput.Text = day?.Body() ?? "";
             ClearButton.Visibility = day != null ? Visibility.Visible : Visibility.Collapsed;
 
             Title = this.date.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture);
@@ -40,12 +43,10 @@ namespace TidyMind
                 AddSwatch(hex);
             PaintSwatches();
 
-            ShowReminders();
-
             Loaded += (s, e) =>
             {
-                NoteInput.Focus();
-                NoteInput.CaretIndex = NoteInput.Text.Length;
+                TitleInput.Focus();
+                TitleInput.CaretIndex = TitleInput.Text.Length;
             };
         }
 
@@ -116,39 +117,34 @@ namespace TidyMind
             }
         }
 
-        private void ShowReminders()
-        {
-            List<Reminder> reminders = CalendarService.RemindersOn(ReminderManager.LoadReminders(), date);
-            RemindersSection.Visibility = reminders.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        // ---- Title and note -----------------------------------------------
 
-            foreach (Reminder reminder in reminders)
+        // Enter in the title moves on to the note (where Enter is a new line); Ctrl+Enter saves from either.
+        private void TitleInput_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.None)
             {
-                StackPanel row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 3, 0, 3) };
-                row.Children.Add(new TextBlock
-                {
-                    Text = reminder.NextFireTime.ToString("HH:mm"),
-                    FontSize = 12,
-                    FontWeight = FontWeights.SemiBold,
-                    Foreground = (Brush)FindResource("TextMain"),
-                    Width = 46
-                });
-                row.Children.Add(new TextBlock
-                {
-                    Text = reminder.Message + (reminder.RepeatType == RepeatType.Once ? "" : "  (" + reminder.RepeatType.ToString().ToLowerInvariant() + ")"),
-                    FontSize = 12,
-                    Foreground = (Brush)FindResource("TextSub"),
-                    TextTrimming = TextTrimming.CharacterEllipsis,
-                    MaxWidth = 310
-                });
-                RemindersList.Children.Add(row);
+                NoteInput.Focus();
+                NoteInput.CaretIndex = NoteInput.Text.Length;
+                e.Handled = true;
             }
+        }
+
+        private void TitleInput_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            TitlePlaceholder.Visibility = TitleInput.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void NoteInput_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            NotePlaceholder.Visibility = NoteInput.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void SaveButton_Click(object sender, RoutedEventArgs e) => Save();
 
         private void Save()
         {
-            if (CalendarService.SaveDay(date, selectedColor, NoteInput.Text))
+            if (CalendarService.SaveDay(date, selectedColor, TitleInput.Text, NoteInput.Text))
                 DialogResult = true;
             else
                 ShowSaveFailed();
@@ -156,7 +152,7 @@ namespace TidyMind
 
         private void ClearButton_Click(object sender, RoutedEventArgs e)
         {
-            if (CalendarService.SaveDay(date, null, null))
+            if (CalendarService.SaveDay(date, null, null, null))
                 DialogResult = true;
             else
                 ShowSaveFailed();

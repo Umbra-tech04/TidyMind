@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Windows;
@@ -23,14 +22,23 @@ namespace TidyMind
         private readonly HashSet<Project> pendingPulse = new HashSet<Project>();
 
         private readonly DragReorder<Project> cardDrag;
+        private readonly CardSelectionController<Project> selection;
 
-        public ProjectView(Profile profile)
+        // saveProfiles: writes the main window's list of memories, which `profile` belongs to (Edit Background).
+        public ProjectView(Profile profile, Func<bool> saveProfiles)
         {
             InitializeComponent();
             profileName = profile.Name;
+            MemoryPageBackground.Attach(Page, BackgroundLayer, profile, saveProfiles);
             TitleText.Text = profile.Name;
             LoadProjects();
             TodoPanel.Load(profile.Name);
+
+            selection = new CardSelectionController<Project>(this, CardScroll, CardArea, MarqueeCanvas,
+                CardEffects.CardRadius, DeleteProjects);
+            selection.SelectionChanged += UpdateSelectionBar;
+            SelectionBar.DeleteClicked += () => selection.DeleteSelected();
+            SelectionBar.CancelClicked += selection.ClearSelection;
 
             // Cards sit 24px apart (12px margin each side); the drop line goes in the middle of that gap.
             cardDrag = new DragReorder<Project>(ProjectPanel, Orientation.Horizontal, 24, null, MoveProject);
@@ -52,14 +60,7 @@ namespace TidyMind
 
         private void LoadProjects()
         {
-            string fileName = profileName + ".json";
-            if (File.Exists(fileName))
-                allProjects = JsonSerializer.Deserialize<List<Project>>(File.ReadAllText(fileName)) ?? new List<Project>();
-            else
-                allProjects = new List<Project>();
-
-            // Stable sort: files from before Order existed (all 0) keep their saved order.
-            allProjects = allProjects.OrderBy(p => p.Order).ToList();
+            allProjects = ProjectStore.Load(profileName);
         }
 
         // Drag-and-drop on the cards. Other tabs' projects keep their relative order; everything is renumbered 0..n.
@@ -73,9 +74,9 @@ namespace TidyMind
             RenderProjects();
         }
 
-        private void SaveProjects()
+        private bool SaveProjects()
         {
-            File.WriteAllText(profileName + ".json", JsonSerializer.Serialize(allProjects));
+            return ProjectStore.SaveOrWarn(profileName, allProjects);
         }
 
         // Projects from before tabs existed (TabId empty) or pointing at a deleted tab go to the first tab.
@@ -96,6 +97,7 @@ namespace TidyMind
         {
             ProjectPanel.Children.Clear();
             cardDrag.Clear();
+            selection.BeginRender();
 
             string filter = SearchBox.Text == "Search..." ? "" : SearchBox.Text.Trim();
             List<Project> inTab = allProjects.Where(p => p.TabId == tabStrip.ActiveTabId).ToList();
@@ -116,6 +118,37 @@ namespace TidyMind
             EmptyState.Text = inTab.Count == 0
                 ? "No projects in this tab yet. Click “+ Add Project” to start."
                 : "No projects match your search.";
+            selection.EndRender(); // what's no longer on screen (other tab, filtered out) drops out of the selection
+        }
+
+        // ---- Multi-selection ----------------------------------------------
+
+        // While anything is selected, the selection bar stands in for the search box and Add buttons.
+        private void UpdateSelectionBar()
+        {
+            bool any = selection.Count > 0;
+            SelectionBar.Show(selection.Count);
+            SelectionBar.Visibility = any ? Visibility.Visible : Visibility.Collapsed;
+            Toolbar.Visibility = any ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        // One confirmation for the lot, then the same delete as a single project's menu (card pictures included),
+        // and the grid read back from disk.
+        private bool DeleteProjects(IReadOnlyCollection<Project> projects)
+        {
+            string what = projects.Count == 1 ? "1 project" : projects.Count + " projects";
+            if (MessageBox.Show("Delete " + what + "? This can't be undone.", "Confirm Delete",
+                    MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                return false;
+
+            ProjectMenu.Delete(projects, p =>
+            {
+                allProjects.Remove(p);
+                pendingPulse.Remove(p);
+            }, SaveProjects);
+            LoadProjects();
+            RenderProjects();
+            return true;
         }
 
         // ---- Search -------------------------------------------------------
@@ -146,91 +179,21 @@ namespace TidyMind
 
         // ---- Card ---------------------------------------------------------
 
-        private const double RingThickness = 3;
-
+        // The look lives in ProjectCard (shared with the Home dashboard); this adds the grid's behaviour.
         private FrameworkElement CreateProjectCard(Project project)
         {
             if (project.Tasks == null)
                 project.Tasks = new List<TaskItem>();
 
-            int total = project.Tasks.Count;
-            int done = project.Tasks.Count(t => t.IsDone);
-            double size = CardEffects.CardSize;
+            ProjectCardVisual visual = ProjectCard.Build(ProjectCardModel.From(project),
+                CardEffects.CardSize, CardEffects.CardRadius, compact: false);
+            Grid card = visual.Card;
+            ShapePath progressRing = visual.Progress;
+            card.Margin = new Thickness(12);
+            card.Cursor = Cursors.Hand;
+            selection.AttachCard(card, project); // first: a Ctrl+click selects, and neither opens nor drags
 
-            Grid card = new Grid
-            {
-                Width = size,
-                Height = size,
-                Margin = new Thickness(12),
-                Cursor = Cursors.Hand
-            };
-
-            DropShadowEffect shadow = CardEffects.CreateShadow();
-            card.Children.Add(new Border
-            {
-                Background = Brushes.White,
-                CornerRadius = new CornerRadius(CardEffects.CardRadius),
-                Effect = shadow
-            });
-
-            PathGeometry ring = CardEffects.BuildRingGeometry(size, CardEffects.CardRadius, RingThickness);
-
-            card.Children.Add(new ShapePath
-            {
-                Data = ring,
-                Stroke = B("#ECECE9"),
-                StrokeThickness = RingThickness
-            });
-
-            ShapePath progressRing = null;
-            if (done > 0)
-            {
-                progressRing = new ShapePath
-                {
-                    Data = ring,
-                    Stroke = CardEffects.Accent,
-                    StrokeThickness = RingThickness,
-                    StrokeDashCap = PenLineCap.Round
-                };
-
-                // A complete ring is drawn solid: a dash exactly one perimeter long can leave a hairline seam.
-                if (done < total)
-                {
-                    double perimeter = CardEffects.RingPerimeter(size, CardEffects.CardRadius, RingThickness);
-                    double progress = (double)done / total;
-
-                    // WPF dash lengths are in multiples of StrokeThickness, not pixels.
-                    progressRing.StrokeDashArray = new DoubleCollection
-                    {
-                        perimeter * progress / RingThickness,
-                        perimeter / RingThickness
-                    };
-                }
-
-                // In a Canvas so the heartbeat's thicker stroke and glow aren't layout-clipped to the 190px cell.
-                card.Children.Add(new Canvas { Children = { progressRing } });
-            }
-
-            card.Children.Add(new TextBlock
-            {
-                Text = project.Name,
-                FontSize = 18,
-                FontWeight = FontWeights.Bold,
-                Foreground = B("#1C1B19"),
-                TextWrapping = TextWrapping.Wrap,
-                TextAlignment = TextAlignment.Center,
-                LineHeight = 23,
-                LineStackingStrategy = LineStackingStrategy.BlockLineHeight,
-                MaxHeight = 69,
-                TextTrimming = TextTrimming.CharacterEllipsis,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(20)
-            });
-
-            card.Children.Add(CreateProgressLabel(project, done, total));
-
-            CardEffects.AttachHoverLift(card, shadow, progressRing == null ? null : () => PulseRing(progressRing));
+            CardEffects.AttachHoverLift(card, visual.Shadow, progressRing == null ? null : () => PulseRing(progressRing));
 
             if (pendingPulse.Contains(project) && progressRing != null)
             {
@@ -247,65 +210,23 @@ namespace TidyMind
             CardEffects.AttachClick(card, () => OpenProject(project));
             cardDrag.Attach(card, project);
 
-            ContextMenu menu = new ContextMenu();
-            MenuItem rename = new MenuItem { Header = "Rename" };
-            rename.Click += (s, e) => RenameProject(project);
-            MenuItem delete = new MenuItem { Header = "Delete" };
-            delete.Click += (s, e) => DeleteProject(project);
-            MenuItem reminder = new MenuItem { Header = "Add Reminder" };
-            reminder.Click += (s, e) => new AddReminderWindow(project.Name).ShowDialog();
-            menu.Items.Add(rename);
-            menu.Items.Add(delete);
-            menu.Items.Add(reminder);
-            menu.Items.Add(new Separator());
-            menu.Items.Add(TextCopy.CopyItem(() => project.Name, "Copy name"));
-            menu.Items.Add(TextCopy.CopyItem(() => ProjectAsText(project), "Copy with tasks"));
-            card.ContextMenu = menu;
+            card.ContextMenu = ProjectMenu.Build(this, project,
+                save: SaveProjects,
+                redraw: RenderProjects,
+                remove: () =>
+                {
+                    allProjects.Remove(project);
+                    pendingPulse.Remove(project);
+                });
 
             return card;
-        }
-
-        private UIElement CreateProgressLabel(Project project, int done, int total)
-        {
-            StackPanel label = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                HorizontalAlignment = HorizontalAlignment.Right,
-                VerticalAlignment = VerticalAlignment.Bottom,
-                Margin = new Thickness(0, 0, 16, 14)
-            };
-
-            if (total == 0)
-            {
-                label.Children.Add(new TextBlock { Text = "No tasks", FontSize = 11, Foreground = B("#A5A5A1") });
-                return label;
-            }
-
-            int percent = project.CompletionPercent();
-
-            label.Children.Add(new TextBlock
-            {
-                Text = done + "/" + total,
-                FontSize = 11,
-                Foreground = B("#8A8A87"),
-                Margin = new Thickness(0, 0, 6, 0)
-            });
-            label.Children.Add(new TextBlock
-            {
-                Text = percent + "%",
-                FontSize = 11,
-                FontWeight = FontWeights.Bold,
-                Foreground = CardEffects.Accent
-            });
-
-            return label;
         }
 
         private static void PulseRing(ShapePath ring)
         {
             DropShadowEffect glow = new DropShadowEffect
             {
-                Color = CardEffects.Accent.Color,
+                Color = CardEffects.GlowColor(ring),
                 ShadowDepth = 0,
                 BlurRadius = 0,
                 Opacity = 0.6
@@ -356,24 +277,6 @@ namespace TidyMind
             OpenProject(project);
         }
 
-        // Name, description and a checklist of the tasks, as plain text for pasting elsewhere.
-        private static string ProjectAsText(Project project)
-        {
-            List<string> lines = new List<string> { project.Name };
-
-            string description = RichTextHelper.ToPlainText(project.Description).Trim();
-            if (description.Length > 0)
-                lines.Add(description);
-
-            if (project.Tasks != null && project.Tasks.Count > 0)
-            {
-                lines.Add("");
-                lines.AddRange(project.Tasks.Select(t => (t.IsDone ? "[x] " : "[ ] ") + t.Title));
-            }
-
-            return string.Join(Environment.NewLine, lines);
-        }
-
         private void OpenProject(Project project)
         {
             bool wasComplete = IsComplete(project);
@@ -387,7 +290,9 @@ namespace TidyMind
                 project.LastModified = DateTime.Now;
 
             MarkPulseIfJustCompleted(project, wasComplete);
-            SaveProjects();
+            // Removed files' copies go only once the project is saved without them; if the save failed they stay.
+            if (SaveProjects())
+                AttachmentStore.Delete(window.RemovedAttachments);
             RenderProjects();
         }
 
@@ -400,31 +305,6 @@ namespace TidyMind
         private static bool IsComplete(Project project)
         {
             return project.Tasks != null && project.Tasks.Count > 0 && project.Tasks.All(t => t.IsDone);
-        }
-
-        private void RenameProject(Project project)
-        {
-            string newName = InputDialog.Prompt(this, "Rename Project", "Enter a new name.", project.Name, "Rename");
-            if (string.IsNullOrWhiteSpace(newName) || newName == project.Name) return;
-
-            project.Name = newName;
-            project.LastModified = DateTime.Now;
-            SaveProjects();
-            RenderProjects();
-        }
-
-        private void DeleteProject(Project project)
-        {
-            var result = MessageBox.Show("Delete '" + project.Name + "'?", "Confirm Delete",
-                MessageBoxButton.YesNo, MessageBoxImage.Warning);
-
-            if (result == MessageBoxResult.Yes)
-            {
-                allProjects.Remove(project);
-                pendingPulse.Remove(project);
-                SaveProjects();
-                RenderProjects();
-            }
         }
 
         private static SolidColorBrush B(string hex)

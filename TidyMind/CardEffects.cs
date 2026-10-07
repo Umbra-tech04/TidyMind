@@ -101,7 +101,7 @@ namespace TidyMind
         public static void RingHeartbeat(Shape ring)
         {
             double rest = ring.StrokeThickness;
-            DropShadowEffect glow = new DropShadowEffect { Color = Accent.Color, ShadowDepth = 0, BlurRadius = 0, Opacity = 0.85 };
+            DropShadowEffect glow = new DropShadowEffect { Color = GlowColor(ring), ShadowDepth = 0, BlurRadius = 0, Opacity = 0.85 };
             ring.Effect = glow;
 
             // Glow must stay inside the 12px card margin, or the scroll area clips it into a hard square edge.
@@ -114,6 +114,12 @@ namespace TidyMind
 
             ring.BeginAnimation(Shape.StrokeThicknessProperty, Beat(rest, rest + 2.5, rest + 1.7));
             glow.BeginAnimation(DropShadowEffect.BlurRadiusProperty, glowBeat);
+        }
+
+        // A ring glows in its own color (a color-customised card's ring isn't azure).
+        public static Color GlowColor(Shape ring)
+        {
+            return ring.Stroke is SolidColorBrush stroke ? stroke.Color : Accent.Color;
         }
 
         // "Lub-dub": a strong first beat, a short gap, a softer second beat, then rest.

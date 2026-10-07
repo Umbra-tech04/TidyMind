@@ -23,10 +23,18 @@ namespace TidyMind
             return profiles.OrderBy(p => p.Order).ToList();
         }
 
+        // Throws IOException if profiles.json couldn't be written (the file is then unchanged).
         public static void SaveProfiles(List<Profile> profiles)
         {
-            string json = JsonSerializer.Serialize(profiles);
-            File.WriteAllText(ProfilesFile, json);
+            if (!TrySaveProfiles(profiles))
+                throw new IOException(ProfilesFile + " couldn't be written.");
+        }
+
+        // Written via a temporary file, so a crash mid-save can't truncate the list of memories. False if it
+        // couldn't be written; the file is then unchanged.
+        public static bool TrySaveProfiles(List<Profile> profiles)
+        {
+            return AtomicFile.TryWriteAllText(ProfilesFile, JsonSerializer.Serialize(profiles));
         }
     }
 }

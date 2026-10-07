@@ -200,8 +200,18 @@ namespace TidyMind
                 Visibility = Visibility.Hidden
             };
             delete.Click += (s, e) => DeleteTodo(todo);
-            TextCopy.AttachMenu(row, () => todo.Text);
             Grid.SetColumn(delete, 2);
+
+            ContextMenu menu = new ContextMenu();
+            MenuItem edit = new MenuItem { Header = "Edit" };
+            edit.Click += (s, e) => BeginEdit(todo, row, check);
+            MenuItem remove = new MenuItem { Header = "Delete" };
+            remove.Click += (s, e) => DeleteTodo(todo); // the same as the row's "×"
+            menu.Items.Add(edit);
+            menu.Items.Add(remove);
+            menu.Items.Add(new Separator());
+            menu.Items.Add(TextCopy.CopyItem(() => todo.Text));
+            row.ContextMenu = menu;
             row.Children.Add(delete);
 
             void UpdateDeleteVisibility() =>
@@ -211,6 +221,69 @@ namespace TidyMind
             row.IsKeyboardFocusWithinChanged += (s, e) => UpdateDeleteVisibility();
 
             return row;
+        }
+
+        // Swaps the row's text for a box with the same text: Enter or clicking away saves, Escape cancels.
+        // An emptied box cancels too; removing a to-do is what Delete is for.
+        private void BeginEdit(QuickTodo todo, Grid row, CheckBox check)
+        {
+            TextBox editor = new TextBox
+            {
+                Text = todo.Text,
+                FontSize = 13,
+                Height = 28,
+                VerticalContentAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 1, 8, 1)
+            };
+            check.Visibility = Visibility.Collapsed;
+            row.Children.Add(editor);
+
+            bool finished = false;
+            void Finish(bool save)
+            {
+                if (finished) return;
+                finished = true;
+
+                string text = editor.Text.Trim();
+                if (save && text.Length > 0 && text != todo.Text)
+                {
+                    if (QuickTodoService.Rename(todo.Id, text))
+                    {
+                        // By Id: a refresh while editing may already have swapped the list for a fresh copy.
+                        QuickTodo current = todos.FirstOrDefault(t => t.Id == todo.Id);
+                        if (current != null)
+                            current.Text = text;
+                    }
+                    else
+                        ShowUnreadable();
+                }
+
+                // Deferred: this can run from inside a Render (a refresh pulling the editor out of the list).
+                Dispatcher.BeginInvoke(new Action(Render));
+            }
+
+            editor.KeyDown += (s, e) =>
+            {
+                if (e.Key == Key.Enter || e.Key == Key.Escape)
+                {
+                    Finish(e.Key == Key.Enter);
+                    e.Handled = true;
+                }
+            };
+            // Focused only after the context menu has closed and handed focus back to where it was; until the box
+            // has had focus once, losing it means nothing.
+            bool focused = false;
+            editor.GotKeyboardFocus += (s, e) => focused = true;
+            editor.LostKeyboardFocus += (s, e) =>
+            {
+                if (focused)
+                    Finish(true);
+            };
+            editor.Loaded += (s, e) => Dispatcher.BeginInvoke(new Action(() =>
+            {
+                editor.Focus();
+                editor.SelectAll();
+            }), DispatcherPriority.Input);
         }
 
         // Restyles the row in place (no rebuild), so the checkbox keeps keyboard focus.

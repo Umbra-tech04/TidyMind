@@ -7,14 +7,30 @@ namespace TidyMind
     {
         public string Name { get; set; }
         public string Description { get; set; }
-        public ProjectStatus Status { get; set; }
         public List<TaskItem> Tasks { get; set; }
         public string Notes { get; set; }
+
+        // Files attached in Project Details (empty for projects from before attachments existed).
+        public List<Attachment> Attachments { get; set; } = new List<Attachment>();
         public Guid TabId { get; set; }
         public int Order { get; set; }
 
         // Set whenever the project or its tasks change (DateTime.MinValue for projects from before this existed).
         public DateTime LastModified { get; set; }
+
+        // The card's own background (Customize Card). Only the field matching the type is set; the other is null.
+        public BackgroundFill CardBackgroundType { get; set; }
+        public string CardBackgroundColor { get; set; }     // "#RRGGBB", when the type is Color
+        public string CardBackgroundImagePath { get; set; } // a file name inside CardImages/, when the type is Image
+
+        public BackgroundSetting GetCardBackground() => new BackgroundSetting(CardBackgroundType, CardBackgroundColor, CardBackgroundImagePath);
+
+        public void SetCardBackground(BackgroundSetting background)
+        {
+            CardBackgroundType = background.Type;
+            CardBackgroundColor = background.Color;
+            CardBackgroundImagePath = background.Image;
+        }
 
         // 0-100 from tasks done; never 100 until every task is done (e.g. 199/200 would otherwise round up).
         public int CompletionPercent()

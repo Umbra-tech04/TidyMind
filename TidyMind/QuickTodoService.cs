@@ -65,6 +65,18 @@ namespace TidyMind
             });
         }
 
+        public static bool Rename(Guid id, string text)
+        {
+            return Update(todos =>
+            {
+                QuickTodo todo = todos.FirstOrDefault(t => t.Id == id);
+                if (todo == null) return false;
+
+                todo.Text = text.Trim();
+                return true;
+            });
+        }
+
         public static bool Delete(Guid id) => Update(todos => todos.RemoveAll(t => t.Id == id) > 0);
 
         // Todos finished before CompletedDate existed have none; their due date stands in for it.

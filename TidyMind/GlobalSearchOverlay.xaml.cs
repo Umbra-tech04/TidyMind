@@ -254,9 +254,10 @@ namespace TidyMind
         {
             switch (kind)
             {
-                case SearchResultKind.Memory: return "";  // folder
-                case SearchResultKind.Project: return ""; // page
-                default: return "";                       // tag
+                case SearchResultKind.Memory: return "\uE8B7";  // folder
+                case SearchResultKind.Project: return "\uE7C3"; // page
+                case SearchResultKind.File: return "\uE723";    // paperclip
+                default: return "\uE8EC";                       // tag
             }
         }
 
@@ -266,6 +267,7 @@ namespace TidyMind
             {
                 case SearchResultKind.Memory: return "Memory";
                 case SearchResultKind.Project: return "Project";
+                case SearchResultKind.File: return "File";
                 default: return "Item";
             }
         }

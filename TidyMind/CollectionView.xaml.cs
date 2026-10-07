@@ -19,11 +19,21 @@ namespace TidyMind
         private Entity currentDetailEntity;
         private readonly MemoryTabStrip tabStrip;
         private readonly DragReorder<Entity> cardDrag;
+        private readonly CardSelectionController<Entity> selection;
 
-        public CollectionView(Profile profile)
+        // saveProfiles: writes the main window's list of memories, which `profile` belongs to (Edit Background).
+        public CollectionView(Profile profile, Func<bool> saveProfiles)
         {
             InitializeComponent();
             profileName = profile.Name;
+            // An open item overlay isn't empty page: no background menu there.
+            MemoryPageBackground.Attach(Page, BackgroundLayer, profile, saveProfiles, OverlayGrid);
+
+            selection = new CardSelectionController<Entity>(this, CardScroll, CardArea, MarqueeCanvas,
+                CardEffects.CardRadius, DeleteEntities);
+            selection.SelectionChanged += UpdateSelectionBar;
+            SelectionBar.DeleteClicked += () => selection.DeleteSelected();
+            SelectionBar.CancelClicked += selection.ClearSelection;
             TitleText.Text = profile.Name;
             LoadEntities();
 
@@ -91,6 +101,7 @@ namespace TidyMind
         {
             EntityPanel.Children.Clear();
             cardDrag.Clear();
+            selection.BeginRender();
 
             string filter = SearchBox.Text == "Search..." ? "" : SearchBox.Text.Trim();
             List<Entity> inTab = entities.Where(e => e.TabId == tabStrip.ActiveTabId).ToList();
@@ -111,6 +122,33 @@ namespace TidyMind
             EmptyState.Text = inTab.Count == 0
                 ? "No items in this tab yet. Click “+ Add Entity” to start."
                 : "No items match your search.";
+            selection.EndRender(); // what's no longer on screen (other tab, filtered out) drops out of the selection
+        }
+
+        // ---- Multi-selection ----------------------------------------------
+
+        // While anything is selected, the selection bar stands in for the search box and Add button.
+        private void UpdateSelectionBar()
+        {
+            bool any = selection.Count > 0;
+            SelectionBar.Show(selection.Count);
+            SelectionBar.Visibility = any ? Visibility.Visible : Visibility.Collapsed;
+            Toolbar.Visibility = any ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        // One confirmation for the lot, then the same removal as a single item's Delete, and the grid read back
+        // from disk.
+        private bool DeleteEntities(IReadOnlyCollection<Entity> doomed)
+        {
+            string what = doomed.Count == 1 ? "1 item" : doomed.Count + " items";
+            if (MessageBox.Show("Delete " + what + "? This can't be undone.", "Confirm Delete",
+                    MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                return false;
+
+            RemoveEntities(doomed);
+            LoadEntities();
+            RenderEntities();
+            return true;
         }
 
         // ---- Search -------------------------------------------------------
@@ -211,6 +249,7 @@ namespace TidyMind
                 Margin = new Thickness(0, 0, 16, 14)
             });
 
+            selection.AttachCard(card, entity); // first: a Ctrl+click selects, and neither opens nor drags
             CardEffects.AttachHoverLift(card, shadow);
             CardEffects.AttachClick(card, () => OpenDetail(entity));
             cardDrag.Attach(card, entity);
@@ -225,6 +264,7 @@ namespace TidyMind
             menu.Items.Add(edit);
             menu.Items.Add(delete);
             menu.Items.Add(reminder);
+            menu.Items.Add(ExportMenu.Submenu(() => entity.Name, (path, format) => ExportService.ExportEntity(entity, path, format)));
             menu.Items.Add(new Separator());
             menu.Items.Add(TextCopy.CopyItem(() => entity.Name, "Copy name"));
             card.ContextMenu = menu;
@@ -343,8 +383,7 @@ namespace TidyMind
 
             if (result == MessageBoxResult.Yes)
             {
-                entities.Remove(target);
-                SaveEntities();
+                RemoveEntities(new[] { target });
                 CloseOverlay();
                 RenderEntities();
             }
@@ -392,10 +431,17 @@ namespace TidyMind
 
             if (result == MessageBoxResult.Yes)
             {
-                entities.Remove(entity);
-                SaveEntities();
+                RemoveEntities(new[] { entity });
                 RenderEntities();
             }
+        }
+
+        // Deleting items: one from its menu, or a multi-selection's Delete.
+        private void RemoveEntities(IEnumerable<Entity> doomed)
+        {
+            foreach (Entity entity in doomed.ToList())
+                entities.Remove(entity);
+            SaveEntities();
         }
 
         private static SolidColorBrush B(string hex)

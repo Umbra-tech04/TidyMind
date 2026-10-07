@@ -89,6 +89,43 @@ namespace TidyMind
             WriteExport(items, "TidyMind — Export All", filePath, format);
         }
 
+        // A single card (its right-click menu): the same layout as in a whole-memory export, just that one block.
+        public static void ExportProject(Project project, string filePath, ExportFormat format)
+        {
+            if (format == ExportFormat.Excel)
+            {
+                using (XLWorkbook workbook = new XLWorkbook())
+                {
+                    IXLWorksheet sheet = workbook.Worksheets.Add(SanitizeSheetName(workbook, project.Name));
+                    int row = 1;
+                    WriteProjectCard(sheet, ref row, project);
+                    FinalizeCardSheet(sheet);
+                    workbook.SaveAs(filePath);
+                }
+                return;
+            }
+
+            WriteExport(new List<ExportItem> { ProjectItem(project) }, project.Name + " — Project Export", filePath, format);
+        }
+
+        public static void ExportEntity(Entity entity, string filePath, ExportFormat format)
+        {
+            if (format == ExportFormat.Excel)
+            {
+                using (XLWorkbook workbook = new XLWorkbook())
+                {
+                    IXLWorksheet sheet = workbook.Worksheets.Add(SanitizeSheetName(workbook, entity.Name));
+                    int row = 1;
+                    WriteEntityCard(sheet, ref row, entity);
+                    FinalizeCardSheet(sheet);
+                    workbook.SaveAs(filePath);
+                }
+                return;
+            }
+
+            WriteExport(new List<ExportItem> { EntityItem(entity) }, entity.Name + " — Collection Export", filePath, format);
+        }
+
         private static List<Project> LoadProjects(string profileName)
         {
             string fileName = profileName + ".json";
@@ -119,50 +156,48 @@ namespace TidyMind
                 items.Add(new ExportItem { Group = group, Name = "To-do", Fields = new List<(string, string)> { ("Items", FormatTodos(todos)) } });
 
             foreach (Project project in LoadProjects(profileName))
-            {
-                ExportItem item = new ExportItem();
-                item.Group = group;
-                item.Name = project.Name;
-                item.Fields = new List<(string, string)>
-                {
-                    ("Description", RichTextHelper.ToPlainText(project.Description)),
-                    ("Status", project.Status.ToString()),
-                    ("Tasks", FormatTasks(project.Tasks)),
-                    ("Notes", project.Notes ?? "")
-                };
-
-                items.Add(item);
-            }
+                items.Add(ProjectItem(project, group));
 
             return items;
         }
 
+        private static ExportItem ProjectItem(Project project, string group = null)
+        {
+            ExportItem item = new ExportItem();
+            item.Group = group;
+            item.Name = project.Name;
+            item.Fields = new List<(string, string)>
+            {
+                ("Description", RichTextHelper.ToPlainText(project.Description)),
+                ("Tasks", FormatTasks(project.Tasks)),
+                ("Notes", RichTextHelper.ToPlainText(project.Notes))
+            };
+            return item;
+        }
+
         private static List<ExportItem> BuildEntityItems(List<Entity> entities, string group = null)
         {
-            List<ExportItem> items = new List<ExportItem>();
+            return entities.Select(entity => EntityItem(entity, group)).ToList();
+        }
 
-            foreach (Entity entity in entities)
+        private static ExportItem EntityItem(Entity entity, string group = null)
+        {
+            ExportItem item = new ExportItem();
+            item.Group = group;
+            item.Name = entity.Name;
+            item.ImagePath = entity.ImagePath;
+            item.Fields = new List<(string, string)>
             {
-                ExportItem item = new ExportItem();
-                item.Group = group;
-                item.Name = entity.Name;
-                item.ImagePath = entity.ImagePath;
-                item.Fields = new List<(string, string)>
-                {
-                    ("Brand", entity.Brand ?? ""),
-                    ("Color", entity.Color ?? ""),
-                    ("Material", entity.Material ?? ""),
-                    ("Season", entity.Season ?? ""),
-                    ("Purchase Price", entity.PurchasePrice ?? ""),
-                    ("Sizes", FormatSizes(entity.Sizes)),
-                    ("Notes", entity.Notes ?? ""),
-                    ("Image Path", entity.ImagePath ?? "")
-                };
-
-                items.Add(item);
-            }
-
-            return items;
+                ("Brand", entity.Brand ?? ""),
+                ("Color", entity.Color ?? ""),
+                ("Material", entity.Material ?? ""),
+                ("Season", entity.Season ?? ""),
+                ("Purchase Price", entity.PurchasePrice ?? ""),
+                ("Sizes", FormatSizes(entity.Sizes)),
+                ("Notes", entity.Notes ?? ""),
+                ("Image Path", entity.ImagePath ?? "")
+            };
+            return item;
         }
 
         private static string FormatTasks(List<TaskItem> tasks)
@@ -235,20 +270,24 @@ namespace TidyMind
 
             foreach (Entity entity in entities)
             {
-                WriteCardHeader(sheet, ref row, entity.Name);
-
-                WriteCardField(sheet, ref row, "Brand", entity.Brand);
-                WriteCardField(sheet, ref row, "Color", entity.Color);
-                WriteCardField(sheet, ref row, "Material", entity.Material);
-                WriteCardField(sheet, ref row, "Season", entity.Season);
-                WriteCardField(sheet, ref row, "Purchase Price", entity.PurchasePrice);
-                WriteCardField(sheet, ref row, "Notes", entity.Notes);
-                WriteSizeRows(sheet, ref row, entity.Sizes);
-
+                WriteEntityCard(sheet, ref row, entity);
                 row += 2;
             }
 
             FinalizeCardSheet(sheet);
+        }
+
+        private static void WriteEntityCard(IXLWorksheet sheet, ref int row, Entity entity)
+        {
+            WriteCardHeader(sheet, ref row, entity.Name);
+
+            WriteCardField(sheet, ref row, "Brand", entity.Brand);
+            WriteCardField(sheet, ref row, "Color", entity.Color);
+            WriteCardField(sheet, ref row, "Material", entity.Material);
+            WriteCardField(sheet, ref row, "Season", entity.Season);
+            WriteCardField(sheet, ref row, "Purchase Price", entity.PurchasePrice);
+            WriteCardField(sheet, ref row, "Notes", entity.Notes);
+            WriteSizeRows(sheet, ref row, entity.Sizes);
         }
 
         private static void AddProjectSheet(XLWorkbook workbook, string profileName)
@@ -266,17 +305,20 @@ namespace TidyMind
 
             foreach (Project project in LoadProjects(profileName))
             {
-                WriteCardHeader(sheet, ref row, project.Name);
-
-                WriteCardField(sheet, ref row, "Description", RichTextHelper.ToPlainText(project.Description));
-                WriteCardField(sheet, ref row, "Status", project.Status.ToString());
-                WriteCardField(sheet, ref row, "Tasks", FormatTasks(project.Tasks));
-                WriteCardField(sheet, ref row, "Notes", project.Notes);
-
+                WriteProjectCard(sheet, ref row, project);
                 row += 2;
             }
 
             FinalizeCardSheet(sheet);
+        }
+
+        private static void WriteProjectCard(IXLWorksheet sheet, ref int row, Project project)
+        {
+            WriteCardHeader(sheet, ref row, project.Name);
+
+            WriteCardField(sheet, ref row, "Description", RichTextHelper.ToPlainText(project.Description));
+            WriteCardField(sheet, ref row, "Tasks", FormatTasks(project.Tasks));
+            WriteCardField(sheet, ref row, "Notes", RichTextHelper.ToPlainText(project.Notes));
         }
 
         private static void WriteCardHeader(IXLWorksheet sheet, ref int row, string name)

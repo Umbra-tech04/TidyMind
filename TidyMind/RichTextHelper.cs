@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Documents;
 
 namespace TidyMind
@@ -51,7 +52,21 @@ namespace TidyMind
                 document.Blocks.Add(new Paragraph(new Run(line)));
         }
 
-        // For places that show the description without formatting (e.g. exports).
+        // Formatting copied inside the app (WPF rich text) is kept; anything pasted from outside comes in as plain
+        // text, so web pages or Word can't drag in their own fonts and sizes.
+        public static void PasteOutsideTextAsPlain(RichTextBox editor)
+        {
+            DataObject.AddPastingHandler(editor, (s, e) =>
+            {
+                if (e.DataObject.GetDataPresent(DataFormats.Xaml) || !e.DataObject.GetDataPresent(DataFormats.UnicodeText))
+                    return;
+                DataObject plain = new DataObject();
+                plain.SetData(DataFormats.UnicodeText, e.DataObject.GetData(DataFormats.UnicodeText));
+                e.DataObject = plain;
+            });
+        }
+
+        // For places that show a description or note without formatting (e.g. exports).
         public static string ToPlainText(string stored)
         {
             if (string.IsNullOrEmpty(stored) || !IsMarkup(stored))

@@ -46,17 +46,30 @@
         <TextBlock Text="COLOR" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextSub}" Margin="0,20,0,8"/>
         <WrapPanel x:Name="SwatchPanel"/>
 
-        <TextBlock Text="NOTE" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextSub}" Margin="0,18,0,8"/>
-        <TextBox x:Name="NoteInput" Style="{StaticResource NoteInputStyle}" Height="110"
-                 AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+        <!-- The day's note: a title and what to do. Saved to calendar.json only; it never becomes a reminder.
+             (Reminders are added separately, from the day's right-click menu in the calendar.) -->
+        <TextBlock Text="TITLE" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextSub}" Margin="0,18,0,8"/>
+        <Grid>
+            <TextBox x:Name="TitleInput" Style="{StaticResource NoteInputStyle}" FontSize="14" FontWeight="SemiBold"
+                     KeyDown="TitleInput_KeyDown" TextChanged="TitleInput_TextChanged"/>
+            <TextBlock x:Name="TitlePlaceholder" Text="e.g. Car service" FontSize="14"
+                       Foreground="{StaticResource TextSub}" Margin="13,0,0,0" VerticalAlignment="Center"
+                       IsHitTestVisible="False"/>
+        </Grid>
 
-        <StackPanel x:Name="RemindersSection" Visibility="Collapsed">
-            <TextBlock Text="REMINDERS" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextSub}" Margin="0,18,0,6"/>
-            <StackPanel x:Name="RemindersList"/>
-        </StackPanel>
+        <TextBlock Text="NOTE" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextSub}" Margin="0,14,0,8"/>
+        <Grid>
+            <TextBox x:Name="NoteInput" Style="{StaticResource NoteInputStyle}" Height="100"
+                     AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                     TextChanged="NoteInput_TextChanged"/>
+            <TextBlock x:Name="NotePlaceholder" Text="What needs doing…" FontSize="14"
+                       Foreground="{StaticResource TextSub}" Margin="13,9,0,0" VerticalAlignment="Top"
+                       IsHitTestVisible="False"/>
+        </Grid>
 
         <Grid Margin="0,22,0,0">
             <Button x:Name="ClearButton" Content="Clear day" HorizontalAlignment="Left"
+                    ToolTip="Removes this day's color, title and note."
                     Style="{StaticResource GhostButtonStyle}" Foreground="{StaticResource Danger}"
                     Height="36" Padding="14,0" Visibility="Collapsed"
                     Click="ClearButton_Click"/>

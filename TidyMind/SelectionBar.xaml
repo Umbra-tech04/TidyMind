@@ -1,0 +1,14 @@
+<UserControl x:Class="TidyMind.SelectionBar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Takes the place of the search box and Add buttons while cards are selected (CardSelectionController). -->
+    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+        <TextBlock x:Name="CountText" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextMain}"
+                   VerticalAlignment="Center" Margin="0,0,16,0"/>
+        <Button Content="Delete" Height="36" Padding="18,0" Margin="0,0,10,0"
+                Style="{StaticResource GhostButtonStyle}" Foreground="{StaticResource Danger}"
+                Click="Delete_Click"/>
+        <Button Content="Cancel" Height="36" Padding="18,0" Style="{StaticResource GhostButtonStyle}"
+                ToolTip="Clear the selection  (Esc)" Click="Cancel_Click"/>
+    </StackPanel>
+</UserControl>

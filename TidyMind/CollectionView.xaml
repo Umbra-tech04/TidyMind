@@ -6,12 +6,16 @@
              xmlns:local="clr-namespace:TidyMind"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="900">
-    <Grid Background="{StaticResource BgMain}">
+    <!-- Right-click on empty space opens Edit Background (MemoryPageBackground). -->
+    <Grid x:Name="Page" Background="{StaticResource BgMain}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
+
+        <!-- The memory's own background (Edit Background), behind everything -->
+        <Grid x:Name="BackgroundLayer" Grid.RowSpan="3" IsHitTestVisible="False" ClipToBounds="True"/>
 
         <!-- Header -->
         <Border Grid.Row="0" Padding="28,24,28,16">
@@ -23,7 +27,10 @@
                                Margin="0,4,0,0"/>
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <!-- While cards are selected, the selection bar replaces this row (see UpdateSelectionBar) -->
+                <local:SelectionBar x:Name="SelectionBar" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                    Visibility="Collapsed"/>
+                <StackPanel x:Name="Toolbar" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                     <TextBox x:Name="SearchBox" Style="{StaticResource SearchBoxStyle}"
                              Width="240" Margin="0,0,10,0"
                              Foreground="{StaticResource TextSub}" Text="Search..."
@@ -42,13 +49,15 @@
         </ScrollViewer>
 
         <!-- Cards -->
-        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="16,0,16,20">
-            <Grid>
+        <!-- Drag on empty space to select cards (CardSelectionController) -->
+        <ScrollViewer x:Name="CardScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="16,0,16,20">
+            <Grid x:Name="CardArea">
                 <WrapPanel x:Name="EntityPanel"/>
                 <TextBlock x:Name="EmptyState" Text="No items yet. Click “+ Add Entity” to start."
                            FontSize="13" Foreground="{StaticResource TextSub}"
                            HorizontalAlignment="Center" Margin="0,60,0,0"
                            Visibility="Collapsed"/>
+                <Canvas x:Name="MarqueeCanvas" IsHitTestVisible="False"/>
             </Grid>
         </ScrollViewer>
 

@@ -21,20 +21,29 @@ namespace TidyMind
             return days.FirstOrDefault(d => d.Date.Date == date.Date);
         }
 
-        // Sparse: a day left with neither a colour nor a note is removed instead of stored empty.
+        // Sparse: a day left with no colour, title or note is removed instead of stored empty.
         // False if nothing was saved: a file that can't be read is left alone rather than replaced by this one day.
-        public static bool SaveDay(DateTime date, string colorHex, string note)
+        public static bool SaveDay(DateTime date, string colorHex, string title, string note)
         {
             if (!TryRead(out List<CalendarDay> days))
                 return false;
             days.RemoveAll(d => d.Date.Date == date.Date);
 
             colorHex = string.IsNullOrWhiteSpace(colorHex) ? null : colorHex;
+            title = string.IsNullOrWhiteSpace(title) ? null : title.Trim();
             note = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
-            if (colorHex != null || note != null)
-                days.Add(new CalendarDay { Date = date.Date, ColorHex = colorHex, Note = note });
+            if (colorHex != null || title != null || note != null)
+                days.Add(new CalendarDay { Date = date.Date, ColorHex = colorHex, Title = title, Note = note });
 
             return AtomicFile.TryWriteAllText(CalendarFile, JsonSerializer.Serialize(days.OrderBy(d => d.Date).ToList()));
+        }
+
+        // Removes the day's note (title and text) and keeps its colour, like emptying both in the day dialog.
+        public static bool DeleteNote(DateTime date)
+        {
+            if (!TryRead(out List<CalendarDay> days))
+                return false;
+            return SaveDay(date, GetDay(days, date)?.ColorHex, null, null);
         }
 
         private static bool TryRead(out List<CalendarDay> days)

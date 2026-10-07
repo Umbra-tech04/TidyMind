@@ -37,16 +37,35 @@ namespace TidyMind
             }
         }
 
+        // Written via a temporary file, so a crash or full disk mid-save can't truncate every reminder at once.
+        // Throws IOException if it couldn't be written (the file is then unchanged); callers that schedule a task
+        // save first, so a failed save never leaves a task behind for a reminder that isn't stored.
         public static void SaveReminders(List<Reminder> reminders)
         {
             string json = JsonSerializer.Serialize(reminders);
-            File.WriteAllText(RemindersFile, json);
+            if (!AtomicFile.TryWriteAllText(RemindersFile, json))
+                throw new IOException(RemindersFile + " couldn't be written.");
         }
 
         public static void AddReminder(Reminder reminder)
         {
             List<Reminder> reminders = LoadReminders();
             reminders.Add(reminder);
+            SaveReminders(reminders);
+
+            RegisterReminderTask(reminder);
+        }
+
+        // Replaces the stored reminder with the same Id and reschedules its task (registering under the same
+        // name overwrites the old trigger).
+        public static void UpdateReminder(Reminder reminder)
+        {
+            List<Reminder> reminders = LoadReminders();
+            int index = reminders.FindIndex(r => r.Id == reminder.Id);
+            if (index < 0)
+                reminders.Add(reminder);
+            else
+                reminders[index] = reminder;
             SaveReminders(reminders);
 
             RegisterReminderTask(reminder);

@@ -10,7 +10,8 @@ namespace TidyMind
     {
         Memory,
         Project,
-        Entity
+        Entity,
+        File // a project's attached file; opens the project
     }
 
     // One searchable thing plus enough to navigate back to it.
@@ -87,6 +88,19 @@ namespace TidyMind
                     Profile = profile,
                     ItemIndex = p
                 });
+
+                // Its attached files by name: picking one opens the project they're in.
+                foreach (Attachment attachment in project.Attachments ?? new List<Attachment>())
+                {
+                    index.Add(new SearchResult
+                    {
+                        Kind = SearchResultKind.File,
+                        Title = attachment.DisplayName,
+                        Location = profile.Name + Arrow + project.Name,
+                        Profile = profile,
+                        ItemIndex = p
+                    });
+                }
             }
         }
 

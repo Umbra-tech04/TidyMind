@@ -88,9 +88,9 @@ namespace TidyMind
             selectedKey = KeyOf(profile);
 
             if (profile.Type == ProfileType.Collection)
-                ContentArea.Content = new CollectionView(profile);
+                ContentArea.Content = new CollectionView(profile, () => ProfileManager.TrySaveProfiles(profiles));
             else
-                ContentArea.Content = new ProjectView(profile);
+                ContentArea.Content = new ProjectView(profile, () => ProfileManager.TrySaveProfiles(profiles));
 
             BuildNav();
         }
@@ -326,6 +326,10 @@ namespace TidyMind
 
             if (result != MessageBoxResult.Yes) return;
 
+            if (profile.Type == ProfileType.Project)
+                DeleteProjectFiles(profile.Name);
+            if (profile.BackgroundType == BackgroundFill.Image)
+                ImageStore.Backgrounds.Delete(profile.BackgroundImagePath); // its page background picture
             DeleteIfExists(DataFile(profile.Name, profile.Type));
             DeleteIfExists(TabStore.FileName(profile.Name, profile.Type));
             if (profile.Type == ProfileType.Project)
@@ -376,6 +380,25 @@ namespace TidyMind
                 File.Delete(path);
         }
 
+        // The card pictures and attached files of a project memory that's being deleted, so they aren't left behind
+        // in CardImages/ and Attachments/. An unreadable projects file just means there's nothing to clean up here.
+        private static void DeleteProjectFiles(string memoryName)
+        {
+            List<Project> projects;
+            try
+            {
+                projects = ProjectStore.Load(memoryName);
+            }
+            catch (Exception e) when (e is IOException || e is System.Text.Json.JsonException || e is UnauthorizedAccessException)
+            {
+                return;
+            }
+
+            foreach (Project project in projects.Where(p => p.CardBackgroundType == BackgroundFill.Image))
+                ImageStore.Cards.Delete(project.CardBackgroundImagePath);
+            AttachmentStore.Delete(projects.SelectMany(p => p.Attachments ?? new List<Attachment>()));
+        }
+
         // ---- Export -------------------------------------------------------
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
@@ -390,17 +413,7 @@ namespace TidyMind
             if (formatWindow.ShowDialog() != true) return;
 
             ExportFormat format = formatWindow.SelectedFormat;
-
-            SaveFileDialog dialog = new SaveFileDialog();
-            dialog.FileName = profile.Name + "_export." + GetExtension(format);
-            dialog.Filter = GetFilter(format);
-
-            if (dialog.ShowDialog() == true)
-            {
-                ExportService.ExportMemory(profile, dialog.FileName, format);
-                MessageBox.Show("Export complete.", "Export",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
-            }
+            ExportMenu.SaveAs(format, profile.Name, path => ExportService.ExportMemory(profile, path, format));
         }
 
         private void ExportAll()
@@ -416,39 +429,7 @@ namespace TidyMind
             if (formatWindow.ShowDialog() != true) return;
 
             ExportFormat format = formatWindow.SelectedFormat;
-
-            SaveFileDialog dialog = new SaveFileDialog();
-            dialog.FileName = "TidyMind_export." + GetExtension(format);
-            dialog.Filter = GetFilter(format);
-
-            if (dialog.ShowDialog() == true)
-            {
-                ExportService.ExportAll(profiles, dialog.FileName, format);
-                MessageBox.Show("Export complete.", "Export",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-        }
-
-        private static string GetExtension(ExportFormat format)
-        {
-            switch (format)
-            {
-                case ExportFormat.Excel: return "xlsx";
-                case ExportFormat.Docx: return "docx";
-                case ExportFormat.Pdf: return "pdf";
-                default: return "xlsx";
-            }
-        }
-
-        private static string GetFilter(ExportFormat format)
-        {
-            switch (format)
-            {
-                case ExportFormat.Excel: return "Excel files (*.xlsx)|*.xlsx";
-                case ExportFormat.Docx: return "Word documents (*.docx)|*.docx";
-                case ExportFormat.Pdf: return "PDF files (*.pdf)|*.pdf";
-                default: return "All files (*.*)|*.*";
-            }
+            ExportMenu.SaveAs(format, "TidyMind", path => ExportService.ExportAll(profiles, path, format));
         }
 
         // ---- Global search -----------------------------------------------

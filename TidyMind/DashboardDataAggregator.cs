@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -27,13 +26,12 @@ namespace TidyMind
         public int Percent { get; set; }
         public DateTime LastModified { get; set; } // default for projects from before timestamps existed
         public int TasksLeft { get; set; }
-        public bool IsActive { get; set; } // Status Active: not paused, planned, cancelled or marked done
+        public ProjectCardModel Card { get; set; } // what the project card draws (the same card as the project grid)
         public SearchResult Target { get; set; }
     }
 
     public class DashboardData
     {
-        public int MemoryCount { get; set; }
         public List<DashboardAgendaItem> TodayItems { get; set; } = new List<DashboardAgendaItem>();
         public List<DashboardAgendaItem> UpcomingItems { get; set; } = new List<DashboardAgendaItem>();
 
@@ -42,8 +40,6 @@ namespace TidyMind
         public int AverageCompletion { get; set; }
         public List<DashboardProject> AlmostDone { get; set; } = new List<DashboardProject>(); // 70-99%, closest first
         public List<DashboardProject> Stalled { get; set; } = new List<DashboardProject>();    // under 30%, untouched 14+ days, longest first
-
-        public string Summary { get; set; }
     }
 
     // Reads every memory's files (like SearchIndexBuilder) fresh on each call and computes the Home dashboard.
@@ -54,15 +50,12 @@ namespace TidyMind
         private const int StalledBelowPercent = 30;
         private const int StalledAfterDays = 14;
 
-        private static readonly CultureInfo English = CultureInfo.InvariantCulture;
-
         public static DashboardData Build(IList<Profile> profiles, DateTime now)
         {
-            DashboardData data = new DashboardData { MemoryCount = profiles.Count };
+            DashboardData data = new DashboardData();
 
             AddAgenda(data, now.Date);
             AddProjects(data, profiles, now.Date);
-            data.Summary = BuildSummary(data);
 
             return data;
         }
@@ -85,16 +78,16 @@ namespace TidyMind
         {
             List<DashboardAgendaItem> items = new List<DashboardAgendaItem>();
 
-            string note = CalendarService.GetDay(days, date)?.Note;
-            if (!string.IsNullOrWhiteSpace(note))
+            // The note's title as the line itself, what to do under it (like a reminder's message and labels).
+            CalendarDay day = CalendarService.GetDay(days, date);
+            if (day != null && day.HasEntry())
             {
-                string[] lines = note.Split('\n').Select(l => l.Trim()).Where(l => l.Length > 0).ToArray();
                 items.Add(new DashboardAgendaItem
                 {
                     Kind = AgendaKind.CalendarNote,
                     Date = date,
-                    Text = lines[0],
-                    Detail = string.Join("  ·  ", lines.Skip(1))
+                    Text = day.Heading(),
+                    Detail = day.Body()
                 });
             }
 
@@ -134,7 +127,7 @@ namespace TidyMind
                         Percent = projects[i].CompletionPercent(),
                         LastModified = projects[i].LastModified,
                         TasksLeft = total - (projects[i].Tasks?.Count(t => t.IsDone) ?? 0),
-                        IsActive = projects[i].Status == ProjectStatus.Active,
+                        Card = ProjectCardModel.From(projects[i]),
                         Target = new SearchResult { Kind = SearchResultKind.Project, Title = projects[i].Name, Profile = profile, ItemIndex = i }
                     });
                 }
@@ -142,8 +135,8 @@ namespace TidyMind
 
             data.ProjectCount = all.Count;
 
-            // "In progress" means the same thing as in the groups below: status Active and not every task done.
-            List<DashboardProject> active = all.Where(p => p.IsActive && p.Percent < 100).ToList();
+            // "In progress" means the same thing as in the groups below: not every task done.
+            List<DashboardProject> active = all.Where(p => p.Percent < 100).ToList();
             data.ActiveProjectCount = active.Count;
             data.AverageCompletion = active.Count == 0 ? 0 : (int)Math.Round(active.Average(p => p.Percent), MidpointRounding.AwayFromZero);
 
@@ -158,34 +151,6 @@ namespace TidyMind
                                              && p.LastModified != default && (today - p.LastModified.Date).Days >= StalledAfterDays)
                 .OrderBy(p => p.LastModified)
                 .ToList();
-        }
-
-        // One friendly sentence from whatever is notable today (plain templates, no AI).
-        public static string BuildSummary(DashboardData data)
-        {
-            if (data.MemoryCount == 0)
-                return "Welcome to TidyMind! Create your first project or collection to get started.";
-
-            List<DashboardAgendaItem> todayReminders = data.TodayItems.Where(i => i.Kind == AgendaKind.Reminder).ToList();
-            int today = todayReminders.Count;
-            string reminders = today == 0 ? null : "You have " + today + (today == 1 ? " reminder" : " reminders") + " today";
-            DashboardProject project = data.AlmostDone.FirstOrDefault();
-            string projectPart = project == null ? null : "'" + project.Name + "' is almost done at " + project.Percent + "%";
-
-            if (reminders != null && projectPart != null)
-                return reminders + ", and " + projectPart + ".";
-            if (reminders != null)
-                return reminders + (today == 1 ? ", at " : " — the first one at ") + todayReminders[0].Time.Value.ToString("HH:mm", English) + ".";
-            if (projectPart != null)
-                return projectPart + (project.TasksLeft == 1 ? " — one task left and it's finished!" : ", with " + project.TasksLeft + " tasks left.");
-            if (data.UpcomingItems.Count > 0)
-            {
-                DashboardAgendaItem next = data.UpcomingItems[0];
-                string prefix = data.TodayItems.Count == 0 ? "Nothing due today. " : ""; // a note today is still something
-                return prefix + "Next up: \"" + next.Text + "\" on " + next.Date.ToString("dddd", English) + ".";
-            }
-            // Nothing notable: no filler sentence.
-            return null;
         }
 
         // A missing or unreadable file contributes nothing; the dashboard must never crash the app.

@@ -1,0 +1,33 @@
+<UserControl x:Class="TidyMind.AttachmentsSection"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel>
+        <!-- Drop zone: files dropped here (or picked with Browse) are copied in and listed below. Solid accent
+             border and a light tint while files are dragged over it. -->
+        <Border x:Name="DropZone" AllowDrop="True" Background="{StaticResource BgPanel}"
+                BorderBrush="{StaticResource Border}" BorderThickness="1" CornerRadius="8" Padding="14,10"
+                DragEnter="DropZone_DragEnter" DragOver="DropZone_DragOver"
+                DragLeave="DropZone_DragLeave" Drop="DropZone_Drop">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="&#xE898;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                           Foreground="{StaticResource TextSub}" VerticalAlignment="Center" Margin="2,0,12,0"/>
+                <TextBlock Grid.Column="1" Text="Drop files here or" FontSize="13"
+                           Foreground="{StaticResource TextSub}" VerticalAlignment="Center"/>
+                <Button Grid.Column="2" Content="Browse..." Style="{StaticResource GhostButtonStyle}"
+                        Height="32" Padding="14,0" Click="BrowseButton_Click"/>
+            </Grid>
+        </Border>
+
+        <!-- The attached files. About five rows show; past that the list scrolls, then hands the wheel to the window
+             (like the task list). -->
+        <ScrollViewer x:Name="FileScroll" MaxHeight="262" Margin="0,8,0,0" Visibility="Collapsed"
+                      VerticalScrollBarVisibility="Auto" PreviewMouseWheel="FileScroll_PreviewMouseWheel">
+            <StackPanel x:Name="FileRows"/>
+        </ScrollViewer>
+    </StackPanel>
+</UserControl>

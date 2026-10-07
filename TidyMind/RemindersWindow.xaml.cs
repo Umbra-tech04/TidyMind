@@ -151,19 +151,8 @@ namespace TidyMind
 
         private void DeleteReminder_Click(object sender, RoutedEventArgs e)
         {
-            Guid id = (Guid)((Button)sender).Tag;
-
-            MessageBoxResult result = MessageBox.Show(
-                "Delete this reminder?",
-                "Confirm Delete",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-
-            if (result == MessageBoxResult.Yes)
-            {
-                ReminderManager.DeleteReminder(id);
+            if (ReminderActions.ConfirmDelete((Guid)((Button)sender).Tag))
                 RenderReminders();
-            }
         }
 
         private void AddReminderButton_Click(object sender, RoutedEventArgs e)

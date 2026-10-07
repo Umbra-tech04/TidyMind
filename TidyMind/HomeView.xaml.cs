@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -17,13 +19,12 @@ namespace TidyMind
     // quick to-do list, which is edited in place.
     public partial class HomeView : UserControl
     {
-        private const string CalendarGlyph = ""; // Segoe MDL2: calendar note
+        private const string CalendarGlyph = "\uE787"; // Segoe MDL2: Calendar (a calendar note)
         private const int DaybookDays = 8;             // today + the aggregator's 7 upcoming days
         private const int GroupSize = 6;                  // per group: a longer list stops being a nudge
         private const int HeartbeatPercent = 90;           // the leading almost-done ring beats once per visit from here up
         private const double TileSize = 124;
         private const double TileRadius = 12;
-        private const double RingThickness = 3;
         private const double StackBelowWidth = 860;    // narrower than this, the week moves under the to-do sheet
 
         private static readonly CultureInfo English = CultureInfo.InvariantCulture;
@@ -87,8 +88,6 @@ namespace TidyMind
 
             DateText.Text = now.ToString("dddd, MMMM d", English);
             GreetingText.Text = GreetingProvider.Pick(now);
-            SummaryText.Text = data.Summary;
-            SummaryText.Visibility = data.Summary == null ? Visibility.Collapsed : Visibility.Visible;
 
             ShowDaybook(data, now.Date);
             ShowProjects(data);
@@ -139,7 +138,9 @@ namespace TidyMind
                 BorderBrush = Res("Hairline"),
                 BorderThickness = new Thickness(0, isToday ? 0 : 1, 0, 0),
                 Padding = new Thickness(0, empty && !isToday ? 6 : 12, 0, empty && !isToday ? 6 : 12),
-                SnapsToDevicePixels = true
+                SnapsToDevicePixels = true,
+                Background = Brushes.Transparent, // so the whole day, gaps included, answers a right-click
+                ContextMenu = AgendaMenus.ForDay(this, date, null, Refresh) // entries have their own menus
             };
 
             Grid grid = new Grid();
@@ -216,7 +217,10 @@ namespace TidyMind
             Border row = HoverRow(new Thickness(10, 6, 10, 6));
             row.Margin = new Thickness(-10, 0, 0, 0);
             TextCopy.AttachClick(row, open); // a click navigates; dragging over the text selects it
-            TextCopy.AttachMenu(row, () => copy);
+            ContextMenu menu = reminder
+                ? AgendaMenus.ForReminder(this, item.Reminder.Id, item.Date, copy, Refresh)
+                : AgendaMenus.ForNote(this, item.Date, copy, Refresh);
+            row.ContextMenu = menu;
 
             Grid grid = new Grid();
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(54) });
@@ -224,7 +228,7 @@ namespace TidyMind
 
             if (reminder)
             {
-                TextBox time = RowText(item.Time?.ToString("HH:mm", English) ?? "", 13, Res("TextSub"));
+                TextBox time = RowText(item.Time?.ToString("HH:mm", English) ?? "", 13, Res("TextSub"), menu);
                 time.Margin = new Thickness(0, 1, 12, 0);
                 time.HorizontalAlignment = HorizontalAlignment.Right;
                 Typography.SetNumeralAlignment(time, FontNumeralAlignment.Tabular);
@@ -245,10 +249,10 @@ namespace TidyMind
 
             StackPanel text = new StackPanel();
             Grid.SetColumn(text, 1);
-            text.Children.Add(RowText(item.Text, 14, Res("TextMain"), reminder ? (FontWeight?)null : FontWeights.SemiBold));
+            text.Children.Add(RowText(item.Text, 14, Res("TextMain"), menu, reminder ? (FontWeight?)null : FontWeights.SemiBold));
             if (!string.IsNullOrEmpty(item.Detail))
             {
-                TextBox detail = RowText(item.Detail, 12, Res("TextSub"));
+                TextBox detail = RowText(item.Detail, 12, Res("TextSub"), menu);
                 detail.Margin = new Thickness(0, 1, 0, 0);
                 text.Children.Add(detail);
             }
@@ -311,71 +315,20 @@ namespace TidyMind
         // A small version of the project view's card: same white square, same ring filling clockwise.
         private FrameworkElement ProjectTile(DashboardProject project, string status, bool beat)
         {
-            StackPanel cell = new StackPanel { Width = TileSize, Margin = new Thickness(10, 8, 10, 12), Cursor = Cursors.Hand };
-
-            Grid card = new Grid { Width = TileSize, Height = TileSize };
-            DropShadowEffect shadow = CardEffects.CreateShadow();
-            card.Children.Add(new Border { Background = Res("BgPanel"), CornerRadius = new CornerRadius(TileRadius), Effect = shadow });
-
-            PathGeometry ring = CardEffects.BuildRingGeometry(TileSize, TileRadius, RingThickness);
-            card.Children.Add(new ShapePath { Data = ring, Stroke = new SolidColorBrush(Color.FromRgb(0xEC, 0xEC, 0xE9)), StrokeThickness = RingThickness });
-
-            ShapePath progress = null;
-            if (project.Percent > 0)
+            // Transparent background: the gap between card and caption answers clicks and right-clicks too.
+            StackPanel cell = new StackPanel
             {
-                progress = new ShapePath
-                {
-                    Data = ring,
-                    Stroke = CardEffects.Accent,
-                    StrokeThickness = RingThickness,
-                    StrokeDashCap = PenLineCap.Round
-                };
+                Width = TileSize,
+                Margin = new Thickness(10, 8, 10, 12),
+                Cursor = Cursors.Hand,
+                Background = Brushes.Transparent
+            };
 
-                // A complete ring is drawn solid: a dash exactly one perimeter long can leave a hairline seam.
-                if (project.Percent < 100)
-                {
-                    double perimeter = CardEffects.RingPerimeter(TileSize, TileRadius, RingThickness);
-
-                    // WPF dash lengths are in multiples of StrokeThickness, not pixels.
-                    progress.StrokeDashArray = new DoubleCollection
-                    {
-                        perimeter * project.Percent / 100.0 / RingThickness,
-                        perimeter / RingThickness
-                    };
-                }
-
-                // In a Canvas so the heartbeat's thicker stroke and glow aren't layout-clipped to the tile.
-                card.Children.Add(new Canvas { Children = { progress } });
-            }
-
-            card.Children.Add(new TextBlock
-            {
-                Text = project.Name,
-                FontSize = 13,
-                FontWeight = FontWeights.Bold,
-                Foreground = Res("TextMain"),
-                TextWrapping = TextWrapping.Wrap,
-                TextAlignment = TextAlignment.Center,
-                LineHeight = 18,
-                LineStackingStrategy = LineStackingStrategy.BlockLineHeight,
-                MaxHeight = 54,
-                TextTrimming = TextTrimming.CharacterEllipsis,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(14, 14, 14, 18)
-            });
-
-            card.Children.Add(new TextBlock
-            {
-                Text = project.Percent + "%",
-                FontSize = 11,
-                FontWeight = FontWeights.Bold,
-                Foreground = project.Percent > 0 ? CardEffects.Accent : Res("TextSub"),
-                HorizontalAlignment = HorizontalAlignment.Right,
-                VerticalAlignment = VerticalAlignment.Bottom,
-                Margin = new Thickness(0, 0, 12, 10)
-            });
-
+            // The project grid's own card (ProjectCard), compact.
+            ProjectCardVisual visual = ProjectCard.Build(project.Card, TileSize, TileRadius, compact: true);
+            Grid card = visual.Card;
+            DropShadowEffect shadow = visual.Shadow;
+            ShapePath progress = visual.Progress;
             cell.Children.Add(card);
 
             // Caption under the card: which memory it lives in, and why it's here.
@@ -384,7 +337,7 @@ namespace TidyMind
 
             CardEffects.AttachHoverLift(card, shadow);
             CardEffects.AttachClick(cell, () => navigate(project.Target));
-            TextCopy.AttachMenu(cell, () => project.Name);
+            AttachProjectMenu(cell, project);
 
             // The one moment of motion on Home: the nearly finished project's ring beats once as you arrive.
             if (beat && progress != null && heartbeatPending && SystemParameters.ClientAreaAnimation)
@@ -400,6 +353,43 @@ namespace TidyMind
             }
 
             return cell;
+        }
+
+        // The project grid's own card menu (ProjectMenu). Built when it opens, from the memory's file read fresh
+        // then, so Rename/Delete change and save the current list rather than the copy Home was drawn from.
+        private void AttachProjectMenu(FrameworkElement cell, DashboardProject shown)
+        {
+            string memory = shown.Target.Profile.Name;
+            int index = shown.Target.ItemIndex;
+
+            cell.ContextMenu = new ContextMenu(); // placeholder: without one, WPF doesn't raise ContextMenuOpening
+            cell.ContextMenuOpening += (s, e) =>
+            {
+                List<Project> projects;
+                try
+                {
+                    projects = ProjectStore.Load(memory);
+                }
+                catch (Exception ex) when (ex is IOException || ex is JsonException || ex is UnauthorizedAccessException)
+                {
+                    e.Handled = true;
+                    return;
+                }
+
+                // Changed since Home was drawn (renamed, moved or deleted in the meantime): redraw instead.
+                if (index >= projects.Count || projects[index].Name != shown.Name)
+                {
+                    e.Handled = true;
+                    Refresh();
+                    return;
+                }
+
+                Project project = projects[index];
+                cell.ContextMenu = ProjectMenu.Build(this, project,
+                    save: () => ProjectStore.SaveOrWarn(memory, projects),
+                    redraw: Refresh,
+                    remove: () => projects.Remove(project));
+            };
         }
 
         // ---- Pieces -------------------------------------------------------
@@ -420,10 +410,14 @@ namespace TidyMind
         }
 
         // Selectable, but with the row's hand cursor: clicking navigates is still the main thing a row does.
-        private static TextBox RowText(string text, double fontSize, Brush foreground, FontWeight? weight = null)
+        // It also carries the row's menu: selectable text has its own one-item "Copy" menu, which would otherwise
+        // answer every right-click on the text and leave the row's menu reachable only from the empty margins.
+        // (Ctrl+C still copies a selection.)
+        private static TextBox RowText(string text, double fontSize, Brush foreground, ContextMenu rowMenu, FontWeight? weight = null)
         {
             TextBox box = TextCopy.Selectable(text, fontSize, foreground, weight);
             box.Cursor = Cursors.Hand;
+            box.ContextMenu = rowMenu;
             return box;
         }
 

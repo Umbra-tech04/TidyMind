@@ -51,7 +51,7 @@
         <!-- Header -->
         <Border Grid.Row="0" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
                 BorderThickness="0,0,0,1" Padding="20,16">
-            <TextBlock Text="Add Reminder" FontSize="18" FontWeight="Bold"
+            <TextBlock x:Name="HeadingText" Text="Add Reminder" FontSize="18" FontWeight="Bold"
                        Foreground="{StaticResource TextMain}"/>
         </Border>
 
@@ -91,13 +91,8 @@
             </Grid>
 
             <TextBlock Text="Repeat" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,0,0,4"/>
-            <ComboBox x:Name="RepeatBox" Height="32" SelectedIndex="0">
-                <ComboBoxItem Content="Once"/>
-                <ComboBoxItem Content="Daily"/>
-                <ComboBoxItem Content="Weekly"/>
-                <ComboBoxItem Content="Monthly"/>
-                <ComboBoxItem Content="Yearly"/>
-            </ComboBox>
+            <!-- Items come from ReminderForm.FillRepeatBox -->
+            <ComboBox x:Name="RepeatBox" Height="32"/>
         </StackPanel>
 
         <!-- Footer -->

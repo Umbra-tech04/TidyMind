@@ -11,6 +11,9 @@
         <SolidColorBrush x:Key="BgSubtle"     Color="#F0F0EE"/>
         <SolidColorBrush x:Key="TextMain"     Color="#1C1B19"/>
         <SolidColorBrush x:Key="TextSub"      Color="#8A8A87"/>
+        <SolidColorBrush x:Key="TextBody"     Color="#3A3936"/> <!-- secondary reading text: softer than TextMain, darker than TextSub -->
+        <FontFamily x:Key="DisplayFont">Segoe UI Variable Display, Segoe UI</FontFamily> <!-- large or title type -->
+
         <SolidColorBrush x:Key="Accent"       Color="#2E7BC4"/>
         <SolidColorBrush x:Key="AccentSoft"   Color="#EAF2F9"/>
         <SolidColorBrush x:Key="BtnBg"        Color="#2E7BC4"/>
@@ -212,32 +215,83 @@
             </Setter>
         </Style>
 
-        <!-- ===== Small "×" on a checklist row (to-dos, to-do lists) ===== -->
-        <Style x:Key="RowDeleteStyle" TargetType="Button">
-            <Setter Property="Foreground" Value="{StaticResource TextSub}"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Width" Value="24"/>
-            <Setter Property="Height" Value="24"/>
-            <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
-            <Setter Property="FontSize" Value="10"/>
-            <Setter Property="Content" Value="&#xE711;"/>
+        <!-- ===== Text link button (e.g. "Show done", a reminder row's Edit / Delete) ===== -->
+        <Style x:Key="LinkButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource Accent}"/>
+            <Setter Property="FontSize" Value="12"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="ToolTip" Value="Delete"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="4">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border Background="Transparent" Padding="2,2">
+                            <TextBlock x:Name="label" Text="{TemplateBinding Content}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="label" Property="TextDecorations" Value="Underline"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ===== Hover icon button: the small icon-only button that appears on a row for edit / delete / … =====
+             Content is one Segoe MDL2 Assets glyph, written as an escaped code point (&#xE70F;), never a pasted
+             character. The glyph is drawn by an explicit TextBlock that takes the button's own FontFamily: the global
+             TextBlock style above forces Segoe UI onto the TextBlock a ContentPresenter generates, which turned
+             every icon into an empty "missing glyph" square. Row styles below only set the glyph and tooltip. -->
+        <SolidColorBrush x:Key="AccentTint"   Color="#1F2E7BC4"/> <!-- Accent at 12%: hover background -->
+        <SolidColorBrush x:Key="AccentTintStrong" Color="#382E7BC4"/> <!-- Accent at 22%: pressed -->
+        <Style x:Key="HoverIconButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource TextSub}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="6">
+                            <TextBlock Text="{TemplateBinding Content}"
+                                       FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}"
+                                       Foreground="{TemplateBinding Foreground}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Foreground" Value="{StaticResource Danger}"/>
-                    <Setter Property="Background" Value="{StaticResource BgSubtle}"/>
+                    <Setter Property="Foreground" Value="{StaticResource Accent}"/>
+                    <Setter Property="Background" Value="{StaticResource AccentTint}"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="{StaticResource AccentTintStrong}"/>
                 </Trigger>
             </Style.Triggers>
+        </Style>
+
+        <!-- "×" on a checklist row (to-dos, to-do lists, project tasks): the glyph turns red on hover -->
+        <Style x:Key="RowDeleteStyle" TargetType="Button" BasedOn="{StaticResource HoverIconButtonStyle}">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Content" Value="&#xE711;"/>
+            <Setter Property="ToolTip" Value="Delete"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="{StaticResource Danger}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Pencil on a checklist row: rename / edit -->
+        <Style x:Key="RowEditStyle" TargetType="Button" BasedOn="{StaticResource HoverIconButtonStyle}">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Content" Value="&#xE70F;"/>
+            <Setter Property="ToolTip" Value="Rename"/>
         </Style>
 
         <!-- ===== Square icon button ===== -->

@@ -172,7 +172,7 @@ namespace TidyMind
                 });
             }
 
-            if (!string.IsNullOrWhiteSpace(day?.Note))
+            if (day != null && day.HasEntry())
             {
                 content.Children.Add(new Rectangle
                 {
@@ -195,22 +195,7 @@ namespace TidyMind
             cell.MouseLeave += (s, e) => cell.BorderBrush = restingBorder;
             CardEffects.AttachClick(cell, () => EditDay(date));
 
-            ContextMenu menu = new ContextMenu();
-            MenuItem addReminder = new MenuItem
-            {
-                Header = "Add Reminder",
-                IsEnabled = date >= DateTime.Today // a reminder can't fire in the past
-            };
-            addReminder.Click += (s, e) => AddReminder(date);
-            menu.Items.Add(addReminder);
-
-            string dayText = DayAsText(day, reminders);
-            if (dayText != null)
-            {
-                menu.Items.Add(new Separator());
-                menu.Items.Add(TextCopy.CopyItem(() => dayText));
-            }
-            cell.ContextMenu = menu;
+            cell.ContextMenu = AgendaMenus.ForDay(this, date, DayAsText(day, reminders), AfterChange);
 
             return cell;
         }
@@ -219,8 +204,13 @@ namespace TidyMind
         private static string DayAsText(CalendarDay day, List<Reminder> reminders)
         {
             List<string> lines = new List<string>();
-            if (!string.IsNullOrWhiteSpace(day?.Note))
-                lines.Add(day.Note.Trim().Replace("\r\n", "\n").Replace("\n", Environment.NewLine)); // the note box stores bare \n
+            if (day != null && day.HasEntry())
+            {
+                lines.Add(day.Heading());
+                string body = day.Body();
+                if (body.Length > 0)
+                    lines.Add(body);
+            }
             lines.AddRange(reminders.Select(r => r.NextFireTime.ToString("HH:mm") + "  " + r.Message));
 
             return lines.Count == 0 ? null : string.Join(Environment.NewLine, lines);
@@ -229,7 +219,7 @@ namespace TidyMind
         // Note + that day's reminders; nothing for an empty day.
         private static object CreateTooltip(DateTime date, CalendarDay day, List<Reminder> reminders)
         {
-            bool hasNote = !string.IsNullOrWhiteSpace(day?.Note);
+            bool hasNote = day != null && day.HasEntry();
             if (!hasNote && reminders.Count == 0)
                 return null;
 
@@ -242,7 +232,12 @@ namespace TidyMind
             });
 
             if (hasNote)
-                tip.Children.Add(new TextBlock { Text = day.Note, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 4) });
+            {
+                string body = day.Body();
+                tip.Children.Add(new TextBlock { Text = day.Heading(), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, body.Length > 0 ? 1 : 4) });
+                if (body.Length > 0)
+                    tip.Children.Add(new TextBlock { Text = body, TextWrapping = TextWrapping.Wrap, Opacity = 0.75, Margin = new Thickness(0, 0, 0, 4) });
+            }
 
             foreach (Reminder reminder in reminders)
             {
@@ -301,9 +296,9 @@ namespace TidyMind
             row.MouseLeave += (s, e) => row.Background = Brushes.Transparent;
             CardEffects.AttachClick(row, () => EditDay(date));
 
-            string dayText = DayAsText(day, reminders);
-            if (dayText != null)
-                TextCopy.AttachMenu(row, () => dayText);
+            // Same menus as the Home week: the note and each reminder line have their own (Edit / Delete /
+            // Add Reminder / Copy); the rest of the row is the day (Add Reminder / Copy).
+            row.ContextMenu = AgendaMenus.ForDay(this, date, DayAsText(day, reminders), AfterChange);
 
             Grid grid = new Grid();
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(18) });
@@ -332,23 +327,34 @@ namespace TidyMind
             grid.Children.Add(dateText);
 
             StackPanel lines = new StackPanel();
-            if (!string.IsNullOrWhiteSpace(day?.Note))
+            if (day != null && day.HasEntry())
             {
+                string body = day.Body();
                 lines.Children.Add(new TextBlock
                 {
-                    Text = day.Note.Split('\n')[0].Trim(),
+                    Text = day.Heading(),
                     FontSize = 12,
                     Foreground = (Brush)FindResource("TextMain"),
-                    TextTrimming = TextTrimming.CharacterEllipsis
+                    TextTrimming = TextTrimming.CharacterEllipsis,
+                    Background = Brushes.Transparent, // the whole line, not just the letters, answers a right-click
+                    ContextMenu = AgendaMenus.ForNote(this, date,
+                        body.Length > 0 ? day.Heading() + Environment.NewLine + body : day.Heading(), AfterChange)
                 });
             }
             foreach (Reminder reminder in reminders)
             {
-                StackPanel line = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 1, 0, 0) };
+                string text = reminder.NextFireTime.ToString("HH:mm", English) + "  " + reminder.Message;
+                StackPanel line = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    Margin = new Thickness(0, 1, 0, 0),
+                    Background = Brushes.Transparent,
+                    ContextMenu = AgendaMenus.ForReminder(this, reminder.Id, date, reminder.Message, AfterChange)
+                };
                 line.Children.Add(new Ellipse { Width = 5, Height = 5, Fill = ReminderDot, Margin = new Thickness(0, 0, 6, 0), VerticalAlignment = VerticalAlignment.Center });
                 line.Children.Add(new TextBlock
                 {
-                    Text = reminder.NextFireTime.ToString("HH:mm") + "  " + reminder.Message,
+                    Text = text,
                     FontSize = 12,
                     Foreground = (Brush)FindResource("TextSub"),
                     TextTrimming = TextTrimming.CharacterEllipsis
@@ -373,11 +379,10 @@ namespace TidyMind
             Sheet.Focus(); // so Esc closes the panel again
         }
 
-        private void AddReminder(DateTime date)
+        // After a right-click action changed a day: redraw, and give the panel focus back so Esc closes it again.
+        private void AfterChange()
         {
-            AddReminderWindow window = new AddReminderWindow(null, date) { Owner = Window.GetWindow(this) };
-            if (window.ShowDialog() == true)
-                Render();
+            Render();
             Sheet.Focus();
         }
 

@@ -10,8 +10,6 @@
          the to-do list is the one white sheet you write on, the week is printed straight onto the page, and projects
          are the app's own ring cards in miniature. Numbers appear inside sentences, never as stat tiles. -->
     <UserControl.Resources>
-        <FontFamily x:Key="DisplayFont">Segoe UI Variable Display, Segoe UI</FontFamily>
-        <SolidColorBrush x:Key="TextBody" Color="#3A3936"/>
         <SolidColorBrush x:Key="Hairline" Color="#E4E4E1"/>
 
         <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
@@ -32,15 +30,12 @@
         <!-- Bottom margin clears the floating corner buttons -->
         <StackPanel x:Name="Page" Margin="48,40,48,88" MaxWidth="1040">
 
-            <!-- Masthead: date, greeting, and the one sentence worth reading today -->
+            <!-- Masthead: date and greeting -->
             <TextBox x:Name="DateText" Style="{StaticResource SelectableTextStyle}"
                      FontSize="13" Foreground="{StaticResource TextSub}"/>
             <TextBox x:Name="GreetingText" Style="{StaticResource SelectableTextStyle}"
                      FontFamily="{StaticResource DisplayFont}" FontSize="40" FontWeight="Light"
                      Foreground="{StaticResource TextMain}" Margin="0,2,0,0"/>
-            <TextBox x:Name="SummaryText" Style="{StaticResource SelectableTextStyle}"
-                     FontSize="17" Foreground="{StaticResource TextBody}"
-                     MaxWidth="620" HorizontalAlignment="Left" Margin="0,10,0,0"/>
 
             <!-- The day: to-do sheet beside the week. Stacks on narrow windows (see ApplyWidth). -->
             <Grid x:Name="DayGrid" Margin="0,40,0,0">

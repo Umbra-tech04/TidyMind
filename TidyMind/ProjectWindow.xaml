@@ -5,46 +5,86 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TidyMind"
         mc:Ignorable="d"
-        Title="Project Details" Height="620" Width="540"
+        Title="Project Details" Width="580" Height="670" MinWidth="560" MinHeight="540"
+        ResizeMode="CanResize"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BgMain}">
     <Window.Resources>
-        <!-- Formatting toolbar toggles: highlighted while the selection already has that formatting.
-             Not focusable, so clicking one never pulls focus (and the selection) out of the editor. -->
-        <Style x:Key="FormatToggleStyle" TargetType="ToggleButton">
-            <Setter Property="Width" Value="30"/>
-            <Setter Property="Height" Value="28"/>
-            <Setter Property="Margin" Value="0,0,2,0"/>
-            <Setter Property="Focusable" Value="False"/>
-            <Setter Property="Cursor" Value="Hand"/>
+        <!-- Section headings: readable at a glance, still clearly labels -->
+        <Style x:Key="SectionLabelStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#6B6965"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+
+        <!-- The thin rule between sections -->
+        <Style x:Key="SectionDividerStyle" TargetType="Border">
+            <Setter Property="Height" Value="1"/>
+            <Setter Property="Background" Value="#E4E2DD"/>
+            <Setter Property="Margin" Value="0,16"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+        </Style>
+
+        <!-- Single-line inputs (name, new task): rounded like the app's dialogs, accent edge when focused -->
+        <Style x:Key="FieldStyle" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Height" Value="40"/>
             <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Foreground" Value="{StaticResource TextMain}"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="ToggleButton">
-                        <Border x:Name="border" Background="Transparent" BorderBrush="Transparent"
-                                BorderThickness="1" CornerRadius="4">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="border" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
+                                BorderThickness="1" CornerRadius="8">
+                            <Grid>
+                                <!-- Placeholder: the box's Tag, shown while it's empty -->
+                                <TextBlock x:Name="placeholder" Text="{TemplateBinding Tag}" Margin="12,0"
+                                           VerticalAlignment="Center" Foreground="{StaticResource TextSub}"
+                                           FontWeight="Normal" IsHitTestVisible="False" Visibility="Collapsed"/>
+                                <ScrollViewer x:Name="PART_ContentHost" Margin="10,0" VerticalAlignment="Center"
+                                              Focusable="False" HorizontalScrollBarVisibility="Hidden"/>
+                            </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="{StaticResource BgSubtle}"/>
+                            <Trigger Property="Text" Value="">
+                                <Setter TargetName="placeholder" Property="Visibility" Value="Visible"/>
                             </Trigger>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="{StaticResource AccentSoft}"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#BFD6EC"/>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#BDBDB9"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Accent}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsChecked" Value="True">
-                    <Setter Property="Foreground" Value="{StaticResource Accent}"/>
-                </Trigger>
-            </Style.Triggers>
         </Style>
+
+        <!-- The notes page's ruled lines. They sit under each line of text because every paragraph line is exactly
+             24 tall (the Paragraph style in NotesBox, BlockLineHeight) and each tile is that same height, starting
+             where the text starts: keep the 24s in step. -->
+        <DrawingBrush x:Key="NotebookRules" TileMode="Tile" Stretch="None"
+                      Viewport="0,0,8,24" ViewportUnits="Absolute"
+                      Viewbox="0,0,8,24" ViewboxUnits="Absolute">
+            <DrawingBrush.Drawing>
+                <DrawingGroup>
+                    <GeometryDrawing Brush="Transparent">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry Rect="0,0,8,24"/>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Brush="#ECEAE4">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry Rect="0,23,8,1"/>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                </DrawingGroup>
+            </DrawingBrush.Drawing>
+        </DrawingBrush>
+
     </Window.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -53,70 +93,42 @@
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
-                BorderThickness="0,0,0,1" Padding="20,16">
+                BorderThickness="0,0,0,1" Padding="32,14">
             <TextBlock Text="Project Details" FontSize="18" FontWeight="Bold"
                        Foreground="{StaticResource TextMain}"/>
         </Border>
 
-        <ScrollViewer Grid.Row="1" Padding="20,14" Background="{StaticResource BgMain}">
-            <StackPanel>
-                <TextBlock Text="Project Name" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,0,0,4"/>
-                <TextBox x:Name="NameBox" Height="32" VerticalContentAlignment="Center"/>
+        <ScrollViewer Grid.Row="1" Background="{StaticResource BgMain}">
+            <StackPanel Margin="32,24,32,28">
+                <TextBlock Text="Project Name" Style="{StaticResource SectionLabelStyle}"/>
+                <TextBox x:Name="NameBox" Style="{StaticResource FieldStyle}" FontSize="15" FontWeight="SemiBold"/>
 
-                <TextBlock Text="Description" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,12,0,4"/>
-                <Border x:Name="EditorFrame" Background="{StaticResource BgInput}"
-                        BorderBrush="{StaticResource Border}" BorderThickness="1" CornerRadius="6">
-                    <StackPanel>
-                        <!-- Toolbar -->
-                        <Border BorderBrush="#ECECE9" BorderThickness="0,0,0,1" Padding="6,4">
-                            <StackPanel Orientation="Horizontal">
-                                <ToggleButton x:Name="BoldButton" Style="{StaticResource FormatToggleStyle}"
-                                              ToolTip="Bold  (Ctrl+B)" Click="BoldButton_Click">
-                                    <TextBlock Text="B" FontWeight="Bold"/>
-                                </ToggleButton>
-                                <ToggleButton x:Name="ItalicButton" Style="{StaticResource FormatToggleStyle}"
-                                              ToolTip="Italic  (Ctrl+I)" Click="ItalicButton_Click">
-                                    <TextBlock Text="I" FontStyle="Italic" FontFamily="Georgia"/>
-                                </ToggleButton>
-                                <ToggleButton x:Name="UnderlineButton" Style="{StaticResource FormatToggleStyle}"
-                                              ToolTip="Underline  (Ctrl+U)" Click="UnderlineButton_Click">
-                                    <TextBlock Text="U" TextDecorations="Underline"/>
-                                </ToggleButton>
+                <Border Style="{StaticResource SectionDividerStyle}"/>
 
-                                <Rectangle Width="1" Height="18" Fill="#E0E0DE" Margin="6,0,8,0"/>
+                <!-- Files: documents and pictures attached to the project -->
+                <TextBlock Text="Files" Style="{StaticResource SectionLabelStyle}"/>
+                <local:AttachmentsSection x:Name="Files"/>
 
-                                <ToggleButton x:Name="ColorButton" Style="{StaticResource FormatToggleStyle}"
-                                              ToolTip="Text color" Click="ColorButton_Click">
-                                    <Grid Width="16">
-                                        <TextBlock Text="A" FontWeight="SemiBold" HorizontalAlignment="Center"
-                                                   Margin="0,-2,0,4"/>
-                                        <Rectangle x:Name="ColorBar" Height="3" RadiusX="1" RadiusY="1"
-                                                   VerticalAlignment="Bottom" Fill="{StaticResource TextMain}"/>
-                                    </Grid>
-                                </ToggleButton>
-                                <Popup x:Name="ColorPopup" PlacementTarget="{Binding ElementName=ColorButton}"
-                                       Placement="Bottom" StaysOpen="False" AllowsTransparency="True"
-                                       Closed="ColorPopup_Closed">
-                                    <Border Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
-                                            BorderThickness="1" CornerRadius="8" Padding="8" Margin="0,4,6,6">
-                                        <Border.Effect>
-                                            <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.12"/>
-                                        </Border.Effect>
-                                        <StackPanel x:Name="ColorSwatches" Orientation="Horizontal"/>
-                                    </Border>
-                                </Popup>
-                            </StackPanel>
-                        </Border>
+                <Border Style="{StaticResource SectionDividerStyle}"/>
 
-                        <!-- Grows with its content from ~4 lines up to ~11, then scrolls -->
-                        <RichTextBox x:Name="DescriptionBox"
-                                     MinHeight="86" MaxHeight="214"
+                <!-- Description: the tallest field; scrolls inside its frame once the text outgrows it -->
+                <TextBlock Text="Description" Style="{StaticResource SectionLabelStyle}"/>
+                <Border x:Name="EditorFrame" Height="240" Background="{StaticResource BgInput}"
+                        BorderBrush="{StaticResource Border}" BorderThickness="1" CornerRadius="8">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <local:FormatToolbar x:Name="DescriptionToolbar"/>
+
+                        <!-- The field people read most: fills the frame, then scrolls within it -->
+                        <RichTextBox x:Name="DescriptionBox" Grid.Row="1"
                                      VerticalScrollBarVisibility="Auto"
-                                     Background="Transparent" BorderThickness="0" Padding="6,6"
+                                     Background="Transparent" BorderThickness="0" Padding="10,10"
                                      Foreground="{StaticResource TextMain}" CaretBrush="{StaticResource TextMain}"
-                                     FontFamily="Segoe UI" FontSize="13"
-                                     AcceptsTab="False"
-                                     SelectionChanged="DescriptionBox_SelectionChanged">
+                                     FontFamily="Segoe UI" FontSize="14"
+                                     AcceptsTab="False">
                             <RichTextBox.Resources>
                                 <!-- No blank gap between paragraphs: Enter starts a plain new line -->
                                 <Style TargetType="Paragraph">
@@ -124,56 +136,154 @@
                                 </Style>
                             </RichTextBox.Resources>
                         </RichTextBox>
-                    </StackPanel>
+                    </Grid>
                 </Border>
 
-                <TextBlock Text="Status" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,12,0,4"/>
-                <ComboBox x:Name="StatusBox" Height="32"
-                          ItemsSource="{Binding Source={x:Static local:ProjectStatusItems.All}}"/>
+                <Border Style="{StaticResource SectionDividerStyle}"/>
 
-                <TextBlock Text="Tasks" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,12,0,4"/>
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                    <TextBox x:Name="TaskInput" Width="270" Height="32"
-                             VerticalContentAlignment="Center"
-                             KeyDown="TaskInput_KeyDown"/>
-                    <Button x:Name="AddTaskButton" Content="Add Task"
-                            Height="32" Margin="10,0,0,0" Padding="12,0"
+                <!-- Tasks: about 4 rows visible; the list scrolls past that, then hands the wheel to the window -->
+                <TextBlock Text="Tasks" Style="{StaticResource SectionLabelStyle}"/>
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="TaskInput" Style="{StaticResource FieldStyle}" Tag="Add a task…" KeyDown="TaskInput_KeyDown"/>
+                    <Button x:Name="AddTaskButton" Grid.Column="1" Content="Add Task"
+                            Height="40" Margin="8,0,0,0" Padding="16,0"
                             Click="AddTaskButton_Click"/>
-                    <TextBlock Text="Right-click to edit"
-                               FontSize="11" Foreground="{StaticResource TextSub}"
-                               VerticalAlignment="Center" Margin="10,0,0,0"/>
-                </StackPanel>
+                </Grid>
 
-                <ListBox x:Name="TaskList" MinHeight="80"
-                         ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                <ListBox x:Name="TaskList" Height="160"
+                         Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
+                         BorderThickness="1" Padding="0"
                          PreviewMouseWheel="TaskList_PreviewMouseWheel"
                          PreviewMouseRightButtonUp="TaskList_PreviewMouseRightButtonUp"
                          KeyDown="TaskList_KeyDown">
+                    <ListBox.Template>
+                        <ControlTemplate TargetType="ListBox">
+                            <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8" Padding="4">
+                                <Grid>
+                                    <ScrollViewer x:Name="Rows" Focusable="False" VerticalScrollBarVisibility="Auto">
+                                        <ItemsPresenter/>
+                                    </ScrollViewer>
+                                    <TextBlock x:Name="emptyHint" Text="No tasks yet. Add the first one above."
+                                               FontSize="13" Foreground="{StaticResource TextSub}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               TextWrapping="Wrap" TextAlignment="Center" Margin="12"
+                                               Visibility="Collapsed"/>
+                                </Grid>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="HasItems" Value="False">
+                                    <Setter TargetName="emptyHint" Property="Visibility" Value="Visible"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </ListBox.Template>
+                    <ListBox.ItemContainerStyle>
+                        <!-- A clean list row: light tint on hover and when selected -->
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="10,4,6,4"/>
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="row" Background="Transparent" CornerRadius="6"
+                                                Padding="{TemplateBinding Padding}" MinHeight="34">
+                                            <ContentPresenter VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="row" Property="Background" Value="{StaticResource BgSubtle}"/>
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="row" Property="Background" Value="{StaticResource AccentSoft}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <CheckBox Content="{Binding Title}" IsChecked="{Binding IsDone}"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <CheckBox IsChecked="{Binding IsDone}" FontSize="14"
+                                          VerticalAlignment="Center" VerticalContentAlignment="Center">
+                                    <TextBlock Text="{Binding Title}" TextWrapping="Wrap"/>
+                                </CheckBox>
+                                <!-- Shown while the row is hovered: the same Rename / Delete as its right-click menu -->
+                                <Button x:Name="editButton" Grid.Column="1" Style="{StaticResource RowEditStyle}"
+                                        Margin="6,0,2,0" Visibility="Hidden" Click="TaskRename_Click"/>
+                                <Button x:Name="deleteButton" Grid.Column="2" Style="{StaticResource RowDeleteStyle}"
+                                        Visibility="Hidden" Click="TaskDelete_Click"/>
+                            </Grid>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                    <Setter TargetName="editButton" Property="Visibility" Value="Visible"/>
+                                    <Setter TargetName="deleteButton" Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
+                <TextBlock Text="Right-click a task for more (copy its text)." FontSize="12"
+                           Foreground="{StaticResource TextSub}" Margin="2,8,0,0" TextWrapping="Wrap"/>
 
-                <TextBlock Text="Notes" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,12,0,4"/>
-                <Border Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
-                        BorderThickness="1" CornerRadius="4" Padding="12" Margin="0,0,0,8">
-                    <TextBox x:Name="NoteText" Text="No notes" Style="{StaticResource SelectableTextStyle}"
-                             FontSize="13" Foreground="{StaticResource TextSub}" MinHeight="50"/>
+                <Border Style="{StaticResource SectionDividerStyle}"/>
+
+                <!-- Notes: a page you just click into and write, formatted like the description; it grows with
+                     the text and the window scrolls it. Ruled lines: see NotebookRules. -->
+                <TextBlock Text="Notes" Style="{StaticResource SectionLabelStyle}"/>
+                <Border x:Name="NotesFrame" Background="#FFFEFA" BorderBrush="#E4E2DD" BorderThickness="1" CornerRadius="8">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <local:FormatToolbar x:Name="NotesToolbar"/>
+
+                        <Grid Grid.Row="1" Margin="18" MinHeight="264" Background="{StaticResource NotebookRules}">
+                            <!-- 5: the editor's built-in page padding, so the placeholder sits where typing starts -->
+                            <TextBlock x:Name="NotesPlaceholder" Text="Start writing..." Margin="5,0,0,0" FontFamily="Segoe UI" FontSize="15"
+                                       LineHeight="24" LineStackingStrategy="BlockLineHeight"
+                                       Foreground="{StaticResource TextSub}" IsHitTestVisible="False"/>
+                            <RichTextBox x:Name="NotesBox"
+                                         VerticalScrollBarVisibility="Disabled"
+                                         Background="Transparent" BorderThickness="0" Padding="0"
+                                         Foreground="{StaticResource TextMain}" CaretBrush="{StaticResource TextMain}"
+                                         FontFamily="Segoe UI" FontSize="15"
+                                         AcceptsTab="False"
+                                         PreviewMouseWheel="NotesBox_PreviewMouseWheel">
+                                <RichTextBox.Resources>
+                                    <!-- Every line exactly one rule tall, no gap between paragraphs -->
+                                    <Style TargetType="Paragraph">
+                                        <Setter Property="Margin" Value="0"/>
+                                        <Setter Property="LineHeight" Value="24"/>
+                                        <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
+                                    </Style>
+                                </RichTextBox.Resources>
+                            </RichTextBox>
+                        </Grid>
+                    </Grid>
                 </Border>
-                <Button x:Name="NoteButton" Content="Add Note"
-                        Style="{StaticResource GhostButtonStyle}"
-                        Width="110" Height="30" HorizontalAlignment="Left"
-                        Click="NoteButton_Click"/>
             </StackPanel>
         </ScrollViewer>
 
+        <!-- Sticky footer: Save stays in reach however long the content gets -->
         <Border Grid.Row="2" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
-                BorderThickness="0,1,0,0" Padding="20,10">
+                BorderThickness="0,1,0,0" Padding="32,12">
             <Button x:Name="SaveButton" Content="Save"
-                    Width="120" Height="34" HorizontalAlignment="Right"
-                    FontWeight="Bold"
+                    Width="128" Height="38" HorizontalAlignment="Right"
+                    FontWeight="SemiBold"
                     Click="SaveButton_Click"/>
         </Border>
     </Grid>
