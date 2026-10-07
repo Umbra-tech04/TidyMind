@@ -31,8 +31,9 @@ namespace TidyMind
         // Raised when the visible set of items may have changed (tab switched, added or deleted).
         public event Action TabsChanged;
 
+        // tabs: the memory's tabs as read by TabStore.TryLoadOrCreate (at least one, sorted).
         public MemoryTabStrip(FrameworkElement view, StackPanel strip, string memoryName, ProfileType type,
-            string itemWord, Func<Guid, int> countItemsInTab, Action<Guid, Guid> moveItems)
+            List<MemoryTab> tabs, string itemWord, Func<Guid, int> countItemsInTab, Action<Guid, Guid> moveItems)
         {
             this.strip = strip;
             this.memoryName = memoryName;
@@ -41,7 +42,7 @@ namespace TidyMind
             this.countItemsInTab = countItemsInTab;
             this.moveItems = moveItems;
 
-            tabs = TabStore.LoadOrCreate(memoryName, type);
+            this.tabs = tabs;
             ActiveTabId = tabs[0].Id;
 
             // Pills sit 6px apart (their right margin).

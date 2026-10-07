@@ -21,6 +21,9 @@ namespace TidyMind
         private readonly DragReorder<Entity> cardDrag;
         private readonly CardSelectionController<Entity> selection;
 
+        // Its items or tabs file couldn't be read: shown read-only (ShowUnreadable), and never saved over.
+        private bool unreadable;
+
         // saveProfiles: writes the main window's list of memories, which `profile` belongs to (Edit Background).
         public CollectionView(Profile profile, Func<bool> saveProfiles)
         {
@@ -28,19 +31,31 @@ namespace TidyMind
             profileName = profile.Name;
             // An open item overlay isn't empty page: no background menu there.
             MemoryPageBackground.Attach(Page, BackgroundLayer, profile, saveProfiles, OverlayGrid);
+            TitleText.Text = profile.Name;
+
+            // An unreadable file is left alone: the page says why, and nothing on it can change or save items.
+            if (!EntityStore.TryLoad(profileName, out entities, out string problem))
+            {
+                ShowUnreadable(EntityStore.FileName(profileName), problem);
+                return;
+            }
+            if (!TabStore.TryLoadOrCreate(profileName, ProfileType.Collection, entities.Select(e => e.TabId),
+                    out List<MemoryTab> tabs, out problem))
+            {
+                ShowUnreadable(TabStore.FileName(profileName, ProfileType.Collection), problem);
+                return;
+            }
 
             selection = new CardSelectionController<Entity>(this, CardScroll, CardArea, MarqueeCanvas,
                 CardEffects.CardRadius, DeleteEntities);
             selection.SelectionChanged += UpdateSelectionBar;
             SelectionBar.DeleteClicked += () => selection.DeleteSelected();
             SelectionBar.CancelClicked += selection.ClearSelection;
-            TitleText.Text = profile.Name;
-            LoadEntities();
 
             // Cards sit 24px apart (12px margin each side); the drop line goes in the middle of that gap.
             cardDrag = new DragReorder<Entity>(EntityPanel, Orientation.Horizontal, 24, null, MoveEntity);
 
-            tabStrip = new MemoryTabStrip(this, TabStrip, profileName, ProfileType.Collection, "item",
+            tabStrip = new MemoryTabStrip(this, TabStrip, profileName, ProfileType.Collection, tabs, "item",
                 tabId => entities.Count(e => e.TabId == tabId),
                 (fromTab, toTab) =>
                 {
@@ -69,16 +84,32 @@ namespace TidyMind
                 SaveEntities();
         }
 
-        private void LoadEntities()
+        // Reads the list back from disk, e.g. after a delete whose save failed, so the grid shows what's really stored.
+        private void ReloadEntities()
         {
-            string fileName = AppPaths.Data(profileName + "_entities.json");
-            if (File.Exists(fileName))
-                entities = JsonSerializer.Deserialize<List<Entity>>(File.ReadAllText(fileName)) ?? new List<Entity>();
+            if (EntityStore.TryLoad(profileName, out List<Entity> loaded, out string problem))
+                entities = loaded;
             else
-                entities = new List<Entity>();
+                ShowUnreadable(EntityStore.FileName(profileName), problem);
+        }
 
-            // Stable sort: files from before Order existed (all 0) keep their saved order.
-            entities = entities.OrderBy(e => e.Order).ToList();
+        // The page without its items: the reason in place of the cards, and no toolbar or tabs to change anything
+        // with. The page background has its own file and keeps working.
+        private void ShowUnreadable(string fileName, string problem)
+        {
+            unreadable = true;
+            selection?.ClearSelection();
+            EntityPanel.Children.Clear();
+            Toolbar.Visibility = Visibility.Collapsed;
+            SelectionBar.Visibility = Visibility.Collapsed;
+            TabStrip.Visibility = Visibility.Collapsed;
+            SubtitleText.Text = "COLLECTION";
+            EmptyState.Text = "Couldn't read " + fileName + ": " + problem + "\n\nThe file was left as it is. "
+                + "Fix it or restore it from a backup, then open this memory again.";
+            EmptyState.TextWrapping = TextWrapping.Wrap;
+            EmptyState.TextAlignment = TextAlignment.Center;
+            EmptyState.MaxWidth = 520;
+            EmptyState.Visibility = Visibility.Visible;
         }
 
         // Drag-and-drop on the cards. Other tabs' items keep their relative order; everything is renumbered 0..n.
@@ -92,18 +123,15 @@ namespace TidyMind
             RenderEntities();
         }
 
-        // Written via a temporary file, so a crash or full disk mid-save leaves the previous file intact.
-        // If it can't be written (locked, no access), says so; the file is then unchanged.
-        private void SaveEntities()
+        private bool SaveEntities()
         {
-            string fileName = profileName + "_entities.json";
-            if (!AtomicFile.TryWriteAllText(AppPaths.Data(fileName), JsonSerializer.Serialize(entities)))
-                MessageBox.Show("Couldn't save: " + fileName + " can't be written. Your last change wasn't saved.",
-                    "Couldn't Save", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return !unreadable && EntityStore.SaveOrWarn(profileName, entities);
         }
 
         private void RenderEntities()
         {
+            if (unreadable) return;
+
             EntityPanel.Children.Clear();
             cardDrag.Clear();
             selection.BeginRender();
@@ -151,7 +179,7 @@ namespace TidyMind
                 return false;
 
             RemoveEntities(doomed);
-            LoadEntities();
+            ReloadEntities();
             RenderEntities();
             return true;
         }
@@ -291,7 +319,7 @@ namespace TidyMind
         // From global search: switch to the item's tab and open its detail card.
         public void Reveal(int entityIndex)
         {
-            if (entityIndex < 0 || entityIndex >= entities.Count) return;
+            if (unreadable || entityIndex < 0 || entityIndex >= entities.Count) return;
 
             Entity entity = entities[entityIndex];
             tabStrip.Select(entity.TabId);
@@ -441,12 +469,14 @@ namespace TidyMind
             }
         }
 
-        // Deleting items: one from its menu, or a multi-selection's Delete.
+        // Deleting items: one from its menu, or a multi-selection's Delete. If that couldn't be saved, the list is read
+        // back from disk, so the items reappear instead of looking deleted until some later save drops them.
         private void RemoveEntities(IEnumerable<Entity> doomed)
         {
             foreach (Entity entity in doomed.ToList())
                 entities.Remove(entity);
-            SaveEntities();
+            if (!SaveEntities())
+                ReloadEntities();
         }
 
         private static SolidColorBrush B(string hex)

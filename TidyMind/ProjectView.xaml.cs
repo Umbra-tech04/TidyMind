@@ -24,6 +24,9 @@ namespace TidyMind
         private readonly DragReorder<Project> cardDrag;
         private readonly CardSelectionController<Project> selection;
 
+        // Its projects or tabs file couldn't be read: shown read-only (ShowUnreadable), and never saved over.
+        private bool unreadable;
+
         // saveProfiles: writes the main window's list of memories, which `profile` belongs to (Edit Background).
         public ProjectView(Profile profile, Func<bool> saveProfiles)
         {
@@ -31,8 +34,20 @@ namespace TidyMind
             profileName = profile.Name;
             MemoryPageBackground.Attach(Page, BackgroundLayer, profile, saveProfiles);
             TitleText.Text = profile.Name;
-            LoadProjects();
             TodoPanel.Load(profile.Name);
+
+            // An unreadable file is left alone: the page says why, and nothing on it can change or save projects.
+            if (!ProjectStore.TryLoad(profileName, out allProjects, out string problem))
+            {
+                ShowUnreadable(profileName + ".json", problem);
+                return;
+            }
+            if (!TabStore.TryLoadOrCreate(profileName, ProfileType.Project, allProjects.Select(p => p.TabId),
+                    out List<MemoryTab> tabs, out problem))
+            {
+                ShowUnreadable(TabStore.FileName(profileName, ProfileType.Project), problem);
+                return;
+            }
 
             selection = new CardSelectionController<Project>(this, CardScroll, CardArea, MarqueeCanvas,
                 CardEffects.CardRadius, DeleteProjects);
@@ -43,7 +58,7 @@ namespace TidyMind
             // Cards sit 24px apart (12px margin each side); the drop line goes in the middle of that gap.
             cardDrag = new DragReorder<Project>(ProjectPanel, Orientation.Horizontal, 24, null, MoveProject);
 
-            tabStrip = new MemoryTabStrip(this, TabStrip, profileName, ProfileType.Project, "project",
+            tabStrip = new MemoryTabStrip(this, TabStrip, profileName, ProfileType.Project, tabs, "project",
                 tabId => allProjects.Count(p => p.TabId == tabId),
                 (fromTab, toTab) =>
                 {
@@ -58,9 +73,32 @@ namespace TidyMind
             RenderProjects();
         }
 
-        private void LoadProjects()
+        // Reads the list back from disk, e.g. after a delete whose save failed, so the grid shows what's really stored.
+        private void ReloadProjects()
         {
-            allProjects = ProjectStore.Load(profileName);
+            if (ProjectStore.TryLoad(profileName, out List<Project> projects, out string problem))
+                allProjects = projects;
+            else
+                ShowUnreadable(profileName + ".json", problem);
+        }
+
+        // The page without its projects: the reason in place of the cards, and no toolbar or tabs to change anything
+        // with. The memory's to-do list and page background have their own files and keep working.
+        private void ShowUnreadable(string fileName, string problem)
+        {
+            unreadable = true;
+            selection?.ClearSelection();
+            ProjectPanel.Children.Clear();
+            Toolbar.Visibility = Visibility.Collapsed;
+            SelectionBar.Visibility = Visibility.Collapsed;
+            TabStrip.Visibility = Visibility.Collapsed;
+            SubtitleText.Text = "PROJECTS";
+            EmptyState.Text = "Couldn't read " + fileName + ": " + problem + "\n\nThe file was left as it is. "
+                + "Fix it or restore it from a backup, then open this memory again.";
+            EmptyState.TextWrapping = TextWrapping.Wrap;
+            EmptyState.TextAlignment = TextAlignment.Center;
+            EmptyState.MaxWidth = 520;
+            EmptyState.Visibility = Visibility.Visible;
         }
 
         // Drag-and-drop on the cards. Other tabs' projects keep their relative order; everything is renumbered 0..n.
@@ -76,7 +114,7 @@ namespace TidyMind
 
         private bool SaveProjects()
         {
-            return ProjectStore.SaveOrWarn(profileName, allProjects);
+            return !unreadable && ProjectStore.SaveOrWarn(profileName, allProjects);
         }
 
         // Projects from before tabs existed (TabId empty) or pointing at a deleted tab go to the first tab.
@@ -95,6 +133,8 @@ namespace TidyMind
 
         private void RenderProjects()
         {
+            if (unreadable) return;
+
             ProjectPanel.Children.Clear();
             cardDrag.Clear();
             selection.BeginRender();
@@ -146,7 +186,7 @@ namespace TidyMind
                 allProjects.Remove(p);
                 pendingPulse.Remove(p);
             }, SaveProjects);
-            LoadProjects();
+            ReloadProjects();
             RenderProjects();
             return true;
         }
@@ -217,7 +257,8 @@ namespace TidyMind
                 {
                     allProjects.Remove(project);
                     pendingPulse.Remove(project);
-                });
+                },
+                reload: ReloadProjects);
 
             return card;
         }
@@ -270,7 +311,7 @@ namespace TidyMind
         // From global search / the dashboard: switch to the project's tab, then open it.
         public void Reveal(int projectIndex)
         {
-            if (projectIndex < 0 || projectIndex >= allProjects.Count) return;
+            if (unreadable || projectIndex < 0 || projectIndex >= allProjects.Count) return;
 
             Project project = allProjects[projectIndex];
             tabStrip.Select(project.TabId);

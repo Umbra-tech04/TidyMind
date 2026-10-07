@@ -14,6 +14,7 @@ namespace TidyMind
         private static QuickNotesWindow instance;
 
         private bool isLoading;
+        private bool unreadable;
 
         private readonly DispatcherTimer saveTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
         private bool savePending;
@@ -64,12 +65,23 @@ namespace TidyMind
             instance = null;
         }
 
+        // An unreadable file is never saved over: the box says why and can't be typed in.
         private void LoadNotes()
         {
             isLoading = true;
 
-            if (File.Exists(NotesFilePath))
-                NotesTextBox.Text = File.ReadAllText(NotesFilePath);
+            try
+            {
+                if (File.Exists(NotesFilePath))
+                    NotesTextBox.Text = File.ReadAllText(NotesFilePath);
+            }
+            catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
+            {
+                unreadable = true;
+                NotesTextBox.IsReadOnly = true;
+                NotesTextBox.Text = "Couldn't read quicknotes.txt: " + e.Message + "\n\nThe file was left as it is. "
+                    + "Close this window and open it again once the file can be read.";
+            }
 
             isLoading = false;
         }
@@ -78,7 +90,7 @@ namespace TidyMind
         // cut can't lose it), which would make typing stutter. Closing the window saves whatever is still pending.
         private void NotesTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (isLoading) return;
+            if (isLoading || unreadable) return;
 
             savePending = true;
             saveTimer.Stop();

@@ -13,7 +13,10 @@ namespace TidyMind
     {
         // save: writes the owning list to disk, false if it couldn't (the view has already said so).
         // remove: takes the project out of the owning list (saving follows through `save`).
-        public static ContextMenu Build(DependencyObject owner, Project project, Func<bool> save, Action redraw, Action remove)
+        // reload: if a delete couldn't be saved, reads the owning list back from disk, so the project reappears and a
+        // later save can't drop it without its card picture and attached files. Null if `redraw` already re-reads.
+        public static ContextMenu Build(DependencyObject owner, Project project, Func<bool> save, Action redraw, Action remove,
+            Action reload = null)
         {
             ContextMenu menu = new ContextMenu();
 
@@ -34,7 +37,8 @@ namespace TidyMind
             delete.Click += (s, e) =>
             {
                 if (!ConfirmDelete(project)) return;
-                Delete(new[] { project }, _ => remove(), save);
+                if (!Delete(new[] { project }, _ => remove(), save))
+                    reload?.Invoke();
                 redraw();
             };
             MenuItem reminder = new MenuItem { Header = "Add Reminder" };

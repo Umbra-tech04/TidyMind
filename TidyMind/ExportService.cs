@@ -128,15 +128,7 @@ namespace TidyMind
 
         private static List<Project> LoadProjects(string profileName) => ProjectStore.Load(profileName);
 
-        private static List<Entity> LoadEntities(string profileName)
-        {
-            string fileName = AppPaths.Data(profileName + "_entities.json");
-            if (!File.Exists(fileName))
-                return new List<Entity>();
-
-            List<Entity> entities = JsonSerializer.Deserialize<List<Entity>>(File.ReadAllText(fileName)) ?? new List<Entity>();
-            return entities.OrderBy(e => e.Order).ToList();
-        }
+        private static List<Entity> LoadEntities(string profileName) => EntityStore.Load(profileName);
 
         // The memory's inline to-do list (if it has one) comes first, then its projects.
         private static List<ExportItem> BuildProjectItems(string profileName, string group = null)

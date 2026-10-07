@@ -26,10 +26,11 @@ namespace TidyMind
         private string selectedKey = HomeKey;
         private readonly DragReorder<Profile> memoryDrag;
 
-        public MainWindow()
+        // profiles: the list of memories, already read by App (which stops before this if it can't be read).
+        public MainWindow(List<Profile> profiles)
         {
             InitializeComponent();
-            profiles = ProfileManager.LoadProfiles();
+            this.profiles = profiles;
 
             // Only within a group: dropping a collection among projects would look like a type change.
             memoryDrag = new DragReorder<Profile>(NavPanel, Orientation.Vertical, 2,
@@ -287,9 +288,7 @@ namespace TidyMind
             profiles.Add(profile);
             ProfileManager.SaveProfiles(profiles);
 
-            TabStore.LoadOrCreate(name, type);
-
-            NavigateTo(profile);
+            NavigateTo(profile); // the view creates the memory's first tab
         }
 
         private void RenameMemory(Profile profile)

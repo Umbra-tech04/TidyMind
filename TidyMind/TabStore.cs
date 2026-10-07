@@ -20,21 +20,48 @@ namespace TidyMind
 
         public static string PathOf(string memoryName, ProfileType type) => AppPaths.Data(FileName(memoryName, type));
 
-        // Loads the memory's tabs (sorted), creating the default tab first if none exist.
-        public static List<MemoryTab> LoadOrCreate(string memoryName, ProfileType type)
+        // Loads the memory's tabs (sorted). With no tabs yet (no file, or an empty one), they are made from the tabs
+        // the memory's items already point at, in the items' order, so a lost tabs file costs only the tab names and
+        // never which items belong together; with no such items, just the default tab.
+        // False (with the reason) if the file exists but can't be read: nothing is created or saved then.
+        public static bool TryLoadOrCreate(string memoryName, ProfileType type, IEnumerable<Guid> itemTabIds,
+            out List<MemoryTab> tabs, out string problem)
         {
             string file = PathOf(memoryName, type);
-            List<MemoryTab> tabs = File.Exists(file)
-                ? JsonSerializer.Deserialize<List<MemoryTab>>(File.ReadAllText(file)) ?? new List<MemoryTab>()
-                : new List<MemoryTab>();
+            tabs = new List<MemoryTab>();
+            problem = null;
+
+            if (File.Exists(file))
+            {
+                try
+                {
+                    tabs = JsonSerializer.Deserialize<List<MemoryTab>>(File.ReadAllText(file)) ?? new List<MemoryTab>();
+                }
+                catch (Exception e) when (e is JsonException || e is IOException || e is UnauthorizedAccessException)
+                {
+                    tabs = null;
+                    problem = e.Message;
+                    return false;
+                }
+            }
 
             if (tabs.Count == 0)
             {
-                tabs.Add(new MemoryTab { Id = Guid.NewGuid(), Name = DefaultTabName, Order = 0 });
+                List<Guid> ids = itemTabIds.Where(id => id != Guid.Empty).Distinct().ToList();
+                if (ids.Count == 0)
+                    ids.Add(Guid.NewGuid());
+
+                tabs = ids.Select((id, i) => new MemoryTab
+                {
+                    Id = id,
+                    Name = i == 0 ? DefaultTabName : DefaultTabName + " " + (i + 1),
+                    Order = i
+                }).ToList();
                 TrySave(memoryName, type, tabs);
             }
 
-            return tabs.OrderBy(t => t.Order).ToList();
+            tabs = tabs.OrderBy(t => t.Order).ToList();
+            return true;
         }
 
         // Written via a temporary file, like the memory's other files. False if it couldn't be written; the file is

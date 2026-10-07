@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -72,13 +74,31 @@ namespace TidyMind
             RemindersPanel.Children.Clear();
             highlightedRow = null;
 
-            List<Reminder> reminders = ReminderManager.LoadReminders();
+            // Unreadable: said so in place of the list, and adding is off (it would fail on the same file anyway).
+            // Re-checked on every activation, so a fixed file shows up as soon as the window comes back.
+            List<Reminder> reminders;
+            string problem = null;
+            try
+            {
+                reminders = ReminderManager.LoadReminders();
+            }
+            catch (Exception e) when (e is IOException || e is JsonException || e is UnauthorizedAccessException)
+            {
+                reminders = new List<Reminder>();
+                problem = e.Message;
+            }
+            AddReminderButton.IsEnabled = problem == null;
             reminders.Sort((a, b) => a.NextFireTime.CompareTo(b.NextFireTime));
 
             if (reminders.Count == 0)
             {
                 TextBlock empty = new TextBlock();
-                empty.Text = "No reminders yet.";
+                empty.Text = problem == null
+                    ? "No reminders yet."
+                    : "Couldn't read reminders.json: " + problem + "\n\nThe file was left as it is. Fix it or restore it "
+                      + "from a backup to see and add reminders.";
+                empty.TextWrapping = TextWrapping.Wrap;
+                empty.TextAlignment = TextAlignment.Center;
                 empty.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8A8A87"));
                 empty.HorizontalAlignment = HorizontalAlignment.Center;
                 empty.Margin = new Thickness(0, 20, 0, 0);

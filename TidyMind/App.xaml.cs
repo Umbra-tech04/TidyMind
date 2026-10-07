@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
@@ -22,6 +23,9 @@ namespace TidyMind
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
+            int remindAt = Array.IndexOf(e.Args, "--remind");
+            UnhandledErrors.Install(this, backgroundProcess: remindAt >= 0 && remindAt < e.Args.Length - 1);
 
             // Launched by a Task Scheduler reminder: show the toast and exit, no UI. Checked before the one-copy
             // rule, so reminders still fire while the app is open.
@@ -47,6 +51,17 @@ namespace TidyMind
                 return;
             }
 
+            // Without the list of memories there's nothing to show, and starting empty would let the next save
+            // replace it; so the app stops here and leaves the file for the user to fix or restore.
+            if (!ProfileManager.TryLoadProfiles(out List<Profile> profiles, out problem))
+            {
+                MessageBox.Show("TidyMind couldn't read its list of memories:\n" + AppPaths.Data("profiles.json")
+                    + "\n\n" + problem + "\n\nThe file wasn't changed. Fix it or restore it from a backup, then start "
+                    + "TidyMind again.", "Couldn't Start", MessageBoxButton.OK, MessageBoxImage.Error);
+                Shutdown();
+                return;
+            }
+
             QuickTodoService.RemoveOldCompleted(DateTime.Today);
 
             EventManager.RegisterClassHandler(typeof(Window), Window.PreviewKeyDownEvent,
@@ -54,7 +69,7 @@ namespace TidyMind
             EventManager.RegisterClassHandler(typeof(Window), FrameworkElement.LoadedEvent,
                 new RoutedEventHandler(AnimateWindowOpen));
 
-            MainWindow window = new MainWindow();
+            MainWindow window = new MainWindow(profiles);
             this.MainWindow = window;
             this.ShutdownMode = ShutdownMode.OnMainWindowClose;
             window.Show();
