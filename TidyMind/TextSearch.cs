@@ -15,30 +15,17 @@ namespace TidyMind
         public static int IndexOf(string text, string query, out int length)
         {
             length = 0;
-            if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(query))
+            if (string.IsNullOrEmpty(text))
                 return -1;
-
-            List<int> origin = new List<int>();
-            string foldedText = Fold(text, origin);
-            string foldedQuery = Fold(query, null);
-            if (foldedQuery.Length == 0)
-                return -1;
-
-            int at = foldedText.IndexOf(foldedQuery, System.StringComparison.Ordinal);
-            if (at < 0)
-                return -1;
-
-            int start = origin[at];
-            int end = origin[at + foldedQuery.Length - 1] + 1;
-            while (end < text.Length && IsMark(text[end])) // an accent typed as a separate character belongs to the match
-                end++;
-            length = end - start;
-            return start;
+            return new SearchableText(text).IndexOf(FoldQuery(query), out length);
         }
+
+        // A query folded once, to look for in many prepared texts (SearchableText.IndexOf).
+        public static string FoldQuery(string query) => string.IsNullOrEmpty(query) ? "" : Fold(query, null);
 
         // Lower-case, accents removed. `origin` (if given) gets, for each folded character, the index of the
         // original character it came from.
-        private static string Fold(string text, List<int>? origin)
+        internal static string Fold(string text, List<int>? origin)
         {
             StringBuilder folded = new StringBuilder(text.Length);
             for (int i = 0; i < text.Length; i++)
@@ -65,6 +52,43 @@ namespace TidyMind
             origin?.Add(from);
         }
 
-        private static bool IsMark(char c) => CharUnicodeInfo.GetUnicodeCategory(c) == UnicodeCategory.NonSpacingMark;
+        internal static bool IsMark(char c) => CharUnicodeInfo.GetUnicodeCategory(c) == UnicodeCategory.NonSpacingMark;
+    }
+
+    // A text folded once by TextSearch's rules, to be searched again and again: global search prepares every entry
+    // (note pages included) when its index is built, so each key typed only compares strings that are ready.
+    public sealed class SearchableText
+    {
+        private readonly string folded;
+        private readonly List<int> origin; // for each folded character, the index of the original one
+
+        public SearchableText(string? text)
+        {
+            Text = text ?? "";
+            origin = new List<int>(Text.Length);
+            folded = TextSearch.Fold(Text, origin);
+        }
+
+        public string Text { get; }
+
+        // foldedQuery: from TextSearch.FoldQuery. Where the match starts in Text and how many of Text's characters it
+        // covers; -1 if it isn't there or the query is empty.
+        public int IndexOf(string foldedQuery, out int length)
+        {
+            length = 0;
+            if (foldedQuery.Length == 0)
+                return -1;
+
+            int at = folded.IndexOf(foldedQuery, System.StringComparison.Ordinal);
+            if (at < 0)
+                return -1;
+
+            int start = origin[at];
+            int end = origin[at + foldedQuery.Length - 1] + 1;
+            while (end < Text.Length && TextSearch.IsMark(Text[end])) // an accent typed as a separate character belongs to the match
+                end++;
+            length = end - start;
+            return start;
+        }
     }
 }

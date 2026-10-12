@@ -304,7 +304,10 @@ namespace TidyMind
         {
             SetEnabled(PrevPageButton, currentPage > 0);
             SetEnabled(NextPageButton, currentPage < pages.Count - 1 || !CurrentPageIsBlank());
-            SetEnabled(DeletePageButton, pages.Count > 1);
+            // With one page the button clears it instead (nothing to do on an empty one).
+            bool single = pages.Count == 1;
+            SetEnabled(DeletePageButton, !single || !CurrentPageIsBlank());
+            DeletePageButton.ToolTip = single ? "Clear page" : "Delete page";
         }
 
         private static void SetEnabled(Button button, bool enabled)
@@ -313,8 +316,18 @@ namespace TidyMind
             button.Opacity = enabled ? 1 : 0.4;
         }
 
-        private bool CurrentPageIsBlank() =>
-            new TextRange(NotesBox.Document.ContentStart, NotesBox.Document.ContentEnd).Text.Trim().Length == 0;
+        // Checked on every key typed on the last page, so it stops at the first visible character instead of reading
+        // the whole page: a long page with text costs next to nothing, and only a (short) blank one is read through.
+        private bool CurrentPageIsBlank()
+        {
+            for (TextPointer at = NotesBox.Document.ContentStart; at != null; at = at.GetNextContextPosition(LogicalDirection.Forward))
+            {
+                if (at.GetPointerContext(LogicalDirection.Forward) == TextPointerContext.Text
+                    && !string.IsNullOrWhiteSpace(at.GetTextInRun(LogicalDirection.Forward)))
+                    return false;
+            }
+            return true;
+        }
 
         // Pages added in this window and left blank at the end go again, so they don't pile up: never the only page,
         // never one up to keepThrough (the page being turned to), never a page that was already stored.
@@ -379,10 +392,21 @@ namespace TidyMind
         }
 
         // There's always at least one page; only a page with writing on it asks first. Then the next page shows
-        // (the previous one if this was the last).
+        // (the previous one if this was the last). The only page is cleared instead, which is stored like any edit
+        // (OnClosing), and the cursor stays in it.
         private void DeletePage_Click(object sender, RoutedEventArgs e)
         {
-            if (pages.Count <= 1) return;
+            if (pages.Count <= 1)
+            {
+                if (CurrentPageIsBlank() || MessageBox.Show(this, "Clear this page and everything written on it?",
+                        "Confirm Clear", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                    return;
+
+                NotesBox.Document.Blocks.Clear();
+                NotesBox.Focus();
+                return;
+            }
+
             if (!CurrentPageIsBlank() && MessageBox.Show(this, "Delete page " + (currentPage + 1) + " and everything written on it?",
                     "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
                 return;
@@ -392,9 +416,27 @@ namespace TidyMind
             ShowPage(Math.Min(currentPage, pages.Count - 1), 0);
         }
 
-        // One row per page, "N. <its first line>"; a click jumps there.
+        // When the list last closed because of a press on ☰ itself (Environment.TickCount64; see PageList_Click).
+        private long pageListClosedByButtonAt;
+
+        // The list closes on any press outside it, ☰ included; that same press then arrives at ☰ as a click.
+        private void PageListPopup_Closed(object sender, EventArgs e)
+        {
+            Point at = Mouse.GetPosition(PageListButton);
+            if (new Rect(PageListButton.RenderSize).Contains(at))
+                pageListClosedByButtonAt = Environment.TickCount64;
+        }
+
+        // One row per page, "N. <its first line>"; a click jumps there. ☰ toggles: the click that just closed the
+        // list doesn't open it again.
         private void PageList_Click(object sender, RoutedEventArgs e)
         {
+            if (Environment.TickCount64 - pageListClosedByButtonAt < 500)
+            {
+                pageListClosedByButtonAt = 0;
+                return;
+            }
+
             KeepCurrentPage();
             PageListRows.Children.Clear();
             for (int i = 0; i < pages.Count; i++)

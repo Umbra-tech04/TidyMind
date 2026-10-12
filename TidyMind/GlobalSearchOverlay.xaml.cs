@@ -27,9 +27,14 @@ namespace TidyMind
         private Action<SearchResult> onChoose;
         private IInputElement focusBeforeOpen;
 
+        // Results follow a short pause in typing rather than every key (the index can hold long note pages);
+        // Enter and the arrows first show what was typed (ApplyPendingSearch).
+        private readonly DispatcherTimer typingPause = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
+
         public GlobalSearchOverlay()
         {
             InitializeComponent();
+            typingPause.Tick += (s, e) => ApplyPendingSearch();
         }
 
         public bool IsOpen => Visibility == Visibility.Visible;
@@ -42,6 +47,7 @@ namespace TidyMind
             onChoose = choose;
             focusBeforeOpen = Keyboard.FocusedElement;
             QueryBox.Text = "";
+            ApplyPendingSearch(); // nothing left over from the last time it was open
             Visibility = Visibility.Visible;
             BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(140)));
 
@@ -57,6 +63,7 @@ namespace TidyMind
         {
             if (!IsOpen) return;
 
+            typingPause.Stop();
             BeginAnimation(OpacityProperty, null);
             Visibility = Visibility.Collapsed;
 
@@ -70,6 +77,14 @@ namespace TidyMind
         private void QueryBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             Placeholder.Visibility = QueryBox.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+            typingPause.Stop();
+            typingPause.Start();
+        }
+
+        // Typed but not shown yet: shown now, so Enter or an arrow acts on what was typed.
+        private void ApplyPendingSearch()
+        {
+            typingPause.Stop();
             ShowResults();
         }
 
@@ -129,7 +144,7 @@ namespace TidyMind
                 FontSize = 14,
                 TextTrimming = TextTrimming.CharacterEllipsis
             };
-            AddHighlightedText(title, result.Text == null ? result.Title ?? "" : AroundMatch(result.Text, query), query);
+            AddHighlightedText(title, result.Text == null ? result.Title ?? "" : AroundMatch(result, query), query);
 
             TextBlock location = new TextBlock
             {
@@ -167,9 +182,11 @@ namespace TidyMind
         }
 
         // A note page shows the words around the match, on one line.
-        private static string AroundMatch(string text, string query)
+        // From the text prepared with the index, so the whole page isn't folded again for each row.
+        private static string AroundMatch(SearchResult result, string query)
         {
-            int at = Math.Max(0, TextSearch.IndexOf(text, query, out int length));
+            string text = result.Searchable.Text;
+            int at = Math.Max(0, result.Searchable.IndexOf(TextSearch.FoldQuery(query), out int length));
             int start = Math.Max(0, at - 30);
             string around = text.Substring(start, Math.Min(text.Length - start, at - start + length + 80));
             around = string.Join(" ", around.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
@@ -229,6 +246,9 @@ namespace TidyMind
 
         private void Overlay_PreviewKeyDown(object sender, KeyEventArgs e)
         {
+            if (typingPause.IsEnabled && (e.Key == Key.Enter || e.Key == Key.Up || e.Key == Key.Down))
+                ApplyPendingSearch();
+
             switch (e.Key)
             {
                 case Key.Escape:

@@ -52,8 +52,10 @@
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="border" Property="BorderBrush" Value="#BDBDB9"/>
                             </Trigger>
+                            <!-- After the Text trigger, so it wins: the placeholder goes as soon as the box is clicked into -->
                             <Trigger Property="IsKeyboardFocused" Value="True">
                                 <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                <Setter TargetName="placeholder" Property="Visibility" Value="Collapsed"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -297,7 +299,7 @@
                         <TextBlock Text="&#xE700;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
                     </Button>
                     <Popup x:Name="PageListPopup" PlacementTarget="{Binding ElementName=PageListButton}"
-                           Placement="Bottom" StaysOpen="False" AllowsTransparency="True">
+                           Placement="Bottom" StaysOpen="False" AllowsTransparency="True" Closed="PageListPopup_Closed">
                         <Border Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
                                 BorderThickness="1" CornerRadius="8" Padding="4" Margin="0,4,6,6">
                             <Border.Effect>

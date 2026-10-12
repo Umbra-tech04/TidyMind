@@ -25,6 +25,11 @@ namespace TidyMind
         public string? Text { get; set; }
         public int Page { get; set; } // which note page (0-based), for Note results
 
+        // Text (or else the title) folded for searching, made once: Build prepares every entry, so typing a query
+        // only compares ready strings.
+        public SearchableText Searchable => searchable ??= new SearchableText(Text ?? Title);
+        private SearchableText? searchable;
+
         // The project's or item's Id (Guid.Empty for a memory itself).
         public Guid ItemId { get; set; }
     }
@@ -54,18 +59,21 @@ namespace TidyMind
                     AddProjects(index, profile);
             }
 
+            // Folded now, while the index is built, rather than on the first key typed.
+            foreach (SearchResult result in index)
+                _ = result.Searchable;
             return index;
         }
 
         // Case-insensitive partial match (a note page by its text). Names that start with the query rank first, then by kind.
         public static List<SearchResult> Filter(List<SearchResult> index, string query, int limit)
         {
-            query = (query ?? "").Trim();
-            if (query.Length == 0)
+            string folded = TextSearch.FoldQuery((query ?? "").Trim());
+            if (folded.Length == 0)
                 return new List<SearchResult>();
 
             return index
-                .Select(r => new { Result = r, At = TextSearch.IndexOf(r.Text ?? r.Title, query, out _) })
+                .Select(r => new { Result = r, At = r.Searchable.IndexOf(folded, out _) })
                 .Where(x => x.At >= 0)
                 .OrderBy(x => x.At == 0 ? 0 : 1)
                 .ThenBy(x => x.Result.Kind)

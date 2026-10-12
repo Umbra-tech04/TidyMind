@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -58,11 +59,44 @@ namespace TidyMind
             NotesTextBox.CaretIndex = NotesTextBox.Text.Length;
         }
 
+        // Closing never throws typed text away. If it can't be saved, the window stays open with the text in it and
+        // says so; it closes once a save works.
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            if (savePending && !TrySave())
+            {
+                e.Cancel = true;
+                MessageBox.Show(this, "Couldn't save your notes: this file can't be written:\n" + NotesFilePath
+                    + "\n\nThe window stays open so nothing is lost. Close it again once the file can be written.",
+                    "Couldn't Save", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            base.OnClosing(e);
+        }
+
+        // A close that can't be refused (TidyMind itself closing) still mustn't lose the text: it goes to a separate
+        // file instead, and the message says where.
         protected override void OnClosed(System.EventArgs e)
         {
-            SaveNow();
+            if (savePending && !TrySave())
+                RescueUnsavedText();
             base.OnClosed(e);
             instance = null;
+        }
+
+        private void RescueUnsavedText()
+        {
+            string name = "quicknotes-unsaved-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".txt";
+            foreach (string path in new[] { AppPaths.Data(name), Path.Combine(Path.GetTempPath(), name) })
+            {
+                if (AtomicFile.TryWriteAllText(path, NotesTextBox.Text))
+                {
+                    MessageBox.Show("Couldn't save your notes to quicknotes.txt, so they were saved here instead:\n" + path,
+                        "Couldn't Save", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+            MessageBox.Show("Couldn't save your notes anywhere: neither quicknotes.txt nor a separate file could be "
+                + "written.", "Couldn't Save", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
         // An unreadable file is never saved over: the box says why and can't be typed in.
@@ -97,17 +131,22 @@ namespace TidyMind
             saveTimer.Start();
         }
 
-        private void SaveNow()
+        private bool TrySave()
         {
             saveTimer.Stop();
-            if (!savePending) return;
+            if (!AtomicFile.TryWriteAllText(NotesFilePath, NotesTextBox.Text))
+                return false;
 
-            if (AtomicFile.TryWriteAllText(NotesFilePath, NotesTextBox.Text))
-            {
-                savePending = false;
-                warnedSaveFailed = false;
-            }
-            else if (!warnedSaveFailed)
+            savePending = false;
+            warnedSaveFailed = false;
+            return true;
+        }
+
+        private void SaveNow()
+        {
+            if (!savePending || TrySave()) return;
+
+            if (!warnedSaveFailed)
             {
                 // Once per failing stretch, not on every pause in typing; the next pause tries again.
                 warnedSaveFailed = true;

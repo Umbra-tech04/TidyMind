@@ -9,8 +9,14 @@ namespace TidyMind
 {
     // Moves memories from the old layout (files named after the memory, next to profiles.json) into their own folders
     // (MemoryFiles). Copies only: the old files stay where they are. A memory switches over when profiles.json is
-    // saved with its Id, which happens only after every one of its files has been copied and checked; until then it
-    // keeps no Id and the next start copies again, into the same folder (its Id is derived from its type and name).
+    // saved with its Id; until then it keeps no Id, and the next start tries again (its Id is derived from its type
+    // and name, so it always lands on the same folder).
+    //
+    // Never over existing data. A memory without an Id usually means "not moved yet", but it can also come from a
+    // profiles.json restored from an older backup or edited by hand, while the memory's folder already holds all the
+    // work done since; the old files next to profiles.json are only a snapshot from the day of the upgrade. So a
+    // memory is copied into a staging folder that is renamed into place in one step: a folder that exists is always
+    // complete, and is then kept as it is. The memory just gets its Id back, and error.log notes it.
     public static class MemoryLayoutMigration
     {
         // False (with the reason) if the copy couldn't be completed; nothing was switched over then.
@@ -28,7 +34,13 @@ namespace TidyMind
                 {
                     Guid id = StableId(memory);
                     memory.Id = taken.Add(id) ? id : NewId(taken);
-                    CopyLegacyFiles(memory);
+
+                    string folder = MemoryFiles.Folder(memory);
+                    if (Directory.Exists(folder))
+                        UnhandledErrors.LogQuietly("memory migration", "'" + memory.Name + "' had no Id in profiles.json, "
+                            + "but its folder " + folder + " already exists: kept as it is, nothing was copied over it.");
+                    else
+                        CopyLegacyFiles(memory, folder);
                 }
 
                 if (!ProfileManager.TrySaveProfiles(profiles))
@@ -62,15 +74,24 @@ namespace TidyMind
             return id;
         }
 
-        private static void CopyLegacyFiles(Profile memory)
+        // Filled in a staging folder, then renamed to the memory's folder in one step (the rename fails rather than
+        // replace a folder that appeared meanwhile). A staging folder left by a copy cut short is cleared and refilled.
+        private static void CopyLegacyFiles(Profile memory, string folder)
         {
+            string staging = folder + ".copying";
+            if (Directory.Exists(staging))
+                Directory.Delete(staging, recursive: true);
+            Directory.CreateDirectory(staging);
+
             string name = memory.Name ?? "";
             bool collection = memory.Type == ProfileType.Collection;
 
-            CopyAndVerify(LegacyPath(collection ? name + "_entities.json" : name + ".json"), MemoryFiles.Items(memory));
-            CopyAndVerify(LegacyPath(collection ? name + "_entities_tabs.json" : name + "_tabs.json"), MemoryFiles.Tabs(memory));
+            CopyAndVerify(LegacyPath(collection ? name + "_entities.json" : name + ".json"), staging, MemoryFiles.Items(memory));
+            CopyAndVerify(LegacyPath(collection ? name + "_entities_tabs.json" : name + "_tabs.json"), staging, MemoryFiles.Tabs(memory));
             if (!collection)
-                CopyAndVerify(LegacyPath(name + "_todos.json"), MemoryFiles.Todos(memory));
+                CopyAndVerify(LegacyPath(name + "_todos.json"), staging, MemoryFiles.Todos(memory));
+
+            Directory.Move(staging, folder);
         }
 
         // Null if the name can't have been a file name: the old version couldn't have saved anything under it.
@@ -80,19 +101,15 @@ namespace TidyMind
         }
 
         // Byte for byte, corrupt files included: an unreadable file stays unreadable (and untouched) rather than
-        // being dropped. A target with no source is a leftover of an earlier attempt and goes.
-        private static void CopyAndVerify(string source, string target)
+        // being dropped. target: the file's final path; it's copied under that name into the staging folder.
+        private static void CopyAndVerify(string source, string staging, string target)
         {
             if (source == null || !File.Exists(source))
-            {
-                if (File.Exists(target))
-                    File.Delete(target);
                 return;
-            }
 
-            Directory.CreateDirectory(Path.GetDirectoryName(target));
-            File.Copy(source, target, overwrite: true);
-            if (!File.ReadAllBytes(source).AsSpan().SequenceEqual(File.ReadAllBytes(target)))
+            string copy = Path.Combine(staging, Path.GetFileName(target));
+            File.Copy(source, copy);
+            if (!File.ReadAllBytes(source).AsSpan().SequenceEqual(File.ReadAllBytes(copy)))
                 throw new IOException(Path.GetFileName(source) + " didn't copy correctly.");
         }
     }

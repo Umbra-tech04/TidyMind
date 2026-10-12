@@ -35,12 +35,39 @@ namespace TidyMind
             midnight.Tick += (s, e) => { Refresh(); ScheduleMidnight(); };
             Loaded += (s, e) => { Refresh(); ScheduleMidnight(); };
             Unloaded += (s, e) => midnight.Stop();
+
+            // A refresh put off while a row was being edited (Refresh) runs once focus moves on to something else.
+            // Not when the window merely loses focus (no new focus): the row is still the one being edited then.
+            TodoList.LostKeyboardFocus += (s, e) =>
+            {
+                if (refreshAfterEdit && e.NewFocus != null)
+                    Dispatcher.BeginInvoke(new Action(Refresh), DispatcherPriority.Input);
+            };
         }
 
+        private bool refreshAfterEdit;
+
+        // Rows aren't rebuilt while one is being edited (its text box is the window's focus, also while the window
+        // is in the background and comes back to it): that would take the caret, and the keys typed next would go
+        // nowhere. The refresh waits until the edit is over (the text is saved when it ends, so nothing is missed).
         public void Refresh()
         {
+            if (IsEditingRow())
+            {
+                refreshAfterEdit = true;
+                return;
+            }
+
+            refreshAfterEdit = false;
             todos = QuickTodoService.GetCurrentList(DateTime.Today);
             Render();
+        }
+
+        private bool IsEditingRow()
+        {
+            Window window = Window.GetWindow(this);
+            return window != null && FocusManager.GetFocusedElement(window) is Visual focused
+                && TodoList.IsAncestorOf(focused);
         }
 
         private void ScheduleMidnight()

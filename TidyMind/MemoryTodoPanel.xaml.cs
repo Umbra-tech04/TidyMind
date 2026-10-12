@@ -73,8 +73,14 @@ namespace TidyMind
             string text = Input.Text.Trim();
             if (text.Length == 0) return;
 
-            todos.Add(new TodoEntry { Text = text });
-            Save();
+            // Not saved: the item isn't added, and the text stays in the box to try again.
+            TodoEntry entry = new TodoEntry { Text = text };
+            todos.Add(entry);
+            if (!Save())
+            {
+                todos.Remove(entry);
+                return;
+            }
             Input.Clear();
             Render();
 
@@ -137,7 +143,11 @@ namespace TidyMind
             check.Click += (s, e) =>
             {
                 entry.IsDone = check.IsChecked == true;
-                Save();
+                if (!Save())
+                {
+                    entry.IsDone = !entry.IsDone; // not saved: the tick goes back
+                    check.IsChecked = entry.IsDone;
+                }
                 PaintDone(text, entry.IsDone);
                 UpdateCount();
             };
@@ -189,11 +199,16 @@ namespace TidyMind
             return false;
         }
 
-        // Focus goes back to the input, so the list stays open even when this was the last item.
+        // Focus goes back to the input, so the list stays open even when this was the last item. If the removal
+        // can't be saved, the item stays where it was.
         private void Delete(TodoEntry entry)
         {
-            todos.Remove(entry);
-            Save();
+            int index = todos.IndexOf(entry);
+            if (index < 0)
+                return;
+            todos.RemoveAt(index);
+            if (!Save())
+                todos.Insert(index, entry);
             Render();
             Input.Focus();
         }

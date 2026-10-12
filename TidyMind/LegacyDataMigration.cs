@@ -9,7 +9,8 @@ namespace TidyMind
     // One-time copy of the data older versions kept in the working folder (normally next to the exe) into
     // AppPaths.DataFolder. Copies only: the old files are never moved or deleted. The marker is written only once
     // every file has arrived and checked out, and nothing reads the new folder before that, so a copy cut short
-    // (crash, full disk) is simply redone from the untouched originals on the next start.
+    // (crash, full disk) is finished from the untouched originals on the next start. Files already in the data folder
+    // are never copied over (CopyAndVerify).
     public static class LegacyDataMigration
     {
         private const string MarkerFile = "legacy-data-copied.txt";
@@ -124,18 +125,40 @@ namespace TidyMind
             return topLevel.Concat(inFolders).ToList();
         }
 
-        // Overwrites what an earlier, interrupted copy left in the target: nothing else can have written there yet.
+        // Never over a file that's already there. The marker going missing (deleted, or the data folder restored
+        // without it) makes this run again long after the first time, when the data folder holds everything done
+        // since and the old folder only what was there on the day of the upgrade. So existing files are kept, and
+        // error.log notes the ones that differ. Each file is copied under a temporary name and only then given its
+        // real one, so a copy cut short never leaves a partial file that would later count as already there.
         private static void CopyAndVerify(string source, string target)
         {
+            List<string> kept = new List<string>();
             foreach (string from in DataFiles(source))
             {
-                string to = Path.Combine(target, Path.GetRelativePath(source, from));
-                Directory.CreateDirectory(Path.GetDirectoryName(to));
-                File.Copy(from, to, overwrite: true);
+                string relative = Path.GetRelativePath(source, from);
+                string to = Path.Combine(target, relative);
+                if (File.Exists(to))
+                {
+                    if (!SameContent(from, to))
+                        kept.Add(relative);
+                    continue;
+                }
 
-                if (!SameContent(from, to))
-                    throw new IOException(Path.GetRelativePath(source, from) + " didn't copy correctly.");
+                Directory.CreateDirectory(Path.GetDirectoryName(to));
+                string temp = to + ".copying";
+                File.Copy(from, temp, overwrite: true); // only ever our own leftover from a copy cut short
+                if (!SameContent(from, temp))
+                {
+                    File.Delete(temp);
+                    throw new IOException(relative + " didn't copy correctly.");
+                }
+                File.Move(temp, to);
             }
+
+            if (kept.Count > 0)
+                UnhandledErrors.LogQuietly("data migration", "Kept " + kept.Count + " file(s) already in " + target
+                    + " instead of copying the older ones from " + source + " over them: "
+                    + string.Join(", ", kept.Take(5)) + (kept.Count > 5 ? ", …" : "") + ".");
         }
 
         // Sizes for pictures and attachments (they can be large); the full contents for the small data files.
