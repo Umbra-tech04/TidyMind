@@ -197,7 +197,7 @@ namespace TidyMind
         {
             BitmapImage image = await decoding.ConfigureAwait(false);
             if (image != null)
-                background.Dispatcher.BeginInvoke(new Action(() => background.Background = ImageFill(image)));
+                _ = background.Dispatcher.BeginInvoke(new Action(() => background.Background = ImageFill(image)));
         }
 
         public static Color? ParseColor(string hex)

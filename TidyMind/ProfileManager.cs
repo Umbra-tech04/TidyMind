@@ -35,13 +35,6 @@ namespace TidyMind
             return true;
         }
 
-        // Throws IOException if profiles.json couldn't be written (the file is then unchanged).
-        public static void SaveProfiles(List<Profile> profiles)
-        {
-            if (!TrySaveProfiles(profiles))
-                throw new IOException("profiles.json couldn't be written.");
-        }
-
         // Written via a temporary file, so a crash mid-save can't truncate the list of memories. False if it
         // couldn't be written; the file is then unchanged.
         public static bool TrySaveProfiles(List<Profile> profiles)

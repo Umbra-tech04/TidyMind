@@ -9,6 +9,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 
 namespace TidyMind
 {
@@ -24,10 +25,19 @@ namespace TidyMind
         // Its items or tabs file couldn't be read: shown read-only (ShowUnreadable), and never saved over.
         private bool unreadable;
 
+        // The search box rebuilds the cards after a short pause in typing, not on every key: rebuilding a big grid per
+        // keystroke lags.
+        private readonly DispatcherTimer searchPause = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
+
         // saveProfiles: writes the main window's list of memories, which `profile` belongs to (Edit Background).
         public CollectionView(Profile profile, Func<bool> saveProfiles)
         {
             InitializeComponent();
+            searchPause.Tick += (s, e) =>
+            {
+                searchPause.Stop();
+                RenderEntities();
+            };
             memory = profile;
             // An open item overlay isn't empty page: no background menu there.
             MemoryPageBackground.Attach(Page, BackgroundLayer, profile, saveProfiles, OverlayGrid);
@@ -168,7 +178,7 @@ namespace TidyMind
             foreach (Entity entity in inTab)
             {
                 if (!string.IsNullOrEmpty(filter) &&
-                    (entity.Name ?? "").IndexOf(filter, StringComparison.OrdinalIgnoreCase) < 0)
+                    !TextSearch.Contains(entity.Name, filter))
                     continue;
 
                 EntityPanel.Children.Add(CreateEntityCard(entity));
@@ -232,7 +242,8 @@ namespace TidyMind
         private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (SearchBox.Text == "Search...") return;
-            RenderEntities();
+            searchPause.Stop();
+            searchPause.Start();
         }
 
         // ---- Card ---------------------------------------------------------
@@ -486,16 +497,26 @@ namespace TidyMind
             Entity edited = form.ResultEntity;
             bool imported = CopyInPickedImage(edited, form.PickedImageFile);
 
-            int index = entities.IndexOf(entity);
+            // By Id, since a reload replaces the list's objects. An item deleted meanwhile has nothing to save into.
+            int index = entities.FindIndex(x => x.Id == entity.Id);
+            if (index < 0)
+            {
+                if (imported)
+                    EntityImages.DeleteCopy(edited.ImagePath);
+                RenderEntities();
+                return;
+            }
+
+            Entity original = entities[index];
             entities[index] = edited;
             if (SaveEntities())
             {
                 if (imported)
-                    EntityImages.DeleteCopy(entity.ImagePath);
+                    EntityImages.DeleteCopy(original.ImagePath);
             }
             else
             {
-                entities[index] = entity;
+                entities[index] = original;
                 if (imported)
                     EntityImages.DeleteCopy(edited.ImagePath);
             }

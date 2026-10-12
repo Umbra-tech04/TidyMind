@@ -153,11 +153,18 @@ namespace TidyMind
         private FrameworkElement CreateRow(QuickTodo todo, DateTime today)
         {
             Grid row = new Grid { MinHeight = 30, Background = Brushes.Transparent };
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-            TextBlock text = new TextBlock { Text = todo.Text, TextWrapping = TextWrapping.Wrap, FontSize = 13 };
+            // The text is edited in place, like the notes (TextEditing.InlineEditor): click into it to fix a letter.
+            // The checkbox beside it ticks the to-do.
+            TextBox text = TextEditing.InlineEditor(() => todo.Text, edited => Rename(todo, edited), () => Input.Focus());
+            text.FontSize = 13;
+            text.VerticalAlignment = VerticalAlignment.Center;
+            text.Margin = new Thickness(0, 4, 8, 4);
+            Grid.SetColumn(text, 1);
 
             bool overdue = GroupOf(todo, today) == DueGroup.Overdue;
             TextBlock due = new TextBlock
@@ -167,17 +174,14 @@ namespace TidyMind
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(0, 0, 6, 0)
             };
-            Grid.SetColumn(due, 1);
+            Grid.SetColumn(due, 2);
 
             PaintDone(text, due, overdue, todo.IsDone);
 
-            // The text is the checkbox's content, so clicking the words ticks it too.
             CheckBox check = new CheckBox
             {
-                Content = text,
                 IsChecked = todo.IsDone,
                 VerticalAlignment = VerticalAlignment.Center,
-                VerticalContentAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(2, 4, 8, 4)
             };
             check.Click += (s, e) => SetDone(todo, check, text, due, overdue);
@@ -190,6 +194,7 @@ namespace TidyMind
                 }
             };
             row.Children.Add(check);
+            row.Children.Add(text);
             row.Children.Add(due);
 
             // Shown only while the row is hovered or focused, to keep the list calm. (Delete on the checkbox also works.)
@@ -200,14 +205,12 @@ namespace TidyMind
                 Visibility = Visibility.Hidden
             };
             delete.Click += (s, e) => DeleteTodo(todo);
-            Grid.SetColumn(delete, 2);
+            Grid.SetColumn(delete, 3);
 
+            // The row's menu (outside the text, which has its own Cut / Copy / Paste). Editing is clicking the text.
             ContextMenu menu = new ContextMenu();
-            MenuItem edit = new MenuItem { Header = "Edit" };
-            edit.Click += (s, e) => BeginEdit(todo, row, check);
             MenuItem remove = new MenuItem { Header = "Delete" };
             remove.Click += (s, e) => DeleteTodo(todo); // the same as the row's "×"
-            menu.Items.Add(edit);
             menu.Items.Add(remove);
             menu.Items.Add(new Separator());
             menu.Items.Add(TextCopy.CopyItem(() => todo.Text));
@@ -223,71 +226,21 @@ namespace TidyMind
             return row;
         }
 
-        // Swaps the row's text for a box with the same text: Enter or clicking away saves, Escape cancels.
-        // An emptied box cancels too; removing a to-do is what Delete is for.
-        private void BeginEdit(QuickTodo todo, Grid row, CheckBox check)
+        // Stored by Id (quicktodos.json is re-read, so a change made elsewhere meanwhile isn't lost). If it can't be
+        // saved, the list says the file is unreadable and the old text is kept.
+        private bool Rename(QuickTodo todo, string text)
         {
-            TextBox editor = new TextBox
+            if (!QuickTodoService.Rename(todo.Id, text))
             {
-                Text = todo.Text,
-                FontSize = 13,
-                Height = 28,
-                VerticalContentAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(0, 1, 8, 1)
-            };
-            check.Visibility = Visibility.Collapsed;
-            row.Children.Add(editor);
-
-            bool finished = false;
-            void Finish(bool save)
-            {
-                if (finished) return;
-                finished = true;
-
-                string text = editor.Text.Trim();
-                if (save && text.Length > 0 && text != todo.Text)
-                {
-                    if (QuickTodoService.Rename(todo.Id, text))
-                    {
-                        // By Id: a refresh while editing may already have swapped the list for a fresh copy.
-                        QuickTodo current = todos.FirstOrDefault(t => t.Id == todo.Id);
-                        if (current != null)
-                            current.Text = text;
-                    }
-                    else
-                        ShowUnreadable();
-                }
-
-                // Deferred: this can run from inside a Render (a refresh pulling the editor out of the list).
-                Dispatcher.BeginInvoke(new Action(Render));
+                ShowUnreadable();
+                return false;
             }
-
-            editor.KeyDown += (s, e) =>
-            {
-                if (e.Key == Key.Enter || e.Key == Key.Escape)
-                {
-                    Finish(e.Key == Key.Enter);
-                    e.Handled = true;
-                }
-            };
-            // Focused only after the context menu has closed and handed focus back to where it was; until the box
-            // has had focus once, losing it means nothing.
-            bool focused = false;
-            editor.GotKeyboardFocus += (s, e) => focused = true;
-            editor.LostKeyboardFocus += (s, e) =>
-            {
-                if (focused)
-                    Finish(true);
-            };
-            editor.Loaded += (s, e) => Dispatcher.BeginInvoke(new Action(() =>
-            {
-                editor.Focus();
-                editor.SelectAll();
-            }), DispatcherPriority.Input);
+            todo.Text = text;
+            return true;
         }
 
         // Restyles the row in place (no rebuild), so the checkbox keeps keyboard focus.
-        private void SetDone(QuickTodo todo, CheckBox check, TextBlock text, TextBlock due, bool overdue)
+        private void SetDone(QuickTodo todo, CheckBox check, TextBox text, TextBlock due, bool overdue)
         {
             bool done = check.IsChecked == true;
             if (!QuickTodoService.SetDone(todo.Id, done))
@@ -327,7 +280,7 @@ namespace TidyMind
         // ---- Helpers ------------------------------------------------------
 
         // The day label is red only while an overdue todo is still open.
-        private void PaintDone(TextBlock text, TextBlock due, bool overdue, bool done)
+        private void PaintDone(TextBox text, TextBlock due, bool overdue, bool done)
         {
             text.TextDecorations = done ? TextDecorations.Strikethrough : null;
             text.Foreground = (Brush)FindResource(done ? "TextSub" : "TextMain");

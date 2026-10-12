@@ -9,7 +9,8 @@ namespace TidyMind
         Memory,
         Project,
         Entity,
-        File // a project's attached file; opens the project
+        File, // a project's attached file; opens the project
+        Note  // a page of a project's notes; opens the project at that page
     }
 
     // One searchable thing plus enough to navigate back to it.
@@ -19,6 +20,10 @@ namespace TidyMind
         public string Title { get; set; }
         public string Location { get; set; }
         public Profile Profile { get; set; }
+
+        // A note page's text: searched instead of the title (its first line), and shown around the match.
+        public string? Text { get; set; }
+        public int Page { get; set; } // which note page (0-based), for Note results
 
         // The project's or item's Id (Guid.Empty for a memory itself).
         public Guid ItemId { get; set; }
@@ -52,7 +57,7 @@ namespace TidyMind
             return index;
         }
 
-        // Case-insensitive partial match. Names that start with the query rank first, then by kind.
+        // Case-insensitive partial match (a note page by its text). Names that start with the query rank first, then by kind.
         public static List<SearchResult> Filter(List<SearchResult> index, string query, int limit)
         {
             query = (query ?? "").Trim();
@@ -60,7 +65,7 @@ namespace TidyMind
                 return new List<SearchResult>();
 
             return index
-                .Select(r => new { Result = r, At = (r.Title ?? "").IndexOf(query, StringComparison.OrdinalIgnoreCase) })
+                .Select(r => new { Result = r, At = TextSearch.IndexOf(r.Text ?? r.Title, query, out _) })
                 .Where(x => x.At >= 0)
                 .OrderBy(x => x.At == 0 ? 0 : 1)
                 .ThenBy(x => x.Result.Kind)
@@ -93,6 +98,26 @@ namespace TidyMind
                         Location = profile.Name + Arrow + project.Name,
                         Profile = profile,
                         ItemId = project.Id
+                    });
+                }
+
+                // Its note pages with writing on them (an old single note is page 1, as Project Details shows it).
+                List<NotePage> pages = project.PagesOrLegacyNote();
+                for (int i = 0; i < pages.Count; i++)
+                {
+                    string text = RichTextHelper.ToPlainText(pages[i].Body ?? "");
+                    string firstLine = text.Split('\n').Select(line => line.Trim()).FirstOrDefault(line => line.Length > 0) ?? "";
+                    if (firstLine.Length == 0) continue;
+
+                    index.Add(new SearchResult
+                    {
+                        Kind = SearchResultKind.Note,
+                        Title = firstLine,
+                        Text = text,
+                        Location = profile.Name + Arrow + project.Name + Arrow + "Page " + (i + 1),
+                        Profile = profile,
+                        ItemId = project.Id,
+                        Page = i
                     });
                 }
             }

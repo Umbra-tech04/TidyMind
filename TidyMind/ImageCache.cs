@@ -23,11 +23,17 @@ namespace TidyMind
         }
 
         // Decodes on the calling thread the first time; null if the file is missing or not a readable image.
+        // A failure isn't kept: the file may only be locked for a moment, or on a drive that comes back, so the
+        // next request tries again.
         public static BitmapImage GetOrLoad(string path, int decodePixelWidth)
         {
             string fullPath = Path.GetFullPath(path);
-            return images.GetOrAdd(fullPath,
-                p => new Lazy<BitmapImage>(() => Decode(p, decodePixelWidth), LazyThreadSafetyMode.ExecutionAndPublication)).Value;
+            Lazy<BitmapImage> entry = images.GetOrAdd(fullPath,
+                p => new Lazy<BitmapImage>(() => Decode(p, decodePixelWidth), LazyThreadSafetyMode.ExecutionAndPublication));
+            BitmapImage image = entry.Value;
+            if (image == null)
+                images.TryRemove(new KeyValuePair<string, Lazy<BitmapImage>>(fullPath, entry)); // only this attempt's entry
+            return image;
         }
 
         // The same, decoded on a worker thread; the result is frozen, so it can be used on the UI thread.

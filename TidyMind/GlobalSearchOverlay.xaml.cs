@@ -129,7 +129,7 @@ namespace TidyMind
                 FontSize = 14,
                 TextTrimming = TextTrimming.CharacterEllipsis
             };
-            AddHighlightedText(title, result.Title ?? "", query);
+            AddHighlightedText(title, result.Text == null ? result.Title ?? "" : AroundMatch(result.Text, query), query);
 
             TextBlock location = new TextBlock
             {
@@ -166,9 +166,20 @@ namespace TidyMind
             return row;
         }
 
+        // A note page shows the words around the match, on one line.
+        private static string AroundMatch(string text, string query)
+        {
+            int at = Math.Max(0, TextSearch.IndexOf(text, query, out int length));
+            int start = Math.Max(0, at - 30);
+            string around = text.Substring(start, Math.Min(text.Length - start, at - start + length + 80));
+            around = string.Join(" ", around.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+            return (start > 0 ? "…" : "") + around;
+        }
+
         private static void AddHighlightedText(TextBlock block, string text, string query)
         {
-            int at = query.Length == 0 ? -1 : text.IndexOf(query, StringComparison.OrdinalIgnoreCase);
+            // The match can differ in length from the query once accents are ignored, so its own length is used.
+            int at = TextSearch.IndexOf(text, query, out int length);
             if (at < 0)
             {
                 block.Text = text;
@@ -176,8 +187,8 @@ namespace TidyMind
             }
 
             block.Inlines.Add(new Run(text.Substring(0, at)));
-            block.Inlines.Add(new Run(text.Substring(at, query.Length)) { FontWeight = FontWeights.Bold });
-            block.Inlines.Add(new Run(text.Substring(at + query.Length)));
+            block.Inlines.Add(new Run(text.Substring(at, length)) { FontWeight = FontWeights.Bold });
+            block.Inlines.Add(new Run(text.Substring(at + length)));
         }
 
         private void Highlight(int position)
@@ -257,6 +268,7 @@ namespace TidyMind
                 case SearchResultKind.Memory: return "\uE8B7";  // folder
                 case SearchResultKind.Project: return "\uE7C3"; // page
                 case SearchResultKind.File: return "\uE723";    // paperclip
+                case SearchResultKind.Note: return "\uE70B";    // note
                 default: return "\uE8EC";                       // tag
             }
         }
@@ -268,6 +280,7 @@ namespace TidyMind
                 case SearchResultKind.Memory: return "Memory";
                 case SearchResultKind.Project: return "Project";
                 case SearchResultKind.File: return "File";
+                case SearchResultKind.Note: return "Note";
                 default: return "Item";
             }
         }

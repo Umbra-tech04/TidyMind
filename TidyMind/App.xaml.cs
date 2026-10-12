@@ -82,6 +82,7 @@ namespace TidyMind
                 new KeyEventHandler(GlobalPreviewKeyDown));
             EventManager.RegisterClassHandler(typeof(Window), FrameworkElement.LoadedEvent,
                 new RoutedEventHandler(AnimateWindowOpen));
+            TextEditing.DisableOvertype();
 
             MainWindow window = new MainWindow(profiles);
             this.MainWindow = window;

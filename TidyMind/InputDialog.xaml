@@ -52,6 +52,8 @@
 
         <TextBox x:Name="ValueInput" Style="{StaticResource DialogInputStyle}" Height="38"
                  TextChanged="ValueInput_TextChanged"/>
+        <TextBlock x:Name="EmptyHint" Text="This can't be empty." FontSize="12" Margin="2,6,0,0"
+                   Foreground="{StaticResource Danger}" Visibility="Collapsed"/>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
             <Button x:Name="CancelButton" Content="Cancel" IsCancel="True"

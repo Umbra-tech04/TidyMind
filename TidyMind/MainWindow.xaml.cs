@@ -467,6 +467,8 @@ namespace TidyMind
         {
             NavigateTo(result.Profile);
             if (result.Kind == SearchResultKind.Memory) return;
+            if (result.Kind == SearchResultKind.Note)
+                ProjectWindow.OpenAtPage(result.ItemId, result.Page);
 
             // After the new view has loaded, so a project opens over its visible card (and can pulse on close).
             Dispatcher.BeginInvoke(new Action(() =>

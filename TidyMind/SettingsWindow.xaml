@@ -25,7 +25,7 @@
         <StackPanel Grid.Row="1" Margin="20,18">
             <TextBlock Text="DATA" FontSize="10" FontWeight="SemiBold"
                        Foreground="{StaticResource TextSub}" Margin="0,0,0,8"/>
-            <Button x:Name="ExportAllButton" Content="Export All Memories…"
+            <Button Content="Export All Memories…"
                     Height="38" HorizontalContentAlignment="Left" Padding="14,0"
                     Click="ExportAllButton_Click"/>
 

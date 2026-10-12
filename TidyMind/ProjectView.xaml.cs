@@ -8,6 +8,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
+using System.Windows.Threading;
 using ShapePath = System.Windows.Shapes.Path;
 
 namespace TidyMind
@@ -27,10 +28,19 @@ namespace TidyMind
         // Its projects or tabs file couldn't be read: shown read-only (ShowUnreadable), and never saved over.
         private bool unreadable;
 
+        // The search box rebuilds the cards after a short pause in typing, not on every key: rebuilding a big grid per
+        // keystroke lags.
+        private readonly DispatcherTimer searchPause = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
+
         // saveProfiles: writes the main window's list of memories, which `profile` belongs to (Edit Background).
         public ProjectView(Profile profile, Func<bool> saveProfiles)
         {
             InitializeComponent();
+            searchPause.Tick += (s, e) =>
+            {
+                searchPause.Stop();
+                RenderProjects();
+            };
             memory = profile;
             MemoryPageBackground.Attach(Page, BackgroundLayer, profile, saveProfiles);
             TitleText.Text = profile.Name;
@@ -145,7 +155,7 @@ namespace TidyMind
             foreach (Project project in inTab)
             {
                 if (!string.IsNullOrEmpty(filter) &&
-                    (project.Name ?? "").IndexOf(filter, StringComparison.OrdinalIgnoreCase) < 0)
+                    !TextSearch.Contains(project.Name, filter))
                     continue;
 
                 ProjectPanel.Children.Add(CreateProjectCard(project));
@@ -213,7 +223,8 @@ namespace TidyMind
         private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (SearchBox.Text == "Search...") return;
-            RenderProjects();
+            searchPause.Stop();
+            searchPause.Start();
         }
 
         // ---- Card ---------------------------------------------------------
@@ -326,7 +337,7 @@ namespace TidyMind
             ProjectWindow window = new ProjectWindow(project);
             window.ShowDialog();
 
-            // Anything changed in the window (name, description, status, tasks, note) counts as an edit.
+            // Anything changed in the window (name, description, tasks, files, notes) counts as an edit.
             if (JsonSerializer.Serialize(project) != before)
                 project.LastModified = DateTime.Now;
 

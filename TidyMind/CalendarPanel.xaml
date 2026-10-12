@@ -47,7 +47,7 @@
                     <Button Grid.Column="1" Content="‹" ToolTip="Previous month" Width="30" Height="30" FontSize="17"
                             Style="{StaticResource IconButtonStyle}" Foreground="{StaticResource Accent}"
                             Margin="6,0,0,0" Click="PrevMonth_Click"/>
-                    <Button Grid.Column="2" x:Name="MonthLabel" ToolTip="Back to today"
+                    <Button Grid.Column="2" ToolTip="Back to today"
                             HorizontalAlignment="Center" Cursor="Hand"
                             Click="MonthLabel_Click">
                         <Button.Template>

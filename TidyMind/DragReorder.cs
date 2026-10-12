@@ -55,6 +55,7 @@ namespace TidyMind
         public void Clear()
         {
             items.Clear();
+            dragEnded.Clear(); // those cards are being replaced, and holding them would keep them in memory
             HideIndicator();
         }
 

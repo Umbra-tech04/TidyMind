@@ -58,7 +58,7 @@
             <TextBlock Text="Choose export format" Foreground="{StaticResource TextSub}"
                        FontSize="11" Margin="0,0,0,14"/>
 
-            <Button x:Name="ExcelButton" Style="{StaticResource ExportOptionButton}"
+            <Button Style="{StaticResource ExportOptionButton}"
                     Margin="0,0,0,10" Click="ExcelButton_Click">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="📊" FontSize="22" VerticalAlignment="Center" Margin="0,0,14,0"/>
@@ -69,7 +69,7 @@
                 </StackPanel>
             </Button>
 
-            <Button x:Name="DocxButton" Style="{StaticResource ExportOptionButton}"
+            <Button Style="{StaticResource ExportOptionButton}"
                     Margin="0,0,0,10" Click="DocxButton_Click">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="📝" FontSize="22" VerticalAlignment="Center" Margin="0,0,14,0"/>
@@ -80,7 +80,7 @@
                 </StackPanel>
             </Button>
 
-            <Button x:Name="PdfButton" Style="{StaticResource ExportOptionButton}"
+            <Button Style="{StaticResource ExportOptionButton}"
                     Click="PdfButton_Click">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="📄" FontSize="22" VerticalAlignment="Center" Margin="0,0,14,0"/>

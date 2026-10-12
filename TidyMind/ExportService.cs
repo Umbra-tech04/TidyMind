@@ -150,7 +150,7 @@ namespace TidyMind
             {
                 ("Description", RichTextHelper.ToPlainText(project.Description)),
                 ("Tasks", FormatTasks(project.Tasks)),
-                ("Notes", RichTextHelper.ToPlainText(project.Notes))
+                ("Notes", project.NotesAsPlainText())
             };
             return item;
         }
@@ -298,7 +298,7 @@ namespace TidyMind
 
             WriteCardField(sheet, ref row, "Description", RichTextHelper.ToPlainText(project.Description));
             WriteCardField(sheet, ref row, "Tasks", FormatTasks(project.Tasks));
-            WriteCardField(sheet, ref row, "Notes", RichTextHelper.ToPlainText(project.Notes));
+            WriteCardField(sheet, ref row, "Notes", project.NotesAsPlainText());
         }
 
         private static void WriteCardHeader(IXLWorksheet sheet, ref int row, string name)
@@ -306,7 +306,7 @@ namespace TidyMind
             sheet.Range(row, 1, row, 2).Merge();
 
             IXLCell cell = sheet.Cell(row, 1);
-            cell.Value = string.IsNullOrWhiteSpace(name) ? "(unnamed)" : name;
+            cell.Value = string.IsNullOrWhiteSpace(name) ? "(unnamed)" : FitCell(name);
             cell.Style.Font.Bold = true;
             cell.Style.Font.FontSize = 13;
             cell.Style.Font.FontColor = XLColor.White;
@@ -319,8 +319,20 @@ namespace TidyMind
         private static void WriteCardField(IXLWorksheet sheet, ref int row, string label, string value)
         {
             StyleCardLabel(sheet, row, label);
-            sheet.Cell(row, 2).Value = string.IsNullOrEmpty(value) ? "-" : value;
+            sheet.Cell(row, 2).Value = string.IsNullOrEmpty(value) ? "-" : FitCell(value);
             row++;
+        }
+
+        // An Excel cell holds at most 32,767 characters, and past that ClosedXML throws, failing the whole export:
+        // longer text (a long note or task list) is cut, and says so. Never cut between the halves of an emoji.
+        private const int MaxCellText = 32000;
+
+        private static string FitCell(string text)
+        {
+            if (text.Length <= MaxCellText)
+                return text;
+            int keep = char.IsHighSurrogate(text[MaxCellText - 1]) ? MaxCellText - 1 : MaxCellText;
+            return text.Substring(0, keep) + " … (cut)";
         }
 
         private static void WriteSizeRows(IXLWorksheet sheet, ref int row, List<SizeQuantity> sizes)
@@ -382,9 +394,35 @@ namespace TidyMind
             return result;
         }
 
-        private static bool HasImage(ExportItem item)
+        // The item's picture as PNG, or null if there is none or it can't be read (damaged, or a format the Word and
+        // PDF libraries don't take, such as WebP): that item is then exported without its picture instead of the
+        // whole export failing. Read through WPF, which decodes every format the app shows, so both writers always
+        // get a plain PNG.
+        private static byte[]? PictureAsPng(ExportItem item)
         {
-            return !string.IsNullOrEmpty(item.ImagePath) && File.Exists(item.ImagePath);
+            if (string.IsNullOrEmpty(item.ImagePath) || !File.Exists(item.ImagePath))
+                return null;
+
+            try
+            {
+                System.Windows.Media.Imaging.BitmapImage bitmap = ImageCache.Decode(item.ImagePath, 400);
+                if (bitmap == null)
+                    return null;
+
+                var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
+                encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));
+                using (MemoryStream png = new MemoryStream())
+                {
+                    encoder.Save(png);
+                    return png.ToArray();
+                }
+            }
+            catch (Exception)
+            {
+                // A damaged file can fail inside the decoder in ways Decode doesn't expect (e.g. a COMException);
+                // whatever it is, it only means "no picture" here.
+                return null;
+            }
         }
 
         private static void WriteDocx(List<ExportItem> items, string title, string filePath)
@@ -410,11 +448,11 @@ namespace TidyMind
 
                     document.InsertParagraph();
 
-                    if (HasImage(item))
+                    byte[]? png = PictureAsPng(item);
+                    if (png != null)
                     {
-                        // Image on the left, fields on the right — same idea as the
-                        // entity detail overlay in CollectionWindow.
-                        Xceed.Document.NET.Image image = document.AddImage(item.ImagePath);
+                        // Image on the left, fields on the right, like the item detail view.
+                        Xceed.Document.NET.Image image = document.AddImage(new MemoryStream(png), "image/png");
                         Picture picture = image.CreatePicture(120, 120);
 
                         Xceed.Document.NET.Table table = document.AddTable(1, 2);
@@ -455,10 +493,7 @@ namespace TidyMind
             }
         }
 
-        // Renders with QuestPDF instead of PDFsharp — PDFsharp's manual page/graphics
-        // handling (XGraphics, raw page sizing, font resolution) was crashing the app.
-        // QuestPDF's layout model handles pagination and text wrapping itself, so none
-        // of that bookkeeping is needed here.
+        // QuestPDF lays out the pages: pagination and text wrapping are its job, so items are simply added in order.
         private static void WritePdf(List<ExportItem> items, string title, string filePath)
         {
             QuestPDF.Fluent.Document.Create(container =>
@@ -486,13 +521,13 @@ namespace TidyMind
                                     column.Item().PaddingTop(12).Text(currentGroup).FontSize(14).Bold();
                             }
 
-                            if (HasImage(item))
+                            byte[]? png = PictureAsPng(item);
+                            if (png != null)
                             {
-                                // Image on the left, fields on the right — same idea as the
-                                // entity detail overlay in CollectionWindow.
+                                // Image on the left, fields on the right, like the item detail view.
                                 column.Item().PaddingTop(8).Row(row =>
                                 {
-                                    row.ConstantItem(80).Height(80).Image(item.ImagePath).FitArea();
+                                    row.ConstantItem(80).Height(80).Image(png).FitArea();
                                     row.ConstantItem(12);
 
                                     row.RelativeItem().Column(info =>

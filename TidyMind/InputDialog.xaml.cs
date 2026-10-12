@@ -53,7 +53,14 @@ namespace TidyMind
             return dialog.ShowDialog() == true ? dialog.ValueInput.Text.Trim() : null;
         }
 
-        private void ValueInput_TextChanged(object sender, TextChangedEventArgs e) => UpdateConfirmState();
+        private void ValueInput_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            UpdateConfirmState();
+            // Said only once the user has typed and blanked it out (a new, still empty field needs no warning);
+            // Confirm stays off meanwhile, so the dialog stays open.
+            if (IsLoaded)
+                EmptyHint.Visibility = ConfirmButton.IsEnabled ? Visibility.Collapsed : Visibility.Visible;
+        }
 
         private void UpdateConfirmState()
         {

@@ -132,8 +132,9 @@ namespace TidyMind
 
             data.ProjectCount = all.Count;
 
-            // "In progress" means the same thing as in the groups below: not every task done.
-            List<DashboardProject> active = all.Where(p => p.Percent < 100).ToList();
+            // "In progress" means the same thing as in the groups below: tasks, not all of them done. A project with no
+            // tasks has nothing to progress on, so it isn't counted as 0% or called stalled (it still counts as a project).
+            List<DashboardProject> active = all.Where(p => p.TasksLeft > 0).ToList();
             data.ActiveProjectCount = active.Count;
             data.AverageCompletion = active.Count == 0 ? 0 : (int)Math.Round(active.Average(p => p.Percent), MidpointRounding.AwayFromZero);
 

@@ -57,7 +57,7 @@ namespace TidyMind
             BitmapImage picture = await decoding.ConfigureAwait(false);
             if (picture == null)
                 return;
-            layer.Dispatcher.BeginInvoke(new System.Action(() =>
+            _ = layer.Dispatcher.BeginInvoke(new System.Action(() =>
             {
                 if (layer.Tag == fill)
                     AddPicture(layer, picture);

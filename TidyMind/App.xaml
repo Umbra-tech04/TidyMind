@@ -10,7 +10,7 @@
         <SolidColorBrush x:Key="BgInput"      Color="#FFFFFF"/>
         <SolidColorBrush x:Key="BgSubtle"     Color="#F0F0EE"/>
         <SolidColorBrush x:Key="TextMain"     Color="#1C1B19"/>
-        <SolidColorBrush x:Key="TextSub"      Color="#8A8A87"/>
+        <SolidColorBrush x:Key="TextSub"      Color="#6E6E6B"/> <!-- 5.1:1 on white, 4.7:1 on BgMain (readable small text) -->
         <SolidColorBrush x:Key="TextBody"     Color="#3A3936"/> <!-- secondary reading text: softer than TextMain, darker than TextSub -->
         <FontFamily x:Key="DisplayFont">Segoe UI Variable Display, Segoe UI</FontFamily> <!-- large or title type -->
 
@@ -24,8 +24,6 @@
         <!-- Sidebar -->
         <SolidColorBrush x:Key="Sidebar"      Color="#1C1B19"/>
         <SolidColorBrush x:Key="SidebarText"  Color="#E8E8E6"/>
-        <SolidColorBrush x:Key="SidebarSub"   Color="#8F8F8B"/>
-        <SolidColorBrush x:Key="SidebarHover" Color="#2A2926"/>
 
         <!-- ===== Window ===== -->
         <Style TargetType="Window">

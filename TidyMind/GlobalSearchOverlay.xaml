@@ -30,8 +30,9 @@
                                VerticalAlignment="Center" Margin="0,0,14,0"/>
 
                     <Grid Grid.Column="1">
+                        <!-- Lighter than typed text, still 4.6:1 on the white card -->
                         <TextBlock x:Name="Placeholder" Text="Search memories, projects and items…"
-                                   FontSize="19" Foreground="#A5A5A2"
+                                   FontSize="19" Foreground="#767673"
                                    VerticalAlignment="Center" Margin="2,0,0,0"
                                    IsHitTestVisible="False"/>
                         <TextBox x:Name="QueryBox" FontSize="19"

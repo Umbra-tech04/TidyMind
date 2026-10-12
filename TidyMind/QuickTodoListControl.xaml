@@ -55,7 +55,7 @@
                     Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
                     BorderThickness="1" CornerRadius="4">
                 <StackPanel Orientation="Horizontal">
-                    <RadioButton x:Name="TodayButton" Content="Today"
+                    <RadioButton Content="Today"
                                  Style="{StaticResource SegmentStyle}" IsChecked="True"/>
                     <RadioButton x:Name="TomorrowButton" Content="Tomorrow"
                                  Style="{StaticResource SegmentStyle}"/>

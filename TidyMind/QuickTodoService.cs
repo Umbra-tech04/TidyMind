@@ -17,12 +17,6 @@ namespace TidyMind
             return TryRead(out List<QuickTodo> todos) ? todos : new List<QuickTodo>();
         }
 
-        // Due on that day, done ones included (callers decide whether to show them), oldest first.
-        public static List<QuickTodo> GetTodosForDate(DateTime date) => DueOn(LoadTodos(), date);
-
-        // Unfinished todos from before today, oldest due date first.
-        public static List<QuickTodo> GetOverdueIncomplete(DateTime today) => Overdue(LoadTodos(), today);
-
         // What the to-do list shows: today's and tomorrow's todos, plus unfinished ones rolled over from earlier
         // days (and those ticked off today, so they stay with today's finished ones). Unordered; the list sorts.
         public static List<QuickTodo> GetCurrentList(DateTime today)
@@ -84,20 +78,6 @@ namespace TidyMind
         {
             DateTime cutoff = today.Date.AddDays(-KeepCompletedDays);
             Update(todos => todos.RemoveAll(t => t.IsDone && (t.CompletedDate ?? t.DueDate) < cutoff) > 0);
-        }
-
-        private static List<QuickTodo> DueOn(List<QuickTodo> todos, DateTime date)
-        {
-            return todos.Where(t => t.DueDate.Date == date.Date).OrderBy(t => t.CreatedDate).ToList();
-        }
-
-        private static List<QuickTodo> Overdue(List<QuickTodo> todos, DateTime today)
-        {
-            return todos
-                .Where(t => !t.IsDone && t.DueDate.Date < today.Date)
-                .OrderBy(t => t.DueDate)
-                .ThenBy(t => t.CreatedDate)
-                .ToList();
         }
 
         // A file that can't be read is left alone instead of being overwritten with an empty list;

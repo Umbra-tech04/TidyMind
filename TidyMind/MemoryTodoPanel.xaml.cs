@@ -43,12 +43,18 @@ namespace TidyMind
             Dispatcher.BeginInvoke(new Action(() => Input.Focus()), DispatcherPriority.Input);
         }
 
-        private void Save()
+        // False (after saying so) if the file couldn't be written.
+        private bool Save()
         {
-            if (readable && !MemoryTodoService.TrySave(memory, todos))
-                MessageBox.Show("Couldn't save the to-do list of '" + memory.Name + "': this file can't be written:\n"
-                    + MemoryFiles.Todos(memory) + "\n\nYour last change wasn't saved.", "Couldn't Save",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            if (!readable)
+                return false;
+            if (MemoryTodoService.TrySave(memory, todos))
+                return true;
+
+            MessageBox.Show("Couldn't save the to-do list of '" + memory.Name + "': this file can't be written:\n"
+                + MemoryFiles.Todos(memory) + "\n\nYour last change wasn't saved.", "Couldn't Save",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return false;
         }
 
         // ---- Input --------------------------------------------------------
@@ -107,19 +113,25 @@ namespace TidyMind
         private FrameworkElement CreateRow(TodoEntry entry)
         {
             Grid row = new Grid { MinHeight = 30, Background = Brushes.Transparent };
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-            TextBlock text = new TextBlock { Text = entry.Text, TextWrapping = TextWrapping.Wrap, FontSize = 13 };
+            // The text is edited in place, like the notes (TextEditing.InlineEditor); the checkbox beside it ticks the
+            // item. Only the text changes: the item keeps its place and its done state.
+            TextBox text = TextEditing.InlineEditor(() => entry.Text, edited => Rename(entry, edited), () => Input.Focus(),
+                editable: readable);
+            text.FontSize = 13;
+            text.VerticalAlignment = VerticalAlignment.Center;
+            text.Margin = new Thickness(0, 3, 8, 3);
             PaintDone(text, entry.IsDone);
+            Grid.SetColumn(text, 1);
+            row.Children.Add(text);
 
-            // The text is the checkbox's content, so clicking the words ticks it too.
             CheckBox check = new CheckBox
             {
-                Content = text,
                 IsChecked = entry.IsDone,
                 VerticalAlignment = VerticalAlignment.Center,
-                VerticalContentAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(2, 3, 8, 3)
             };
             check.Click += (s, e) =>
@@ -147,7 +159,7 @@ namespace TidyMind
                 Visibility = Visibility.Hidden
             };
             delete.Click += (s, e) => Delete(entry);
-            Grid.SetColumn(delete, 1);
+            Grid.SetColumn(delete, 2);
             row.Children.Add(delete);
 
             void UpdateDeleteVisibility() =>
@@ -160,10 +172,21 @@ namespace TidyMind
             return row;
         }
 
-        private void PaintDone(TextBlock text, bool done)
+        private void PaintDone(TextBox text, bool done)
         {
             text.TextDecorations = done ? TextDecorations.Strikethrough : null;
             text.Foreground = (Brush)FindResource(done ? "TextSub" : "TextMain");
+        }
+
+        // If saving fails (said so by Save), the old text is kept.
+        private bool Rename(TodoEntry entry, string text)
+        {
+            string previous = entry.Text;
+            entry.Text = text;
+            if (Save())
+                return true;
+            entry.Text = previous;
+            return false;
         }
 
         // Focus goes back to the input, so the list stays open even when this was the last item.

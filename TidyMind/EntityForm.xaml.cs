@@ -19,7 +19,7 @@ namespace TidyMind
         private readonly Entity existing;
         private string entityType;
 
-        // Közös
+        // Every type
         private TextBox nameBox;
         private TextBox notesBox;
         private TextBlock imagePathText;
@@ -38,6 +38,7 @@ namespace TidyMind
             FormTitle.Text = "Add " + entityType;
             this.Title = "Add " + entityType;
             BuildForm();
+            opened = CurrentInput();
         }
 
         public EntityForm(Entity existing)
@@ -49,6 +50,34 @@ namespace TidyMind
             this.Title = "Edit " + entityType;
             BuildForm();
             FillForm(existing);
+            opened = CurrentInput();
+        }
+
+        // What the form showed when it opened, to tell whether closing with X would throw anything away.
+        private readonly string opened;
+
+        private string CurrentInput() => string.Join("\n", nameBox?.Text, notesBox?.Text, brandBox?.Text, colorBox?.Text,
+            priceBox?.Text, GetComboValue(materialBox), GetComboValue(seasonBox), PickedImageFile,
+            JsonSerializer.Serialize(sizes));
+
+        // Closing without saving (X, Alt+F4) asks first when something was typed or changed; Save doesn't.
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        {
+            if (DialogResult != true && CurrentInput() != opened
+                && MessageBox.Show(this, "Discard changes?", "Unsaved Changes", MessageBoxButton.YesNo,
+                    MessageBoxImage.Question) != MessageBoxResult.Yes)
+                e.Cancel = true;
+
+            base.OnClosing(e);
+        }
+
+        // Esc closes like X (asking first if anything was typed or changed). An open dropdown takes its own Esc first.
+        protected override void OnKeyDown(System.Windows.Input.KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+            if (e.Key != System.Windows.Input.Key.Escape || e.Handled) return;
+            e.Handled = true;
+            Close();
         }
 
         private void BuildForm()

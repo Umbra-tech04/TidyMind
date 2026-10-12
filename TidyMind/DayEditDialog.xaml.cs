@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
@@ -42,12 +43,29 @@ namespace TidyMind
             foreach (string hex in Palette)
                 AddSwatch(hex);
             PaintSwatches();
+            opened = CurrentInput();
 
             Loaded += (s, e) =>
             {
                 TitleInput.Focus();
                 TitleInput.CaretIndex = TitleInput.Text.Length;
             };
+        }
+
+        // What the dialog showed when it opened, to tell whether Esc, Cancel or X would throw anything away.
+        private readonly string opened;
+
+        private string CurrentInput() => selectedColor + "\n" + TitleInput.Text + "\n" + NoteInput.Text;
+
+        // Closing without saving (Esc, Cancel, X) asks first when something was changed; Save and Clear don't.
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            if (DialogResult != true && CurrentInput() != opened
+                && MessageBox.Show(this, "Discard changes?", "Unsaved Changes", MessageBoxButton.YesNo,
+                    MessageBoxImage.Question) != MessageBoxResult.Yes)
+                e.Cancel = true;
+
+            base.OnClosing(e);
         }
 
         // Returns true if the day was saved or cleared.

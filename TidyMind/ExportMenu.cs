@@ -29,8 +29,10 @@ namespace TidyMind
             return item;
         }
 
-        // Asks where to save, then writes. A failed write (most often: the file is open in Excel or Word) is
-        // reported instead of taking the app down.
+        // Asks where to save, then writes. The export is written to a temporary file next to the target and only
+        // moved over it once complete, so a failed export (a bad picture, the file open in Excel or Word, a full
+        // disk) never leaves a half-written file or destroys the one already there. The failure is reported
+        // instead of taking the app down.
         public static void SaveAs(ExportFormat format, string name, Action<string> write)
         {
             SaveFileDialog dialog = new SaveFileDialog();
@@ -38,13 +40,22 @@ namespace TidyMind
             dialog.Filter = GetFilter(format);
             if (dialog.ShowDialog() != true) return;
 
+            string target = dialog.FileName;
+            bool existed = File.Exists(target);
+            // Same folder (so the move is a rename) and same extension (the Excel and Word writers check it).
+            string temp = Path.Combine(Path.GetDirectoryName(target) ?? "",
+                Path.GetFileNameWithoutExtension(target) + ".tmp-" + Guid.NewGuid().ToString("N").Substring(0, 8)
+                + Path.GetExtension(target));
             try
             {
-                write(dialog.FileName);
+                write(temp);
+                File.Move(temp, target, overwrite: true);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("The export couldn't be saved.\n\n" + ex.Message, "Export",
+                try { File.Delete(temp); } catch (Exception) { /* best effort: nothing else to do with it */ }
+                MessageBox.Show("The export couldn't be saved.\n\n" + ex.Message
+                    + (existed ? "\n\nThe existing file was left unchanged." : ""), "Export",
                     MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }

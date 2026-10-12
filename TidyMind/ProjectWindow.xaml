@@ -83,6 +83,27 @@
             </DrawingBrush.Drawing>
         </DrawingBrush>
 
+        <!-- A row in the ☰ page list: "N. first line", tinted on hover -->
+        <Style x:Key="PageRowStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource TextMain}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="row" Background="Transparent" CornerRadius="6" Padding="10,6">
+                            <TextBlock Text="{TemplateBinding Content}" TextTrimming="CharacterEllipsis"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="row" Property="Background" Value="{StaticResource BgSubtle}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </Window.Resources>
 
     <Grid>
@@ -101,7 +122,10 @@
         <ScrollViewer Grid.Row="1" Background="{StaticResource BgMain}">
             <StackPanel Margin="32,24,32,28">
                 <TextBlock Text="Project Name" Style="{StaticResource SectionLabelStyle}"/>
-                <TextBox x:Name="NameBox" Style="{StaticResource FieldStyle}" FontSize="15" FontWeight="SemiBold"/>
+                <TextBox x:Name="NameBox" Style="{StaticResource FieldStyle}" FontSize="15" FontWeight="SemiBold"
+                         TextChanged="NameBox_TextChanged"/>
+                <TextBlock x:Name="NameError" Text="A project needs a name." FontSize="12" Margin="2,6,0,0"
+                           Foreground="{StaticResource Danger}" Visibility="Collapsed"/>
 
                 <Border Style="{StaticResource SectionDividerStyle}"/>
 
@@ -149,7 +173,7 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <TextBox x:Name="TaskInput" Style="{StaticResource FieldStyle}" Tag="Add a task…" KeyDown="TaskInput_KeyDown"/>
-                    <Button x:Name="AddTaskButton" Grid.Column="1" Content="Add Task"
+                    <Button Grid.Column="1" Content="Add Task"
                             Height="40" Margin="8,0,0,0" Padding="16,0"
                             Click="AddTaskButton_Click"/>
                 </Grid>
@@ -240,9 +264,54 @@
 
                 <Border Style="{StaticResource SectionDividerStyle}"/>
 
-                <!-- Notes: a page you just click into and write, formatted like the description; it grows with
-                     the text and the window scrolls it. Ruled lines: see NotebookRules. -->
-                <TextBlock Text="Notes" Style="{StaticResource SectionLabelStyle}"/>
+                <!-- Notes: a notebook, one page at a time. Ctrl+PageUp / Ctrl+PageDown flip too. -->
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Notes" Style="{StaticResource SectionLabelStyle}" Margin="0" VerticalAlignment="Center"/>
+                    <Button x:Name="PrevPageButton" Grid.Column="1" Style="{StaticResource IconButtonStyle}"
+                            Width="30" Height="30" Margin="16,0,0,0" ToolTip="Previous page  (Ctrl+PageUp)"
+                            Click="PrevPage_Click">
+                        <TextBlock Text="&#xE76B;" FontFamily="Segoe MDL2 Assets" FontSize="11"/>
+                    </Button>
+                    <TextBlock x:Name="PageIndicator" Grid.Column="2" MinWidth="56" TextAlignment="Center"
+                               VerticalAlignment="Center" FontSize="13" Foreground="{StaticResource TextSub}"/>
+                    <Button x:Name="NextPageButton" Grid.Column="3" Style="{StaticResource IconButtonStyle}"
+                            Width="30" Height="30" ToolTip="Next page  (Ctrl+PageDown); on the last page, a new page"
+                            Click="NextPage_Click">
+                        <TextBlock Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="11"/>
+                    </Button>
+                    <Button x:Name="DeletePageButton" Grid.Column="5" Style="{StaticResource IconButtonStyle}"
+                            Width="30" Height="30" ToolTip="Delete page" Click="DeletePage_Click">
+                        <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+                    </Button>
+                    <Button x:Name="PageListButton" Grid.Column="6" Style="{StaticResource IconButtonStyle}"
+                            Width="30" Height="30" Margin="6,0,0,0" ToolTip="All pages" Click="PageList_Click">
+                        <TextBlock Text="&#xE700;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+                    </Button>
+                    <Popup x:Name="PageListPopup" PlacementTarget="{Binding ElementName=PageListButton}"
+                           Placement="Bottom" StaysOpen="False" AllowsTransparency="True">
+                        <Border Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
+                                BorderThickness="1" CornerRadius="8" Padding="4" Margin="0,4,6,6">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.12"/>
+                            </Border.Effect>
+                            <ScrollViewer MaxHeight="320" VerticalScrollBarVisibility="Auto">
+                                <StackPanel x:Name="PageListRows" Width="280"/>
+                            </ScrollViewer>
+                        </Border>
+                    </Popup>
+                </Grid>
+
+                <!-- The current page, formatted like the description; a long page scrolls inside itself.
+                     Ruled lines: see NotebookRules (on the document, so they scroll with the text). -->
                 <Border x:Name="NotesFrame" Background="#FFFEFA" BorderBrush="#E4E2DD" BorderThickness="1" CornerRadius="8">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -251,27 +320,36 @@
                         </Grid.RowDefinitions>
                         <local:FormatToolbar x:Name="NotesToolbar"/>
 
-                        <Grid Grid.Row="1" Margin="18" MinHeight="264" Background="{StaticResource NotebookRules}">
-                            <!-- 5: the editor's built-in page padding, so the placeholder sits where typing starts -->
-                            <TextBlock x:Name="NotesPlaceholder" Text="Start writing..." Margin="5,0,0,0" FontFamily="Segoe UI" FontSize="15"
-                                       LineHeight="24" LineStackingStrategy="BlockLineHeight"
-                                       Foreground="{StaticResource TextSub}" IsHitTestVisible="False"/>
-                            <RichTextBox x:Name="NotesBox"
-                                         VerticalScrollBarVisibility="Disabled"
-                                         Background="Transparent" BorderThickness="0" Padding="0"
-                                         Foreground="{StaticResource TextMain}" CaretBrush="{StaticResource TextMain}"
-                                         FontFamily="Segoe UI" FontSize="15"
-                                         AcceptsTab="False"
-                                         PreviewMouseWheel="NotesBox_PreviewMouseWheel">
-                                <RichTextBox.Resources>
-                                    <!-- Every line exactly one rule tall, no gap between paragraphs -->
-                                    <Style TargetType="Paragraph">
-                                        <Setter Property="Margin" Value="0"/>
-                                        <Setter Property="LineHeight" Value="24"/>
-                                        <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
-                                    </Style>
-                                </RichTextBox.Resources>
-                            </RichTextBox>
+                        <!-- PageSheet slides in when a page is turned (ShowPage). Its own adorner layer keeps the
+                             caret and selection moving with the text during the slide. -->
+                        <Grid Grid.Row="1" Margin="18" Height="384" ClipToBounds="True">
+                            <AdornerDecorator x:Name="PageSheet">
+                                <AdornerDecorator.RenderTransform>
+                                    <TranslateTransform/>
+                                </AdornerDecorator.RenderTransform>
+                                <Grid>
+                                    <!-- 5: the editor's built-in page padding, so the placeholder sits where typing starts -->
+                                    <TextBlock x:Name="NotesPlaceholder" Text="Start writing..." Margin="5,0,0,0" FontFamily="Segoe UI" FontSize="15"
+                                               LineHeight="24" LineStackingStrategy="BlockLineHeight"
+                                               Foreground="{StaticResource TextSub}" IsHitTestVisible="False"/>
+                                    <RichTextBox x:Name="NotesBox"
+                                                 VerticalScrollBarVisibility="Auto"
+                                                 Background="Transparent" BorderThickness="0" Padding="0"
+                                                 Foreground="{StaticResource TextMain}" CaretBrush="{StaticResource TextMain}"
+                                                 FontFamily="Segoe UI" FontSize="15"
+                                                 AcceptsTab="False">
+                                        <RichTextBox.Resources>
+                                            <!-- Every line exactly one rule tall, no gap between paragraphs -->
+                                            <Style TargetType="Paragraph">
+                                                <Setter Property="Margin" Value="0"/>
+                                                <Setter Property="LineHeight" Value="24"/>
+                                                <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
+                                            </Style>
+                                        </RichTextBox.Resources>
+                                        <FlowDocument Background="{StaticResource NotebookRules}"/>
+                                    </RichTextBox>
+                                </Grid>
+                            </AdornerDecorator>
                         </Grid>
                     </Grid>
                 </Border>

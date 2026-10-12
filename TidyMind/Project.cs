@@ -14,7 +14,34 @@ namespace TidyMind
         public string Name { get; set; }
         public string Description { get; set; }
         public List<TaskItem> Tasks { get; set; }
+
+        // The single note from before pages existed. No longer written, so older versions (and a rollback) still
+        // find it as it was; it only stands in while NotePages is null.
         public string Notes { get; set; }
+
+        // Null until the notes are first edited in this version. Left out of the file while null, so saving an
+        // untouched project writes it exactly as it was.
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<NotePage>? NotePages { get; set; }
+
+        // What Project Details shows: the pages, or the old note as page 1 (built fresh, not stored). Never empty.
+        public List<NotePage> PagesOrLegacyNote()
+        {
+            List<NotePage> pages = NotePages?.Where(p => p != null).ToList() ?? new List<NotePage>();
+            if (NotePages == null)
+                pages.Add(new NotePage { Body = Notes });
+            else if (pages.Count == 0)
+                pages.Add(new NotePage());
+            return pages;
+        }
+
+        // Every page's text, for exports (an old note exports exactly as before).
+        public string NotesAsPlainText()
+        {
+            return string.Join("\n\n", PagesOrLegacyNote()
+                .Select(p => RichTextHelper.ToPlainText(p.Body ?? ""))
+                .Where(text => text.Trim().Length > 0));
+        }
 
         // Files attached in Project Details (empty for projects from before attachments existed).
         public List<Attachment> Attachments { get; set; } = new List<Attachment>();
