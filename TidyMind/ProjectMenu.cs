@@ -30,8 +30,9 @@ namespace TidyMind
             MenuItem customize = new MenuItem { Header = "Customize Card" };
             customize.Click += (s, e) =>
             {
-                if (Customize(owner, project, save))
-                    redraw();
+                if (!Customize(owner, project, save)) return;
+                redraw();
+                TourSignals.Raise(TourSignals.CardCustomized);
             };
             MenuItem delete = new MenuItem { Header = "Delete" };
             delete.Click += (s, e) =>

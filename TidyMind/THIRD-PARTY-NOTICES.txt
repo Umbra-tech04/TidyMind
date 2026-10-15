@@ -1,0 +1,10 @@
+TidyMind uses these third-party packages:
+
+DocX (Xceed): Xceed Community License, non-commercial use
+QuestPDF: QuestPDF Community License
+ClosedXML, ClosedXML.Parser, ExcelNumberFormat: MIT
+DocumentFormat.OpenXml: MIT
+SkiaSharp: MIT
+SixLabors.Fonts: Apache License 2.0
+RBush: MIT
+TaskScheduler (David Hall): MIT

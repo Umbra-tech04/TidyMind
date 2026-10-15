@@ -4,6 +4,7 @@ using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -290,7 +291,7 @@ namespace TidyMind
                 });
             }
 
-            card.Children.Add(new TextBlock
+            TextBlock title = new TextBlock
             {
                 Text = entity.Name,
                 FontSize = hasImage ? 14 : 18,
@@ -305,9 +306,10 @@ namespace TidyMind
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = hasImage ? new Thickness(16, 118, 16, 30) : new Thickness(20)
-            });
+            };
+            card.Children.Add(title);
 
-            card.Children.Add(new TextBlock
+            TextBlock subtitle = new TextBlock
             {
                 Text = GetCardSubtitle(entity),
                 FontSize = 11,
@@ -317,7 +319,10 @@ namespace TidyMind
                 HorizontalAlignment = HorizontalAlignment.Right,
                 VerticalAlignment = VerticalAlignment.Bottom,
                 Margin = new Thickness(0, 0, 16, 14)
-            });
+            };
+            card.Children.Add(subtitle);
+            if (entity.EntityType == EntityTypes.Vehicle)
+                ShowVehicleOnCard(entity, title, subtitle);
 
             selection.AttachCard(card, entity); // first: a Ctrl+click selects, and neither opens nor drags
             CardEffects.AttachHoverLift(card, shadow);
@@ -340,6 +345,34 @@ namespace TidyMind
             card.ContextMenu = menu;
 
             return card;
+        }
+
+        // A vehicle's card: the plate under the make and model (one line each), and its nearest expiry date in the
+        // subtitle's place ("Inspection in 12 days"), highlighted when it's close or past (Expiry).
+        private static void ShowVehicleOnCard(Entity entity, TextBlock title, TextBlock subtitle)
+        {
+            if (!string.IsNullOrWhiteSpace(entity.Plate))
+            {
+                title.TextWrapping = TextWrapping.NoWrap;
+                title.Inlines.Add(new LineBreak());
+                title.Inlines.Add(new Run(entity.Plate)
+                {
+                    FontSize = 11,
+                    FontWeight = FontWeights.Normal,
+                    Foreground = (Brush)Application.Current.FindResource("TextSub")
+                });
+            }
+
+            var nearest = EntityTypes.NearestExpiry(entity);
+            if (nearest == null)
+            {
+                subtitle.Text = "";
+                return;
+            }
+            ExpiryLevel level = Expiry.Level(nearest.Value.Date, DateTime.Today);
+            subtitle.Text = nearest.Value.Name + " " + Expiry.Describe(nearest.Value.Date, DateTime.Today);
+            subtitle.Foreground = Expiry.Brush(level);
+            subtitle.FontWeight = Expiry.Weight(level);
         }
 
         private string GetCardSubtitle(Entity e)
@@ -372,13 +405,18 @@ namespace TidyMind
             DetailName.Text = entity.Name;
             DetailPanel.Children.Clear();
 
-            AddDetailRow("Brand", entity.Brand);
-            AddDetailRow("Color", entity.Color);
-            AddDetailRow("Material", entity.Material);
-            AddDetailRow("Season", entity.Season);
-            AddDetailRow("Purchase Price", entity.PurchasePrice);
-            AddSizesDetail(entity);
-            AddDetailRow("Notes", entity.Notes);
+            if (EntityTypes.Fields(entity.EntityType).Count > 0)
+                AddDefinedDetails(entity);
+            else
+            {
+                AddDetailRow("Brand", entity.Brand);
+                AddDetailRow("Color", entity.Color);
+                AddDetailRow("Material", entity.Material);
+                AddDetailRow("Season", entity.Season);
+                AddDetailRow("Purchase Price", entity.PurchasePrice);
+                AddSizesDetail(entity);
+                AddDetailRow("Notes", entity.Notes);
+            }
 
             OverlayGrid.Visibility = Visibility.Visible;
             OverlayGrid.Opacity = 0;
@@ -389,18 +427,35 @@ namespace TidyMind
                 new DoubleAnimation(20, 0, TimeSpan.FromMilliseconds(180)));
         }
 
-        private void AddDetailRow(string label, string value)
+        // A type with a definition (EntityTypes): its fields, notes and logs; an expiry date also says how close it is.
+        private void AddDefinedDetails(Entity entity)
+        {
+            foreach ((string label, string value) in EntityTypes.Describe(entity))
+            {
+                bool expiry = EntityTypes.Fields(entity.EntityType).Any(f => f.IsExpiry && f.Label == label);
+                DateTime? date = expiry ? Values.ParseDate(value) : null;
+                if (date == null)
+                {
+                    AddDetailRow(label, value);
+                    continue;
+                }
+                ExpiryLevel level = Expiry.Level(date.Value, DateTime.Today);
+                AddDetailRow(label, value + ", " + Expiry.Describe(date.Value, DateTime.Today), Expiry.Brush(level), Expiry.Weight(level));
+            }
+        }
+
+        private void AddDetailRow(string label, string value, Brush? foreground = null, FontWeight? weight = null)
         {
             if (string.IsNullOrWhiteSpace(value)) return;
 
             DetailPanel.Children.Add(new TextBlock
             {
                 Text = label,
-                Foreground = B("#8A8A87"),
+                Foreground = (Brush)FindResource("TextSub"), // 5.1:1 on the white card
                 FontSize = 11,
                 Margin = new Thickness(0, 8, 0, 2)
             });
-            DetailPanel.Children.Add(TextCopy.Selectable(value, 13, B("#1C1B19")));
+            DetailPanel.Children.Add(TextCopy.Selectable(value, 13, foreground ?? B("#1C1B19"), weight));
         }
 
         private void AddSizesDetail(Entity entity)
@@ -410,7 +465,7 @@ namespace TidyMind
             DetailPanel.Children.Add(new TextBlock
             {
                 Text = "Sizes",
-                Foreground = B("#8A8A87"),
+                Foreground = (Brush)FindResource("TextSub"),
                 FontSize = 11,
                 Margin = new Thickness(0, 8, 0, 4)
             });

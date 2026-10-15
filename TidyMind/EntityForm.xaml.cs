@@ -1,5 +1,7 @@
 ﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
@@ -31,12 +33,16 @@ namespace TidyMind
         private TextBox brandBox, colorBox, priceBox;
         private ComboBox materialBox, seasonBox;
 
+        // Types with a definition (EntityTypes, e.g. Vehicle): one control per field, one LogEditor per log.
+        private readonly Dictionary<FieldDefinition, Control> fieldControls = new Dictionary<FieldDefinition, Control>();
+        private readonly Dictionary<LogDefinition, LogEditor> logEditors = new Dictionary<LogDefinition, LogEditor>();
+
         public EntityForm(string entityType)
         {
             InitializeComponent();
             this.entityType = entityType;
-            FormTitle.Text = "Add " + entityType;
-            this.Title = "Add " + entityType;
+            FormTitle.Text = "Add " + entityType.ToLowerInvariant();
+            this.Title = FormTitle.Text;
             BuildForm();
             opened = CurrentInput();
         }
@@ -46,8 +52,8 @@ namespace TidyMind
             InitializeComponent();
             this.existing = existing;
             this.entityType = existing.EntityType;
-            FormTitle.Text = "Edit " + entityType;
-            this.Title = "Edit " + entityType;
+            FormTitle.Text = "Edit " + (entityType ?? "item").ToLowerInvariant();
+            this.Title = FormTitle.Text;
             BuildForm();
             FillForm(existing);
             opened = CurrentInput();
@@ -58,12 +64,19 @@ namespace TidyMind
 
         private string CurrentInput() => string.Join("\n", nameBox?.Text, notesBox?.Text, brandBox?.Text, colorBox?.Text,
             priceBox?.Text, GetComboValue(materialBox), GetComboValue(seasonBox), PickedImageFile,
-            JsonSerializer.Serialize(sizes));
+            JsonSerializer.Serialize(sizes),
+            string.Join("\n", fieldControls.Select(f => FieldValue(f.Key, f.Value))),
+            JsonSerializer.Serialize(logEditors.Values.Select(editor => editor.Rows)));
 
         // Closing without saving (X, Alt+F4) asks first when something was typed or changed; Save doesn't.
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
         {
-            if (DialogResult != true && CurrentInput() != opened
+            // A log cell still being typed in counts too: leaving it stores it (TextEditing.InlineEditor).
+            if (DialogResult != true)
+                System.Windows.Input.Keyboard.ClearFocus();
+
+            // A refused log value (red line under its table) counts as a change, so it isn't dropped without asking.
+            if (DialogResult != true && (CurrentInput() != opened || logEditors.Values.Any(editor => editor.HasProblem))
                 && MessageBox.Show(this, "Discard changes?", "Unsaved Changes", MessageBoxButton.YesNo,
                     MessageBoxImage.Question) != MessageBoxResult.Yes)
                 e.Cancel = true;
@@ -84,9 +97,90 @@ namespace TidyMind
         {
             FormPanel.Children.Clear();
             AddImagePicker();
-            AddTextBox("Name", ref nameBox);
-            BuildClothing();
+            AddTextBox(EntityTypes.NameLabel(entityType), ref nameBox);
+            if (EntityTypes.Fields(entityType).Count > 0)
+                BuildDefinedFields();
+            else
+                BuildClothing();
             AddTextBoxMultiline("Notes", ref notesBox);
+            BuildLogs();
+        }
+
+        // ---- Types with a definition (EntityTypes) -------------------------
+
+        private void BuildDefinedFields()
+        {
+            foreach (FieldDefinition field in EntityTypes.Fields(entityType))
+            {
+                if (field.Kind == ValueKind.Choice)
+                {
+                    ComboBox combo = null;
+                    AddComboBox(field.Label, ref combo, field.Choices);
+                    fieldControls[field] = combo;
+                }
+                else if (field.Kind == ValueKind.Date)
+                    fieldControls[field] = AddDatePicker(field);
+                else
+                {
+                    TextBox box = null;
+                    AddTextBox(field.Label, ref box);
+                    fieldControls[field] = box;
+                }
+            }
+        }
+
+        // An expiry date says how close it is beside the picker ("in 12 days"), highlighted within 30 days.
+        private DatePicker AddDatePicker(FieldDefinition field)
+        {
+            AddLabel(field.Label);
+            StackPanel row = new StackPanel { Orientation = Orientation.Horizontal };
+            DatePicker picker = new DatePicker { Width = 180, Height = 32, VerticalContentAlignment = VerticalAlignment.Center };
+            System.Windows.Automation.AutomationProperties.SetName(picker, field.Label);
+            row.Children.Add(picker);
+
+            if (field.IsExpiry)
+            {
+                TextBlock status = new TextBlock { FontSize = 12, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0, 0, 0) };
+                picker.SelectedDateChanged += (s, e) =>
+                {
+                    DateTime? date = picker.SelectedDate;
+                    ExpiryLevel level = date == null ? ExpiryLevel.Later : Expiry.Level(date.Value, DateTime.Today);
+                    status.Text = date == null ? "" : Expiry.Describe(date.Value, DateTime.Today);
+                    status.Foreground = Expiry.Brush(level);
+                    status.FontWeight = Expiry.Weight(level);
+                };
+                row.Children.Add(status);
+            }
+
+            FormPanel.Children.Add(row);
+            return picker;
+        }
+
+        private void BuildLogs()
+        {
+            IReadOnlyList<LogDefinition> logs = EntityTypes.Logs(entityType);
+            if (logs.Count > 0)
+                Width = 600; // room for the log columns
+
+            foreach (LogDefinition log in logs)
+            {
+                AddLabel(log.Label);
+                LogEditor editor = new LogEditor(log);
+                logEditors[log] = editor;
+                FormPanel.Children.Add(editor);
+            }
+        }
+
+        // The field's value in its stored form: "" for nothing, null if a number field holds something else.
+        private string FieldValue(FieldDefinition field, Control control)
+        {
+            switch (control)
+            {
+                case ComboBox combo: return GetComboValue(combo) ?? "";
+                case DatePicker picker: return Values.FromDate(picker.SelectedDate) ?? "";
+                case TextBox box: return Values.Normalize(field.Kind, box.Text);
+                default: return "";
+            }
         }
 
         private void BuildClothing()
@@ -203,8 +297,7 @@ namespace TidyMind
 
             imagePathText = new TextBlock();
             imagePathText.Text = "No image selected";
-            imagePathText.Foreground = new SolidColorBrush(
-                (Color)ColorConverter.ConvertFromString("#858585"));
+            imagePathText.Foreground = (Brush)FindResource("TextSub"); // 4.7:1 and up, readable at this size
             imagePathText.FontSize = 11;
             imagePathText.VerticalAlignment = VerticalAlignment.Center;
             imagePathText.Margin = new Thickness(12, 0, 0, 0);
@@ -225,8 +318,7 @@ namespace TidyMind
         {
             TextBlock label = new TextBlock();
             label.Text = text;
-            label.Foreground = new SolidColorBrush(
-                (Color)ColorConverter.ConvertFromString("#858585"));
+            label.Foreground = (Brush)FindResource("TextSub");
             label.FontSize = 11;
             label.Margin = new Thickness(0, 12, 0, 4);
             FormPanel.Children.Add(label);
@@ -268,6 +360,7 @@ namespace TidyMind
         // replaces it with the first option.
         private void SetComboBox(ComboBox box, string value)
         {
+            if (box == null) return; // a field this type doesn't have
             if (string.IsNullOrEmpty(value)) { box.SelectedIndex = -1; return; }
             foreach (ComboBoxItem item in box.Items)
             {
@@ -318,6 +411,19 @@ namespace TidyMind
                 imagePreview.Source = EntityImages.Load(e);
             }
 
+            foreach (KeyValuePair<FieldDefinition, Control> field in fieldControls)
+            {
+                string value = field.Key.Get(e);
+                if (field.Value is ComboBox combo) SetComboBox(combo, value);
+                else if (field.Value is DatePicker picker) picker.SelectedDate = Values.ParseDate(value);
+                else if (field.Value is TextBox box) box.Text = value ?? "";
+            }
+            foreach (KeyValuePair<LogDefinition, LogEditor> log in logEditors)
+                log.Value.Load(EntityTypes.Rows(e, log.Key));
+
+            if (sizesPanel == null)
+                return; // the rest is Clothing's
+
             if (brandBox != null) brandBox.Text = e.Brand;
             if (colorBox != null) colorBox.Text = e.Color;
             if (priceBox != null) priceBox.Text = e.PurchasePrice;
@@ -338,11 +444,29 @@ namespace TidyMind
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
+            // A log value that was just refused: fix it first (the reason is under its table).
+            LogEditor? refused = logEditors.Values.FirstOrDefault(editor => editor.HasProblem);
+            if (refused != null)
+            {
+                refused.BringIntoView();
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(nameBox?.Text))
             {
-                MessageBox.Show("Name is required.", "Error",
+                MessageBox.Show(EntityTypes.NameLabel(entityType) + " is required.", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
+            }
+
+            foreach (KeyValuePair<FieldDefinition, Control> field in fieldControls)
+            {
+                if (FieldValue(field.Key, field.Value) == null)
+                {
+                    MessageBox.Show(this, field.Key.Label + " needs a number.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    field.Value.Focus();
+                    return;
+                }
             }
 
             // A copy through JSON carries everything, including fields this version doesn't know (ExtensionData).
@@ -358,6 +482,24 @@ namespace TidyMind
             ResultEntity.Material = GetComboValue(materialBox);
             ResultEntity.Season = GetComboValue(seasonBox);
             ResultEntity.Sizes = sizes;
+
+            foreach (KeyValuePair<FieldDefinition, Control> field in fieldControls)
+            {
+                string value = FieldValue(field.Key, field.Value);
+                field.Key.Set(ResultEntity, value.Length == 0 ? null : value);
+            }
+
+            // Only logs with rows are stored; logs this version doesn't know stay as they were.
+            foreach (KeyValuePair<LogDefinition, LogEditor> log in logEditors)
+            {
+                List<Dictionary<string, string>> rows = log.Value.FilledRows;
+                if (rows.Count > 0)
+                    (ResultEntity.Logs ??= new Dictionary<string, List<Dictionary<string, string>>>())[log.Key.Key] = rows;
+                else
+                    ResultEntity.Logs?.Remove(log.Key.Key);
+            }
+            if (ResultEntity.Logs?.Count == 0)
+                ResultEntity.Logs = null;
 
             this.DialogResult = true;
             this.Close();

@@ -35,6 +35,7 @@ namespace TidyMind
                 return;
             }
 
+            WaitForRestartedFrom(e.Args);
             if (!ClaimSingleInstance())
             {
                 Shutdown();
@@ -88,6 +89,25 @@ namespace TidyMind
             this.MainWindow = window;
             this.ShutdownMode = ShutdownMode.OnMainWindowClose;
             window.Show();
+        }
+
+        // Started by a restore ("--after-restore <pid>", DataBackup.Restart): the copy that did the restore is still
+        // closing and holds the one-copy lock, so wait (briefly) for it to be gone.
+        private static void WaitForRestartedFrom(string[] args)
+        {
+            int at = Array.IndexOf(args, "--after-restore");
+            if (at < 0 || at + 1 >= args.Length || !int.TryParse(args[at + 1], out int pid))
+                return;
+
+            try
+            {
+                using (System.Diagnostics.Process previous = System.Diagnostics.Process.GetProcessById(pid))
+                    previous.WaitForExit(15000);
+            }
+            catch (ArgumentException)
+            {
+                // Already gone.
+            }
         }
 
         private bool TryHandleRemindArgument(string[] args)

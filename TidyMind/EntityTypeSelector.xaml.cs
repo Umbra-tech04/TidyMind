@@ -12,6 +12,15 @@ namespace TidyMind
             InitializeComponent();
         }
 
+        // Esc closes, as in the other dialogs (nothing typed here to lose).
+        protected override void OnKeyDown(System.Windows.Input.KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+            if (e.Key != System.Windows.Input.Key.Escape || e.Handled) return;
+            e.Handled = true;
+            Close();
+        }
+
         private void TypeButton_Click(object sender, RoutedEventArgs e)
         {
             SelectedType = (string)((Button)sender).Tag;

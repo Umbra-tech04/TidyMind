@@ -48,10 +48,12 @@ namespace TidyMind
 
         // A list item's text edited in place, the way the project notes are: it looks like plain text, and a click
         // puts the caret where you clicked, so a wrong letter is fixed without retyping the rest. Enter or clicking
-        // away saves, Esc puts the stored text back. An empty text is never saved.
+        // away saves, Esc puts the stored text back. An empty text is never saved, unless allowEmpty (a log cell may
+        // be cleared).
         // stored: the item's current text. save: stores the trimmed new text; false if it couldn't (the caller has
         // said so), and the stored text then comes back. leave: where focus goes after Enter or Esc.
-        public static TextBox InlineEditor(Func<string> stored, Func<string, bool> save, Action leave, bool editable = true)
+        public static TextBox InlineEditor(Func<string> stored, Func<string, bool> save, Action leave, bool editable = true,
+            bool allowEmpty = false)
         {
             TextBox box = new TextBox
             {
@@ -87,7 +89,7 @@ namespace TidyMind
             box.LostKeyboardFocus += (s, e) =>
             {
                 string edited = box.Text.Trim();
-                if (edited.Length > 0 && edited != stored())
+                if ((edited.Length > 0 || allowEmpty) && edited != stored())
                     save(edited);
                 box.Text = stored(); // the saved text, or the old one if it was empty or couldn't be saved
             };

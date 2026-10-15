@@ -166,6 +166,13 @@ namespace TidyMind
             item.Group = group;
             item.Name = entity.Name;
             item.ImagePath = EntityImages.FullPath(entity);
+            if (EntityTypes.Fields(entity.EntityType).Count > 0)
+            {
+                // A type with a definition (Vehicle): its fields, notes and logs.
+                item.Fields = EntityTypes.Describe(entity);
+                item.Fields.Add(("Image Path", item.ImagePath ?? ""));
+                return item;
+            }
             item.Fields = new List<(string, string)>
             {
                 ("Brand", entity.Brand ?? ""),
@@ -260,6 +267,13 @@ namespace TidyMind
         private static void WriteEntityCard(IXLWorksheet sheet, ref int row, Entity entity)
         {
             WriteCardHeader(sheet, ref row, entity.Name);
+
+            if (EntityTypes.Fields(entity.EntityType).Count > 0)
+            {
+                foreach ((string label, string value) in EntityTypes.Describe(entity))
+                    WriteCardField(sheet, ref row, label, value);
+                return;
+            }
 
             WriteCardField(sheet, ref row, "Brand", entity.Brand);
             WriteCardField(sheet, ref row, "Color", entity.Color);

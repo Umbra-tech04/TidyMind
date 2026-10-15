@@ -60,18 +60,20 @@
             <StackPanel Orientation="Horizontal"
                         HorizontalAlignment="Right" VerticalAlignment="Bottom"
                         Margin="0,0,24,20" Panel.ZIndex="100">
-                <Button Style="{StaticResource IconButtonStyle}"
-                        Content="📝" ToolTip="Quick Notes  (Ctrl+Shift+N)"
-                        Width="40" Height="40" FontSize="16" Padding="0,0,4,0" Margin="0,0,12,0"
-                        Click="QuickNotesButton_Click"/>
-                <Button Style="{StaticResource IconButtonStyle}"
-                        Content="🔔" ToolTip="Reminders  (Ctrl+Shift+R)"
-                        Width="40" Height="40" FontSize="16" Margin="0,0,12,0"
-                        Click="RemindersIconButton_Click"/>
-                <Button Style="{StaticResource IconButtonStyle}"
-                        Content="📅" ToolTip="Calendar  (Ctrl+Shift+C)"
-                        Width="40" Height="40" FontSize="16" Margin="0,0,12,0"
-                        Click="CalendarIconButton_Click"/>
+                <StackPanel x:Name="OverlayButtons" Orientation="Horizontal">
+                    <Button Style="{StaticResource IconButtonStyle}"
+                            Content="📝" ToolTip="Quick Notes  (Ctrl+Shift+N)"
+                            Width="40" Height="40" FontSize="16" Padding="0,0,4,0" Margin="0,0,12,0"
+                            Click="QuickNotesButton_Click"/>
+                    <Button Style="{StaticResource IconButtonStyle}"
+                            Content="🔔" ToolTip="Reminders  (Ctrl+Shift+R)"
+                            Width="40" Height="40" FontSize="16" Margin="0,0,12,0"
+                            Click="RemindersIconButton_Click"/>
+                    <Button Style="{StaticResource IconButtonStyle}"
+                            Content="📅" ToolTip="Calendar  (Ctrl+Shift+C)"
+                            Width="40" Height="40" FontSize="16" Margin="0,0,12,0"
+                            Click="CalendarIconButton_Click"/>
+                </StackPanel>
                 <Button x:Name="HelpButton" Style="{StaticResource IconButtonStyle}"
                         Content="?" ToolTip="Shortcuts" FontWeight="Bold"
                         Width="40" Height="40" FontSize="16"
@@ -113,6 +115,10 @@
                             <TextBlock Grid.Row="1" Grid.Column="1" Text="— Reminders"
                                        Foreground="{StaticResource TextSub}"/>
                         </Grid>
+                        <Border BorderBrush="{StaticResource Border}" BorderThickness="0,1,0,0" Margin="0,12,0,8"/>
+                        <Button x:Name="TakeTourLink" Style="{StaticResource LinkButtonStyle}" FontSize="13"
+                                Foreground="{StaticResource BtnHover}" HorizontalAlignment="Left"
+                                Click="TakeTour_Click"/>
                     </StackPanel>
                 </Border>
             </Popup>

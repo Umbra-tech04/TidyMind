@@ -44,7 +44,8 @@ namespace TidyMind
             memory = profile;
             MemoryPageBackground.Attach(Page, BackgroundLayer, profile, saveProfiles);
             TitleText.Text = profile.Name;
-            TodoPanel.Load(profile);
+            TodoPanel.Load(profile, saveProfiles);
+            TodoPanel.MouseWheel += (s, e) => WheelScroll.Forward(e, CardScroll); // the panel itself doesn't scroll
 
             // An unreadable file is left alone: the page says why, and nothing on it can change or save projects.
             if (!ProjectStore.TryLoad(memory, out allProjects, out string problem))
@@ -179,6 +180,8 @@ namespace TidyMind
             SelectionBar.Show(selection.Count);
             SelectionBar.Visibility = any ? Visibility.Visible : Visibility.Collapsed;
             Toolbar.Visibility = any ? Visibility.Collapsed : Visibility.Visible;
+            if (selection.Count > 1)
+                TourSignals.Raise(TourSignals.CardsSelected);
         }
 
         // One confirmation for the lot, then the same delete as a single project's menu (card pictures included),
@@ -317,8 +320,6 @@ namespace TidyMind
             RenderProjects();
         }
 
-        private void AddTodoListButton_Click(object sender, RoutedEventArgs e) => TodoPanel.Reveal();
-
         // From global search / the dashboard: switch to the project's tab, then open it. Nothing if it's gone since.
         public void Reveal(Guid projectId)
         {
@@ -335,7 +336,9 @@ namespace TidyMind
             string before = JsonSerializer.Serialize(project);
 
             ProjectWindow window = new ProjectWindow(project);
+            TourSignals.Raise(TourSignals.ProjectOpened);
             window.ShowDialog();
+            TourSignals.Raise(TourSignals.ProjectClosed);
 
             // Anything changed in the window (name, description, tasks, files, notes) counts as an edit.
             if (JsonSerializer.Serialize(project) != before)

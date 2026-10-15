@@ -34,8 +34,13 @@ namespace TidyMind
             // Only within a group: dropping a collection among projects would look like a type change.
             memoryDrag = new DragReorder<Profile>(NavPanel, Orientation.Vertical, 2,
                 (dragged, target) => dragged.Type == target.Type, MoveMemory);
+            TakeTourLink.Content = TourSteps.HelpEntry;
 
             NavigateHome();
+
+            // A fresh install (no memories, the tour never offered): the welcome card, once the window is up.
+            if (profiles.Count == 0 && AppSettings.Load().Tour == null)
+                Loaded += (s, e) => GuidedTour.Run(new[] { TourSteps.Welcome }, 0, TourEnded);
         }
 
         // Native title bar is drawn by the OS, not our XAML — recolor it via DWM
@@ -79,7 +84,7 @@ namespace TidyMind
         private void NavigateHome()
         {
             selectedKey = HomeKey;
-            ContentArea.Content = new HomeView(profiles, GoToSearchResult); // rebuilt (and re-read from disk) on every visit
+            ContentArea.Content = new HomeView(profiles, GoToSearchResult, Discover); // rebuilt (and re-read from disk) on every visit
             BuildNav();
         }
 
@@ -93,6 +98,8 @@ namespace TidyMind
                 ContentArea.Content = new ProjectView(profile, () => ProfileManager.TrySaveProfiles(profiles));
 
             BuildNav();
+            if (profile.Type == ProfileType.Collection)
+                TourSignals.Raise(TourSignals.CollectionOpened);
         }
 
         private void BuildNav()
@@ -141,6 +148,7 @@ namespace TidyMind
 
             Border item = CreateNavItem("📁", profile.Name, selectedKey == KeyOf(profile),
                 () => NavigateTo(profile), menu, true);
+            item.Name = "Nav" + KeyOf(profile); // the guided tour points at it (SampleNavItem)
             memoryDrag.Attach(item, profile);
             return item;
         }
@@ -282,7 +290,7 @@ namespace TidyMind
             {
                 Id = Guid.NewGuid(),
                 Name = name,
-                Color = MemoryColors[profiles.Count % MemoryColors.Length],
+                Color = NextColor(),
                 Type = type,
                 Order = profiles.Count == 0 ? 0 : profiles.Max(p => p.Order) + 1
             };
@@ -296,6 +304,8 @@ namespace TidyMind
 
             NavigateTo(profile); // the view creates the memory's folder and first tab
         }
+
+        private string NextColor() => MemoryColors[profiles.Count % MemoryColors.Length];
 
         // Only the name changes: the memory's files are in a folder named by its Id, so nothing on disk moves.
         private void RenameMemory(Profile profile)
@@ -330,7 +340,8 @@ namespace TidyMind
         private void DeleteMemory(Profile profile)
         {
             MessageBoxResult result = MessageBox.Show(
-                "Delete '" + profile.Name + "'? This will delete all its data.",
+                "Delete '" + profile.Name + "'? This will delete all its data."
+                + (profile.IsSample == true ? "\n\n" + TourSteps.DeleteNote : ""),
                 "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning);
 
             if (result != MessageBoxResult.Yes) return;
@@ -405,7 +416,7 @@ namespace TidyMind
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
-            SettingsWindow settings = new SettingsWindow(ExportAll);
+            SettingsWindow settings = new SettingsWindow(ExportAll) { Owner = this };
             settings.ShowDialog();
         }
 
@@ -487,6 +498,89 @@ namespace TidyMind
         private void RemindersIconButton_Click(object sender, RoutedEventArgs e) => OverlayManager.Route(Overlay.Reminders);
 
         private void HelpButton_Click(object sender, RoutedEventArgs e) => HelpPopup.IsOpen = !HelpPopup.IsOpen;
+
+        // ---- Guided tour --------------------------------------------------
+
+        private void TakeTour_Click(object sender, RoutedEventArgs e)
+        {
+            HelpPopup.IsOpen = false;
+            StartTour(null);
+        }
+
+        // Home's "What can TidyMind do?" cards: the tour from that card's step, or Settings for Backup.
+        private void Discover(string start)
+        {
+            if (start == TourSteps.BackupCard)
+                SettingsButton_Click(this, new RoutedEventArgs());
+            else
+                StartTour(start);
+        }
+
+        // Makes sure the example memories exist (asking first, unless the welcome card's Start already did), then runs
+        // the tour from that step. The user's own memories are never touched.
+        private void StartTour(string? stepId, bool confirmed = false)
+        {
+            if (!WelcomeMemory.Exists(profiles))
+            {
+                if (!confirmed && MessageBox.Show(this, TourSteps.ConfirmText, TourSteps.ConfirmTitle,
+                        MessageBoxButton.OKCancel, MessageBoxImage.Information) != MessageBoxResult.OK)
+                    return;
+                bool added = WelcomeMemory.TryCreate(profiles, NextColor);
+                BuildNav();
+                if (!added)
+                {
+                    MessageBox.Show(this, "The example memory couldn't be written to\n" + AppPaths.DataFolder
+                        + "\n\nNothing was changed.", TourSteps.ConfirmTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+
+            if (AppSettings.Load().Tour == null)
+                AppSettings.Update(s => s.Tour = AppSettings.TourShown);
+            List<TourStep> steps = TourSteps.Build(this);
+            GuidedTour.Run(steps, TourSteps.IndexOf(steps, stepId), TourEnded);
+        }
+
+        private void TourEnded(TourEnd end)
+        {
+            switch (end)
+            {
+                case TourEnd.Finished:
+                    AppSettings.Update(s => s.Tour = AppSettings.TourCompleted);
+                    break;
+                case TourEnd.Skipped:
+                    AppSettings.Update(s => s.Tour = s.Tour == AppSettings.TourCompleted ? s.Tour : AppSettings.TourDismissed);
+                    break;
+                case TourEnd.Begin:
+                    StartTour(null, confirmed: true);
+                    break;
+            }
+        }
+
+        // For TourSteps: shows that example memory unless it's already the open page.
+        public void ShowSample(ProfileType type)
+        {
+            Profile? sample = WelcomeMemory.Find(profiles, type);
+            if (sample != null && selectedKey != KeyOf(sample))
+                NavigateTo(sample);
+        }
+
+        public bool ShowsSample => profiles.Any(p => p.IsSample == true && KeyOf(p) == selectedKey);
+
+        // Opens the example project with notes on two pages, the way a search result opens a project.
+        public void OpenSampleNotebook()
+        {
+            Profile? sample = WelcomeMemory.Find(profiles, ProfileType.Project);
+            Guid? notebook = sample == null ? null : WelcomeMemory.NotebookProject(sample);
+            if (notebook != null)
+                GoToSearchResult(new SearchResult { Kind = SearchResultKind.Project, Profile = sample, ItemId = notebook.Value });
+        }
+
+        public FrameworkElement? SampleNavItem(ProfileType type)
+        {
+            Profile? sample = WelcomeMemory.Find(profiles, type);
+            return sample == null ? null : GuidedTour.Find(this, "Nav" + KeyOf(sample));
+        }
 
         private static SolidColorBrush B(string hex)
         {

@@ -139,6 +139,7 @@ namespace TidyMind
                 {
                     Kind = SearchResultKind.Entity,
                     Title = entity.Name,
+                    Text = EntityTypes.SearchText(entity), // a vehicle: every field and log row too; null: by name
                     Location = profile.Name + Arrow + entity.Name,
                     Profile = profile,
                     ItemId = entity.Id

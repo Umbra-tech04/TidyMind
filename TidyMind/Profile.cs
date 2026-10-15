@@ -28,6 +28,15 @@ namespace TidyMind
         public string BackgroundColor { get; set; }     // "#RRGGBB", when the type is Color
         public string BackgroundImagePath { get; set; } // a file name inside BackgroundImages/, when the type is Image
 
+        // A project memory's to-do panel folded to one line (MemoryTodoPanel). Null until its header is first clicked;
+        // the panel then picks by how many to-dos are open. Not written while null.
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? TodoCollapsed { get; set; }
+
+        // One of the guided tour's example memories (WelcomeMemory). Left out of the file for the user's own memories.
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? IsSample { get; set; }
+
         public BackgroundSetting GetBackground() => new BackgroundSetting(BackgroundType, BackgroundColor, BackgroundImagePath);
 
         public void SetBackground(BackgroundSetting background)

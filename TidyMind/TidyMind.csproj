@@ -17,6 +17,11 @@
     <Using Remove="System.Windows.Forms" />
     <Using Remove="System.Drawing" />
   </ItemGroup>
+  <!-- The licence list: shipped next to the exe, and built in for Settings > Licenses. -->
+  <ItemGroup>
+    <None Update="THIRD-PARTY-NOTICES.txt" CopyToOutputDirectory="PreserveNewest" />
+    <EmbeddedResource Include="THIRD-PARTY-NOTICES.txt" LogicalName="TidyMind.THIRD-PARTY-NOTICES.txt" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.105.1" />
     <PackageReference Include="DocX" Version="5.2.0" />

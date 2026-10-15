@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TidyMind"
         mc:Ignorable="d"
-        Title="Add Entity" Height="220" Width="300"
+        Title="Add item" Height="200" Width="380"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BgMain}">
     <Grid>
@@ -22,7 +22,10 @@
         </Border>
 
         <WrapPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
-            <Button Content="👕 Clothing" Width="160" Height="70" Margin="8" FontSize="13" Tag="Clothing" Click="TypeButton_Click"/>
+            <Button Content="Clothing" Style="{StaticResource GhostButtonStyle}" Width="150" Height="56" Margin="8"
+                    FontSize="13" Tag="Clothing" Click="TypeButton_Click"/>
+            <Button Content="Vehicle" Style="{StaticResource GhostButtonStyle}" Width="150" Height="56" Margin="8"
+                    FontSize="13" Tag="Vehicle" Click="TypeButton_Click"/>
         </WrapPanel>
     </Grid>
 </Window>

@@ -112,6 +112,8 @@ namespace TidyMind
             ResultsScroller.ScrollToTop();
             if (results.Count > 0)
                 Highlight(0);
+            if (query.Length > 0)
+                TourSignals.Raise(TourSignals.Searched);
         }
 
         private Border CreateRow(SearchResult result, string query, int position)
@@ -144,7 +146,9 @@ namespace TidyMind
                 FontSize = 14,
                 TextTrimming = TextTrimming.CharacterEllipsis
             };
-            AddHighlightedText(title, result.Text == null ? result.Title ?? "" : AroundMatch(result, query), query);
+            // The words around the match when it's in the text, not in the title itself.
+            bool inTitle = result.Text == null || TextSearch.Contains(result.Title, query);
+            AddHighlightedText(title, inTitle ? result.Title ?? "" : AroundMatch(result, query), query);
 
             TextBlock location = new TextBlock
             {

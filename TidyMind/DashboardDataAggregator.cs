@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace TidyMind
@@ -17,43 +18,36 @@ namespace TidyMind
         public Reminder Reminder { get; set; } // null for notes
     }
 
-    public class DashboardProject
-    {
-        public string Name { get; set; }
-        public string MemoryName { get; set; }
-        public int Percent { get; set; }
-        public DateTime LastModified { get; set; } // default for projects from before timestamps existed
-        public int TasksLeft { get; set; }
-        public ProjectCardModel Card { get; set; } // what the project card draws (the same card as the project grid)
-        public SearchResult Target { get; set; }
-    }
-
     public class DashboardData
     {
         public List<DashboardAgendaItem> TodayItems { get; set; } = new List<DashboardAgendaItem>();
         public List<DashboardAgendaItem> UpcomingItems { get; set; } = new List<DashboardAgendaItem>();
 
-        public int ProjectCount { get; set; }
-        public int ActiveProjectCount { get; set; }
-        public int AverageCompletion { get; set; }
-        public List<DashboardProject> AlmostDone { get; set; } = new List<DashboardProject>(); // 70-99%, closest first
-        public List<DashboardProject> Stalled { get; set; } = new List<DashboardProject>();    // under 30%, untouched 14+ days, longest first
+        // Expiry dates (EntityTypes) across every collection: within ExpiryDays or already past, soonest first.
+        public List<DashboardExpiry> Expiries { get; set; } = new List<DashboardExpiry>();
+    }
+
+    // One expiry date of one item ("Inspection" of "Skoda Octavia"), and where it is.
+    public class DashboardExpiry
+    {
+        public string ItemName { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string MemoryName { get; set; } = "";
+        public DateTime Date { get; set; }
+        public SearchResult Target { get; set; } = new SearchResult();
     }
 
     // Reads every memory's files (like SearchIndexBuilder) fresh on each call and computes the Home dashboard.
     public static class DashboardDataAggregator
     {
         private const int UpcomingDays = 7;
-        private const int AlmostDonePercent = 70;
-        private const int StalledBelowPercent = 30;
-        private const int StalledAfterDays = 14;
 
         public static DashboardData Build(IList<Profile> profiles, DateTime now)
         {
             DashboardData data = new DashboardData();
 
             AddAgenda(data, now.Date);
-            AddProjects(data, profiles, now.Date);
+            AddExpiries(data, profiles, now.Date);
 
             return data;
         }
@@ -107,48 +101,51 @@ namespace TidyMind
             return items;
         }
 
-        private static void AddProjects(DashboardData data, IList<Profile> profiles, DateTime today)
-        {
-            List<DashboardProject> all = new List<DashboardProject>();
+        // ---- Expiry dates -------------------------------------------------
 
-            foreach (Profile profile in profiles.Where(p => p.Type == ProfileType.Project))
+        public const int ExpiryDays = 60;
+
+        // Each collection's expiry dates, kept while its file is unchanged: Home refreshes on every activation, and
+        // this way only a collection that was saved since is read again.
+        private static readonly Dictionary<Guid, (DateTime Written, List<DashboardExpiry> Dates)> expiryCache =
+            new Dictionary<Guid, (DateTime, List<DashboardExpiry>)>();
+
+        // Read only: it never schedules anything. A date further than ExpiryDays ahead, or none, isn't listed.
+        private static void AddExpiries(DashboardData data, IList<Profile> profiles, DateTime today)
+        {
+            // Collections deleted since leave the cache.
+            foreach (Guid gone in expiryCache.Keys.Where(id => !profiles.Any(p => p.Id == id)).ToList())
+                expiryCache.Remove(gone);
+
+            foreach (Profile profile in profiles.Where(p => p.Type == ProfileType.Collection))
             {
-                // A missing or unreadable file contributes nothing; the dashboard must never crash the app.
-                foreach (Project project in ProjectStore.LoadOrEmpty(profile))
+                string file = MemoryFiles.Items(profile);
+                DateTime written = File.Exists(file) ? File.GetLastWriteTimeUtc(file) : DateTime.MinValue;
+                if (!expiryCache.TryGetValue(profile.Id, out var cached) || cached.Written != written)
                 {
-                    int total = project.Tasks?.Count ?? 0;
-                    all.Add(new DashboardProject
-                    {
-                        Name = project.Name,
-                        MemoryName = profile.Name,
-                        Percent = project.CompletionPercent(),
-                        LastModified = project.LastModified,
-                        TasksLeft = total - (project.Tasks?.Count(t => t.IsDone) ?? 0),
-                        Card = ProjectCardModel.From(project),
-                        Target = new SearchResult { Kind = SearchResultKind.Project, Title = project.Name, Profile = profile, ItemId = project.Id }
-                    });
+                    // A missing or unreadable file contributes nothing (the collection view says why).
+                    cached = (written, EntityStore.LoadOrEmpty(profile)
+                        .SelectMany(entity => EntityTypes.Expiries(entity).Select(expiry => new DashboardExpiry
+                        {
+                            ItemName = entity.Name ?? "",
+                            Name = expiry.Name,
+                            Date = expiry.Date,
+                            Target = new SearchResult { Kind = SearchResultKind.Entity, Title = entity.Name, Profile = profile, ItemId = entity.Id }
+                        }))
+                        .ToList());
+                    expiryCache[profile.Id] = cached;
+                }
+
+                foreach (DashboardExpiry expiry in cached.Dates.Where(x => (x.Date - today).TotalDays <= ExpiryDays))
+                {
+                    // The memory as it is now (renamed, or the list read again since this was cached).
+                    expiry.MemoryName = profile.Name;
+                    expiry.Target.Profile = profile;
+                    data.Expiries.Add(expiry);
                 }
             }
 
-            data.ProjectCount = all.Count;
-
-            // "In progress" means the same thing as in the groups below: tasks, not all of them done. A project with no
-            // tasks has nothing to progress on, so it isn't counted as 0% or called stalled (it still counts as a project).
-            List<DashboardProject> active = all.Where(p => p.TasksLeft > 0).ToList();
-            data.ActiveProjectCount = active.Count;
-            data.AverageCompletion = active.Count == 0 ? 0 : (int)Math.Round(active.Average(p => p.Percent), MidpointRounding.AwayFromZero);
-
-            data.AlmostDone = active.Where(p => p.Percent >= AlmostDonePercent)
-                .OrderByDescending(p => p.Percent)
-                .ThenByDescending(p => p.LastModified)
-                .ToList();
-
-            // Projects from before timestamps existed have no known age, so they can't be called stalled — guessing
-            // would flag every old project the first time this opens. They join in once they're edited and left alone.
-            data.Stalled = active.Where(p => p.Percent < StalledBelowPercent
-                                             && p.LastModified != default && (today - p.LastModified.Date).Days >= StalledAfterDays)
-                .OrderBy(p => p.LastModified)
-                .ToList();
+            data.Expiries = data.Expiries.OrderBy(x => x.Date).ThenBy(x => x.ItemName).ToList();
         }
     }
 }

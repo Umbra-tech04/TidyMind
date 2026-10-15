@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -10,22 +11,31 @@ using System.Windows.Threading;
 namespace TidyMind
 {
     // A project memory's inline to-do list, above its tabs and project cards. Saved on every change.
-    // Shown while it has items; an empty one stays out of the way until "+ To-Do List" reveals it.
+    // An empty one is just the add box. The header folds it to one line (Profile.TodoCollapsed).
     public partial class MemoryTodoPanel : UserControl
     {
+        private const string ExpandedGlyph = "\uE70D";  // Segoe MDL2: ChevronDown
+        private const string CollapsedGlyph = "\uE76C"; // Segoe MDL2: ChevronRight
+        private const int FoldAboveOpen = 3;            // no saved choice: folded when more to-dos than this are open
+
         private Profile memory;
+        private Func<bool> saveProfiles;
         private List<TodoEntry> todos = new List<TodoEntry>();
         private bool readable = true;
+        private bool collapsed;
 
         public MemoryTodoPanel()
         {
             InitializeComponent();
         }
 
-        public void Load(Profile memory)
+        // saveProfiles: writes the main window's list of memories, where the folded state is kept.
+        public void Load(Profile memory, Func<bool> saveProfiles)
         {
             this.memory = memory;
+            this.saveProfiles = saveProfiles;
             readable = MemoryTodoService.TryLoad(memory, out todos);
+            collapsed = memory.TodoCollapsed ?? todos.Count(t => !t.IsDone) > FoldAboveOpen;
 
             // An unreadable file is left alone (never saved over), and the list is shown with the reason.
             Input.IsEnabled = readable;
@@ -33,14 +43,24 @@ namespace TidyMind
             ErrorText.Text = "Couldn't read " + MemoryFiles.Todos(memory) + ". Fix or remove that file to use this list.";
 
             Render();
-            Visibility = todos.Count > 0 || !readable ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        // "+ To-Do List": show the list and put the cursor in it.
-        public void Reveal()
+        // ---- Folding ------------------------------------------------------
+
+        // Remembered per memory. If profiles.json can't be written, the panel still folds for this session.
+        private void Header_Click(object sender, RoutedEventArgs e)
         {
-            Visibility = Visibility.Visible;
-            Dispatcher.BeginInvoke(new Action(() => Input.Focus()), DispatcherPriority.Input);
+            collapsed = !collapsed;
+            memory.TodoCollapsed = collapsed;
+            saveProfiles();
+            UpdateHeader();
+        }
+
+        // The list scrolls itself while it can; at either end the wheel moves on (ProjectView passes it to the cards).
+        private void ListScroll_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (!WheelScroll.CanScroll(ListScroll, e.Delta))
+                WheelScroll.Forward(e, this);
         }
 
         // False (after saying so) if the file couldn't be written.
@@ -93,13 +113,6 @@ namespace TidyMind
             Placeholder.Visibility = Input.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        // Revealed but left empty: tuck it away again.
-        private void Input_LostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
-        {
-            if (readable && todos.Count == 0 && Input.Text.Length == 0)
-                Visibility = Visibility.Collapsed;
-        }
-
         // ---- List ---------------------------------------------------------
 
         private void Render()
@@ -107,13 +120,32 @@ namespace TidyMind
             ItemList.Children.Clear();
             foreach (TodoEntry entry in todos)
                 ItemList.Children.Add(CreateRow(entry));
-            UpdateCount();
+            UpdateHeader();
         }
 
-        private void UpdateCount()
+        // Counter, folded preview and layout. With no to-dos there's nothing to fold or count: just the add box (and
+        // the reason, if the file couldn't be read).
+        private void UpdateHeader()
         {
+            bool hasItems = todos.Count > 0;
+            bool folded = collapsed && hasItems;
+
             int done = todos.Count(t => t.IsDone);
-            CountText.Text = todos.Count == 0 ? "" : done + "/" + todos.Count + " done";
+            CountText.Text = hasItems ? done + "/" + todos.Count + " done" : "";
+            TodoEntry next = todos.FirstOrDefault(t => !t.IsDone);
+            NextRun.Text = next?.Text ?? "";
+            NextText.Visibility = folded && next != null ? Visibility.Visible : Visibility.Collapsed;
+
+            Header.Visibility = hasItems || !readable ? Visibility.Visible : Visibility.Collapsed;
+            Header.IsEnabled = hasItems;
+            Arrow.Text = folded ? CollapsedGlyph : ExpandedGlyph;
+            Arrow.Visibility = hasItems ? Visibility.Visible : Visibility.Collapsed;
+            Header.ToolTip = folded ? "Unfold the to-do list" : "Fold the to-do list";
+            AutomationProperties.SetName(Header, folded ? "To-do list, folded" : "To-do list, open");
+            Header.Margin = new Thickness(0, 0, 0, folded ? 0 : 4);
+
+            Body.Visibility = folded ? Visibility.Collapsed : Visibility.Visible;
+            Frame.Padding = folded ? new Thickness(10, 4, 10, 4) : new Thickness(10, 8, 10, 10);
         }
 
         private FrameworkElement CreateRow(TodoEntry entry)
@@ -149,7 +181,7 @@ namespace TidyMind
                     check.IsChecked = entry.IsDone;
                 }
                 PaintDone(text, entry.IsDone);
-                UpdateCount();
+                UpdateHeader();
             };
             check.KeyDown += (s, e) =>
             {
@@ -194,13 +226,15 @@ namespace TidyMind
             string previous = entry.Text;
             entry.Text = text;
             if (Save())
+            {
+                TourSignals.Raise(TourSignals.TodoEdited);
                 return true;
+            }
             entry.Text = previous;
             return false;
         }
 
-        // Focus goes back to the input, so the list stays open even when this was the last item. If the removal
-        // can't be saved, the item stays where it was.
+        // Focus goes back to the input. If the removal can't be saved, the item stays where it was.
         private void Delete(TodoEntry entry)
         {
             int index = todos.IndexOf(entry);

@@ -60,8 +60,9 @@ namespace TidyMind
                 return false;
             }, ImageStore.Backgrounds);
 
-            if (saved)
-                Show(layer, profile);
+            if (!saved) return;
+            Show(layer, profile);
+            TourSignals.Raise(TourSignals.PageBackgroundChanged);
         }
 
         private static DependencyObject Parent(DependencyObject d)

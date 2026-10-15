@@ -490,13 +490,9 @@ namespace TidyMind
         // the window (like the task list).
         private void FileScroll_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
-            if (e.Delta < 0 ? FileScroll.VerticalOffset < FileScroll.ScrollableHeight - 0.5 : FileScroll.VerticalOffset > 0.5)
-                return;
-
             // Raised from this control, outside the list's own scroll area, so it bubbles straight to the window's.
-            e.Handled = true;
-            var forward = new MouseWheelEventArgs(e.MouseDevice, e.Timestamp, e.Delta) { RoutedEvent = UIElement.MouseWheelEvent };
-            RaiseEvent(forward);
+            if (!WheelScroll.CanScroll(FileScroll, e.Delta))
+                WheelScroll.Forward(e, this);
         }
 
         private static string FormatSize(long bytes)

@@ -54,7 +54,7 @@ namespace TidyMind
         public ShapePath Progress { get; set; } // null until a task is done (nothing to pulse yet)
     }
 
-    // The project card used by the project grid and, smaller, by the Home dashboard. The perimeter ring is a light
+    // The project card used by the project grid and, smaller, by the card-customize preview. The perimeter ring is a light
     // track that fills clockwise as tasks get done, and closes, with a faint azure wash, when every task is done.
     // The name sits top-left so long names wrap instead of being cut; the full-size card also says what's next.
     public static class ProjectCard
@@ -80,7 +80,7 @@ namespace TidyMind
             ["#332F2B"] = Color.FromRgb(0xFF, 0xB6, 0x48)  // Charcoal
         };
 
-        // compact: the Home tile (smaller type, no "Next" line).
+        // compact: the card-customize preview (smaller type, no "Next" line).
         public static ProjectCardVisual Build(ProjectCardModel model, double size, double radius, bool compact)
         {
             double thickness = compact ? 3 : 4;

@@ -32,6 +32,20 @@ namespace TidyMind
         public string PurchasePrice { get; set; }
         public List<SizeQuantity> Sizes { get; set; } = new List<SizeQuantity>();
 
+        // Vehicle (EntityTypes.Vehicle); the make and model is Name. Left out of the file while empty, so other items
+        // are stored exactly as before.
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? VehicleKind { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? Plate { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public int? Year { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public int? OdometerKm { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public DateTime? InsuranceExpires { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public DateTime? InspectionExpires { get; set; }
+
+        // Log fields (EntityTypes, LogDefinition) by log key, e.g. "Fuel": each row maps column keys to stored text
+        // (Values: dates as yyyy-MM-dd, numbers with a '.' decimal point). Left out until a log has rows.
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public Dictionary<string, List<Dictionary<string, string>>>? Logs { get; set; }
+
         // Fields this version doesn't know (written by another TidyMind version): kept so saving doesn't drop them.
         [JsonExtensionData]
         public Dictionary<string, JsonElement> ExtensionData { get; set; }

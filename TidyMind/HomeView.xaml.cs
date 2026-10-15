@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Effects;
 using System.Windows.Threading;
-using ShapePath = System.Windows.Shapes.Path;
 
 namespace TidyMind
 {
@@ -19,24 +18,21 @@ namespace TidyMind
     {
         private const string CalendarGlyph = "\uE787"; // Segoe MDL2: Calendar (a calendar note)
         private const int DaybookDays = 8;             // today + the aggregator's 7 upcoming days
-        private const int GroupSize = 6;                  // per group: a longer list stops being a nudge
-        private const int HeartbeatPercent = 90;           // the leading almost-done ring beats once per visit from here up
-        private const double TileSize = 124;
-        private const double TileRadius = 12;
         private const double StackBelowWidth = 860;    // narrower than this, the week moves under the to-do sheet
 
         private static readonly CultureInfo English = CultureInfo.InvariantCulture;
         private readonly IList<Profile> profiles;
         private readonly Action<SearchResult> navigate;
         private Window host;
-        private bool heartbeatPending = true; // the almost-done ring beats once per visit, not on every refresh
 
-        public HomeView(IList<Profile> profiles, Action<SearchResult> navigate)
+        // discover: a "What can TidyMind do?" item was chosen (its TourSteps.Discovery start).
+        public HomeView(IList<Profile> profiles, Action<SearchResult> navigate, Action<string> discover)
         {
             InitializeComponent();
             this.profiles = profiles;
             this.navigate = navigate;
 
+            ShowDiscovery(discover);
             SizeChanged += (s, e) => ApplyWidth(e.NewSize.Width);
 
             // Overlays (calendar, reminders) and dialogs change data while Home stays on screen, and reminders
@@ -88,7 +84,7 @@ namespace TidyMind
             GreetingText.Text = GreetingProvider.Pick(now);
 
             ShowDaybook(data, now.Date);
-            ShowProjects(data);
+            ShowExpiries(data, now.Date);
 
             // Before it's loaded the control loads itself.
             if (QuickTodos.IsLoaded)
@@ -105,9 +101,45 @@ namespace TidyMind
             Grid.SetColumnSpan(WeekPanel, stacked ? 3 : 1);
             Grid.SetColumnSpan(TodoSheet, stacked ? 3 : 1);
             WeekPanel.Margin = new Thickness(0, stacked ? 20 : 0, 0, 0);
+            DiscoveryItems.Columns = stacked ? 3 : 6;
 
             double side = width < 640 ? 20 : stacked ? 32 : 48;
             Page.Margin = new Thickness(side, stacked ? 28 : 40, side, 88);
+        }
+
+        // ---- What can TidyMind do? ----------------------------------------
+
+        private void ShowDiscovery(Action<string> discover)
+        {
+            if (AppSettings.Load().HideDiscovery == true)
+            {
+                DiscoverySection.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            DiscoveryTitle.Text = TourSteps.DiscoveryTitle;
+            HideDiscoveryLink.Content = TourSteps.DiscoveryHide;
+            Style style = (Style)FindResource("DiscoveryItemStyle");
+            foreach ((string title, string text, string start) in TourSteps.Discovery)
+            {
+                StackPanel content = new StackPanel();
+                content.Children.Add(Caption(title, 14, Res("TextMain"), FontWeights.SemiBold, new Thickness(0)));
+                TextBlock line = Caption(text, 12, Res("TextSub"), FontWeights.Normal, new Thickness(0, 2, 0, 0));
+                line.TextWrapping = TextWrapping.Wrap;
+                content.Children.Add(line);
+
+                Button item = new Button { Style = style, Content = content, Margin = new Thickness(0, 0, 4, 0) };
+                AutomationProperties.SetName(item, title + ". " + text);
+                item.Click += (s, e) => discover(start);
+                DiscoveryItems.Children.Add(item);
+            }
+        }
+
+        // For good; if settings.json can't be written, just for now.
+        private void HideDiscovery_Click(object sender, RoutedEventArgs e)
+        {
+            AppSettings.Update(s => s.HideDiscovery = true);
+            DiscoverySection.Visibility = Visibility.Collapsed;
         }
 
         // ---- This week ----------------------------------------------------
@@ -260,129 +292,50 @@ namespace TidyMind
             return row;
         }
 
-        // ---- Projects -----------------------------------------------------
+        // ---- Upcoming expiries --------------------------------------------
 
-        private void ShowProjects(DashboardData data)
+        private void ShowExpiries(DashboardData data, DateTime today)
         {
-            int active = data.ActiveProjectCount;
-            ProjectsLede.Text = active == 0
-                ? "Nothing in progress."
-                : active == 1
-                    ? "1 in progress, " + data.AverageCompletion + "% done."
-                    : active + " in progress, " + data.AverageCompletion + "% done on average.";
+            ExpiryRows.Children.Clear();
+            ExpirySection.Visibility = data.Expiries.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
 
-            ProjectSignals.Children.Clear();
+            int past = data.Expiries.Count(x => x.Date < today);
+            int coming = data.Expiries.Count - past;
+            ExpiriesLede.Text = string.Join(", ", new[]
+            {
+                past == 0 ? null : past + " already past",
+                coming == 0 ? null : coming + " in the next " + DashboardDataAggregator.ExpiryDays + " days"
+            }.Where(part => part != null)) + ".";
 
-            // Each group appears only when something qualifies; the rules are in DashboardDataAggregator.
-            if (data.AlmostDone.Count > 0)
-                ProjectSignals.Children.Add(ProjectGroup("Almost done", "70% or more, a few tasks left.", data.AlmostDone,
-                    p => p.TasksLeft == 1 ? "1 task left" : p.TasksLeft + " tasks left", true));
-            if (data.Stalled.Count > 0)
-                ProjectSignals.Children.Add(ProjectGroup("Stalled", "Under 30% and untouched for two weeks or more.", data.Stalled,
-                    p => "Untouched " + (DateTime.Today - p.LastModified.Date).Days + " days", false));
-
-            if (ProjectSignals.Children.Count == 0)
-                ProjectSignals.Children.Add(Hint(data.ProjectCount == 0 ? "No projects yet." : "Everything's moving along.", new Thickness(0)));
+            foreach (DashboardExpiry expiry in data.Expiries)
+                ExpiryRows.Children.Add(ExpiryRow(expiry, today));
         }
 
-        private FrameworkElement ProjectGroup(string title, string rule, List<DashboardProject> projects,
-            Func<DashboardProject, string> status, bool lead)
+        // The item and which date, where it is, and how close (highlighted by Expiry, in words too). A click opens it.
+        private FrameworkElement ExpiryRow(DashboardExpiry expiry, DateTime today)
         {
-            StackPanel group = new StackPanel { Margin = new Thickness(0, 0, 0, 12) };
+            Border row = HoverRow(new Thickness(10, 6, 10, 6));
+            row.Margin = new Thickness(-10, 0, 0, 0);
+            CardEffects.AttachClick(row, () => navigate(expiry.Target));
 
-            StackPanel heading = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 6) };
-            heading.Children.Add(new TextBlock { Text = title, FontSize = 13, FontWeight = FontWeights.SemiBold, Foreground = Res("TextMain") });
-            heading.Children.Add(new TextBlock
-            {
-                Text = projects.Count > GroupSize ? rule + "  Showing " + GroupSize + " of " + projects.Count + "." : rule,
-                FontSize = 12,
-                Foreground = Res("TextSub"),
-                Margin = new Thickness(10, 0, 0, 0),
-                VerticalAlignment = VerticalAlignment.Bottom
-            });
-            group.Children.Add(heading);
+            Grid grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-            // Negative margin: the cards' own margin leaves room for the hover lift and shadow
-            WrapPanel tiles = new WrapPanel { Margin = new Thickness(-10, 0, -10, 0) };
-            for (int i = 0; i < projects.Count && i < GroupSize; i++)
-                tiles.Children.Add(ProjectTile(projects[i], status(projects[i]), lead && i == 0 && projects[i].Percent >= HeartbeatPercent));
-            group.Children.Add(tiles);
-            return group;
-        }
+            StackPanel text = new StackPanel();
+            text.Children.Add(Caption(expiry.ItemName, 14, Res("TextMain"), FontWeights.Normal, new Thickness(0)));
+            text.Children.Add(Caption(expiry.Name + "  ·  " + expiry.MemoryName, 12, Res("TextSub"), FontWeights.Normal, new Thickness(0, 1, 0, 0)));
+            grid.Children.Add(text);
 
-        // A small version of the project view's card: same white square, same ring filling clockwise.
-        private FrameworkElement ProjectTile(DashboardProject project, string status, bool beat)
-        {
-            // Transparent background: the gap between card and caption answers clicks and right-clicks too.
-            StackPanel cell = new StackPanel
-            {
-                Width = TileSize,
-                Margin = new Thickness(10, 8, 10, 12),
-                Cursor = Cursors.Hand,
-                Background = Brushes.Transparent
-            };
+            ExpiryLevel level = Expiry.Level(expiry.Date, today);
+            TextBlock when = Caption(Expiry.Describe(expiry.Date, today), 13, Expiry.Brush(level), Expiry.Weight(level),
+                new Thickness(16, 1, 0, 0));
+            when.VerticalAlignment = VerticalAlignment.Top;
+            Grid.SetColumn(when, 1);
+            grid.Children.Add(when);
 
-            // The project grid's own card (ProjectCard), compact.
-            ProjectCardVisual visual = ProjectCard.Build(project.Card, TileSize, TileRadius, compact: true);
-            Grid card = visual.Card;
-            DropShadowEffect shadow = visual.Shadow;
-            ShapePath progress = visual.Progress;
-            cell.Children.Add(card);
-
-            // Caption under the card: which memory it lives in, and why it's here.
-            cell.Children.Add(Caption(project.MemoryName, 12, Res("TextBody"), FontWeights.Normal, new Thickness(2, 10, 0, 0)));
-            cell.Children.Add(Caption(status, 11, Res("TextSub"), FontWeights.Normal, new Thickness(2, 1, 0, 0)));
-
-            CardEffects.AttachHoverLift(card, shadow);
-            CardEffects.AttachClick(cell, () => navigate(project.Target));
-            AttachProjectMenu(cell, project);
-
-            // The one moment of motion on Home: the nearly finished project's ring beats once as you arrive.
-            if (beat && progress != null && heartbeatPending && SystemParameters.ClientAreaAnimation)
-            {
-                heartbeatPending = false;
-                RoutedEventHandler onLoaded = null;
-                onLoaded = (s, e) =>
-                {
-                    card.Loaded -= onLoaded;
-                    CardEffects.RingHeartbeat(progress);
-                };
-                card.Loaded += onLoaded;
-            }
-
-            return cell;
-        }
-
-        // The project grid's own card menu (ProjectMenu). Built when it opens, from the memory's file read fresh
-        // then, so Rename/Delete change and save the current list rather than the copy Home was drawn from.
-        private void AttachProjectMenu(FrameworkElement cell, DashboardProject shown)
-        {
-            Profile memory = shown.Target.Profile;
-            Guid projectId = shown.Target.ItemId;
-
-            cell.ContextMenu = new ContextMenu(); // placeholder: without one, WPF doesn't raise ContextMenuOpening
-            cell.ContextMenuOpening += (s, e) =>
-            {
-                if (!ProjectStore.TryLoad(memory, out List<Project> projects, out _))
-                {
-                    e.Handled = true;
-                    return;
-                }
-
-                // Deleted since Home was drawn: redraw instead.
-                Project project = projects.FirstOrDefault(p => p.Id == projectId);
-                if (project == null)
-                {
-                    e.Handled = true;
-                    Refresh();
-                    return;
-                }
-
-                cell.ContextMenu = ProjectMenu.Build(this, project,
-                    save: () => ProjectStore.SaveOrWarn(memory, projects),
-                    redraw: Refresh,
-                    remove: () => projects.Remove(project));
-            };
+            row.Child = grid;
+            return row;
         }
 
         // ---- Pieces -------------------------------------------------------

@@ -36,7 +36,7 @@
                              Foreground="{StaticResource TextSub}" Text="Search..."
                              GotFocus="SearchBox_GotFocus" LostFocus="SearchBox_LostFocus"
                              TextChanged="SearchBox_TextChanged"/>
-                    <Button Content="+  Add Entity" Height="36" Padding="16,0"
+                    <Button Content="+  Add item" Height="36" Padding="16,0"
                             Click="AddEntityButton_Click"/>
                 </StackPanel>
             </Grid>
@@ -53,7 +53,7 @@
         <ScrollViewer x:Name="CardScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="16,0,16,20">
             <Grid x:Name="CardArea">
                 <WrapPanel x:Name="EntityPanel"/>
-                <TextBlock x:Name="EmptyState" Text="No items yet. Click “+ Add Entity” to start."
+                <TextBlock x:Name="EmptyState" Text="No items yet. Click “+ Add item” to start."
                            FontSize="13" Foreground="{StaticResource TextSub}"
                            HorizontalAlignment="Center" Margin="0,60,0,0"
                            Visibility="Collapsed"/>
