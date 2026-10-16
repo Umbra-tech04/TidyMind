@@ -1189,6 +1189,15 @@ Az ablak nyitva marad, így semmi sem vész el. Zárd be újra, amint a fájl í
 
 A fájl változatlan maradt. Zárd be ezt az ablakot, és nyisd meg újra, amint a fájl olvasható lesz.</value>
   </data>
+  <data name="Notify.Test.Direct" xml:space="preserve">
+    <value>Közvetlenül a TidyMindból küldve.</value>
+  </data>
+  <data name="Notify.Test.Scheduled" xml:space="preserve">
+    <value>A Windows Feladatütemezőn keresztül küldve, mint egy valódi emlékeztető.</value>
+  </data>
+  <data name="Notify.Test.Title" xml:space="preserve">
+    <value>TidyMind próbaértesítés</value>
+  </data>
   <data name="Plan.AddBlock" xml:space="preserve">
     <value>Új idősáv</value>
   </data>
@@ -1749,6 +1758,43 @@ A fájl változatlan maradt. Javítsd ki, vagy állítsd vissza egy mentésből,
   <data name="Settings.Licenses" xml:space="preserve">
     <value>Licencek</value>
   </data>
+  <data name="Settings.Notify.Button" xml:space="preserve">
+    <value>Küldés</value>
+  </data>
+  <data name="Settings.Notify.Caption" xml:space="preserve">
+    <value>Próbaértesítés</value>
+  </data>
+  <data name="Settings.Notify.Failed" xml:space="preserve">
+    <value>nem sikerült ({0}).</value>
+  </data>
+  <data name="Settings.Notify.NoAnswer" xml:space="preserve">
+    <value>40 másodpercen belül nem jött válasz: az ütemezett feladat nem futott le.</value>
+  </data>
+  <data name="Settings.Notify.NotScheduled" xml:space="preserve">
+    <value>nem sikerült ütemezni ({0}).</value>
+  </data>
+  <data name="Settings.Notify.Note" xml:space="preserve">
+    <value>Egyet azonnal, egyet pedig a Windows Feladatütemezőn keresztül, ahogy egy valódi emlékeztető.</value>
+  </data>
+  <data name="Settings.Notify.Off" xml:space="preserve">
+    <value>a Windowsban ki vannak kapcsolva a TidyMind értesítései (Gépház &gt; Rendszer &gt; Értesítések).</value>
+  </data>
+  <data name="Settings.Notify.Result" xml:space="preserve">
+    <value>Közvetlenül a TidyMindból: {0}
+
+A Windows Feladatütemezőn keresztül, mint egy valódi emlékeztető: {1}
+
+A részletek az adatmappa reminders.log fájljában vannak.</value>
+  </data>
+  <data name="Settings.Notify.Shown" xml:space="preserve">
+    <value>elküldve. Ha nem jelent meg, nézd meg a Windows Ne zavarjanak (Fókuszsegéd) beállítását.</value>
+  </data>
+  <data name="Settings.Notify.Title" xml:space="preserve">
+    <value>Próbaértesítés küldése</value>
+  </data>
+  <data name="Settings.Notify.Waiting" xml:space="preserve">
+    <value>Várakozás a Windows Feladatütemezőre (legfeljebb 40 másodperc)…</value>
+  </data>
   <data name="Settings.Restore.Button" xml:space="preserve">
     <value>Visszaállítás…</value>
   </data>
@@ -1793,6 +1839,9 @@ A jelenlegi adataid változatlanok maradtak.</value>
   </data>
   <data name="Settings.Section.General" xml:space="preserve">
     <value>Általános</value>
+  </data>
+  <data name="Settings.Section.Notifications" xml:space="preserve">
+    <value>Értesítések</value>
   </data>
   <data name="Settings.Title" xml:space="preserve">
     <value>Beállítások</value>

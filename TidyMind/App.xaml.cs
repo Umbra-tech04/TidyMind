@@ -16,6 +16,7 @@ namespace TidyMind
         private const string ActivateEventName = @"Local\TidyMind_Activate";
         private const int ASFW_ANY = -1;
         private const string RemoveTasksArgument = "--remove-reminder-tasks";
+        private const string TestNotificationArgument = "--test-notification";
 
         // TidyMind's ID to Windows: taskbar grouping, reminder notifications, the user's notification settings. Must
         // equal MyAppUserModelId in installer/TidyMind.iss; never change it.
@@ -31,8 +32,10 @@ namespace TidyMind
             base.OnStartup(e);
 
             int remindAt = Array.IndexOf(e.Args, "--remind");
+            int testAt = Array.IndexOf(e.Args, TestNotificationArgument);
             bool removeTasks = Array.IndexOf(e.Args, RemoveTasksArgument) >= 0;
-            UnhandledErrors.Install(this, backgroundProcess: removeTasks || (remindAt >= 0 && remindAt < e.Args.Length - 1));
+            UnhandledErrors.Install(this, backgroundProcess: removeTasks || (remindAt >= 0 && remindAt < e.Args.Length - 1)
+                || (testAt >= 0 && testAt < e.Args.Length - 1));
 
             // Run by the uninstaller (installer/TidyMind.iss) before the program files go: deletes the reminder tasks
             // and exits, no UI, no data read or changed. Exit code 1 if that failed (the uninstall carries on regardless;
@@ -59,10 +62,21 @@ namespace TidyMind
             FrameworkElement.LanguageProperty.OverrideMetadata(typeof(FrameworkElement),
                 new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(Loc.Culture.IetfLanguageTag)));
 
-            // Launched by a Task Scheduler reminder: show the toast and exit, no UI. Checked before the one-copy
-            // rule, so reminders still fire while the app is open.
+            // Launched by a Task Scheduler reminder: show the toast and exit (a window only if the notification
+            // failed and TidyMind isn't open). Checked before the one-copy rule, so reminders still fire while the app
+            // is open.
             if (TryHandleRemindArgument(e.Args))
             {
+                Shutdown();
+                return;
+            }
+
+            // Settings' "Send test notification", through Task Scheduler: one test notification, its outcome written
+            // for the app to read; no data read or changed.
+            if (testAt >= 0 && testAt < e.Args.Length - 1)
+            {
+                if (Guid.TryParse(e.Args[testAt + 1], out Guid token))
+                    ReminderManager.RunTest(token);
                 Shutdown();
                 return;
             }
@@ -120,6 +134,9 @@ namespace TidyMind
             EventManager.RegisterClassHandler(typeof(DatePicker), FrameworkElement.LoadedEvent,
                 new RoutedEventHandler((s, args) => Loc.PrepareDatePicker((DatePicker)s)));
             TextEditing.DisableOvertype();
+
+            // A reminder whose Windows notification failed is handed to this window to show (ReminderPopups).
+            ReminderPopups.Listen(Dispatcher);
 
             MainWindow window = new MainWindow(profiles);
             this.MainWindow = window;
@@ -199,6 +216,7 @@ namespace TidyMind
         protected override void OnExit(ExitEventArgs e)
         {
             activateWait?.Unregister(null);
+            ReminderPopups.StopListening();
             base.OnExit(e);
         }
 

@@ -141,6 +141,54 @@ namespace TidyMind
             DataBackup.Restart();
         }
 
+        // ---- Notifications ------------------------------------------------
+
+        private static readonly TimeSpan ScheduledTestWait = TimeSpan.FromSeconds(40);
+
+        // Two notifications, to tell where a failure is: one straight from this process, and one through a one-off
+        // Task Scheduler task made by the same code as a reminder's (same user, session and settings). The outcome is
+        // said in plain words; the exact errors go to reminders.log.
+        private async void TestNotificationButton_Click(object sender, RoutedEventArgs e)
+        {
+            TestNotifyButton.IsEnabled = false;
+            NotifyNote.Text = Loc.T("Settings.Notify.Waiting");
+            NotificationResult direct = ReminderManager.TestNow();
+
+            Guid token = Guid.NewGuid();
+            string scheduled;
+            try
+            {
+                ReminderManager.ScheduleTest(token, DateTime.Now.AddSeconds(5));
+                NotificationResult? answer = null;
+                for (TimeSpan waited = TimeSpan.Zero; answer == null && waited < ScheduledTestWait; waited += TimeSpan.FromMilliseconds(500))
+                {
+                    await System.Threading.Tasks.Task.Delay(500);
+                    answer = ReminderManager.ReadTestResult(token);
+                }
+                scheduled = answer == null ? Loc.T("Settings.Notify.NoAnswer") : Describe(answer);
+            }
+            catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException || ex is UnauthorizedAccessException || ex is IOException)
+            {
+                scheduled = Loc.F("Settings.Notify.NotScheduled", ex.Message);
+            }
+            finally
+            {
+                ReminderManager.RemoveTest(token);
+            }
+
+            NotifyNote.SetBinding(TextBlock.TextProperty, Loc.Bind("Settings.Notify.Note"));
+            TestNotifyButton.IsEnabled = true;
+            Msg.Show(this, Loc.F("Settings.Notify.Result", Describe(direct), scheduled), Loc.T("Settings.Notify.Caption"),
+                MessageBoxButton.OK, direct.Outcome == NotificationOutcome.Failed ? MessageBoxImage.Warning : MessageBoxImage.Information);
+        }
+
+        private static string Describe(NotificationResult result) => result.Outcome switch
+        {
+            NotificationOutcome.Shown => Loc.T("Settings.Notify.Shown"),
+            NotificationOutcome.TurnedOff => Loc.T("Settings.Notify.Off"),
+            _ => Loc.F("Settings.Notify.Failed", result.Detail)
+        };
+
         // ---- Data folder --------------------------------------------------
 
         private void OpenDataFolderButton_Click(object sender, RoutedEventArgs e)

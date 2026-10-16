@@ -1222,6 +1222,15 @@ The window stays open so nothing is lost. Close it again once the file can be wr
 
 The file was left as it is. Close this window and open it again once the file can be read.</value>
   </data>
+  <data name="Notify.Test.Direct" xml:space="preserve">
+    <value>Sent straight from TidyMind.</value>
+  </data>
+  <data name="Notify.Test.Scheduled" xml:space="preserve">
+    <value>Sent through Windows Task Scheduler, like a real reminder.</value>
+  </data>
+  <data name="Notify.Test.Title" xml:space="preserve">
+    <value>TidyMind test notification</value>
+  </data>
   <data name="Plan.AddBlock" xml:space="preserve">
     <value>Add block</value>
   </data>
@@ -1803,6 +1812,43 @@ The file was left as it is. Fix it or restore it from a backup to see and add re
   <data name="Settings.Licenses" xml:space="preserve">
     <value>Licenses</value>
   </data>
+  <data name="Settings.Notify.Button" xml:space="preserve">
+    <value>Send</value>
+  </data>
+  <data name="Settings.Notify.Caption" xml:space="preserve">
+    <value>Test Notification</value>
+  </data>
+  <data name="Settings.Notify.Failed" xml:space="preserve">
+    <value>failed ({0}).</value>
+  </data>
+  <data name="Settings.Notify.NoAnswer" xml:space="preserve">
+    <value>no answer within 40 seconds: the scheduled task didn't run.</value>
+  </data>
+  <data name="Settings.Notify.NotScheduled" xml:space="preserve">
+    <value>couldn't be scheduled ({0}).</value>
+  </data>
+  <data name="Settings.Notify.Note" xml:space="preserve">
+    <value>One right away, and one through Windows Task Scheduler like a real reminder.</value>
+  </data>
+  <data name="Settings.Notify.Off" xml:space="preserve">
+    <value>Windows has notifications from TidyMind turned off (Settings &gt; System &gt; Notifications).</value>
+  </data>
+  <data name="Settings.Notify.Result" xml:space="preserve">
+    <value>Straight from TidyMind: {0}
+
+Through Windows Task Scheduler, like a real reminder: {1}
+
+The details are in reminders.log in the data folder.</value>
+  </data>
+  <data name="Settings.Notify.Shown" xml:space="preserve">
+    <value>sent. If it didn't appear, check Do not disturb (Focus assist) in Windows.</value>
+  </data>
+  <data name="Settings.Notify.Title" xml:space="preserve">
+    <value>Send test notification</value>
+  </data>
+  <data name="Settings.Notify.Waiting" xml:space="preserve">
+    <value>Waiting for Windows Task Scheduler (up to 40 seconds)…</value>
+  </data>
   <data name="Settings.Restore.Button" xml:space="preserve">
     <value>Restore…</value>
   </data>
@@ -1847,6 +1893,9 @@ Your current data was left as it was.</value>
   </data>
   <data name="Settings.Section.General" xml:space="preserve">
     <value>General</value>
+  </data>
+  <data name="Settings.Section.Notifications" xml:space="preserve">
+    <value>Notifications</value>
   </data>
   <data name="Settings.Title" xml:space="preserve">
     <value>Settings</value>

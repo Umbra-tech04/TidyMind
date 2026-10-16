@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading;
-using System.Windows.Forms;
 using Microsoft.Win32.TaskScheduler;
 using Windows.Data.Xml.Dom;
 using Windows.UI.Notifications;
@@ -15,6 +15,7 @@ namespace TidyMind
     {
         private static readonly string RemindersFile = AppPaths.Data("reminders.json");
         private const string TaskNamePrefix = "TidyMind_Reminder_";
+        private const string TestTaskPrefix = "TidyMind_NotificationTest_";
 
         public static List<Reminder> LoadReminders()
         {
@@ -440,47 +441,74 @@ namespace TidyMind
         // the reminder process always waits this long before it exits.
         private static readonly TimeSpan NotificationFailureWait = TimeSpan.FromSeconds(3);
 
-        // What Windows throws for a sender it doesn't know.
+        // "Element not found": what Windows answers for a sender it doesn't know (yet).
         private const int ElementNotFound = unchecked((int)0x80070490);
 
-        // A Windows notification: a banner, then kept in the Action Center. Windows sends it only for App.UserModelId
-        // on a Start Menu shortcut (the installer's; a build run from its own folder has none). If it can't be sent,
-        // the reason goes to reminders.log and a tray balloon shows instead; notifications the user turned off for
-        // TidyMind stay off.
+        // The reminder's Windows notification. If Windows didn't take it, the reminder still shows: in the open
+        // TidyMind window, or else in a window of this process (ReminderPopups). Notifications the user turned off for
+        // TidyMind in Windows stay off.
         private static void ShowNotification(Reminder due)
         {
             // In the saved language (App reads it before a reminder fires); reminders.log stays in English.
             string title = string.IsNullOrWhiteSpace(due.Title) ? Loc.T("Reminder.Toast.Title")
                 : Loc.F("Reminder.Toast.TitleFor", DayPlanReminders.ShownTitle(due, DayPlanReminders.BlockIds()));
             string message = due.Message ?? "";
-            string problem;
+
+            NotificationResult result = SendToast(title, message);
+            if (result.Outcome != NotificationOutcome.Failed)
+            {
+                Note("fire " + due.Id + ": " + result);
+                return;
+            }
+            bool handed = ReminderPopups.HandToApp(title, message);
+            Note("fire " + due.Id + ": " + result + "; " + (handed ? "shown in the open TidyMind window instead" : "shown in a TidyMind window instead"));
+            if (!handed)
+                ReminderPopups.ShowHere(title, message);
+        }
+
+        // One Windows notification from App.UserModelId: a banner, then kept in the Action Center. Windows takes it only
+        // for an ID a Start Menu shortcut carries (the installer's). Never throws: the outcome says what happened.
+        public static NotificationResult SendToast(string title, string message)
+        {
+            string where = "session " + Process.GetCurrentProcess().SessionId + (Environment.UserInteractive ? "" : ", not interactive");
             try
             {
                 ToastNotifier notifier = ToastNotificationManager.CreateToastNotifier(App.UserModelId);
-                NotificationSetting setting = notifier.Setting;
-                if (setting != NotificationSetting.Enabled)
+
+                // Read for the log, never as a gate: Windows 10 throws "Element not found" here for an app that has
+                // never shown a notification (Windows lists it under Settings > Notifications only after its first
+                // one), so checking first kept that first one, and every later one, from being sent.
+                NotificationSetting? setting = null;
+                string settingText;
+                try
                 {
-                    Note("fire " + due.Id + ": not shown, Windows notifications from TidyMind are off (" + setting + ")");
-                    return;
+                    setting = notifier.Setting;
+                    settingText = setting.ToString();
                 }
-                problem = SendNotification(notifier, title, message);
-                if (problem == null)
+                catch (Exception e)
                 {
-                    Note("fire " + due.Id + ": notification sent");
-                    return;
+                    settingText = "not readable (" + Code(e) + ")";
                 }
+
+                string problem = SendNotification(notifier, title, message);
+                if (problem != null)
+                    return new NotificationResult(NotificationOutcome.Failed, problem + "; setting " + settingText + "; " + where);
+                if (setting != null && setting != NotificationSetting.Enabled)
+                    return new NotificationResult(NotificationOutcome.TurnedOff, "turned off in Windows (" + settingText + "); " + where);
+                return new NotificationResult(NotificationOutcome.Shown, "notification sent; setting " + settingText + "; " + where);
             }
             catch (Exception e)
             {
-                // Whatever Windows threw (a COMException mostly), the reminder must still show. "Not found" comes
-                // without a message.
-                problem = e.GetType().Name + " 0x" + e.HResult.ToString("X8") + ": "
-                    + (e.HResult == ElementNotFound ? "no Start Menu shortcut has TidyMind's ID (" + App.UserModelId + ")" : e.Message);
+                // Whatever Windows threw (a COMException mostly). "Element not found" comes without a message and has
+                // more than one cause, so it's described, not diagnosed.
+                string what = e.HResult == ElementNotFound
+                    ? "Element not found: Windows doesn't know the sender " + App.UserModelId + " (no Start Menu shortcut with that ID yet, or the notification platform isn't available here)"
+                    : e.Message;
+                return new NotificationResult(NotificationOutcome.Failed, "the Windows notification failed (" + Code(e) + " " + what + "); " + where);
             }
-
-            Note("fire " + due.Id + ": the Windows notification failed (" + problem + "); shown as a tray balloon instead");
-            ShowBalloon(title, message);
         }
+
+        private static string Code(Exception e) => e.GetType().Name + " 0x" + e.HResult.ToString("X8");
 
         // Null once shown; otherwise what Windows reported.
         private static string SendNotification(ToastNotifier notifier, string title, string message)
@@ -500,16 +528,59 @@ namespace TidyMind
             return failed.Task.Wait(NotificationFailureWait) ? failed.Task.Result : null;
         }
 
-        // A tray icon's balloon. Windows takes it away with the icon, so the process stays a few seconds for it to
-        // be seen.
-        private static void ShowBalloon(string title, string message)
+        // ---- Testing the notification path ---------------------------------
+
+        // Where "TidyMind.exe --test-notification <token>" writes its outcome for the app to read (same user, same
+        // temp folder); nothing goes into the data folder.
+        public static string TestResultFile(Guid token) =>
+            Path.Combine(Path.GetTempPath(), "tidymind-notification-test-" + token.ToString("N") + ".txt");
+
+        // The real path of a reminder: a one-off task with the same settings, user and session as a reminder's,
+        // starting this exe. Throws if Task Scheduler refuses it.
+        public static void ScheduleTest(Guid token, DateTime at)
         {
-            using (NotifyIcon icon = new NotifyIcon { Icon = System.Drawing.SystemIcons.Information, Visible = true })
+            RegisterTask(TestTaskPrefix + token, at, "TidyMind notification test", "--test-notification \"" + token + "\"");
+            Note("test " + token + ": task scheduled for " + at.ToString("HH:mm:ss"));
+        }
+
+        public static void RemoveTest(Guid token)
+        {
+            TrySchedule(() =>
             {
-                // An empty text throws.
-                icon.ShowBalloonTip(5000, title, message.Length > 0 ? message : title, ToolTipIcon.Info);
-                Thread.Sleep(6000);
-                icon.Visible = false;
+                using (TaskService taskService = new TaskService())
+                    taskService.RootFolder.DeleteTask(TestTaskPrefix + token, false);
+            });
+            try { File.Delete(TestResultFile(token)); } catch (Exception e) when (e is IOException || e is UnauthorizedAccessException) { }
+        }
+
+        // The task's side: one test notification, its outcome to reminders.log and to the result file.
+        public static void RunTest(Guid token)
+        {
+            NotificationResult result = SendToast(Loc.T("Notify.Test.Title"), Loc.T("Notify.Test.Scheduled"));
+            Note("test " + token + " (scheduled task): " + result);
+            AtomicFile.TryWriteAllText(TestResultFile(token), result.Outcome + "\n" + result.Detail);
+        }
+
+        // The app's side, for Settings: the same notification straight from this process.
+        public static NotificationResult TestNow()
+        {
+            NotificationResult result = SendToast(Loc.T("Notify.Test.Title"), Loc.T("Notify.Test.Direct"));
+            Note("test (from the app): " + result);
+            return result;
+        }
+
+        // The outcome the task wrote, or null while there's none yet.
+        public static NotificationResult? ReadTestResult(Guid token)
+        {
+            try
+            {
+                string[] lines = File.ReadAllLines(TestResultFile(token));
+                return lines.Length >= 2 && Enum.TryParse(lines[0], out NotificationOutcome outcome)
+                    ? new NotificationResult(outcome, lines[1]) : null;
+            }
+            catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
+            {
+                return null;
             }
         }
 
@@ -529,8 +600,11 @@ namespace TidyMind
             RegisterTask(reminder.Id, reminder.NextFireTime, "TidyMind reminder: " + reminder.Title);
         }
 
+        private static void RegisterTask(Guid id, DateTime fireTime, string description) =>
+            RegisterTask(GetTaskName(id), fireTime, description, "--remind \"" + id + "\"");
+
         // Throws if it can't be scheduled, so callers never take an unscheduled reminder for a scheduled one.
-        private static void RegisterTask(Guid id, DateTime fireTime, string description)
+        private static void RegisterTask(string name, DateTime fireTime, string description, string arguments)
         {
             string exePath = Environment.ProcessPath;
             if (string.IsNullOrEmpty(exePath))
@@ -540,15 +614,17 @@ namespace TidyMind
             {
                 TaskDefinition taskDefinition = taskService.NewTask();
                 taskDefinition.RegistrationInfo.Description = description;
+                // The signed-in user's own session, only while signed in: a notification (or window) can only show
+                // there. (Task Scheduler's default for a task without a password, written out so it can't drift.)
+                taskDefinition.Principal.UserId = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
+                taskDefinition.Principal.LogonType = TaskLogonType.InteractiveToken;
+                taskDefinition.Principal.RunLevel = TaskRunLevel.LUA;
 
                 taskDefinition.Triggers.Clear();
                 taskDefinition.Triggers.Add(new TimeTrigger(fireTime));
 
                 taskDefinition.Actions.Clear();
-                taskDefinition.Actions.Add(new ExecAction(
-                    exePath,
-                    "--remind \"" + id + "\"",
-                    Path.GetDirectoryName(exePath)));
+                taskDefinition.Actions.Add(new ExecAction(exePath, arguments, Path.GetDirectoryName(exePath)));
 
                 taskDefinition.Settings.DisallowStartIfOnBatteries = false;
                 taskDefinition.Settings.StopIfGoingOnBatteries = false;
@@ -557,7 +633,7 @@ namespace TidyMind
                 // see Repeats, but nothing else should run forever either).
                 taskDefinition.Settings.ExecutionTimeLimit = TimeSpan.FromMinutes(10);
 
-                taskService.RootFolder.RegisterTaskDefinition(GetTaskName(id), taskDefinition);
+                taskService.RootFolder.RegisterTaskDefinition(name, taskDefinition);
             }
         }
 
@@ -573,7 +649,8 @@ namespace TidyMind
                 {
                     using (task)
                     {
-                        if (task.Name.StartsWith(TaskNamePrefix, StringComparison.OrdinalIgnoreCase))
+                        if (task.Name.StartsWith(TaskNamePrefix, StringComparison.OrdinalIgnoreCase)
+                            || task.Name.StartsWith(TestTaskPrefix, StringComparison.OrdinalIgnoreCase))
                             names.Add(task.Name);
                     }
                 }

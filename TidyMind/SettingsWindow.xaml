@@ -78,6 +78,22 @@
             </Grid>
         </Border>
 
+        <TextBlock Text="{local:Tr Settings.Section.Notifications}" Style="{StaticResource SectionLabelStyle}"/>
+        <Border Style="{StaticResource CardStyle}">
+            <Grid Style="{StaticResource RowStyle}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{local:Tr Settings.Notify.Title}" Style="{StaticResource RowTitleStyle}"/>
+                    <TextBlock x:Name="NotifyNote" Text="{local:Tr Settings.Notify.Note}" Style="{StaticResource RowNoteStyle}"/>
+                </StackPanel>
+                <Button x:Name="TestNotifyButton" Content="{local:Tr Settings.Notify.Button}" Style="{StaticResource RowButtonStyle}"
+                        Click="TestNotificationButton_Click"/>
+            </Grid>
+        </Border>
+
         <TextBlock Text="{local:Tr Settings.Section.Backup}" Style="{StaticResource SectionLabelStyle}"/>
         <Border Style="{StaticResource CardStyle}">
             <StackPanel>

@@ -24,7 +24,8 @@ A Windows desktop app (WPF, .NET 10, `net10.0-windows10.0.19041.0`) for personal
 ## Reminders
 - Each reminder is one Task Scheduler task `TidyMind_Reminder_<Id>` running `TidyMind.exe --remind "<Id>"` (no UI) at its next time; repeating ones are re-registered after firing.
 - `reminders.json` changes run under the named mutex `Local\TidyMind_Reminders` in `ReminderManager`. The app itself is single-instance (`Local\TidyMind_SingleInstance`).
-- Toast: sent under the AppUserModelID `TidyMind.App` (`App.UserModelId`, must equal the installer's `MyAppUserModelId`; the Start Menu shortcut carries it). Falls back to a tray balloon. The text uses the saved language (`Loc.Initialize` runs before `--remind` is handled).
+- Toast: sent under the AppUserModelID `TidyMind.App` (`App.UserModelId`, must equal the installer's `MyAppUserModelId`; the Start Menu shortcut carries it). `ToastNotifier.Setting` is only logged, never a gate (Windows 10 throws 0x80070490 there before the first toast). If the toast fails, `ReminderPopups` shows the reminder in the open app, or in a window of the `--remind` process. The text uses the saved language (`Loc.Initialize` runs before `--remind` is handled).
+- Settings → Send test notification: one toast from the app, one through a real one-off task (`TidyMind_NotificationTest_*`, `--test-notification <token>`); results in reminders.log.
 - The uninstaller runs `TidyMind.exe --remove-reminder-tasks`; the app also repairs missing/stale tasks at start (`RepairTasksInBackground`).
 
 ## Installer
@@ -50,7 +51,7 @@ dotnet build tests\Harness\Harness.csproj
 cd tests\Harness
 dotnet bin\Debug\net10.0-windows10.0.19041.0\Harness.dll <mode> <tempDataFolder> [shotsFolder|uiCulture]
 ```
-Modes: `ui` (tour + Home), `plan` (Day Plan), `loc` (localization), `locfirst <data> <hu-HU|sr-Cyrl-RS|de-DE>` (first-launch language), `locdata1` then `locdata2` on the same folder (data byte-identical across switches and a restart), `toast <data> [en|hu|sr-Latn]` (sends one real notification). The harness refuses a data folder inside the real one and stops if real `TidyMind_Reminder_*` tasks exist; reminder tests create and remove tasks.
+Modes: `taskpath` (real Task Scheduler path + popup handover; run `Harness.exe`, not `dotnet Harness.dll`), `ui` (tour + Home), `plan` (Day Plan), `loc` (localization), `locfirst <data> <hu-HU|sr-Cyrl-RS|de-DE>` (first-launch language), `locdata1` then `locdata2` on the same folder (data byte-identical across switches and a restart), `toast <data> [en|hu|sr-Latn]` (sends one real notification). The harness refuses a data folder inside the real one and stops if real `TidyMind_Reminder_*` tasks exist; reminder tests create and remove tasks.
 
 ## Hard rules
 - **Never start the app against the real data folder.** Tests and manual runs use a temp data folder (the harness redirects `AppPaths.DataFolder`).

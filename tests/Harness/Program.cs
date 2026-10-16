@@ -34,8 +34,10 @@ static partial class Program
     static int Main(string[] args)
     {
         Console.OutputEncoding = System.Text.Encoding.UTF8;
+        if (args.Length == 2 && args[0] == "--test-notification")
+            return RunScheduledTest(args[1]);
         // Anything else (e.g. a "--remind" from a task left behind by a crashed run) does nothing.
-        string[] modes = { "toast", "ui", "plan", "loc", "locfirst", "locdata1", "locdata2" };
+        string[] modes = { "toast", "ui", "plan", "loc", "locfirst", "locdata1", "locdata2", "probe", "taskpath" };
         if (args.Length < 2 || !modes.Contains(args[0]))
             return 2;
         string data = Path.GetFullPath(args[1]);
@@ -58,7 +60,7 @@ static partial class Program
 
         mode = args[0];
         uiCulture = args.Length > 2 ? args[2] : null;
-        int result = args[0] == "toast" ? Toast(data) : Ui(args[0] == "locfirst" || args[0].StartsWith("locdata") ? Path.Combine(data, "..", "shots") : args[2], args[0] == "plan");
+        int result = args[0] == "taskpath" ? TaskPath() : args[0] == "probe" ? Probe() : args[0] == "toast" ? Toast(data) : Ui(args[0] == "locfirst" || args[0].StartsWith("locdata") ? Path.Combine(data, "..", "shots") : args[2], args[0] == "plan");
         Console.WriteLine(failures == 0 ? "ALL PASSED" : failures + " FAILED");
         return failures == 0 ? result : 1;
     }

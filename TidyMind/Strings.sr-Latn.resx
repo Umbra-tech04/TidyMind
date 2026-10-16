@@ -1255,6 +1255,15 @@ Prozor ostaje otvoren da se ništa ne izgubi. Zatvori ga ponovo kada datoteka bu
 
 Datoteka je ostala kakva je bila. Zatvori ovaj prozor i otvori ga ponovo kada datoteka bude mogla da se pročita.</value>
   </data>
+  <data name="Notify.Test.Direct" xml:space="preserve">
+    <value>Poslato direktno iz TidyMind-a.</value>
+  </data>
+  <data name="Notify.Test.Scheduled" xml:space="preserve">
+    <value>Poslato preko Windows Planera zadataka, kao pravi podsetnik.</value>
+  </data>
+  <data name="Notify.Test.Title" xml:space="preserve">
+    <value>TidyMind probno obaveštenje</value>
+  </data>
   <data name="Plan.AddBlock" xml:space="preserve">
     <value>Dodaj blok</value>
   </data>
@@ -1857,6 +1866,43 @@ Datoteka je ostala kakva je bila. Popravi je ili je vrati iz rezervne kopije, pa
   <data name="Settings.Licenses" xml:space="preserve">
     <value>Licence</value>
   </data>
+  <data name="Settings.Notify.Button" xml:space="preserve">
+    <value>Pošalji</value>
+  </data>
+  <data name="Settings.Notify.Caption" xml:space="preserve">
+    <value>Probno obaveštenje</value>
+  </data>
+  <data name="Settings.Notify.Failed" xml:space="preserve">
+    <value>nije uspelo ({0}).</value>
+  </data>
+  <data name="Settings.Notify.NoAnswer" xml:space="preserve">
+    <value>nema odgovora u roku od 40 sekundi: zakazani zadatak se nije pokrenuo.</value>
+  </data>
+  <data name="Settings.Notify.NotScheduled" xml:space="preserve">
+    <value>nije moglo da se zakaže ({0}).</value>
+  </data>
+  <data name="Settings.Notify.Note" xml:space="preserve">
+    <value>Jedno odmah, a jedno preko Windows Planera zadataka, kao pravi podsetnik.</value>
+  </data>
+  <data name="Settings.Notify.Off" xml:space="preserve">
+    <value>u Windowsu su obaveštenja za TidyMind isključena (Podešavanja &gt; Sistem &gt; Obaveštenja).</value>
+  </data>
+  <data name="Settings.Notify.Result" xml:space="preserve">
+    <value>Direktno iz TidyMind-a: {0}
+
+Preko Windows Planera zadataka, kao pravi podsetnik: {1}
+
+Detalji su u datoteci reminders.log u fascikli sa podacima.</value>
+  </data>
+  <data name="Settings.Notify.Shown" xml:space="preserve">
+    <value>poslato. Ako se nije pojavilo, proveri režim Ne uznemiravaj (Pomoćnik za fokus) u Windowsu.</value>
+  </data>
+  <data name="Settings.Notify.Title" xml:space="preserve">
+    <value>Pošalji probno obaveštenje</value>
+  </data>
+  <data name="Settings.Notify.Waiting" xml:space="preserve">
+    <value>Čeka se Windows Planer zadataka (najviše 40 sekundi)…</value>
+  </data>
   <data name="Settings.Restore.Button" xml:space="preserve">
     <value>Vrati…</value>
   </data>
@@ -1901,6 +1947,9 @@ Tvoji trenutni podaci su ostali nepromenjeni.</value>
   </data>
   <data name="Settings.Section.General" xml:space="preserve">
     <value>Opšte</value>
+  </data>
+  <data name="Settings.Section.Notifications" xml:space="preserve">
+    <value>Obaveštenja</value>
   </data>
   <data name="Settings.Title" xml:space="preserve">
     <value>Podešavanja</value>
