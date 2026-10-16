@@ -11,7 +11,7 @@ namespace TidyMind
     // (a project card, a memory's page) stores only that file name. Decoded pictures are kept in ImageCache.
     public class ImageStore
     {
-        public const string FileFilter = "Images (*.jpg;*.jpeg;*.png;*.webp)|*.jpg;*.jpeg;*.png;*.webp";
+        public static string FileFilter => Loc.T("Background.ImageFilter");
 
         // Card pictures: decoded at about twice the full card's width, sharp on high-DPI screens without holding
         // full-size photos for every customised card.

@@ -8,3 +8,4 @@ SkiaSharp: MIT
 SixLabors.Fonts: Apache License 2.0
 RBush: MIT
 TaskScheduler (David Hall): MIT
+Microsoft.Windows.SDK.NET, WinRT.Runtime (Microsoft): Microsoft Windows SDK License

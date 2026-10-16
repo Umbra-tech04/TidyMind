@@ -65,12 +65,12 @@ namespace TidyMind
             footer.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             addButton = new Button
             {
-                Content = "Add row",
+                Content = Loc.T("Log.AddRow"),
                 Style = (Style)Application.Current.FindResource("GhostButtonStyle"),
                 Height = 30,
                 Padding = new Thickness(12, 0, 12, 0)
             };
-            AutomationProperties.SetName(addButton, "Add row to " + log.Label.ToLowerInvariant());
+            AutomationProperties.SetName(addButton, Loc.F("Log.AddRowTo", log.Label));
             addButton.Click += (s, e) => AddRow();
             footer.Children.Add(addButton);
             summary = new TextBlock
@@ -129,7 +129,7 @@ namespace TidyMind
                 table.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
                 TextBlock empty = new TextBlock
                 {
-                    Text = "No entries yet.",
+                    Text = Loc.T("Log.Empty"),
                     FontSize = 12,
                     Foreground = Res("TextSub"),
                     Margin = new Thickness(0, 4, 0, 6)
@@ -159,10 +159,10 @@ namespace TidyMind
                 {
                     Style = (Style)Application.Current.FindResource("RowDeleteStyle"),
                     Focusable = true, // reachable with Tab, unlike the hover-only row buttons elsewhere
-                    ToolTip = "Delete row",
+                    ToolTip = Loc.T("Log.DeleteRow"),
                     VerticalAlignment = VerticalAlignment.Center
                 };
-                AutomationProperties.SetName(delete, "Delete row");
+                AutomationProperties.SetName(delete, Loc.T("Log.DeleteRow"));
                 delete.Click += (s, e) => DeleteRow(row);
                 Place(delete, at, log.Columns.Length);
             }
@@ -189,7 +189,7 @@ namespace TidyMind
                 FontWeight = sorted ? FontWeights.SemiBold : FontWeights.Normal,
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Margin = new Thickness(0, 2, 8, 2),
-                ToolTip = "Sort by " + column.Label.ToLowerInvariant()
+                ToolTip = Loc.F("Log.SortBy", column.Label)
             };
             header.Click += (s, e) =>
             {
@@ -226,9 +226,7 @@ namespace TidyMind
             string? value = Values.Normalize(column.Kind, edited);
             if (value == null)
             {
-                problem.Text = column.Kind == ValueKind.Date
-                    ? column.Label + " needs a date, like 2026-10-13."
-                    : column.Label + " needs a number, like 1250 or 6.5.";
+                problem.Text = Loc.F(column.Kind == ValueKind.Date ? "Log.NeedsDate" : "Log.NeedsNumber", column.Label);
                 problem.Visibility = Visibility.Visible;
                 HasProblem = true;
                 return false;
@@ -262,8 +260,8 @@ namespace TidyMind
             if (column.Kind == ValueKind.Text)
             {
                 Func<Dictionary<string, string>, string> text = r => r[column.Key];
-                ordered = descending ? filled.OrderByDescending(text, StringComparer.CurrentCultureIgnoreCase)
-                                     : filled.OrderBy(text, StringComparer.CurrentCultureIgnoreCase);
+                ordered = descending ? filled.OrderByDescending(text, Loc.Comparer)
+                                     : filled.OrderBy(text, Loc.Comparer);
             }
             else
             {
@@ -293,7 +291,7 @@ namespace TidyMind
         private void DeleteRow(Dictionary<string, string> row)
         {
             bool hasContent = log.Columns.Any(c => c.Kind != ValueKind.Date && !string.IsNullOrWhiteSpace(row.GetValueOrDefault(c.Key)));
-            if (hasContent && MessageBox.Show(Window.GetWindow(this), "Delete this row?", "Confirm Delete",
+            if (hasContent && Msg.Show(Window.GetWindow(this), Loc.T("Log.DeleteConfirm"), Loc.T("Common.ConfirmDelete"),
                     MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
                 return;
 

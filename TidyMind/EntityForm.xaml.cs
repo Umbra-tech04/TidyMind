@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Media;
 
@@ -41,7 +42,7 @@ namespace TidyMind
         {
             InitializeComponent();
             this.entityType = entityType;
-            FormTitle.Text = "Add " + entityType.ToLowerInvariant();
+            FormTitle.Text = Loc.T(TitleKey("Add", entityType));
             this.Title = FormTitle.Text;
             BuildForm();
             opened = CurrentInput();
@@ -52,12 +53,16 @@ namespace TidyMind
             InitializeComponent();
             this.existing = existing;
             this.entityType = existing.EntityType;
-            FormTitle.Text = "Edit " + (entityType ?? "item").ToLowerInvariant();
+            FormTitle.Text = Loc.T(TitleKey("Edit", entityType));
             this.Title = FormTitle.Text;
             BuildForm();
             FillForm(existing);
             opened = CurrentInput();
         }
+
+        // "Entity.Add.Vehicle", "Entity.Edit.Clothing"…; a type without its own title is an "item".
+        private static string TitleKey(string action, string type) =>
+            "Entity." + action + "." + (type == EntityTypes.Clothing || type == EntityTypes.Vehicle ? type : "Item");
 
         // What the form showed when it opened, to tell whether closing with X would throw anything away.
         private readonly string opened;
@@ -77,7 +82,7 @@ namespace TidyMind
 
             // A refused log value (red line under its table) counts as a change, so it isn't dropped without asking.
             if (DialogResult != true && (CurrentInput() != opened || logEditors.Values.Any(editor => editor.HasProblem))
-                && MessageBox.Show(this, "Discard changes?", "Unsaved Changes", MessageBoxButton.YesNo,
+                && Msg.Show(this, Loc.T("Common.DiscardChanges"), Loc.T("Common.UnsavedChanges"), MessageBoxButton.YesNo,
                     MessageBoxImage.Question) != MessageBoxResult.Yes)
                 e.Cancel = true;
 
@@ -102,7 +107,7 @@ namespace TidyMind
                 BuildDefinedFields();
             else
                 BuildClothing();
-            AddTextBoxMultiline("Notes", ref notesBox);
+            AddTextBoxMultiline(Loc.T("Entity.Field.Notes"), ref notesBox);
             BuildLogs();
         }
 
@@ -185,25 +190,24 @@ namespace TidyMind
 
         private void BuildClothing()
         {
-            AddTextBox("Brand", ref brandBox);
-            AddTextBox("Color", ref colorBox);
-            AddComboBox("Material", ref materialBox,
-                new[] { "Cotton", "Polyester", "Wool", "Linen", "Silk", "Denim", "Leather", "Synthetic", "Mixed" });
-            AddComboBox("Season", ref seasonBox,
-                new[] { "All-season", "Summer", "Winter", "Spring/Autumn" });
-            AddTextBox("Purchase Price", ref priceBox);
+            AddTextBox(Loc.T("Entity.Field.Brand"), ref brandBox);
+            AddTextBox(Loc.T("Entity.Field.Color"), ref colorBox);
+            AddComboBox(Loc.T("Entity.Field.Material"), ref materialBox, Choices.Material);
+            AddComboBox(Loc.T("Entity.Field.Season"), ref seasonBox, Choices.Season);
+            AddTextBox(Loc.T("Entity.Field.PurchasePrice"), ref priceBox);
             AddSizesSection();
         }
 
         private void AddSizesSection()
         {
-            AddLabel("Sizes, Conditions & Quantities");
+            AddLabel(Loc.T("Entity.Field.Sizes"));
             sizesPanel = new StackPanel();
             FormPanel.Children.Add(sizesPanel);
 
             Button addSizeBtn = new Button();
-            addSizeBtn.Content = "+ Add Size";
-            addSizeBtn.Width = 120;
+            addSizeBtn.Content = "+ " + Loc.T("Entity.AddSize");
+            addSizeBtn.MinWidth = 120;
+            addSizeBtn.Padding = new Thickness(12, 0, 12, 0);
             addSizeBtn.Height = 30;
             addSizeBtn.HorizontalAlignment = HorizontalAlignment.Left;
             addSizeBtn.Margin = new Thickness(0, 8, 0, 0);
@@ -233,17 +237,17 @@ namespace TidyMind
                 sizeBox.TextChanged += (s, e) => sq.Size = sizeBox.Text;
 
                 ComboBox condBox = new ComboBox();
-                condBox.Width = 120;
+                condBox.Width = 150;
                 condBox.Height = 32;
                 condBox.Margin = new Thickness(0, 0, 6, 0);
-                foreach (var c in new[] { "New", "Good", "Worn", "To donate", "To throw away" })
-                    condBox.Items.Add(new ComboBoxItem { Content = c });
+                foreach (string c in Choices.Condition)
+                    condBox.Items.Add(ChoiceItem(c));
                 SetComboBox(condBox, sq.Condition);
-                condBox.SelectionChanged += (s, e) =>
-                    sq.Condition = ((ComboBoxItem)condBox.SelectedItem)?.Content.ToString();
+                condBox.SelectionChanged += (s, e) => sq.Condition = GetComboValue(condBox);
 
                 Button minusBtn = new Button();
                 minusBtn.Content = "−";
+                AutomationProperties.SetName(minusBtn, Loc.T("Entity.Size.Less"));
                 minusBtn.Width = 32;
                 minusBtn.Height = 32;
                 minusBtn.Margin = new Thickness(0, 0, 4, 0);
@@ -259,6 +263,7 @@ namespace TidyMind
 
                 Button plusBtn = new Button();
                 plusBtn.Content = "+";
+                AutomationProperties.SetName(plusBtn, Loc.T("Entity.Size.More"));
                 plusBtn.Width = 32;
                 plusBtn.Height = 32;
                 plusBtn.Margin = new Thickness(4, 0, 6, 0);
@@ -266,6 +271,7 @@ namespace TidyMind
 
                 Button removeBtn = new Button();
                 removeBtn.Content = "✕";
+                AutomationProperties.SetName(removeBtn, Loc.T("Entity.Size.Remove"));
                 removeBtn.Width = 32;
                 removeBtn.Height = 32;
                 removeBtn.Background = new SolidColorBrush(
@@ -284,19 +290,19 @@ namespace TidyMind
 
         private void AddImagePicker()
         {
-            AddLabel("Image");
+            AddLabel(Loc.T("Entity.Field.Image"));
             StackPanel row = new StackPanel();
             row.Orientation = Orientation.Horizontal;
             row.Margin = new Thickness(0, 0, 0, 4);
 
             Button pickBtn = new Button();
-            pickBtn.Content = "Choose Image";
+            pickBtn.Content = Loc.T("Entity.ChooseImage");
             pickBtn.Height = 32;
             pickBtn.Padding = new Thickness(12, 0, 12, 0);
             pickBtn.Click += PickImageButton_Click;
 
             imagePathText = new TextBlock();
-            imagePathText.Text = "No image selected";
+            imagePathText.Text = Loc.T("Entity.NoImage");
             imagePathText.Foreground = (Brush)FindResource("TextSub"); // 4.7:1 and up, readable at this size
             imagePathText.FontSize = 11;
             imagePathText.VerticalAlignment = VerticalAlignment.Center;
@@ -349,11 +355,14 @@ namespace TidyMind
             AddLabel(label);
             box = new ComboBox();
             box.Height = 32;
-            foreach (var item in items)
-                box.Items.Add(new ComboBoxItem { Content = item });
+            foreach (string item in items)
+                box.Items.Add(ChoiceItem(item));
             box.SelectedIndex = 0;
             FormPanel.Children.Add(box);
         }
+
+        // A choice shows in the current language and keeps its stored (English) value in Tag.
+        private static ComboBoxItem ChoiceItem(string value) => new ComboBoxItem { Content = Choices.Label(value), Tag = value };
 
         // Shows the stored value exactly: one that isn't among the choices (saved by an older version, or typed into
         // the file) is added as an extra choice, and an empty one stays empty, so saving the item unchanged never
@@ -364,26 +373,27 @@ namespace TidyMind
             if (string.IsNullOrEmpty(value)) { box.SelectedIndex = -1; return; }
             foreach (ComboBoxItem item in box.Items)
             {
-                if (item.Content.ToString() == value)
+                if ((string)item.Tag == value)
                 {
                     box.SelectedItem = item;
                     return;
                 }
             }
 
-            ComboBoxItem kept = new ComboBoxItem { Content = value };
+            ComboBoxItem kept = new ComboBoxItem { Content = value, Tag = value };
             box.Items.Add(kept);
             box.SelectedItem = kept;
         }
 
+        // The stored value of the picked choice, never its on-screen text.
         private string GetComboValue(ComboBox box)
-            => ((ComboBoxItem)box?.SelectedItem)?.Content.ToString();
+            => (string)((ComboBoxItem)box?.SelectedItem)?.Tag;
 
         // Only previewed here; it's copied in when the item is saved (CollectionView).
         private void PickImageButton_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog dialog = new OpenFileDialog();
-            dialog.Filter = "Image files|*.jpg;*.jpeg;*.png;*.bmp;*.gif";
+            dialog.Filter = Loc.T("Entity.ImageFilter");
             if (dialog.ShowDialog() == true)
             {
                 PickedImageFile = dialog.FileName;
@@ -407,7 +417,7 @@ namespace TidyMind
             // A missing or unreadable picture just shows no preview.
             if (!string.IsNullOrEmpty(e.ImagePath))
             {
-                imagePathText.Text = EntityImages.IsLegacyPath(e.ImagePath) ? e.ImagePath : "Current picture";
+                imagePathText.Text = EntityImages.IsLegacyPath(e.ImagePath) ? e.ImagePath : Loc.T("Entity.CurrentImage");
                 imagePreview.Source = EntityImages.Load(e);
             }
 
@@ -454,7 +464,7 @@ namespace TidyMind
 
             if (string.IsNullOrWhiteSpace(nameBox?.Text))
             {
-                MessageBox.Show(EntityTypes.NameLabel(entityType) + " is required.", "Error",
+                Msg.Show(this, Loc.F("Entity.Required", EntityTypes.NameLabel(entityType)), Loc.T("Common.Error"),
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
@@ -463,7 +473,8 @@ namespace TidyMind
             {
                 if (FieldValue(field.Key, field.Value) == null)
                 {
-                    MessageBox.Show(this, field.Key.Label + " needs a number.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Msg.Show(this, Loc.F("Entity.NeedsNumber", field.Key.Label), Loc.T("Common.Error"), MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
                     field.Value.Focus();
                     return;
                 }

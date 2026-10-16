@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TidyMind"
         mc:Ignorable="d"
-        Title="Add Reminder" Height="560" Width="380"
+        Title="{local:Tr Common.AddReminder}" Height="560" Width="380"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BgMain}">
@@ -51,7 +51,7 @@
         <!-- Header -->
         <Border Grid.Row="0" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
                 BorderThickness="0,0,0,1" Padding="20,16">
-            <TextBlock x:Name="HeadingText" Text="Add Reminder" FontSize="18" FontWeight="Bold"
+            <TextBlock x:Name="HeadingText" Text="{local:Tr Common.AddReminder}" FontSize="18" FontWeight="Bold"
                        Foreground="{StaticResource TextMain}"/>
         </Border>
 
@@ -61,7 +61,7 @@
                        FontSize="12" Foreground="{StaticResource TextSub}"
                        TextWrapping="Wrap" Margin="0,0,0,16"/>
 
-            <TextBlock Text="Message" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,0,0,4"/>
+            <TextBlock Text="{local:Tr Reminder.Form.Message}" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,0,0,4"/>
             <TextBox x:Name="MessageInput" Height="80"
                      TextWrapping="Wrap" AcceptsReturn="True"
                      VerticalScrollBarVisibility="Auto"
@@ -69,7 +69,7 @@
                      GotFocus="MessageInput_GotFocus"
                      LostFocus="MessageInput_LostFocus"/>
 
-            <TextBlock Text="Date" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,0,0,4"/>
+            <TextBlock Text="{local:Tr Reminder.Form.Date}" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,0,0,4"/>
             <DatePicker x:Name="ReminderDatePicker" Margin="0,0,0,16"/>
 
             <Grid Margin="0,0,0,16">
@@ -80,17 +80,17 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0">
-                    <TextBlock Text="Hour" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,0,0,4"/>
+                    <TextBlock Text="{local:Tr Reminder.Form.Hour}" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,0,0,4"/>
                     <ComboBox x:Name="HourBox" Height="32"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="2">
-                    <TextBlock Text="Minute" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,0,0,4"/>
+                    <TextBlock Text="{local:Tr Reminder.Form.Minute}" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,0,0,4"/>
                     <ComboBox x:Name="MinuteBox" Height="32"/>
                 </StackPanel>
             </Grid>
 
-            <TextBlock Text="Repeat" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,0,0,4"/>
+            <TextBlock Text="{local:Tr Reminder.Form.Repeat}" Foreground="{StaticResource TextSub}" FontSize="11" Margin="0,0,0,4"/>
             <!-- Items come from ReminderForm.FillRepeatBox -->
             <ComboBox x:Name="RepeatBox" Height="32"/>
         </StackPanel>
@@ -98,8 +98,8 @@
         <!-- Footer -->
         <Border Grid.Row="2" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
                 BorderThickness="0,1,0,0" Padding="20,10">
-            <Button x:Name="SaveButton" Content="Save Reminder"
-                    Width="150" Height="34" HorizontalAlignment="Right"
+            <Button x:Name="SaveButton" Content="{local:Tr Reminder.Form.Save}"
+                    MinWidth="150" Padding="16,0" Height="34" HorizontalAlignment="Right"
                     FontWeight="Bold"
                     Click="SaveButton_Click"/>
         </Border>

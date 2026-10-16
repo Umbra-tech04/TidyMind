@@ -27,6 +27,7 @@ namespace TidyMind
 
         // Its projects or tabs file couldn't be read: shown read-only (ShowUnreadable), and never saved over.
         private bool unreadable;
+        private string unreadableFile, unreadableProblem;
 
         // The search box rebuilds the cards after a short pause in typing, not on every key: rebuilding a big grid per
         // keystroke lags.
@@ -44,6 +45,19 @@ namespace TidyMind
             memory = profile;
             MemoryPageBackground.Attach(Page, BackgroundLayer, profile, saveProfiles);
             TitleText.Text = profile.Name;
+
+            // Counts, cards and the reason a file couldn't be read, in the new language; names are the user's own.
+            Loc.Track(this, () =>
+            {
+                if (unreadable)
+                {
+                    SubtitleText.Text = Loc.T("Project.Kind");
+                    EmptyState.Text = Loc.F("Memory.Unreadable", unreadableFile, unreadableProblem);
+                    return;
+                }
+                tabStrip.Render();
+                RenderProjects();
+            });
             TodoPanel.Load(profile, saveProfiles);
             TodoPanel.MouseWheel += (s, e) => WheelScroll.Forward(e, CardScroll); // the panel itself doesn't scroll
 
@@ -68,7 +82,7 @@ namespace TidyMind
             // Cards sit 24px apart (12px margin each side); the drop line goes in the middle of that gap.
             cardDrag = new DragReorder<Project>(ProjectPanel, Orientation.Horizontal, 24, null, MoveProject);
 
-            tabStrip = new MemoryTabStrip(this, TabStrip, memory, tabs, "project",
+            tabStrip = new MemoryTabStrip(this, TabStrip, memory, tabs, "Tabs.DeleteMove.Projects",
                 tabId => allProjects.Count(p => p.TabId == tabId),
                 (fromTab, toTab) =>
                 {
@@ -97,17 +111,15 @@ namespace TidyMind
         private void ShowUnreadable(string file, string problem)
         {
             unreadable = true;
+            unreadableFile = file;
+            unreadableProblem = problem;
             selection?.ClearSelection();
             ProjectPanel.Children.Clear();
             Toolbar.Visibility = Visibility.Collapsed;
             SelectionBar.Visibility = Visibility.Collapsed;
             TabStrip.Visibility = Visibility.Collapsed;
-            SubtitleText.Text = "PROJECTS";
-            EmptyState.Text = "Couldn't read " + file + ":\n" + problem + "\n\nThe file was left as it is. "
-                + "Fix it or restore it from a backup, then open this memory again.";
-            EmptyState.TextWrapping = TextWrapping.Wrap;
-            EmptyState.TextAlignment = TextAlignment.Center;
-            EmptyState.MaxWidth = 520;
+            SubtitleText.Text = Loc.T("Project.Kind");
+            EmptyState.Text = Loc.F("Memory.Unreadable", file, problem);
             EmptyState.Visibility = Visibility.Visible;
         }
 
@@ -149,7 +161,7 @@ namespace TidyMind
             cardDrag.Clear();
             selection.BeginRender();
 
-            string filter = SearchBox.Text == "Search..." ? "" : SearchBox.Text.Trim();
+            string filter = SearchBox.Text.Trim();
             List<Project> inTab = allProjects.Where(p => p.TabId == tabStrip.ActiveTabId).ToList();
 
             int shown = 0;
@@ -163,11 +175,9 @@ namespace TidyMind
                 shown++;
             }
 
-            SubtitleText.Text = "PROJECTS  ·  " + inTab.Count + (inTab.Count == 1 ? " item" : " items");
+            SubtitleText.Text = Loc.Plural("Project.Subtitle", inTab.Count);
             EmptyState.Visibility = shown == 0 ? Visibility.Visible : Visibility.Collapsed;
-            EmptyState.Text = inTab.Count == 0
-                ? "No projects in this tab yet. Click “+ Add Project” to start."
-                : "No projects match your search.";
+            EmptyState.Text = Loc.T(inTab.Count == 0 ? "Project.Empty" : "Project.NoMatch");
             selection.EndRender(); // what's no longer on screen (other tab, filtered out) drops out of the selection
         }
 
@@ -188,8 +198,7 @@ namespace TidyMind
         // and the grid read back from disk.
         private bool DeleteProjects(IReadOnlyCollection<Project> projects)
         {
-            string what = projects.Count == 1 ? "1 project" : projects.Count + " projects";
-            if (MessageBox.Show("Delete " + what + "? This can't be undone.", "Confirm Delete",
+            if (Msg.Show(Loc.Plural("Project.DeleteMany", projects.Count), Loc.T("Common.ConfirmDelete"),
                     MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
                 return false;
 
@@ -205,27 +214,8 @@ namespace TidyMind
 
         // ---- Search -------------------------------------------------------
 
-        private void SearchBox_GotFocus(object sender, RoutedEventArgs e)
-        {
-            if (SearchBox.Text == "Search...")
-            {
-                SearchBox.Text = "";
-                SearchBox.Foreground = B("#1C1B19");
-            }
-        }
-
-        private void SearchBox_LostFocus(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(SearchBox.Text))
-            {
-                SearchBox.Text = "Search...";
-                SearchBox.Foreground = B("#8A8A87");
-            }
-        }
-
         private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (SearchBox.Text == "Search...") return;
             searchPause.Stop();
             searchPause.Start();
         }
@@ -304,7 +294,7 @@ namespace TidyMind
 
         private void AddProjectButton_Click(object sender, RoutedEventArgs e)
         {
-            string name = InputDialog.Prompt(this, "Add Project", "What's the project called?");
+            string name = InputDialog.Prompt(this, Loc.T("Project.Add"), Loc.T("Project.AddPrompt"));
             if (string.IsNullOrWhiteSpace(name)) return;
 
             allProjects.Add(new Project
@@ -360,11 +350,6 @@ namespace TidyMind
         private static bool IsComplete(Project project)
         {
             return project.Tasks != null && project.Tasks.Count > 0 && project.Tasks.All(t => t.IsDone);
-        }
-
-        private static SolidColorBrush B(string hex)
-        {
-            return new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
         }
     }
 }

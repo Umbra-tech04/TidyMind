@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Windows;
 
 namespace TidyMind
@@ -104,22 +105,22 @@ namespace TidyMind
                 {
                     ZipArchiveEntry? entry = zip.GetEntry(ManifestName);
                     if (entry == null)
-                        return "This file isn't a TidyMind backup (it has no " + ManifestName + ").";
+                        return Loc.F("Backup.Error.NoManifest", ManifestName);
 
                     Manifest? manifest;
                     using (Stream stream = entry.Open())
                         manifest = JsonSerializer.Deserialize<Manifest>(stream);
                     if (manifest == null || manifest.App != "TidyMind")
-                        return "This file isn't a TidyMind backup.";
+                        return Loc.T("Backup.Error.NotBackup");
                     if (manifest.Format > FormatVersion)
-                        return "This backup was made by a newer TidyMind (" + manifest.AppVersion + ") and can't be restored here.";
+                        return Loc.F("Backup.Error.Newer", manifest.AppVersion);
                     return null;
                 }
             }
             catch (Exception e) when (e is InvalidDataException || e is IOException || e is UnauthorizedAccessException
                                       || e is JsonException)
             {
-                return "The file can't be read as a backup: " + e.Message;
+                return Loc.F("Backup.Error.Unreadable", e.Message);
             }
         }
 
@@ -136,7 +137,7 @@ namespace TidyMind
         {
             safetyCopy = null;
             string data = AppPaths.DataFolder;
-            string parent = Path.GetDirectoryName(data) ?? throw new IOException("The data folder has no parent folder.");
+            string parent = Path.GetDirectoryName(data) ?? throw new IOException(Loc.T("Backup.Error.NoParentFolder"));
 
             string unpacked = Path.Combine(parent, "TidyMind.restore-" + Guid.NewGuid().ToString("N"));
             try
@@ -144,12 +145,13 @@ namespace TidyMind
                 Unpack(zipPath, unpacked);
                 Validate(unpacked);
                 KeepLogs(data, unpacked);
+                KeepLanguage(unpacked);
 
                 safetyCopy = UniquePath(Path.Combine(parent, "TidyMind-before-restore-" + DateTime.Now.ToString("yyyy-MM-dd-HHmm")), ".zip");
                 WriteZip(data, safetyCopy);
                 using (ZipArchive check = ZipFile.OpenRead(safetyCopy))
                     if (check.GetEntry(ManifestName) == null)
-                        throw new IOException("The safety copy of the current data couldn't be checked, so nothing was changed.");
+                        throw new IOException(Loc.T("Backup.Error.SafetyCopy"));
 
                 string replaced = Path.Combine(parent, "TidyMind.replaced-" + Guid.NewGuid().ToString("N"));
                 if (Directory.Exists(data))
@@ -191,8 +193,7 @@ namespace TidyMind
                     string destination = Path.GetFullPath(Path.Combine(root, entry.FullName));
                     if (entry.FullName.Contains(':') || Path.IsPathRooted(entry.FullName)
                         || !destination.StartsWith(root, StringComparison.OrdinalIgnoreCase))
-                        throw new InvalidDataException("The backup contains a file that would land outside the data folder ("
-                            + entry.FullName + "), so it wasn't restored.");
+                        throw new InvalidDataException(Loc.F("Backup.Error.OutsideFolder", entry.FullName));
 
                     Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
                     entry.ExtractToFile(destination, overwrite: false);
@@ -204,12 +205,11 @@ namespace TidyMind
         {
             string profilesFile = Path.Combine(folder, "profiles.json");
             if (!File.Exists(profilesFile))
-                throw new InvalidDataException("The backup has no profiles.json, so it wasn't restored.");
+                throw new InvalidDataException(Loc.T("Backup.Error.NoProfiles"));
 
             List<Profile> profiles = Read<List<Profile>>(folder, "profiles.json") ?? new List<Profile>();
             if (profiles.Any(p => p.Id == Guid.Empty))
-                throw new InvalidDataException("The backup's profiles.json has memories without an Id (it's from an older "
-                    + "TidyMind), so it wasn't restored.");
+                throw new InvalidDataException(Loc.T("Backup.Error.OldProfiles"));
 
             foreach (Profile memory in profiles)
             {
@@ -235,8 +235,7 @@ namespace TidyMind
             }
             catch (JsonException e)
             {
-                throw new InvalidDataException("The backup's " + relative + " can't be read (" + e.Message
-                    + "), so it wasn't restored.");
+                throw new InvalidDataException(Loc.F("Backup.Error.FileUnreadable", relative, e.Message));
             }
         }
 
@@ -258,6 +257,42 @@ namespace TidyMind
             }
         }
 
+        // The language is this PC's preference, not data: the restored settings get the current one (or none, if none
+        // was picked), whatever the backup had. Only the unpacked copy is written; a settings file that can't be read
+        // is left alone (it reads as the defaults anyway).
+        private static void KeepLanguage(string unpacked)
+        {
+            const string Key = nameof(AppSettings.Language);
+            string? language = AppSettings.Load().Language;
+            string file = Path.Combine(unpacked, "settings.json");
+            JsonObject settings;
+            try
+            {
+                if (!File.Exists(file))
+                    settings = new JsonObject();
+                else if (JsonNode.Parse(File.ReadAllText(file)) is JsonObject read)
+                    settings = read;
+                else
+                    return;
+            }
+            catch (JsonException)
+            {
+                return;
+            }
+
+            JsonNode? restored = settings[Key];
+            bool same = language == null
+                ? restored == null
+                : restored is JsonValue value && value.TryGetValue(out string? code) && code == language;
+            if (same)
+                return;
+            if (language == null)
+                settings.Remove(Key);
+            else
+                settings[Key] = language;
+            File.WriteAllText(file, settings.ToJsonString());
+        }
+
         private static string UniquePath(string pathWithoutExtension, string extension)
         {
             string path = pathWithoutExtension + extension;
@@ -276,13 +311,13 @@ namespace TidyMind
             try
             {
                 if (exe == null)
-                    throw new IOException("TidyMind's own location couldn't be found.");
+                    throw new IOException(Loc.T("Backup.Error.NoExe"));
                 using (Process.Start(new ProcessStartInfo(exe) { ArgumentList = { "--after-restore", Environment.ProcessId.ToString() } })) { }
             }
             catch (Exception e) when (e is IOException || e is System.ComponentModel.Win32Exception)
             {
-                MessageBox.Show("TidyMind couldn't start again by itself: " + e.Message + "\n\nIt will close now; please "
-                    + "open it again.", "Restore", MessageBoxButton.OK, MessageBoxImage.Information);
+                Msg.Show(Loc.F("Backup.Restart.Failed", e.Message), Loc.T("Settings.Restore.Caption"), MessageBoxButton.OK,
+                    MessageBoxImage.Information);
             }
             Application.Current.Shutdown();
         }

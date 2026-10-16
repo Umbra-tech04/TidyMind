@@ -82,6 +82,12 @@ namespace TidyMind
             }
         }
 
+        public static void CloseAll()
+        {
+            foreach (Overlay overlay in All)
+                Close(overlay);
+        }
+
         // Called for every key press in every window of the app (one class handler in App).
         public static bool TryHandleShortcut(KeyEventArgs e)
         {

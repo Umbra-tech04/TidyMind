@@ -31,7 +31,8 @@ namespace TidyMind
     public class DashboardExpiry
     {
         public string ItemName { get; set; } = "";
-        public string Name { get; set; } = "";
+        public FieldDefinition Field { get; set; } = new FieldDefinition();
+        public string Name => Field.ExpiryName; // in the current language, also for an entry cached before a switch
         public string MemoryName { get; set; } = "";
         public DateTime Date { get; set; }
         public SearchResult Target { get; set; } = new SearchResult();
@@ -58,15 +59,17 @@ namespace TidyMind
             List<Reminder> reminders = ReminderManager.TryLoadReminders();
             List<CalendarDay> days = CalendarService.LoadDays();
 
-            data.TodayItems = ItemsOn(today, reminders, days);
+            HashSet<Guid>? blockIds = DayPlanReminders.BlockIds();
+            data.TodayItems = ItemsOn(today, reminders, days, blockIds);
 
             // Every occurrence: Home shows the week day by day, so a daily reminder belongs on each of its days.
             for (int day = 1; day <= UpcomingDays; day++)
-                data.UpcomingItems.AddRange(ItemsOn(today.AddDays(day), reminders, days));
+                data.UpcomingItems.AddRange(ItemsOn(today.AddDays(day), reminders, days, blockIds));
         }
 
         // The day's note first (it covers the whole day), then its reminders by time.
-        private static List<DashboardAgendaItem> ItemsOn(DateTime date, List<Reminder> reminders, List<CalendarDay> days)
+        private static List<DashboardAgendaItem> ItemsOn(DateTime date, List<Reminder> reminders, List<CalendarDay> days,
+            ISet<Guid>? blockIds)
         {
             List<DashboardAgendaItem> items = new List<DashboardAgendaItem>();
 
@@ -85,8 +88,8 @@ namespace TidyMind
 
             foreach (Reminder reminder in CalendarService.RemindersOn(reminders, date))
             {
-                string title = string.IsNullOrWhiteSpace(reminder.Title) ? null : reminder.Title;
-                string repeat = reminder.RepeatType == RepeatType.Once ? null : reminder.RepeatType.ToString().ToLowerInvariant();
+                string title = string.IsNullOrWhiteSpace(reminder.Title) ? null : DayPlanReminders.ShownTitle(reminder, blockIds);
+                string repeat = reminder.RepeatType == RepeatType.Once ? null : ReminderForm.RepeatLabel(reminder.RepeatType).ToLower(Loc.Culture);
                 items.Add(new DashboardAgendaItem
                 {
                     Kind = AgendaKind.Reminder,
@@ -128,7 +131,7 @@ namespace TidyMind
                         .SelectMany(entity => EntityTypes.Expiries(entity).Select(expiry => new DashboardExpiry
                         {
                             ItemName = entity.Name ?? "",
-                            Name = expiry.Name,
+                            Field = expiry.Field,
                             Date = expiry.Date,
                             Target = new SearchResult { Kind = SearchResultKind.Entity, Title = entity.Name, Profile = profile, ItemId = entity.Id }
                         }))
@@ -145,7 +148,7 @@ namespace TidyMind
                 }
             }
 
-            data.Expiries = data.Expiries.OrderBy(x => x.Date).ThenBy(x => x.ItemName).ToList();
+            data.Expiries = data.Expiries.OrderBy(x => x.Date).ThenBy(x => x.ItemName, Loc.Comparer).ToList();
         }
     }
 }

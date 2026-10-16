@@ -1,0 +1,2200 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Agenda.DeleteNote.Confirm" xml:space="preserve">
+    <value>Delete the note for {0}? The day's color stays.</value>
+  </data>
+  <data name="Agenda.DeleteNote.Failed" xml:space="preserve">
+    <value>Couldn't delete the note: calendar.json can't be read or written.</value>
+  </data>
+  <data name="App.Start.Caption" xml:space="preserve">
+    <value>Couldn't Start</value>
+  </data>
+  <data name="App.Start.Layout" xml:space="preserve">
+    <value>TidyMind couldn't copy your memories into their new folders under:
+{0}
+
+{1}
+
+Your existing data was left untouched. Free up disk space or check the folder's permissions, then start TidyMind again.</value>
+  </data>
+  <data name="App.Start.LegacyCopy" xml:space="preserve">
+    <value>TidyMind couldn't copy your data into its new folder:
+{0}
+
+{1}
+
+Your existing data was left untouched. Free up disk space or check the folder's permissions, then start TidyMind again.</value>
+  </data>
+  <data name="App.Start.Profiles" xml:space="preserve">
+    <value>TidyMind couldn't read its list of memories:
+{0}
+
+{1}
+
+The file wasn't changed. Fix it or restore it from a backup, then start TidyMind again.</value>
+  </data>
+  <data name="Background.ChooseImage" xml:space="preserve">
+    <value>Choose Image…</value>
+  </data>
+  <data name="Background.ChooseImageTitle" xml:space="preserve">
+    <value>Choose an image</value>
+  </data>
+  <data name="Background.CopyFailed" xml:space="preserve">
+    <value>Couldn't copy that image into {0}.</value>
+  </data>
+  <data name="Background.CurrentImage" xml:space="preserve">
+    <value>Current image</value>
+  </data>
+  <data name="Background.Edit" xml:space="preserve">
+    <value>Edit Background</value>
+  </data>
+  <data name="Background.EditTitle" xml:space="preserve">
+    <value>Edit background</value>
+  </data>
+  <data name="Background.Image" xml:space="preserve">
+    <value>IMAGE</value>
+  </data>
+  <data name="Background.ImageFilter" xml:space="preserve">
+    <value>Images (*.jpg;*.jpeg;*.png;*.webp)|*.jpg;*.jpeg;*.png;*.webp</value>
+  </data>
+  <data name="Background.MemorySub" xml:space="preserve">
+    <value>{0}  ·  every tab of this memory</value>
+  </data>
+  <data name="Background.NoImage" xml:space="preserve">
+    <value>No image</value>
+  </data>
+  <data name="Background.NotAnImage" xml:space="preserve">
+    <value>That file can't be opened as an image. Choose a JPG, PNG or WebP picture.</value>
+  </data>
+  <data name="Background.ProfilesNotSaved" xml:space="preserve">
+    <value>Couldn't save: profiles.json can't be written. The background wasn't changed.</value>
+  </data>
+  <data name="Background.Remove" xml:space="preserve">
+    <value>Remove customization</value>
+  </data>
+  <data name="Backup.Error.FileUnreadable" xml:space="preserve">
+    <value>The backup's {0} can't be read ({1}), so it wasn't restored.</value>
+  </data>
+  <data name="Backup.Error.Newer" xml:space="preserve">
+    <value>This backup was made by a newer TidyMind ({0}) and can't be restored here.</value>
+  </data>
+  <data name="Backup.Error.NoExe" xml:space="preserve">
+    <value>TidyMind's own location couldn't be found.</value>
+  </data>
+  <data name="Backup.Error.NoManifest" xml:space="preserve">
+    <value>This file isn't a TidyMind backup (it has no {0}).</value>
+  </data>
+  <data name="Backup.Error.NoParentFolder" xml:space="preserve">
+    <value>The data folder has no parent folder.</value>
+  </data>
+  <data name="Backup.Error.NoProfiles" xml:space="preserve">
+    <value>The backup has no profiles.json, so it wasn't restored.</value>
+  </data>
+  <data name="Backup.Error.NotBackup" xml:space="preserve">
+    <value>This file isn't a TidyMind backup.</value>
+  </data>
+  <data name="Backup.Error.OldProfiles" xml:space="preserve">
+    <value>The backup's profiles.json has memories without an Id (it's from an older TidyMind), so it wasn't restored.</value>
+  </data>
+  <data name="Backup.Error.OutsideFolder" xml:space="preserve">
+    <value>The backup contains a file that would land outside the data folder ({0}), so it wasn't restored.</value>
+  </data>
+  <data name="Backup.Error.SafetyCopy" xml:space="preserve">
+    <value>The safety copy of the current data couldn't be checked, so nothing was changed.</value>
+  </data>
+  <data name="Backup.Error.Unreadable" xml:space="preserve">
+    <value>The file can't be read as a backup: {0}</value>
+  </data>
+  <data name="Backup.Restart.Failed" xml:space="preserve">
+    <value>TidyMind couldn't start again by itself: {0}
+
+It will close now; please open it again.</value>
+  </data>
+  <data name="Calendar.CloseTip" xml:space="preserve">
+    <value>Close  (Esc)</value>
+  </data>
+  <data name="Calendar.Colored" xml:space="preserve">
+    <value>Colored</value>
+  </data>
+  <data name="Calendar.Hint" xml:space="preserve">
+    <value>Click a day for a color, a note or its day plan  ·  right-click to add a reminder</value>
+  </data>
+  <data name="Calendar.InMonth" xml:space="preserve">
+    <value>In {0}</value>
+  </data>
+  <data name="Calendar.NextMonth" xml:space="preserve">
+    <value>Next month</value>
+  </data>
+  <data name="Calendar.NextYear" xml:space="preserve">
+    <value>Next year</value>
+  </data>
+  <data name="Calendar.NothingInMonth" xml:space="preserve">
+    <value>Nothing planned in {0} yet.</value>
+  </data>
+  <data name="Calendar.PlanBlocks.One" xml:space="preserve">
+    <value>Day plan: {0} block</value>
+  </data>
+  <data name="Calendar.PlanBlocks.Other" xml:space="preserve">
+    <value>Day plan: {0} blocks</value>
+  </data>
+  <data name="Calendar.PrevMonth" xml:space="preserve">
+    <value>Previous month</value>
+  </data>
+  <data name="Calendar.PrevYear" xml:space="preserve">
+    <value>Previous year</value>
+  </data>
+  <data name="Calendar.Today" xml:space="preserve">
+    <value>Back to today</value>
+  </data>
+  <data name="Card.CopyWithTasks" xml:space="preserve">
+    <value>Copy with tasks</value>
+  </data>
+  <data name="Card.Customize" xml:space="preserve">
+    <value>Customize Card</value>
+  </data>
+  <data name="Card.CustomizeTitle" xml:space="preserve">
+    <value>Customize card</value>
+  </data>
+  <data name="Card.Next" xml:space="preserve">
+    <value>Next: {0}</value>
+  </data>
+  <data name="Card.NoTasks" xml:space="preserve">
+    <value>No tasks yet</value>
+  </data>
+  <data name="Card.Tasks.One" xml:space="preserve">
+    <value>{0} task</value>
+  </data>
+  <data name="Card.Tasks.Other" xml:space="preserve">
+    <value>{0} tasks</value>
+  </data>
+  <data name="Card.TasksDone.One" xml:space="preserve">
+    <value>{1} of {0} task</value>
+  </data>
+  <data name="Card.TasksDone.Other" xml:space="preserve">
+    <value>{1} of {0} tasks</value>
+  </data>
+  <data name="Choice.Allseason" xml:space="preserve">
+    <value>All-season</value>
+  </data>
+  <data name="Choice.Bicycle" xml:space="preserve">
+    <value>Bicycle</value>
+  </data>
+  <data name="Choice.Car" xml:space="preserve">
+    <value>Car</value>
+  </data>
+  <data name="Choice.Cotton" xml:space="preserve">
+    <value>Cotton</value>
+  </data>
+  <data name="Choice.Denim" xml:space="preserve">
+    <value>Denim</value>
+  </data>
+  <data name="Choice.Good" xml:space="preserve">
+    <value>Good</value>
+  </data>
+  <data name="Choice.Leather" xml:space="preserve">
+    <value>Leather</value>
+  </data>
+  <data name="Choice.Linen" xml:space="preserve">
+    <value>Linen</value>
+  </data>
+  <data name="Choice.Mixed" xml:space="preserve">
+    <value>Mixed</value>
+  </data>
+  <data name="Choice.Motorcycle" xml:space="preserve">
+    <value>Motorcycle</value>
+  </data>
+  <data name="Choice.New" xml:space="preserve">
+    <value>New</value>
+  </data>
+  <data name="Choice.Other" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="Choice.Polyester" xml:space="preserve">
+    <value>Polyester</value>
+  </data>
+  <data name="Choice.Silk" xml:space="preserve">
+    <value>Silk</value>
+  </data>
+  <data name="Choice.SpringAutumn" xml:space="preserve">
+    <value>Spring/Autumn</value>
+  </data>
+  <data name="Choice.Summer" xml:space="preserve">
+    <value>Summer</value>
+  </data>
+  <data name="Choice.Synthetic" xml:space="preserve">
+    <value>Synthetic</value>
+  </data>
+  <data name="Choice.Todonate" xml:space="preserve">
+    <value>To donate</value>
+  </data>
+  <data name="Choice.Tothrowaway" xml:space="preserve">
+    <value>To throw away</value>
+  </data>
+  <data name="Choice.Winter" xml:space="preserve">
+    <value>Winter</value>
+  </data>
+  <data name="Choice.Wool" xml:space="preserve">
+    <value>Wool</value>
+  </data>
+  <data name="Choice.Worn" xml:space="preserve">
+    <value>Worn</value>
+  </data>
+  <data name="Collection.AddItem" xml:space="preserve">
+    <value>Add item</value>
+  </data>
+  <data name="Collection.DeleteMany.One" xml:space="preserve">
+    <value>Delete {0} item? This can't be undone.</value>
+  </data>
+  <data name="Collection.DeleteMany.Other" xml:space="preserve">
+    <value>Delete {0} items? This can't be undone.</value>
+  </data>
+  <data name="Collection.Empty" xml:space="preserve">
+    <value>No items in this tab yet. Click “+ Add item” to start.</value>
+  </data>
+  <data name="Collection.Kind" xml:space="preserve">
+    <value>COLLECTION</value>
+  </data>
+  <data name="Collection.NoMatch" xml:space="preserve">
+    <value>No items match your search.</value>
+  </data>
+  <data name="Collection.PictureFailed" xml:space="preserve">
+    <value>Couldn't copy that image into {0}, so the new picture wasn't added. The rest of the item is saved as usual.</value>
+  </data>
+  <data name="Collection.PictureFailed.Caption" xml:space="preserve">
+    <value>Couldn't Add Picture</value>
+  </data>
+  <data name="Collection.SaveFailed" xml:space="preserve">
+    <value>Couldn't save the items of '{0}': this file can't be written:
+{1}
+
+Your last change wasn't saved.</value>
+  </data>
+  <data name="Collection.Subtitle.One" xml:space="preserve">
+    <value>COLLECTION  ·  {0} item</value>
+  </data>
+  <data name="Collection.Subtitle.Other" xml:space="preserve">
+    <value>COLLECTION  ·  {0} items</value>
+  </data>
+  <data name="Color.Azure" xml:space="preserve">
+    <value>Azure</value>
+  </data>
+  <data name="Color.Brick" xml:space="preserve">
+    <value>Brick</value>
+  </data>
+  <data name="Color.Charcoal" xml:space="preserve">
+    <value>Charcoal</value>
+  </data>
+  <data name="Color.Forest" xml:space="preserve">
+    <value>Forest</value>
+  </data>
+  <data name="Color.Ink" xml:space="preserve">
+    <value>Ink</value>
+  </data>
+  <data name="Color.Ochre" xml:space="preserve">
+    <value>Ochre</value>
+  </data>
+  <data name="Color.Plum" xml:space="preserve">
+    <value>Plum</value>
+  </data>
+  <data name="Color.Rust" xml:space="preserve">
+    <value>Rust</value>
+  </data>
+  <data name="Color.Slate" xml:space="preserve">
+    <value>Slate</value>
+  </data>
+  <data name="Color.Teal" xml:space="preserve">
+    <value>Teal</value>
+  </data>
+  <data name="Common.AddReminder" xml:space="preserve">
+    <value>Add Reminder</value>
+  </data>
+  <data name="Common.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Common.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Common.ConfirmDelete" xml:space="preserve">
+    <value>Confirm Delete</value>
+  </data>
+  <data name="Common.Copy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="Common.CopyName" xml:space="preserve">
+    <value>Copy name</value>
+  </data>
+  <data name="Common.CouldntDelete" xml:space="preserve">
+    <value>Couldn't Delete</value>
+  </data>
+  <data name="Common.CouldntSave" xml:space="preserve">
+    <value>Couldn't Save</value>
+  </data>
+  <data name="Common.Cut" xml:space="preserve">
+    <value>Cut</value>
+  </data>
+  <data name="Common.Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Common.DeleteNamed" xml:space="preserve">
+    <value>Delete '{0}'?</value>
+  </data>
+  <data name="Common.DiscardChanges" xml:space="preserve">
+    <value>Discard changes?</value>
+  </data>
+  <data name="Common.Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Common.Error" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="Common.No" xml:space="preserve">
+    <value>&amp;No</value>
+  </data>
+  <data name="Common.Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Common.Paste" xml:space="preserve">
+    <value>Paste</value>
+  </data>
+  <data name="Common.Rename" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="Common.RenamePrompt" xml:space="preserve">
+    <value>Enter a new name.</value>
+  </data>
+  <data name="Common.Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Common.SaveTip" xml:space="preserve">
+    <value>Save  (Ctrl+Enter)</value>
+  </data>
+  <data name="Common.SearchPlaceholder" xml:space="preserve">
+    <value>Search...</value>
+  </data>
+  <data name="Common.SelectDate" xml:space="preserve">
+    <value>Select a date</value>
+  </data>
+  <data name="Common.Today" xml:space="preserve">
+    <value>Today</value>
+  </data>
+  <data name="Common.Tomorrow" xml:space="preserve">
+    <value>Tomorrow</value>
+  </data>
+  <data name="Common.UnsavedChanges" xml:space="preserve">
+    <value>Unsaved Changes</value>
+  </data>
+  <data name="Common.Yes" xml:space="preserve">
+    <value>&amp;Yes</value>
+  </data>
+  <data name="Common.Yesterday" xml:space="preserve">
+    <value>Yesterday</value>
+  </data>
+  <data name="Day.Clear" xml:space="preserve">
+    <value>Clear day</value>
+  </data>
+  <data name="Day.ClearTip" xml:space="preserve">
+    <value>Removes this day's color, title and note.</value>
+  </data>
+  <data name="Day.Color" xml:space="preserve">
+    <value>COLOR</value>
+  </data>
+  <data name="Day.Note" xml:space="preserve">
+    <value>NOTE</value>
+  </data>
+  <data name="Day.NotePlaceholder" xml:space="preserve">
+    <value>What needs doing…</value>
+  </data>
+  <data name="Day.OpenPlan.One" xml:space="preserve">
+    <value>Open the day plan ({0} block)</value>
+  </data>
+  <data name="Day.OpenPlan.Other" xml:space="preserve">
+    <value>Open the day plan ({0} blocks)</value>
+  </data>
+  <data name="Day.PlanThisDay" xml:space="preserve">
+    <value>Plan this day</value>
+  </data>
+  <data name="Day.SaveFailed" xml:space="preserve">
+    <value>Couldn't save: calendar.json can't be read or written. Your other calendar days were left untouched.</value>
+  </data>
+  <data name="Day.Title" xml:space="preserve">
+    <value>TITLE</value>
+  </data>
+  <data name="Day.TitlePlaceholder" xml:space="preserve">
+    <value>e.g. Car service</value>
+  </data>
+  <data name="Entity.Add.Clothing" xml:space="preserve">
+    <value>Add clothing</value>
+  </data>
+  <data name="Entity.Add.Item" xml:space="preserve">
+    <value>Add item</value>
+  </data>
+  <data name="Entity.Add.Vehicle" xml:space="preserve">
+    <value>Add vehicle</value>
+  </data>
+  <data name="Entity.AddSize" xml:space="preserve">
+    <value>Add Size</value>
+  </data>
+  <data name="Entity.ChooseImage" xml:space="preserve">
+    <value>Choose Image</value>
+  </data>
+  <data name="Entity.Column.Cost" xml:space="preserve">
+    <value>Cost</value>
+  </data>
+  <data name="Entity.Column.Date" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="Entity.Column.Km" xml:space="preserve">
+    <value>Km</value>
+  </data>
+  <data name="Entity.Column.Liters" xml:space="preserve">
+    <value>Liters</value>
+  </data>
+  <data name="Entity.Column.Price" xml:space="preserve">
+    <value>Price</value>
+  </data>
+  <data name="Entity.Column.Where" xml:space="preserve">
+    <value>Where</value>
+  </data>
+  <data name="Entity.Column.Work" xml:space="preserve">
+    <value>What was done</value>
+  </data>
+  <data name="Entity.CurrentImage" xml:space="preserve">
+    <value>Current picture</value>
+  </data>
+  <data name="Entity.Edit.Clothing" xml:space="preserve">
+    <value>Edit clothing</value>
+  </data>
+  <data name="Entity.Edit.Item" xml:space="preserve">
+    <value>Edit item</value>
+  </data>
+  <data name="Entity.Edit.Vehicle" xml:space="preserve">
+    <value>Edit vehicle</value>
+  </data>
+  <data name="Entity.Expiry.Inspection" xml:space="preserve">
+    <value>Inspection</value>
+  </data>
+  <data name="Entity.Expiry.Insurance" xml:space="preserve">
+    <value>Insurance</value>
+  </data>
+  <data name="Entity.ExpiryLine" xml:space="preserve">
+    <value>{0} {1}</value>
+  </data>
+  <data name="Entity.Field.Brand" xml:space="preserve">
+    <value>Brand</value>
+  </data>
+  <data name="Entity.Field.Color" xml:space="preserve">
+    <value>Color</value>
+  </data>
+  <data name="Entity.Field.Image" xml:space="preserve">
+    <value>Image</value>
+  </data>
+  <data name="Entity.Field.Inspection" xml:space="preserve">
+    <value>Inspection expires</value>
+  </data>
+  <data name="Entity.Field.Insurance" xml:space="preserve">
+    <value>Insurance expires</value>
+  </data>
+  <data name="Entity.Field.Kind" xml:space="preserve">
+    <value>Kind</value>
+  </data>
+  <data name="Entity.Field.MakeModel" xml:space="preserve">
+    <value>Make and model</value>
+  </data>
+  <data name="Entity.Field.Material" xml:space="preserve">
+    <value>Material</value>
+  </data>
+  <data name="Entity.Field.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Entity.Field.Notes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="Entity.Field.Odometer" xml:space="preserve">
+    <value>Odometer (km)</value>
+  </data>
+  <data name="Entity.Field.Plate" xml:space="preserve">
+    <value>Plate</value>
+  </data>
+  <data name="Entity.Field.PurchasePrice" xml:space="preserve">
+    <value>Purchase Price</value>
+  </data>
+  <data name="Entity.Field.Season" xml:space="preserve">
+    <value>Season</value>
+  </data>
+  <data name="Entity.Field.Sizes" xml:space="preserve">
+    <value>Sizes, Conditions &amp; Quantities</value>
+  </data>
+  <data name="Entity.Field.Year" xml:space="preserve">
+    <value>Year</value>
+  </data>
+  <data name="Entity.Fuel.Consumption" xml:space="preserve">
+    <value>Consumption: {0:0.0} l/100 km (last two fill-ups)</value>
+  </data>
+  <data name="Entity.ImageFilter" xml:space="preserve">
+    <value>Image files|*.jpg;*.jpeg;*.png;*.bmp;*.gif</value>
+  </data>
+  <data name="Entity.Log.Fuel" xml:space="preserve">
+    <value>Fuel log</value>
+  </data>
+  <data name="Entity.Log.Service" xml:space="preserve">
+    <value>Service log</value>
+  </data>
+  <data name="Entity.NeedsNumber" xml:space="preserve">
+    <value>{0} needs a number.</value>
+  </data>
+  <data name="Entity.NoImage" xml:space="preserve">
+    <value>No image selected</value>
+  </data>
+  <data name="Entity.Required" xml:space="preserve">
+    <value>{0} is required.</value>
+  </data>
+  <data name="Entity.Size.Less" xml:space="preserve">
+    <value>One fewer</value>
+  </data>
+  <data name="Entity.Size.More" xml:space="preserve">
+    <value>One more</value>
+  </data>
+  <data name="Entity.Size.Remove" xml:space="preserve">
+    <value>Remove this size</value>
+  </data>
+  <data name="Entity.SizeCount.One" xml:space="preserve">
+    <value>{0} size</value>
+  </data>
+  <data name="Entity.SizeCount.Other" xml:space="preserve">
+    <value>{0} sizes</value>
+  </data>
+  <data name="Entity.Sizes" xml:space="preserve">
+    <value>Sizes</value>
+  </data>
+  <data name="Entity.Type.Clothing" xml:space="preserve">
+    <value>Clothing</value>
+  </data>
+  <data name="Entity.Type.Vehicle" xml:space="preserve">
+    <value>Vehicle</value>
+  </data>
+  <data name="Entity.WhatToAdd" xml:space="preserve">
+    <value>What do you want to add?</value>
+  </data>
+  <data name="Error.Background" xml:space="preserve">
+    <value>Something went wrong and TidyMind has to close: {0}
+
+Your last change may not have been saved. The details were written to {1}.</value>
+  </data>
+  <data name="Error.Caption" xml:space="preserve">
+    <value>Unexpected Error</value>
+  </data>
+  <data name="Error.KeepRunning" xml:space="preserve">
+    <value>Something went wrong: {0}
+
+TidyMind will keep running, but your last change may not have been saved. The details were written to {1}.</value>
+  </data>
+  <data name="Error.MustClose" xml:space="preserve">
+    <value>Something went wrong: {0}
+
+TidyMind has to close. The details were written to {1}.</value>
+  </data>
+  <data name="Expiry.DaysAgo.One" xml:space="preserve">
+    <value>expired {0} day ago</value>
+  </data>
+  <data name="Expiry.DaysAgo.Other" xml:space="preserve">
+    <value>expired {0} days ago</value>
+  </data>
+  <data name="Expiry.InDays.One" xml:space="preserve">
+    <value>in {0} day</value>
+  </data>
+  <data name="Expiry.InDays.Other" xml:space="preserve">
+    <value>in {0} days</value>
+  </data>
+  <data name="Expiry.Today" xml:space="preserve">
+    <value>expires today</value>
+  </data>
+  <data name="Expiry.Tomorrow" xml:space="preserve">
+    <value>tomorrow</value>
+  </data>
+  <data name="Expiry.Yesterday" xml:space="preserve">
+    <value>expired yesterday</value>
+  </data>
+  <data name="Export.BlockDone" xml:space="preserve">
+    <value>{0} (done)</value>
+  </data>
+  <data name="Export.Caption" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="Export.ChooseFormat" xml:space="preserve">
+    <value>Choose export format</value>
+  </data>
+  <data name="Export.Complete" xml:space="preserve">
+    <value>Export complete.</value>
+  </data>
+  <data name="Export.CutMark" xml:space="preserve">
+    <value>(cut)</value>
+  </data>
+  <data name="Export.Done" xml:space="preserve">
+    <value>{0} (done)</value>
+  </data>
+  <data name="Export.ExcelNote" xml:space="preserve">
+    <value>Native Excel spreadsheet</value>
+  </data>
+  <data name="Export.ExistingKept" xml:space="preserve">
+    <value>The existing file was left unchanged.</value>
+  </data>
+  <data name="Export.Failed" xml:space="preserve">
+    <value>The export couldn't be saved.
+
+{0}</value>
+  </data>
+  <data name="Export.Filter.Excel" xml:space="preserve">
+    <value>Excel files (*.xlsx)|*.xlsx</value>
+  </data>
+  <data name="Export.Filter.Pdf" xml:space="preserve">
+    <value>PDF files (*.pdf)|*.pdf</value>
+  </data>
+  <data name="Export.Filter.Word" xml:space="preserve">
+    <value>Word documents (*.docx)|*.docx</value>
+  </data>
+  <data name="Export.ImagePath" xml:space="preserve">
+    <value>Image Path</value>
+  </data>
+  <data name="Export.Items" xml:space="preserve">
+    <value>Items</value>
+  </data>
+  <data name="Export.Nothing" xml:space="preserve">
+    <value>There are no memories or day plans to export.</value>
+  </data>
+  <data name="Export.Open" xml:space="preserve">
+    <value>{0} (undone)</value>
+  </data>
+  <data name="Export.PdfNote" xml:space="preserve">
+    <value>Printable document with images</value>
+  </data>
+  <data name="Export.Sheet" xml:space="preserve">
+    <value>Sheet</value>
+  </data>
+  <data name="Export.SizeRow" xml:space="preserve">
+    <value>Size {0} - {1} x{2}</value>
+  </data>
+  <data name="Export.Title.All" xml:space="preserve">
+    <value>TidyMind — Export All</value>
+  </data>
+  <data name="Export.Title.Collection" xml:space="preserve">
+    <value>{0} — Collection Export</value>
+  </data>
+  <data name="Export.Title.Project" xml:space="preserve">
+    <value>{0} — Project Export</value>
+  </data>
+  <data name="Export.Unnamed" xml:space="preserve">
+    <value>(unnamed)</value>
+  </data>
+  <data name="Export.WordNote" xml:space="preserve">
+    <value>Formatted document with images</value>
+  </data>
+  <data name="Files.AddFailed" xml:space="preserve">
+    <value>Couldn't add '{0}': it couldn't be read or copied.</value>
+  </data>
+  <data name="Files.AddFailedCaption" xml:space="preserve">
+    <value>Couldn't Add File</value>
+  </data>
+  <data name="Files.AllFilter" xml:space="preserve">
+    <value>All files (*.*)|*.*</value>
+  </data>
+  <data name="Files.AttachCaption" xml:space="preserve">
+    <value>Attach Files</value>
+  </data>
+  <data name="Files.Browse" xml:space="preserve">
+    <value>Browse...</value>
+  </data>
+  <data name="Files.DropHere" xml:space="preserve">
+    <value>Drop files here or</value>
+  </data>
+  <data name="Files.FoldersOnly" xml:space="preserve">
+    <value>Folders can't be attached, only files.</value>
+  </data>
+  <data name="Files.FoldersSkipped" xml:space="preserve">
+    <value>Folders can't be attached, only files. The files were added.</value>
+  </data>
+  <data name="Files.Large" xml:space="preserve">
+    <value>'{0}' is {1}. Copying it takes a while and uses that much disk space. Attach it anyway?</value>
+  </data>
+  <data name="Files.LargeCaption" xml:space="preserve">
+    <value>Large File</value>
+  </data>
+  <data name="Files.Missing" xml:space="preserve">
+    <value>This file is no longer on disk. Remove '{0}' from the project?</value>
+  </data>
+  <data name="Files.MissingCaption" xml:space="preserve">
+    <value>File Missing</value>
+  </data>
+  <data name="Files.NoProgram" xml:space="preserve">
+    <value>Couldn't open '{0}': Windows has no program set up for this kind of file.</value>
+  </data>
+  <data name="Files.NoProgramCaption" xml:space="preserve">
+    <value>Couldn't Open</value>
+  </data>
+  <data name="Files.Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Files.OpenNamed" xml:space="preserve">
+    <value>Open {0}</value>
+  </data>
+  <data name="Files.Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Files.RemoveCaption" xml:space="preserve">
+    <value>Remove File</value>
+  </data>
+  <data name="Files.RemoveConfirm" xml:space="preserve">
+    <value>Remove '{0}' from this project?</value>
+  </data>
+  <data name="Files.RenameTitle" xml:space="preserve">
+    <value>Rename File</value>
+  </data>
+  <data name="Files.SaveCopy" xml:space="preserve">
+    <value>Save a copy as...</value>
+  </data>
+  <data name="Files.SaveCopyFailed" xml:space="preserve">
+    <value>Couldn't save the copy: {0}</value>
+  </data>
+  <data name="Files.ShowInFolder" xml:space="preserve">
+    <value>Show in folder</value>
+  </data>
+  <data name="Files.Size.B" xml:space="preserve">
+    <value>{0} B</value>
+  </data>
+  <data name="Files.Size.GB" xml:space="preserve">
+    <value>{0:0.0} GB</value>
+  </data>
+  <data name="Files.Size.KB" xml:space="preserve">
+    <value>{0:0} KB</value>
+  </data>
+  <data name="Files.Size.MB" xml:space="preserve">
+    <value>{0:0} MB</value>
+  </data>
+  <data name="Files.Size.MBSmall" xml:space="preserve">
+    <value>{0:0.0} MB</value>
+  </data>
+  <data name="Format.Bold" xml:space="preserve">
+    <value>Bold</value>
+  </data>
+  <data name="Format.BoldTip" xml:space="preserve">
+    <value>Bold  (Ctrl+B)</value>
+  </data>
+  <data name="Format.DateTime" xml:space="preserve">
+    <value>yyyy-MM-dd HH:mm</value>
+  </data>
+  <data name="Format.FullDate" xml:space="preserve">
+    <value>dddd, MMMM d, yyyy</value>
+  </data>
+  <data name="Format.Italic" xml:space="preserve">
+    <value>Italic</value>
+  </data>
+  <data name="Format.ItalicTip" xml:space="preserve">
+    <value>Italic  (Ctrl+I)</value>
+  </data>
+  <data name="Format.LongDate" xml:space="preserve">
+    <value>MMMM d, yyyy</value>
+  </data>
+  <data name="Format.ShortDate" xml:space="preserve">
+    <value>MMM d, yyyy</value>
+  </data>
+  <data name="Format.ShortMonthDay" xml:space="preserve">
+    <value>MMM d</value>
+  </data>
+  <data name="Format.ShortWeekdayDate" xml:space="preserve">
+    <value>ddd, MMM d, yyyy</value>
+  </data>
+  <data name="Format.ShortWeekdayDay" xml:space="preserve">
+    <value>ddd d</value>
+  </data>
+  <data name="Format.TextColor" xml:space="preserve">
+    <value>Text color</value>
+  </data>
+  <data name="Format.Underline" xml:space="preserve">
+    <value>Underline</value>
+  </data>
+  <data name="Format.UnderlineTip" xml:space="preserve">
+    <value>Underline  (Ctrl+U)</value>
+  </data>
+  <data name="Format.WeekdayDayMonth" xml:space="preserve">
+    <value>dddd, MMMM d</value>
+  </data>
+  <data name="Format.YearMonth" xml:space="preserve">
+    <value>MMMM yyyy</value>
+  </data>
+  <data name="Greeting.Afternoon.1" xml:space="preserve">
+    <value>Good afternoon.</value>
+  </data>
+  <data name="Greeting.Afternoon.2" xml:space="preserve">
+    <value>Halfway through the day.</value>
+  </data>
+  <data name="Greeting.Afternoon.3" xml:space="preserve">
+    <value>Afternoon. How's it going?</value>
+  </data>
+  <data name="Greeting.Afternoon.4" xml:space="preserve">
+    <value>Midday stretch. Keeping the pace.</value>
+  </data>
+  <data name="Greeting.Afternoon.5" xml:space="preserve">
+    <value>Afternoon break?</value>
+  </data>
+  <data name="Greeting.Evening.1" xml:space="preserve">
+    <value>Good evening.</value>
+  </data>
+  <data name="Greeting.Evening.2" xml:space="preserve">
+    <value>Evening calm.</value>
+  </data>
+  <data name="Greeting.Evening.3" xml:space="preserve">
+    <value>The day's winding down.</value>
+  </data>
+  <data name="Greeting.Evening.4" xml:space="preserve">
+    <value>Evening. What's left for today?</value>
+  </data>
+  <data name="Greeting.Morning.1" xml:space="preserve">
+    <value>Good morning.</value>
+  </data>
+  <data name="Greeting.Morning.2" xml:space="preserve">
+    <value>Early bird today.</value>
+  </data>
+  <data name="Greeting.Morning.3" xml:space="preserve">
+    <value>Morning. Coffee first, then get started?</value>
+  </data>
+  <data name="Greeting.Morning.4" xml:space="preserve">
+    <value>Fresh day, fresh list.</value>
+  </data>
+  <data name="Greeting.Morning.5" xml:space="preserve">
+    <value>Nice morning. Let's ease into it.</value>
+  </data>
+  <data name="Greeting.Night.1" xml:space="preserve">
+    <value>It's late.</value>
+  </data>
+  <data name="Greeting.Night.2" xml:space="preserve">
+    <value>Night shift?</value>
+  </data>
+  <data name="Greeting.Night.3" xml:space="preserve">
+    <value>Quiet hour. Everything okay?</value>
+  </data>
+  <data name="Greeting.Night.4" xml:space="preserve">
+    <value>Still up. That's fine, but mind your sleep too.</value>
+  </data>
+  <data name="Greeting.Night.5" xml:space="preserve">
+    <value>Around midnight. Rest if you can.</value>
+  </data>
+  <data name="Home.Discovery.Hide" xml:space="preserve">
+    <value>Hide</value>
+  </data>
+  <data name="Home.Discovery.Show" xml:space="preserve">
+    <value>Show</value>
+  </data>
+  <data name="Home.Discovery.Title" xml:space="preserve">
+    <value>What can TidyMind do?</value>
+  </data>
+  <data name="Home.Expiries.Coming.One" xml:space="preserve">
+    <value>{0} in the next {1} days</value>
+  </data>
+  <data name="Home.Expiries.Coming.Other" xml:space="preserve">
+    <value>{0} in the next {1} days</value>
+  </data>
+  <data name="Home.Expiries.Pair" xml:space="preserve">
+    <value>{0}, {1}.</value>
+  </data>
+  <data name="Home.Expiries.Past.One" xml:space="preserve">
+    <value>{0} already past</value>
+  </data>
+  <data name="Home.Expiries.Past.Other" xml:space="preserve">
+    <value>{0} already past</value>
+  </data>
+  <data name="Home.Expiries.Single" xml:space="preserve">
+    <value>{0}.</value>
+  </data>
+  <data name="Home.Expiries.Title" xml:space="preserve">
+    <value>Upcoming expiries</value>
+  </data>
+  <data name="Home.Plan.AndMore" xml:space="preserve">
+    <value>and {0} more</value>
+  </data>
+  <data name="Home.Plan.Nothing" xml:space="preserve">
+    <value>Nothing planned.</value>
+  </data>
+  <data name="Home.Plan.NothingMore" xml:space="preserve">
+    <value>Nothing more planned today.</value>
+  </data>
+  <data name="Home.Plan.Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Home.Plan.PlanToday" xml:space="preserve">
+    <value>Plan today</value>
+  </data>
+  <data name="Home.Plan.Title" xml:space="preserve">
+    <value>Today's plan</value>
+  </data>
+  <data name="Home.Plan.Unreadable" xml:space="preserve">
+    <value>Couldn't read the day plan.</value>
+  </data>
+  <data name="Home.Tile.Backgrounds.Text" xml:space="preserve">
+    <value>Give pages and cards a color or a picture.</value>
+  </data>
+  <data name="Home.Tile.Backgrounds.Title" xml:space="preserve">
+    <value>Backgrounds</value>
+  </data>
+  <data name="Home.Tile.Backup.Text" xml:space="preserve">
+    <value>Save all your data to one file, and restore it from there.</value>
+  </data>
+  <data name="Home.Tile.Backup.Title" xml:space="preserve">
+    <value>Backup</value>
+  </data>
+  <data name="Home.Tile.Calendar.Text" xml:space="preserve">
+    <value>Color a day, write a note on it, see your reminders.</value>
+  </data>
+  <data name="Home.Tile.Calendar.Title" xml:space="preserve">
+    <value>Calendar</value>
+  </data>
+  <data name="Home.Tile.Collections.Text" xml:space="preserve">
+    <value>Keep a list of the things you own, like clothes or a car.</value>
+  </data>
+  <data name="Home.Tile.Collections.Title" xml:space="preserve">
+    <value>Collections</value>
+  </data>
+  <data name="Home.Tile.DayPlan.Text" xml:space="preserve">
+    <value>Divide a day into time blocks and tick them off.</value>
+  </data>
+  <data name="Home.Tile.DayPlan.Title" xml:space="preserve">
+    <value>Day Plan</value>
+  </data>
+  <data name="Home.Tile.Export.Text" xml:space="preserve">
+    <value>Save a memory, or all of them, as Excel, Word or PDF.</value>
+  </data>
+  <data name="Home.Tile.Export.Title" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="Home.Tile.Notebook.Text" xml:space="preserve">
+    <value>Write notes on pages you can turn.</value>
+  </data>
+  <data name="Home.Tile.Notebook.Title" xml:space="preserve">
+    <value>Notebook</value>
+  </data>
+  <data name="Home.Tile.Projects.Text" xml:space="preserve">
+    <value>Plan anything with tasks, notes and files.</value>
+  </data>
+  <data name="Home.Tile.Projects.Title" xml:space="preserve">
+    <value>Projects</value>
+  </data>
+  <data name="Home.Tile.QuickNotes.Text" xml:space="preserve">
+    <value>One scratch pad, open from any page with Ctrl+Shift+N.</value>
+  </data>
+  <data name="Home.Tile.QuickNotes.Title" xml:space="preserve">
+    <value>Quick Notes</value>
+  </data>
+  <data name="Home.Tile.Reminders.Text" xml:space="preserve">
+    <value>Get a Windows notification on time, once or repeating.</value>
+  </data>
+  <data name="Home.Tile.Reminders.Title" xml:space="preserve">
+    <value>Reminders</value>
+  </data>
+  <data name="Home.Tile.Search.Text" xml:space="preserve">
+    <value>Find projects, items, files, notes and plans with Ctrl+Shift+F.</value>
+  </data>
+  <data name="Home.Tile.Search.Title" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="Home.Tile.Todos.Text" xml:space="preserve">
+    <value>Keep a to-do list on Home and in each project memory.</value>
+  </data>
+  <data name="Home.Tile.Todos.Title" xml:space="preserve">
+    <value>To-dos</value>
+  </data>
+  <data name="Home.Todo.Title" xml:space="preserve">
+    <value>To-do</value>
+  </data>
+  <data name="Home.Week.NothingToday" xml:space="preserve">
+    <value>Nothing planned for today.</value>
+  </data>
+  <data name="Home.Week.OpenInCalendar" xml:space="preserve">
+    <value>Open in calendar</value>
+  </data>
+  <data name="Home.Week.Title" xml:space="preserve">
+    <value>This week</value>
+  </data>
+  <data name="Input.Create" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="Input.Empty" xml:space="preserve">
+    <value>This can't be empty.</value>
+  </data>
+  <data name="Language.Button.Name" xml:space="preserve">
+    <value>Language: {0}</value>
+  </data>
+  <data name="Language.Button.Tooltip" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Log.AddRow" xml:space="preserve">
+    <value>Add row</value>
+  </data>
+  <data name="Log.AddRowTo" xml:space="preserve">
+    <value>Add row to {0}</value>
+  </data>
+  <data name="Log.DeleteConfirm" xml:space="preserve">
+    <value>Delete this row?</value>
+  </data>
+  <data name="Log.DeleteRow" xml:space="preserve">
+    <value>Delete row</value>
+  </data>
+  <data name="Log.Empty" xml:space="preserve">
+    <value>No entries yet.</value>
+  </data>
+  <data name="Log.NeedsDate" xml:space="preserve">
+    <value>{0} needs a date, like 2026-10-13.</value>
+  </data>
+  <data name="Log.NeedsNumber" xml:space="preserve">
+    <value>{0} needs a number, like 1250 or 6.5.</value>
+  </data>
+  <data name="Log.SortBy" xml:space="preserve">
+    <value>Sort by {0}</value>
+  </data>
+  <data name="Main.Corner.Calendar" xml:space="preserve">
+    <value>Calendar  (Ctrl+Shift+C)</value>
+  </data>
+  <data name="Main.Corner.Help" xml:space="preserve">
+    <value>Shortcuts</value>
+  </data>
+  <data name="Main.Corner.QuickNotes" xml:space="preserve">
+    <value>Quick Notes  (Ctrl+Shift+N)</value>
+  </data>
+  <data name="Main.Corner.Reminders" xml:space="preserve">
+    <value>Reminders  (Ctrl+Shift+R)</value>
+  </data>
+  <data name="Main.Help.Calendar" xml:space="preserve">
+    <value>Calendar</value>
+  </data>
+  <data name="Main.Help.DayPlan" xml:space="preserve">
+    <value>Day Plan in the sidebar divides a day into time blocks; any day's plan opens from the calendar.</value>
+  </data>
+  <data name="Main.Help.QuickNotes" xml:space="preserve">
+    <value>Quick Notes</value>
+  </data>
+  <data name="Main.Help.Reminders" xml:space="preserve">
+    <value>Reminders</value>
+  </data>
+  <data name="Main.Help.Search" xml:space="preserve">
+    <value>Search everything</value>
+  </data>
+  <data name="Main.Help.Title" xml:space="preserve">
+    <value>Keyboard Shortcuts</value>
+  </data>
+  <data name="Main.NewCollection" xml:space="preserve">
+    <value>New Collection</value>
+  </data>
+  <data name="Main.NewProject" xml:space="preserve">
+    <value>New Project</value>
+  </data>
+  <data name="Memory.CollectionNameTaken" xml:space="preserve">
+    <value>A collection with that name already exists.</value>
+  </data>
+  <data name="Memory.Delete.Confirm" xml:space="preserve">
+    <value>Delete '{0}'? This will delete all its data.</value>
+  </data>
+  <data name="Memory.Menu.Export" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="Memory.New.Caption" xml:space="preserve">
+    <value>New Memory</value>
+  </data>
+  <data name="Memory.New.CollectionPrompt" xml:space="preserve">
+    <value>Give your new collection a name.</value>
+  </data>
+  <data name="Memory.New.ProjectPrompt" xml:space="preserve">
+    <value>Give your new project a name.</value>
+  </data>
+  <data name="Memory.NotSaved" xml:space="preserve">
+    <value>Couldn't save the list of memories: this file can't be written:
+{0}
+
+{1}</value>
+  </data>
+  <data name="Memory.NotSaved.CollectionNotAdded" xml:space="preserve">
+    <value>The new collection wasn't added.</value>
+  </data>
+  <data name="Memory.NotSaved.NameUnchanged" xml:space="preserve">
+    <value>The name wasn't changed.</value>
+  </data>
+  <data name="Memory.NotSaved.NothingDeleted" xml:space="preserve">
+    <value>Nothing was deleted.</value>
+  </data>
+  <data name="Memory.NotSaved.Order" xml:space="preserve">
+    <value>The new order will be lost when TidyMind closes.</value>
+  </data>
+  <data name="Memory.NotSaved.ProjectNotAdded" xml:space="preserve">
+    <value>The new project wasn't added.</value>
+  </data>
+  <data name="Memory.ProjectNameTaken" xml:space="preserve">
+    <value>A project with that name already exists.</value>
+  </data>
+  <data name="Memory.Rename.Caption" xml:space="preserve">
+    <value>Rename Memory</value>
+  </data>
+  <data name="Memory.Rename.CollectionTitle" xml:space="preserve">
+    <value>Rename Collection</value>
+  </data>
+  <data name="Memory.Rename.ProjectTitle" xml:space="preserve">
+    <value>Rename Project</value>
+  </data>
+  <data name="Memory.Unreadable" xml:space="preserve">
+    <value>Couldn't read {0}:
+{1}
+
+The file was left as it is. Fix it or restore it from a backup, then open this memory again.</value>
+  </data>
+  <data name="Migration.CopyFailed" xml:space="preserve">
+    <value>{0} didn't copy correctly.</value>
+  </data>
+  <data name="Migration.MarkerFailed" xml:space="preserve">
+    <value>Couldn't write {0}.</value>
+  </data>
+  <data name="Migration.ProfilesFailed" xml:space="preserve">
+    <value>profiles.json couldn't be written.</value>
+  </data>
+  <data name="Nav.Collections" xml:space="preserve">
+    <value>Collections</value>
+  </data>
+  <data name="Nav.DayPlan" xml:space="preserve">
+    <value>Day Plan</value>
+  </data>
+  <data name="Nav.Home" xml:space="preserve">
+    <value>Home</value>
+  </data>
+  <data name="Nav.NoCollections" xml:space="preserve">
+    <value>No collections yet</value>
+  </data>
+  <data name="Nav.NoProjects" xml:space="preserve">
+    <value>No projects yet</value>
+  </data>
+  <data name="Nav.Projects" xml:space="preserve">
+    <value>Projects</value>
+  </data>
+  <data name="Notes.Lost" xml:space="preserve">
+    <value>Couldn't save your notes anywhere: neither quicknotes.txt nor a separate file could be written.</value>
+  </data>
+  <data name="Notes.Rescued" xml:space="preserve">
+    <value>Couldn't save your notes to quicknotes.txt, so they were saved here instead:
+{0}</value>
+  </data>
+  <data name="Notes.SaveFailed" xml:space="preserve">
+    <value>Couldn't save: quicknotes.txt can't be written. Your notes are still here and will be saved as soon as it works again.</value>
+  </data>
+  <data name="Notes.SaveFailedOnClose" xml:space="preserve">
+    <value>Couldn't save your notes: this file can't be written:
+{0}
+
+The window stays open so nothing is lost. Close it again once the file can be written.</value>
+  </data>
+  <data name="Notes.Unreadable" xml:space="preserve">
+    <value>Couldn't read quicknotes.txt: {0}
+
+The file was left as it is. Close this window and open it again once the file can be read.</value>
+  </data>
+  <data name="Plan.AddBlock" xml:space="preserve">
+    <value>Add block</value>
+  </data>
+  <data name="Plan.Block.Moved" xml:space="preserve">
+    <value>The block was moved.</value>
+  </data>
+  <data name="Plan.Block.NotChanged" xml:space="preserve">
+    <value>The block wasn't changed.</value>
+  </data>
+  <data name="Plan.Block.NotChangedEither" xml:space="preserve">
+    <value>The block wasn't changed either.</value>
+  </data>
+  <data name="Plan.Block.NotDeleted" xml:space="preserve">
+    <value>The block wasn't deleted.</value>
+  </data>
+  <data name="Plan.Block.NotMoved" xml:space="preserve">
+    <value>The block wasn't moved.</value>
+  </data>
+  <data name="Plan.Block.NotSaved" xml:space="preserve">
+    <value>The block wasn't saved.</value>
+  </data>
+  <data name="Plan.Block.Saved" xml:space="preserve">
+    <value>The block was saved.</value>
+  </data>
+  <data name="Plan.BlockName" xml:space="preserve">
+    <value>{0}, {1}</value>
+  </data>
+  <data name="Plan.BlockNameDone" xml:space="preserve">
+    <value>{0}, {1}, done</value>
+  </data>
+  <data name="Plan.Delete.Confirm" xml:space="preserve">
+    <value>Delete '{0}' ({1}) from the plan?</value>
+  </data>
+  <data name="Plan.Delete.Failed" xml:space="preserve">
+    <value>Couldn't delete the block: this file can't be read or written:
+{0}</value>
+  </data>
+  <data name="Plan.Delete.ReminderRemoved" xml:space="preserve">
+    <value>Its reminder was removed.</value>
+  </data>
+  <data name="Plan.Detail.Overlaps" xml:space="preserve">
+    <value>Overlaps another block</value>
+  </data>
+  <data name="Plan.Detail.Reminder" xml:space="preserve">
+    <value>Reminder: {0}</value>
+  </data>
+  <data name="Plan.Detail.Todo" xml:space="preserve">
+    <value>To-do: {0}  ·  {1}</value>
+  </data>
+  <data name="Plan.Detail.TodoMissing" xml:space="preserve">
+    <value>Its to-do can't be found</value>
+  </data>
+  <data name="Plan.Dialog.DayAndTime" xml:space="preserve">
+    <value>DAY AND TIME</value>
+  </data>
+  <data name="Plan.Dialog.Edit" xml:space="preserve">
+    <value>Edit block</value>
+  </data>
+  <data name="Plan.Dialog.EditWindow" xml:space="preserve">
+    <value>Edit Block</value>
+  </data>
+  <data name="Plan.Dialog.EndHour" xml:space="preserve">
+    <value>End hour</value>
+  </data>
+  <data name="Plan.Dialog.EndMinute" xml:space="preserve">
+    <value>End minute</value>
+  </data>
+  <data name="Plan.Dialog.New" xml:space="preserve">
+    <value>New block</value>
+  </data>
+  <data name="Plan.Dialog.NewWindow" xml:space="preserve">
+    <value>New Block</value>
+  </data>
+  <data name="Plan.Dialog.NotLinked" xml:space="preserve">
+    <value>Not linked</value>
+  </data>
+  <data name="Plan.Dialog.Notes" xml:space="preserve">
+    <value>NOTES</value>
+  </data>
+  <data name="Plan.Dialog.NotesPlaceholder" xml:space="preserve">
+    <value>Anything to remember…</value>
+  </data>
+  <data name="Plan.Dialog.RemindMe" xml:space="preserve">
+    <value>Remind me</value>
+  </data>
+  <data name="Plan.Dialog.Reminder" xml:space="preserve">
+    <value>REMINDER</value>
+  </data>
+  <data name="Plan.Dialog.StartHour" xml:space="preserve">
+    <value>Start hour</value>
+  </data>
+  <data name="Plan.Dialog.StartMinute" xml:space="preserve">
+    <value>Start minute</value>
+  </data>
+  <data name="Plan.Dialog.TitlePlaceholder" xml:space="preserve">
+    <value>e.g. Math homework</value>
+  </data>
+  <data name="Plan.Dialog.Todo" xml:space="preserve">
+    <value>TO-DO</value>
+  </data>
+  <data name="Plan.Done" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="Plan.Duration.Hours" xml:space="preserve">
+    <value>{0} h</value>
+  </data>
+  <data name="Plan.Duration.HoursMinutes" xml:space="preserve">
+    <value>{0} h {1} min</value>
+  </data>
+  <data name="Plan.Duration.Minutes" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="Plan.Lead.AtStart" xml:space="preserve">
+    <value>At the start</value>
+  </data>
+  <data name="Plan.Lead.HourBefore" xml:space="preserve">
+    <value>1 hour before</value>
+  </data>
+  <data name="Plan.Lead.MinutesBefore.One" xml:space="preserve">
+    <value>{0} minute before</value>
+  </data>
+  <data name="Plan.Lead.MinutesBefore.Other" xml:space="preserve">
+    <value>{0} minutes before</value>
+  </data>
+  <data name="Plan.List" xml:space="preserve">
+    <value>List</value>
+  </data>
+  <data name="Plan.List.Empty" xml:space="preserve">
+    <value>Nothing planned for this day yet.</value>
+  </data>
+  <data name="Plan.List.Free" xml:space="preserve">
+    <value>Free  {0}–{1}</value>
+  </data>
+  <data name="Plan.Mark.Linked" xml:space="preserve">
+    <value>Linked to a to-do</value>
+  </data>
+  <data name="Plan.Mark.Reminder" xml:space="preserve">
+    <value>Reminder</value>
+  </data>
+  <data name="Plan.MarkDone" xml:space="preserve">
+    <value>Mark as done</value>
+  </data>
+  <data name="Plan.MarkNotDone" xml:space="preserve">
+    <value>Mark as not done</value>
+  </data>
+  <data name="Plan.Name" xml:space="preserve">
+    <value>Day plan</value>
+  </data>
+  <data name="Plan.NextDay" xml:space="preserve">
+    <value>Next day</value>
+  </data>
+  <data name="Plan.Now" xml:space="preserve">
+    <value>Now</value>
+  </data>
+  <data name="Plan.PrevDay" xml:space="preserve">
+    <value>Previous day</value>
+  </data>
+  <data name="Plan.Problem.Day" xml:space="preserve">
+    <value>Please pick a day.</value>
+  </data>
+  <data name="Plan.Problem.DayCaption" xml:space="preserve">
+    <value>Missing Day</value>
+  </data>
+  <data name="Plan.Problem.EndAfterStart" xml:space="preserve">
+    <value>A block has to end after it starts.</value>
+  </data>
+  <data name="Plan.Problem.MinLength.One" xml:space="preserve">
+    <value>A block has to be at least {0} minute long.</value>
+  </data>
+  <data name="Plan.Problem.MinLength.Other" xml:space="preserve">
+    <value>A block has to be at least {0} minutes long.</value>
+  </data>
+  <data name="Plan.Problem.ReminderPast" xml:space="preserve">
+    <value>That reminder time has already passed. Pick a later start or a shorter lead, or untick Remind me.</value>
+  </data>
+  <data name="Plan.Problem.TimesCaption" xml:space="preserve">
+    <value>Check the Times</value>
+  </data>
+  <data name="Plan.Problem.Title" xml:space="preserve">
+    <value>Please enter a title.</value>
+  </data>
+  <data name="Plan.Problem.TitleCaption" xml:space="preserve">
+    <value>Missing Title</value>
+  </data>
+  <data name="Plan.Problem.WithinDay" xml:space="preserve">
+    <value>A block has to stay within its day (00:00 to 24:00).</value>
+  </data>
+  <data name="Plan.Reminder.Failed" xml:space="preserve">
+    <value>Its reminder couldn't be changed: reminders.json can't be read or written, or Windows Task Scheduler didn't accept the change.</value>
+  </data>
+  <data name="Plan.Reminder.Removed" xml:space="preserve">
+    <value>Its reminder was removed: that time has already passed.</value>
+  </data>
+  <data name="Plan.SaveFailed" xml:space="preserve">
+    <value>Couldn't save the day plan: this file can't be read or written:
+{0}
+
+{1}</value>
+  </data>
+  <data name="Plan.Summary.Blocks.One" xml:space="preserve">
+    <value>{0} block</value>
+  </data>
+  <data name="Plan.Summary.Blocks.Other" xml:space="preserve">
+    <value>{0} blocks</value>
+  </data>
+  <data name="Plan.Summary.Done.One" xml:space="preserve">
+    <value>{0} done</value>
+  </data>
+  <data name="Plan.Summary.Done.Other" xml:space="preserve">
+    <value>{0} done</value>
+  </data>
+  <data name="Plan.Summary.Empty" xml:space="preserve">
+    <value>Nothing planned yet: drag across the timeline, or use Add block.</value>
+  </data>
+  <data name="Plan.Summary.Overlapping.One" xml:space="preserve">
+    <value>{0} overlapping</value>
+  </data>
+  <data name="Plan.Summary.Overlapping.Other" xml:space="preserve">
+    <value>{0} overlapping</value>
+  </data>
+  <data name="Plan.Summary.Planned" xml:space="preserve">
+    <value>{0} planned</value>
+  </data>
+  <data name="Plan.TimeDone" xml:space="preserve">
+    <value>{0}  ·  done</value>
+  </data>
+  <data name="Plan.Timeline" xml:space="preserve">
+    <value>Timeline</value>
+  </data>
+  <data name="Plan.Todo.Add" xml:space="preserve">
+    <value>Add to plan</value>
+  </data>
+  <data name="Plan.Todo.AddName" xml:space="preserve">
+    <value>Add {0} to the plan</value>
+  </data>
+  <data name="Plan.Todo.CantChange" xml:space="preserve">
+    <value>Couldn't change the to-do '{0}': its list can't be read or written.</value>
+  </data>
+  <data name="Plan.Todo.DragTip" xml:space="preserve">
+    <value>Drag onto the timeline to plan it</value>
+  </data>
+  <data name="Plan.Todo.From" xml:space="preserve">
+    <value>From {0}</value>
+  </data>
+  <data name="Plan.Todo.NotAdded" xml:space="preserve">
+    <value>The to-do wasn't added to the plan.</value>
+  </data>
+  <data name="Plan.Todos" xml:space="preserve">
+    <value>To-dos</value>
+  </data>
+  <data name="Plan.Todos.None" xml:space="preserve">
+    <value>No open to-dos for this day.</value>
+  </data>
+  <data name="Plan.Todos.Unusable" xml:space="preserve">
+    <value>The to-do list of {0} can't be read or written.</value>
+  </data>
+  <data name="Plan.TodosHint" xml:space="preserve">
+    <value>Not on this day's plan yet. Drag one onto the timeline, or press + to add it.</value>
+  </data>
+  <data name="Plan.Unreadable" xml:space="preserve">
+    <value>Couldn't read the day plan:
+{0}
+
+It wasn't changed. Fix or remove that file to plan days again; until then nothing here can be changed.</value>
+  </data>
+  <data name="Project.Add" xml:space="preserve">
+    <value>Add Project</value>
+  </data>
+  <data name="Project.AddPrompt" xml:space="preserve">
+    <value>What's the project called?</value>
+  </data>
+  <data name="Project.DeleteMany.One" xml:space="preserve">
+    <value>Delete {0} project? This can't be undone.</value>
+  </data>
+  <data name="Project.DeleteMany.Other" xml:space="preserve">
+    <value>Delete {0} projects? This can't be undone.</value>
+  </data>
+  <data name="Project.Empty" xml:space="preserve">
+    <value>No projects in this tab yet. Click “+ Add Project” to start.</value>
+  </data>
+  <data name="Project.Kind" xml:space="preserve">
+    <value>PROJECTS</value>
+  </data>
+  <data name="Project.NoMatch" xml:space="preserve">
+    <value>No projects match your search.</value>
+  </data>
+  <data name="Project.SaveFailed" xml:space="preserve">
+    <value>Couldn't save the projects of '{0}': this file can't be written:
+{1}
+
+Your last change wasn't saved.</value>
+  </data>
+  <data name="Project.Subtitle.One" xml:space="preserve">
+    <value>PROJECTS  ·  {0} item</value>
+  </data>
+  <data name="Project.Subtitle.Other" xml:space="preserve">
+    <value>PROJECTS  ·  {0} items</value>
+  </data>
+  <data name="ProjectWindow.AddTask" xml:space="preserve">
+    <value>Add Task</value>
+  </data>
+  <data name="ProjectWindow.AllPages" xml:space="preserve">
+    <value>All pages</value>
+  </data>
+  <data name="ProjectWindow.ClearPage" xml:space="preserve">
+    <value>Clear page</value>
+  </data>
+  <data name="ProjectWindow.ClearPageCaption" xml:space="preserve">
+    <value>Confirm Clear</value>
+  </data>
+  <data name="ProjectWindow.ClearPageConfirm" xml:space="preserve">
+    <value>Clear this page and everything written on it?</value>
+  </data>
+  <data name="ProjectWindow.DeletePage" xml:space="preserve">
+    <value>Delete page</value>
+  </data>
+  <data name="ProjectWindow.DeletePageConfirm" xml:space="preserve">
+    <value>Delete page {0} and everything written on it?</value>
+  </data>
+  <data name="ProjectWindow.Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="ProjectWindow.EmptyPage" xml:space="preserve">
+    <value>(empty)</value>
+  </data>
+  <data name="ProjectWindow.Files" xml:space="preserve">
+    <value>Files</value>
+  </data>
+  <data name="ProjectWindow.Name" xml:space="preserve">
+    <value>Project Name</value>
+  </data>
+  <data name="ProjectWindow.NameRequired" xml:space="preserve">
+    <value>A project needs a name.</value>
+  </data>
+  <data name="ProjectWindow.NextPage" xml:space="preserve">
+    <value>Next page  (Ctrl+PageDown); on the last page, a new page</value>
+  </data>
+  <data name="ProjectWindow.NoTasks" xml:space="preserve">
+    <value>No tasks yet. Add the first one above.</value>
+  </data>
+  <data name="ProjectWindow.Notes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="ProjectWindow.NotesPlaceholder" xml:space="preserve">
+    <value>Start writing...</value>
+  </data>
+  <data name="ProjectWindow.PrevPage" xml:space="preserve">
+    <value>Previous page  (Ctrl+PageUp)</value>
+  </data>
+  <data name="ProjectWindow.RenameTask" xml:space="preserve">
+    <value>Rename Task</value>
+  </data>
+  <data name="ProjectWindow.RenameTaskPrompt" xml:space="preserve">
+    <value>Enter a new name for this task.</value>
+  </data>
+  <data name="ProjectWindow.StillCopying" xml:space="preserve">
+    <value>Files are still being added. Stop adding them and close?</value>
+  </data>
+  <data name="ProjectWindow.StillCopyingCaption" xml:space="preserve">
+    <value>Files Still Copying</value>
+  </data>
+  <data name="ProjectWindow.TaskHint" xml:space="preserve">
+    <value>Right-click a task for more (copy its text).</value>
+  </data>
+  <data name="ProjectWindow.TaskPlaceholder" xml:space="preserve">
+    <value>Add a task…</value>
+  </data>
+  <data name="ProjectWindow.Tasks" xml:space="preserve">
+    <value>Tasks</value>
+  </data>
+  <data name="ProjectWindow.Title" xml:space="preserve">
+    <value>Project Details</value>
+  </data>
+  <data name="Reminder.DeleteConfirm" xml:space="preserve">
+    <value>Delete this reminder?</value>
+  </data>
+  <data name="Reminder.DeleteFailed" xml:space="preserve">
+    <value>Couldn't delete the reminder: reminders.json can't be read or written, or Windows Task Scheduler didn't accept the change.</value>
+  </data>
+  <data name="Reminder.Form.Date" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="Reminder.Form.EditTitle" xml:space="preserve">
+    <value>Edit Reminder</value>
+  </data>
+  <data name="Reminder.Form.For" xml:space="preserve">
+    <value>Reminder for: {0}</value>
+  </data>
+  <data name="Reminder.Form.General" xml:space="preserve">
+    <value>General reminder (not attached to anything)</value>
+  </data>
+  <data name="Reminder.Form.Hour" xml:space="preserve">
+    <value>Hour</value>
+  </data>
+  <data name="Reminder.Form.Message" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="Reminder.Form.Minute" xml:space="preserve">
+    <value>Minute</value>
+  </data>
+  <data name="Reminder.Form.Placeholder" xml:space="preserve">
+    <value>What should I remind you about?</value>
+  </data>
+  <data name="Reminder.Form.Repeat" xml:space="preserve">
+    <value>Repeat</value>
+  </data>
+  <data name="Reminder.Form.Save" xml:space="preserve">
+    <value>Save Reminder</value>
+  </data>
+  <data name="Reminder.Form.SaveChanges" xml:space="preserve">
+    <value>Save Changes</value>
+  </data>
+  <data name="Reminder.Problem.Date" xml:space="preserve">
+    <value>Please pick a date.</value>
+  </data>
+  <data name="Reminder.Problem.DateTitle" xml:space="preserve">
+    <value>Missing Date</value>
+  </data>
+  <data name="Reminder.Problem.Message" xml:space="preserve">
+    <value>Please enter a reminder message.</value>
+  </data>
+  <data name="Reminder.Problem.MessageTitle" xml:space="preserve">
+    <value>Missing Message</value>
+  </data>
+  <data name="Reminder.Problem.Past" xml:space="preserve">
+    <value>That time has already passed. Please pick a time in the future.</value>
+  </data>
+  <data name="Reminder.Problem.PastTitle" xml:space="preserve">
+    <value>Time in the Past</value>
+  </data>
+  <data name="Reminder.Problem.Time" xml:space="preserve">
+    <value>Please pick an hour and a minute.</value>
+  </data>
+  <data name="Reminder.Problem.TimeTitle" xml:space="preserve">
+    <value>Missing Time</value>
+  </data>
+  <data name="Reminder.SaveFailed" xml:space="preserve">
+    <value>Couldn't save the reminder: reminders.json can't be read or written, or Windows Task Scheduler didn't accept it.</value>
+  </data>
+  <data name="Reminder.Toast.Title" xml:space="preserve">
+    <value>Reminder</value>
+  </data>
+  <data name="Reminder.Toast.TitleFor" xml:space="preserve">
+    <value>Reminder: {0}</value>
+  </data>
+  <data name="Reminders.Empty" xml:space="preserve">
+    <value>No reminders yet.</value>
+  </data>
+  <data name="Reminders.For" xml:space="preserve">
+    <value>For: {0}</value>
+  </data>
+  <data name="Reminders.Unreadable" xml:space="preserve">
+    <value>Couldn't read reminders.json: {0}
+
+The file was left as it is. Fix it or restore it from a backup to see and add reminders.</value>
+  </data>
+  <data name="Repeat.Daily" xml:space="preserve">
+    <value>Daily</value>
+  </data>
+  <data name="Repeat.Monthly" xml:space="preserve">
+    <value>Monthly</value>
+  </data>
+  <data name="Repeat.Once" xml:space="preserve">
+    <value>Once</value>
+  </data>
+  <data name="Repeat.Weekly" xml:space="preserve">
+    <value>Weekly</value>
+  </data>
+  <data name="Repeat.Yearly" xml:space="preserve">
+    <value>Yearly</value>
+  </data>
+  <data name="Search.CollectionMemory" xml:space="preserve">
+    <value>Collection memory</value>
+  </data>
+  <data name="Search.Keys" xml:space="preserve">
+    <value>↑ ↓  to move    ·    Enter  to open    ·    Esc  to close</value>
+  </data>
+  <data name="Search.Kind.File" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="Search.Kind.Item" xml:space="preserve">
+    <value>Item</value>
+  </data>
+  <data name="Search.Kind.Memory" xml:space="preserve">
+    <value>Memory</value>
+  </data>
+  <data name="Search.Kind.Note" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="Search.Kind.Plan" xml:space="preserve">
+    <value>Plan</value>
+  </data>
+  <data name="Search.Kind.Project" xml:space="preserve">
+    <value>Project</value>
+  </data>
+  <data name="Search.NoMatch" xml:space="preserve">
+    <value>Nothing matches “{0}”.</value>
+  </data>
+  <data name="Search.Page" xml:space="preserve">
+    <value>Page {0}</value>
+  </data>
+  <data name="Search.Placeholder" xml:space="preserve">
+    <value>Search memories, projects and items…</value>
+  </data>
+  <data name="Search.ProjectMemory" xml:space="preserve">
+    <value>Project memory</value>
+  </data>
+  <data name="Selection.Clear" xml:space="preserve">
+    <value>Clear selection</value>
+  </data>
+  <data name="Selection.ClearTip" xml:space="preserve">
+    <value>Clear the selection  (Esc)</value>
+  </data>
+  <data name="Selection.Count" xml:space="preserve">
+    <value>{0} selected</value>
+  </data>
+  <data name="Selection.DeleteSelected" xml:space="preserve">
+    <value>Delete {0} selected</value>
+  </data>
+  <data name="Settings.Backup.Button" xml:space="preserve">
+    <value>Back up…</value>
+  </data>
+  <data name="Settings.Backup.Caption" xml:space="preserve">
+    <value>Backup</value>
+  </data>
+  <data name="Settings.Backup.Failed" xml:space="preserve">
+    <value>The backup couldn't be saved.
+
+{0}</value>
+  </data>
+  <data name="Settings.Backup.FileName" xml:space="preserve">
+    <value>TidyMind-backup-{0}.zip</value>
+  </data>
+  <data name="Settings.Backup.Filter" xml:space="preserve">
+    <value>ZIP files (*.zip)|*.zip</value>
+  </data>
+  <data name="Settings.Backup.Note" xml:space="preserve">
+    <value>Saves everything TidyMind stores to one ZIP file.</value>
+  </data>
+  <data name="Settings.Backup.Saved" xml:space="preserve">
+    <value>Backup saved: {0}</value>
+  </data>
+  <data name="Settings.Backup.Title" xml:space="preserve">
+    <value>Back up all data</value>
+  </data>
+  <data name="Settings.DataFolder.Button" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Settings.DataFolder.Caption" xml:space="preserve">
+    <value>Open Data Folder</value>
+  </data>
+  <data name="Settings.DataFolder.Failed" xml:space="preserve">
+    <value>The data folder couldn't be opened:
+{0}
+
+{1}</value>
+  </data>
+  <data name="Settings.DataFolder.Title" xml:space="preserve">
+    <value>Open data folder</value>
+  </data>
+  <data name="Settings.ExportAll.Button" xml:space="preserve">
+    <value>Export…</value>
+  </data>
+  <data name="Settings.ExportAll.Note" xml:space="preserve">
+    <value>A readable report, not a backup.</value>
+  </data>
+  <data name="Settings.ExportAll.Title" xml:space="preserve">
+    <value>Export all memories</value>
+  </data>
+  <data name="Settings.Language.NotSaved" xml:space="preserve">
+    <value>The language was changed, but it couldn't be saved in settings.json, so TidyMind will start in the previous language next time.</value>
+  </data>
+  <data name="Settings.Language.Note" xml:space="preserve">
+    <value>Every window switches right away.</value>
+  </data>
+  <data name="Settings.Language.Title" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Settings.Licenses" xml:space="preserve">
+    <value>Licenses</value>
+  </data>
+  <data name="Settings.Restore.Button" xml:space="preserve">
+    <value>Restore…</value>
+  </data>
+  <data name="Settings.Restore.Caption" xml:space="preserve">
+    <value>Restore from Backup</value>
+  </data>
+  <data name="Settings.Restore.Confirm" xml:space="preserve">
+    <value>Restore from this backup?
+{0}
+
+Your current data will be replaced. A copy of it is saved first, then TidyMind restarts.</value>
+  </data>
+  <data name="Settings.Restore.Done" xml:space="preserve">
+    <value>The backup was restored. Your previous data was saved here:
+{0}
+
+TidyMind will now restart.</value>
+  </data>
+  <data name="Settings.Restore.Failed" xml:space="preserve">
+    <value>The backup wasn't restored: {0}
+
+Your current data was left as it was.</value>
+  </data>
+  <data name="Settings.Restore.FailedSafetyCopy" xml:space="preserve">
+    <value>A safety copy of it was also saved here:
+{0}</value>
+  </data>
+  <data name="Settings.Restore.Filter" xml:space="preserve">
+    <value>TidyMind backups (*.zip)|*.zip</value>
+  </data>
+  <data name="Settings.Restore.Note" xml:space="preserve">
+    <value>Replaces the current data. TidyMind restarts.</value>
+  </data>
+  <data name="Settings.Restore.Title" xml:space="preserve">
+    <value>Restore from backup</value>
+  </data>
+  <data name="Settings.Section.Backup" xml:space="preserve">
+    <value>Backup</value>
+  </data>
+  <data name="Settings.Section.Data" xml:space="preserve">
+    <value>Data</value>
+  </data>
+  <data name="Settings.Section.General" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="Settings.Title" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Swatch.NoColor" xml:space="preserve">
+    <value>No color</value>
+  </data>
+  <data name="Tabs.Add" xml:space="preserve">
+    <value>Add tab</value>
+  </data>
+  <data name="Tabs.DefaultName" xml:space="preserve">
+    <value>Unnamed</value>
+  </data>
+  <data name="Tabs.DefaultNameNumbered" xml:space="preserve">
+    <value>Unnamed {0}</value>
+  </data>
+  <data name="Tabs.Delete.Caption" xml:space="preserve">
+    <value>Delete Tab</value>
+  </data>
+  <data name="Tabs.DeleteMove.Items.One" xml:space="preserve">
+    <value>Delete the tab '{1}'?
+
+Its {0} item will be moved to '{2}'.</value>
+  </data>
+  <data name="Tabs.DeleteMove.Items.Other" xml:space="preserve">
+    <value>Delete the tab '{1}'?
+
+Its {0} items will be moved to '{2}'.</value>
+  </data>
+  <data name="Tabs.DeleteMove.Projects.One" xml:space="preserve">
+    <value>Delete the tab '{1}'?
+
+Its {0} project will be moved to '{2}'.</value>
+  </data>
+  <data name="Tabs.DeleteMove.Projects.Other" xml:space="preserve">
+    <value>Delete the tab '{1}'?
+
+Its {0} projects will be moved to '{2}'.</value>
+  </data>
+  <data name="Tabs.NewName" xml:space="preserve">
+    <value>New Tab</value>
+  </data>
+  <data name="Tabs.NewNameNumbered" xml:space="preserve">
+    <value>New Tab {0}</value>
+  </data>
+  <data name="Tabs.SaveFailed" xml:space="preserve">
+    <value>Couldn't save the tabs of '{0}': this file can't be written:
+{1}
+
+Your last change to the tabs wasn't saved.</value>
+  </data>
+  <data name="TextColor.Blue" xml:space="preserve">
+    <value>Blue</value>
+  </data>
+  <data name="TextColor.Default" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="TextColor.Gray" xml:space="preserve">
+    <value>Gray</value>
+  </data>
+  <data name="TextColor.Green" xml:space="preserve">
+    <value>Green</value>
+  </data>
+  <data name="TextColor.Orange" xml:space="preserve">
+    <value>Orange</value>
+  </data>
+  <data name="TextColor.Purple" xml:space="preserve">
+    <value>Purple</value>
+  </data>
+  <data name="TextColor.Red" xml:space="preserve">
+    <value>Red</value>
+  </data>
+  <data name="Todo.Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Todo.AllDone" xml:space="preserve">
+    <value>All done for now.</value>
+  </data>
+  <data name="Todo.Count" xml:space="preserve">
+    <value>{0}/{1} done</value>
+  </data>
+  <data name="Todo.Empty" xml:space="preserve">
+    <value>Nothing on the list.</value>
+  </data>
+  <data name="Todo.Fold" xml:space="preserve">
+    <value>Fold the to-do list</value>
+  </data>
+  <data name="Todo.FromDate" xml:space="preserve">
+    <value>from {0}</value>
+  </data>
+  <data name="Todo.FromYesterday" xml:space="preserve">
+    <value>from yesterday</value>
+  </data>
+  <data name="Todo.Header" xml:space="preserve">
+    <value>TO-DO</value>
+  </data>
+  <data name="Todo.HideDone" xml:space="preserve">
+    <value>Hide done</value>
+  </data>
+  <data name="Todo.ListFolded" xml:space="preserve">
+    <value>To-do list, folded</value>
+  </data>
+  <data name="Todo.ListOpen" xml:space="preserve">
+    <value>To-do list, open</value>
+  </data>
+  <data name="Todo.ListUnreadable" xml:space="preserve">
+    <value>Couldn't read {0}. Fix or remove that file to use this list.</value>
+  </data>
+  <data name="Todo.Next" xml:space="preserve">
+    <value>Next:</value>
+  </data>
+  <data name="Todo.Placeholder" xml:space="preserve">
+    <value>Add a to-do…</value>
+  </data>
+  <data name="Todo.PlaceholderEnter" xml:space="preserve">
+    <value>Add a to-do and press Enter…</value>
+  </data>
+  <data name="Todo.SaveFailed" xml:space="preserve">
+    <value>Couldn't save the to-do list of '{0}': this file can't be written:
+{1}
+
+Your last change wasn't saved.</value>
+  </data>
+  <data name="Todo.ShowDone" xml:space="preserve">
+    <value>Show done ({0})</value>
+  </data>
+  <data name="Todo.Unfold" xml:space="preserve">
+    <value>Unfold the to-do list</value>
+  </data>
+  <data name="Todo.Unreadable" xml:space="preserve">
+    <value>Couldn't save: quicktodos.json can't be read.</value>
+  </data>
+  <data name="Tour.BasicsDone.Text" xml:space="preserve">
+    <value>That covers the everyday things, and the tricks take about another minute.</value>
+  </data>
+  <data name="Tour.BasicsDone.Title" xml:space="preserve">
+    <value>Basics done</value>
+  </data>
+  <data name="Tour.Button.Finish" xml:space="preserve">
+    <value>Finish</value>
+  </data>
+  <data name="Tour.Button.Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Tour.Button.NotNow" xml:space="preserve">
+    <value>Not now</value>
+  </data>
+  <data name="Tour.Button.Skip" xml:space="preserve">
+    <value>Skip tour</value>
+  </data>
+  <data name="Tour.Button.Start" xml:space="preserve">
+    <value>Start the tour</value>
+  </data>
+  <data name="Tour.Button.Tricks" xml:space="preserve">
+    <value>Continue with tricks</value>
+  </data>
+  <data name="Tour.CardLook.Text" xml:space="preserve">
+    <value>Right-click this card and choose Customize Card to give it a color or a picture.</value>
+  </data>
+  <data name="Tour.CardLook.Title" xml:space="preserve">
+    <value>Change a card's look</value>
+  </data>
+  <data name="Tour.CloseProject.Text" xml:space="preserve">
+    <value>Click Save to close the project and keep your changes.</value>
+  </data>
+  <data name="Tour.CloseProject.Title" xml:space="preserve">
+    <value>Close the project</value>
+  </data>
+  <data name="Tour.Collections.Text" xml:space="preserve">
+    <value>Open this collection in the sidebar to see a list of things you own.</value>
+  </data>
+  <data name="Tour.Collections.Title" xml:space="preserve">
+    <value>Collections</value>
+  </data>
+  <data name="Tour.Confirm.Text" xml:space="preserve">
+    <value>This adds an example memory. Your own data is not changed.</value>
+  </data>
+  <data name="Tour.Confirm.Title" xml:space="preserve">
+    <value>Take the tour</value>
+  </data>
+  <data name="Tour.Confirm.WriteFailed" xml:space="preserve">
+    <value>The example memory couldn't be written to
+{0}
+
+Nothing was changed.</value>
+  </data>
+  <data name="Tour.Corner.Text" xml:space="preserve">
+    <value>These buttons open quick notes, your reminders and the calendar from any page.</value>
+  </data>
+  <data name="Tour.Corner.Title" xml:space="preserve">
+    <value>Notes, reminders and calendar</value>
+  </data>
+  <data name="Tour.DayPlan.Text" xml:space="preserve">
+    <value>Open Day Plan to divide a day into time blocks, like Gym 17:00–18:30.</value>
+  </data>
+  <data name="Tour.DayPlan.Title" xml:space="preserve">
+    <value>Plan your day</value>
+  </data>
+  <data name="Tour.DeleteNote" xml:space="preserve">
+    <value>This is the example memory.</value>
+  </data>
+  <data name="Tour.End.Text" xml:space="preserve">
+    <value>Help and shortcuts are behind the ? button, and you can delete the example memories from the sidebar any time.</value>
+  </data>
+  <data name="Tour.End.Title" xml:space="preserve">
+    <value>That's the tour</value>
+  </data>
+  <data name="Tour.HelpEntry" xml:space="preserve">
+    <value>Take the tour</value>
+  </data>
+  <data name="Tour.OpenProject.Text" xml:space="preserve">
+    <value>Click this card to open the project.</value>
+  </data>
+  <data name="Tour.OpenProject.Title" xml:space="preserve">
+    <value>Open a project</value>
+  </data>
+  <data name="Tour.PageBackground.Text" xml:space="preserve">
+    <value>Right-click an empty part of the page and choose Edit Background.</value>
+  </data>
+  <data name="Tour.PageBackground.Title" xml:space="preserve">
+    <value>Change the page background</value>
+  </data>
+  <data name="Tour.Search.Example" xml:space="preserve">
+    <value>bike</value>
+  </data>
+  <data name="Tour.Search.Text" xml:space="preserve">
+    <value>Press Ctrl+Shift+F and type a word, for example {0}.</value>
+  </data>
+  <data name="Tour.Search.Title" xml:space="preserve">
+    <value>Search everything</value>
+  </data>
+  <data name="Tour.SelectCards.Text" xml:space="preserve">
+    <value>Drag a rectangle across the empty space around the cards to select more than one.</value>
+  </data>
+  <data name="Tour.SelectCards.Title" xml:space="preserve">
+    <value>Select several cards</value>
+  </data>
+  <data name="Tour.StepOf" xml:space="preserve">
+    <value>Step {0} of {1}.</value>
+  </data>
+  <data name="Tour.TodoList.Text" xml:space="preserve">
+    <value>Type a to-do and press Enter, then click its text to change it.</value>
+  </data>
+  <data name="Tour.TodoList.Title" xml:space="preserve">
+    <value>Keep a to-do list</value>
+  </data>
+  <data name="Tour.TurnPage.Text" xml:space="preserve">
+    <value>Click the right arrow to go to page two, then click it again to start a new page.</value>
+  </data>
+  <data name="Tour.TurnPage.Title" xml:space="preserve">
+    <value>Turn the page</value>
+  </data>
+  <data name="Tour.Welcome.Text" xml:space="preserve">
+    <value>A memory is one area of your life, listed in the sidebar. A project memory holds projects, each with its tasks, notes and files. A collection memory keeps a list of things you own, like clothes or a bike.</value>
+  </data>
+  <data name="Tour.Welcome.Title" xml:space="preserve">
+    <value>Welcome to TidyMind</value>
+  </data>
+  <data name="Welcome.Bike.Item" xml:space="preserve">
+    <value>City bike</value>
+  </data>
+  <data name="Welcome.Bike.ItemNotes" xml:space="preserve">
+    <value>Vehicles can also keep logs, like fuel or service.</value>
+  </data>
+  <data name="Welcome.Bike.Name" xml:space="preserve">
+    <value>Fix the bike</value>
+  </data>
+  <data name="Welcome.Bike.Task1" xml:space="preserve">
+    <value>Buy a new tube</value>
+  </data>
+  <data name="Welcome.Bike.Task2" xml:space="preserve">
+    <value>Oil the chain</value>
+  </data>
+  <data name="Welcome.Jacket.Color" xml:space="preserve">
+    <value>Navy</value>
+  </data>
+  <data name="Welcome.Jacket.Name" xml:space="preserve">
+    <value>Rain jacket</value>
+  </data>
+  <data name="Welcome.Jacket.Notes" xml:space="preserve">
+    <value>A collection keeps a list of things you own.</value>
+  </data>
+  <data name="Welcome.Name" xml:space="preserve">
+    <value>Welcome</value>
+  </data>
+  <data name="Welcome.Notebook.Description" xml:space="preserve">
+    <value>A project keeps tasks, notes and files for one thing you are working on.</value>
+  </data>
+  <data name="Welcome.Notebook.Name" xml:space="preserve">
+    <value>Notebook</value>
+  </data>
+  <data name="Welcome.Notebook.Page1" xml:space="preserve">
+    <value>This is page one.
+The arrow above turns to the next page.</value>
+  </data>
+  <data name="Welcome.Notebook.Page2" xml:space="preserve">
+    <value>This is page two.
+On the last page, the arrow starts a new page.</value>
+  </data>
+  <data name="Welcome.Notebook.Task1" xml:space="preserve">
+    <value>Read the first page</value>
+  </data>
+  <data name="Welcome.Notebook.Task2" xml:space="preserve">
+    <value>Add a page of your own</value>
+  </data>
+  <data name="Welcome.Reading.Name" xml:space="preserve">
+    <value>Reading list</value>
+  </data>
+  <data name="Welcome.Reading.Task1" xml:space="preserve">
+    <value>Finish the current book</value>
+  </data>
+  <data name="Welcome.Sweater.Color" xml:space="preserve">
+    <value>Grey</value>
+  </data>
+  <data name="Welcome.Sweater.Name" xml:space="preserve">
+    <value>Wool sweater</value>
+  </data>
+  <data name="Welcome.Tab.Home" xml:space="preserve">
+    <value>Around the house</value>
+  </data>
+  <data name="Welcome.Tab.Start" xml:space="preserve">
+    <value>Getting started</value>
+  </data>
+  <data name="Welcome.Tab.Things" xml:space="preserve">
+    <value>Things</value>
+  </data>
+  <data name="Welcome.Todo1" xml:space="preserve">
+    <value>Water the plants</value>
+  </data>
+  <data name="Welcome.Todo2" xml:space="preserve">
+    <value>Call the bank about the new card</value>
+  </data>
+  <data name="Welcome.Todo3" xml:space="preserve">
+    <value>Buy coffee</value>
+  </data>
+  <data name="Welcome.Trip.Name" xml:space="preserve">
+    <value>Plan a weekend trip</value>
+  </data>
+  <data name="Welcome.Trip.Task1" xml:space="preserve">
+    <value>Pick a date</value>
+  </data>
+  <data name="Welcome.Trip.Task2" xml:space="preserve">
+    <value>Book a place to stay</value>
+  </data>
+  <data name="Welcome.Trip.Task3" xml:space="preserve">
+    <value>Pack a bag</value>
+  </data>
+  <data name="Welcome.Trip.Task4" xml:space="preserve">
+    <value>Check the weather</value>
+  </data>
+</root>

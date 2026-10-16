@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,12 +14,13 @@ namespace TidyMind
     // "from yesterday" by itself once the date changes.
     public partial class QuickTodoListControl : UserControl
     {
-        private const string UnreadableMessage = "Couldn't save: quicktodos.json can't be read.";
-
         private enum DueGroup { Overdue, Today, Tomorrow }
 
         private List<QuickTodo> todos = new List<QuickTodo>();
         private bool showDone;
+
+        // A to-do was ticked or unticked here (and the day plan blocks linked to it with it).
+        public event Action DoneChanged;
 
         // Ticked while this list is on screen: they stay put (struck through), also across refreshes, until the
         // list is created again — so a mis-click can be undone where it happened.
@@ -33,6 +33,12 @@ namespace TidyMind
         {
             InitializeComponent();
             midnight.Tick += (s, e) => { Refresh(); ScheduleMidnight(); };
+            Loc.Track(this, () =>
+            {
+                Render();
+                if (StatusText.Visibility == Visibility.Visible)
+                    ShowUnreadable();
+            });
             Loaded += (s, e) => { Refresh(); ScheduleMidnight(); };
             Unloaded += (s, e) => midnight.Stop();
 
@@ -169,10 +175,10 @@ namespace TidyMind
         {
             int hiddenDone = todos.Count(t => !IsShown(t));
             DoneToggle.Visibility = showDone || hiddenDone > 0 ? Visibility.Visible : Visibility.Collapsed;
-            DoneToggle.Content = showDone ? "Hide done" : "Show done (" + hiddenDone + ")";
+            DoneToggle.Content = showDone ? Loc.T("Todo.HideDone") : Loc.F("Todo.ShowDone", hiddenDone);
 
             EmptyText.Visibility = TodoList.Children.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-            EmptyText.Text = hiddenDone > 0 ? "All done for now." : "Nothing on the list.";
+            EmptyText.Text = Loc.T(hiddenDone > 0 ? "Todo.AllDone" : "Todo.Empty");
         }
 
         private bool IsShown(QuickTodo todo) => !todo.IsDone || showDone || completedHere.Contains(todo.Id);
@@ -236,7 +242,7 @@ namespace TidyMind
 
             // The row's menu (outside the text, which has its own Cut / Copy / Paste). Editing is clicking the text.
             ContextMenu menu = new ContextMenu();
-            MenuItem remove = new MenuItem { Header = "Delete" };
+            MenuItem remove = new MenuItem { Header = Loc.T("Common.Delete") };
             remove.Click += (s, e) => DeleteTodo(todo); // the same as the row's "×"
             menu.Items.Add(remove);
             menu.Items.Add(new Separator());
@@ -284,6 +290,7 @@ namespace TidyMind
 
             PaintDone(text, due, overdue, done);
             UpdateFooter();
+            DoneChanged?.Invoke();
         }
 
         private void DeleteTodo(QuickTodo todo)
@@ -316,7 +323,7 @@ namespace TidyMind
 
         private void ShowUnreadable()
         {
-            StatusText.Text = UnreadableMessage;
+            StatusText.Text = Loc.T("Todo.Unreadable");
             StatusText.Visibility = Visibility.Visible;
         }
 
@@ -324,10 +331,10 @@ namespace TidyMind
         {
             switch ((due.Date - today).Days)
             {
-                case 0: return "Today";
-                case 1: return "Tomorrow";
-                case -1: return "from yesterday";
-                default: return "from " + due.ToString("MMM d", CultureInfo.InvariantCulture);
+                case 0: return Loc.T("Common.Today");
+                case 1: return Loc.T("Common.Tomorrow");
+                case -1: return Loc.T("Todo.FromYesterday");
+                default: return Loc.F("Todo.FromDate", due.ToString(Loc.T("Format.ShortMonthDay"), Loc.Culture));
             }
         }
     }

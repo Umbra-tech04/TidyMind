@@ -22,7 +22,7 @@ namespace TidyMind
                 newImage = store.Import(ImageFile);
                 if (newImage == null)
                 {
-                    MessageBox.Show("Couldn't copy that image into " + store.Folder + ".", "Couldn't Save",
+                    Msg.Show(Loc.F("Background.CopyFailed", store.Folder), Loc.T("Common.CouldntSave"),
                         MessageBoxButton.OK, MessageBoxImage.Warning);
                     return false;
                 }

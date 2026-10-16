@@ -9,7 +9,7 @@ namespace TidyMind
         // The choice, or null if the dialog was cancelled.
         public static BackgroundChoice Choose(DependencyObject owner, Project project)
         {
-            BackgroundDialog dialog = new BackgroundDialog("Customize card", project.Name, project.GetCardBackground(),
+            BackgroundDialog dialog = new BackgroundDialog(Loc.T("Card.CustomizeTitle"), project.Name, project.GetCardBackground(),
                 ImageStore.Cards, color => color,
                 (type, color, pickedImage) =>
                 {

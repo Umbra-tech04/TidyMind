@@ -6,9 +6,9 @@
              xmlns:local="clr-namespace:TidyMind"
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1000">
-    <!-- Home reads like the opening spread of a daybook, not an admin panel. The to-do list is the one white sheet
-         you write on, and the week is printed straight onto the page. Numbers appear inside sentences, never as
-         stat tiles. -->
+    <!-- Home reads like the opening spread of a daybook, not an admin panel. The to-do list is the white sheet you
+         write on, and the week is printed straight onto the page. Numbers appear inside sentences, never as stat
+         tiles. The feature tiles at the bottom are framed notes to read, nothing to click. -->
     <UserControl.Resources>
         <SolidColorBrush x:Key="Hairline" Color="#E4E4E1"/>
 
@@ -23,30 +23,6 @@
             <Setter Property="Foreground" Value="{StaticResource TextSub}"/>
             <Setter Property="Margin" Value="12,0,0,1"/>
             <Setter Property="VerticalAlignment" Value="Bottom"/>
-        </Style>
-        <!-- A "What can TidyMind do?" item: a row printed on the page that turns into paper under the cursor, like
-             the week's entries; the keyboard focus shows as an accent edge -->
-        <Style x:Key="DiscoveryItemStyle" TargetType="Button">
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="row" Background="Transparent" BorderBrush="Transparent" BorderThickness="1"
-                                CornerRadius="8" Padding="10,8">
-                            <ContentPresenter/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="row" Property="Background" Value="{StaticResource BgPanel}"/>
-                            </Trigger>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="row" Property="BorderBrush" Value="{StaticResource Accent}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
         </Style>
     </UserControl.Resources>
 
@@ -79,33 +55,41 @@
                         <DropShadowEffect Color="Black" Direction="270" ShadowDepth="2" BlurRadius="12" Opacity="0.08"/>
                     </Border.Effect>
                     <StackPanel>
-                        <TextBlock Text="To-do" Style="{StaticResource SectionTitleStyle}" Margin="0,0,0,14"/>
+                        <TextBlock Text="{local:Tr Home.Todo.Title}" Style="{StaticResource SectionTitleStyle}" Margin="0,0,0,14"/>
                         <local:QuickTodoListControl x:Name="QuickTodos"/>
                     </StackPanel>
                 </Border>
 
                 <StackPanel x:Name="WeekPanel" Grid.Column="2">
-                    <TextBlock Text="This week" Style="{StaticResource SectionTitleStyle}" Margin="0,20,0,6"/>
+                    <!-- Today's plan: what's still ahead today (DayPlanStore); the link opens the day plan -->
+                    <DockPanel Margin="0,20,0,4" LastChildFill="False">
+                        <TextBlock Text="{local:Tr Home.Plan.Title}" Style="{StaticResource SectionTitleStyle}"/>
+                        <Button x:Name="OpenPlanLink" DockPanel.Dock="Right" Style="{StaticResource LinkButtonStyle}"
+                                Foreground="{StaticResource TextSub}" VerticalAlignment="Bottom" Click="OpenPlan_Click"/>
+                    </DockPanel>
+                    <StackPanel x:Name="PlanRows"/>
+
+                    <TextBlock Text="{local:Tr Home.Week.Title}" Style="{StaticResource SectionTitleStyle}" Margin="0,28,0,6"/>
                     <StackPanel x:Name="Daybook"/>
                 </StackPanel>
             </Grid>
 
-            <!-- What can TidyMind do?: printed on the page like the week. Each item starts the guided tour at its step
-                 (Backup opens Settings). Filled from TourSteps.Discovery; Hide removes the row for good (AppSettings). -->
-            <StackPanel x:Name="DiscoverySection" Margin="0,52,0,0">
-                <DockPanel Margin="0,0,0,8" LastChildFill="False">
-                    <TextBlock x:Name="DiscoveryTitle" Style="{StaticResource SectionTitleStyle}"/>
-                    <Button x:Name="HideDiscoveryLink" DockPanel.Dock="Right" Style="{StaticResource LinkButtonStyle}"
-                            Foreground="{StaticResource TextSub}" VerticalAlignment="Bottom" Click="HideDiscovery_Click"/>
+            <!-- What can TidyMind do?: tiles to read (HomeView.Features); Hide/Show folds them (AppSettings.HideDiscovery) -->
+            <StackPanel Margin="0,52,0,0">
+                <DockPanel Margin="0,0,0,12" LastChildFill="False">
+                    <TextBlock Text="{local:Tr Home.Discovery.Title}" Style="{StaticResource SectionTitleStyle}"/>
+                    <Button x:Name="DiscoveryToggle" DockPanel.Dock="Right" Style="{StaticResource LinkButtonStyle}"
+                            Foreground="{StaticResource TextSub}" VerticalAlignment="Bottom" Click="DiscoveryToggle_Click"/>
                 </DockPanel>
-                <UniformGrid x:Name="DiscoveryItems" Columns="6" Margin="-10,0,-10,0"/>
+                <!-- Columns follow the width (ApplyWidth) -->
+                <UniformGrid x:Name="DiscoveryItems" Columns="4"/>
             </StackPanel>
 
             <!-- Upcoming expiries: dates from collections (insurance, inspection) within 60 days or already past,
                  soonest first. Shown only when there are any. -->
             <StackPanel x:Name="ExpirySection" Visibility="Collapsed">
                 <StackPanel Orientation="Horizontal" Margin="0,52,0,12">
-                    <TextBlock Text="Upcoming expiries" Style="{StaticResource SectionTitleStyle}"/>
+                    <TextBlock Text="{local:Tr Home.Expiries.Title}" Style="{StaticResource SectionTitleStyle}"/>
                     <TextBox x:Name="ExpiriesLede" Style="{StaticResource SectionLedeStyle}"/>
                 </StackPanel>
                 <!-- Up to 560 wide, left-aligned, so the times line up in one column -->

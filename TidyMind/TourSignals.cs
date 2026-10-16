@@ -15,6 +15,7 @@ namespace TidyMind
         public const string CollectionOpened = "CollectionOpened";
         public const string PageBackgroundChanged = "PageBackgroundChanged";
         public const string Searched = "Searched";
+        public const string DayPlanOpened = "DayPlanOpened";
 
         public static event Action<string> Raised;
 

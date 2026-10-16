@@ -27,21 +27,41 @@
                     </TextBlock>
                 </Border>
 
-                <!-- Bottom: New Project / New Collection + Settings -->
+                <!-- Bottom: New Project / New Collection, then Settings with the language switch beside it -->
                 <Border DockPanel.Dock="Bottom" Padding="14,10,14,16">
                     <StackPanel>
-                        <Button Content="+  New Project"
-                                Height="36" HorizontalContentAlignment="Left" Padding="14,0"
-                                Click="NewProjectButton_Click"/>
-                        <Button Content="+  New Collection"
-                                Height="36" Margin="0,8,0,0"
+                        <Button Height="36" HorizontalContentAlignment="Left" Padding="14,0"
+                                Click="NewProjectButton_Click">
+                            <TextBlock TextTrimming="CharacterEllipsis"><Run Text="+  "/><Run Text="{local:Tr Main.NewProject}"/></TextBlock>
+                        </Button>
+                        <Button Height="36" Margin="0,8,0,0"
                                 HorizontalContentAlignment="Left" Padding="14,0"
-                                Click="NewCollectionButton_Click"/>
-                        <Button Content="⚙  Settings"
-                                Height="34" Margin="0,8,0,0"
-                                HorizontalContentAlignment="Left" Padding="14,0"
-                                Background="#3A3935" Foreground="{StaticResource SidebarText}"
-                                Click="SettingsButton_Click"/>
+                                Click="NewCollectionButton_Click">
+                            <TextBlock TextTrimming="CharacterEllipsis"><Run Text="+  "/><Run Text="{local:Tr Main.NewCollection}"/></TextBlock>
+                        </Button>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Height="34" HorizontalContentAlignment="Left" Padding="10,0"
+                                    Background="#3A3935" Foreground="{StaticResource SidebarText}"
+                                    Click="SettingsButton_Click">
+                                <TextBlock TextTrimming="CharacterEllipsis"><Run Text="⚙  "/><Run Text="{local:Tr Settings.Title}"/></TextBlock>
+                            </Button>
+                            <!-- The language switch: globe and the current language's code; a click lists the three
+                                 languages, each named in its own language (MainWindow.LanguageButton_Click). -->
+                            <Button x:Name="LanguageButton" Grid.Column="1" Height="34" MinWidth="58" Margin="8,0,0,0"
+                                    Padding="10,0" Background="#3A3935" Foreground="{StaticResource SidebarText}"
+                                    ToolTip="{local:Tr Language.Button.Tooltip}" Click="LanguageButton_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="LanguageCode" Margin="6,0,0,0" FontSize="12" FontWeight="SemiBold"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
                     </StackPanel>
                 </Border>
 
@@ -62,20 +82,24 @@
                         Margin="0,0,24,20" Panel.ZIndex="100">
                 <StackPanel x:Name="OverlayButtons" Orientation="Horizontal">
                     <Button Style="{StaticResource IconButtonStyle}"
-                            Content="📝" ToolTip="Quick Notes  (Ctrl+Shift+N)"
+                            Content="📝" ToolTip="{local:Tr Main.Corner.QuickNotes}"
+                            AutomationProperties.Name="{local:Tr Main.Help.QuickNotes}"
                             Width="40" Height="40" FontSize="16" Padding="0,0,4,0" Margin="0,0,12,0"
                             Click="QuickNotesButton_Click"/>
                     <Button Style="{StaticResource IconButtonStyle}"
-                            Content="🔔" ToolTip="Reminders  (Ctrl+Shift+R)"
+                            Content="🔔" ToolTip="{local:Tr Main.Corner.Reminders}"
+                            AutomationProperties.Name="{local:Tr Main.Help.Reminders}"
                             Width="40" Height="40" FontSize="16" Margin="0,0,12,0"
                             Click="RemindersIconButton_Click"/>
                     <Button Style="{StaticResource IconButtonStyle}"
-                            Content="📅" ToolTip="Calendar  (Ctrl+Shift+C)"
+                            Content="📅" ToolTip="{local:Tr Main.Corner.Calendar}"
+                            AutomationProperties.Name="{local:Tr Main.Help.Calendar}"
                             Width="40" Height="40" FontSize="16" Margin="0,0,12,0"
                             Click="CalendarIconButton_Click"/>
                 </StackPanel>
                 <Button x:Name="HelpButton" Style="{StaticResource IconButtonStyle}"
-                        Content="?" ToolTip="Shortcuts" FontWeight="Bold"
+                        Content="?" ToolTip="{local:Tr Main.Corner.Help}" FontWeight="Bold"
+                        AutomationProperties.Name="{local:Tr Main.Corner.Help}"
                         Width="40" Height="40" FontSize="16"
                         Click="HelpButton_Click"/>
             </StackPanel>
@@ -85,7 +109,7 @@
                 <Border Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
                         BorderThickness="1" Padding="14" Margin="0,0,0,6">
                     <StackPanel>
-                        <TextBlock Text="Keyboard Shortcuts" FontWeight="Bold" FontSize="13"
+                        <TextBlock Text="{local:Tr Main.Help.Title}" FontWeight="Bold" FontSize="13"
                                    Foreground="{StaticResource Accent}" Margin="0,0,0,10"/>
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -100,25 +124,28 @@
                             </Grid.RowDefinitions>
                             <TextBlock Grid.Row="3" Grid.Column="0" Text="Ctrl+Shift+C" FontFamily="Consolas"
                                        FontWeight="Bold" Foreground="{StaticResource TextMain}" Margin="0,4,10,0"/>
-                            <TextBlock Grid.Row="3" Grid.Column="1" Text="— Calendar"
-                                       Foreground="{StaticResource TextSub}" Margin="0,4,0,0"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1"
+                                       Foreground="{StaticResource TextSub}" Margin="0,4,0,0"><Run Text="— "/><Run Text="{local:Tr Main.Help.Calendar}"/></TextBlock>
                             <TextBlock Grid.Row="2" Grid.Column="0" Text="Ctrl+Shift+F" FontFamily="Consolas"
                                        FontWeight="Bold" Foreground="{StaticResource TextMain}" Margin="0,4,10,0"/>
-                            <TextBlock Grid.Row="2" Grid.Column="1" Text="— Search everything"
-                                       Foreground="{StaticResource TextSub}" Margin="0,4,0,0"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1"
+                                       Foreground="{StaticResource TextSub}" Margin="0,4,0,0"><Run Text="— "/><Run Text="{local:Tr Main.Help.Search}"/></TextBlock>
                             <TextBlock Grid.Row="0" Grid.Column="0" Text="Ctrl+Shift+N" FontFamily="Consolas"
                                        FontWeight="Bold" Foreground="{StaticResource TextMain}" Margin="0,0,10,4"/>
-                            <TextBlock Grid.Row="0" Grid.Column="1" Text="— Quick Notes"
-                                       Foreground="{StaticResource TextSub}" Margin="0,0,0,4"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1"
+                                       Foreground="{StaticResource TextSub}" Margin="0,0,0,4"><Run Text="— "/><Run Text="{local:Tr Main.Help.QuickNotes}"/></TextBlock>
                             <TextBlock Grid.Row="1" Grid.Column="0" Text="Ctrl+Shift+R" FontFamily="Consolas"
                                        FontWeight="Bold" Foreground="{StaticResource TextMain}"/>
-                            <TextBlock Grid.Row="1" Grid.Column="1" Text="— Reminders"
-                                       Foreground="{StaticResource TextSub}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1"
+                                       Foreground="{StaticResource TextSub}"><Run Text="— "/><Run Text="{local:Tr Main.Help.Reminders}"/></TextBlock>
                         </Grid>
+                        <TextBlock Text="{local:Tr Main.Help.DayPlan}"
+                                   Foreground="{StaticResource TextSub}" FontSize="12" TextWrapping="Wrap" MaxWidth="250"
+                                   HorizontalAlignment="Left" Margin="0,12,0,0"/>
                         <Border BorderBrush="{StaticResource Border}" BorderThickness="0,1,0,0" Margin="0,12,0,8"/>
                         <Button x:Name="TakeTourLink" Style="{StaticResource LinkButtonStyle}" FontSize="13"
                                 Foreground="{StaticResource BtnHover}" HorizontalAlignment="Left"
-                                Click="TakeTour_Click"/>
+                                Content="{local:Tr Tour.HelpEntry}" Click="TakeTour_Click"/>
                     </StackPanel>
                 </Border>
             </Popup>

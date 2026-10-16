@@ -25,6 +25,7 @@ namespace TidyMind
 
         // Its items or tabs file couldn't be read: shown read-only (ShowUnreadable), and never saved over.
         private bool unreadable;
+        private string unreadableFile, unreadableProblem;
 
         // The search box rebuilds the cards after a short pause in typing, not on every key: rebuilding a big grid per
         // keystroke lags.
@@ -43,6 +44,22 @@ namespace TidyMind
             // An open item overlay isn't empty page: no background menu there.
             MemoryPageBackground.Attach(Page, BackgroundLayer, profile, saveProfiles, OverlayGrid);
             TitleText.Text = profile.Name;
+
+            // Counts, cards, an open detail card and the reason a file couldn't be read, in the new language; names
+            // and notes are the user's own.
+            Loc.Track(this, () =>
+            {
+                if (unreadable)
+                {
+                    SubtitleText.Text = Loc.T("Collection.Kind");
+                    EmptyState.Text = Loc.F("Memory.Unreadable", unreadableFile, unreadableProblem);
+                    return;
+                }
+                tabStrip.Render();
+                RenderEntities();
+                if (OverlayGrid.Visibility == Visibility.Visible && currentDetailEntity != null)
+                    FillDetail(currentDetailEntity);
+            });
 
             // An unreadable file is left alone: the page says why, and nothing on it can change or save items.
             if (!EntityStore.TryLoad(memory, out entities, out string problem))
@@ -65,7 +82,7 @@ namespace TidyMind
             // Cards sit 24px apart (12px margin each side); the drop line goes in the middle of that gap.
             cardDrag = new DragReorder<Entity>(EntityPanel, Orientation.Horizontal, 24, null, MoveEntity);
 
-            tabStrip = new MemoryTabStrip(this, TabStrip, memory, tabs, "item",
+            tabStrip = new MemoryTabStrip(this, TabStrip, memory, tabs, "Tabs.DeleteMove.Items",
                 tabId => entities.Count(e => e.TabId == tabId),
                 (fromTab, toTab) =>
                 {
@@ -134,17 +151,15 @@ namespace TidyMind
         private void ShowUnreadable(string file, string problem)
         {
             unreadable = true;
+            unreadableFile = file;
+            unreadableProblem = problem;
             selection?.ClearSelection();
             EntityPanel.Children.Clear();
             Toolbar.Visibility = Visibility.Collapsed;
             SelectionBar.Visibility = Visibility.Collapsed;
             TabStrip.Visibility = Visibility.Collapsed;
-            SubtitleText.Text = "COLLECTION";
-            EmptyState.Text = "Couldn't read " + file + ":\n" + problem + "\n\nThe file was left as it is. "
-                + "Fix it or restore it from a backup, then open this memory again.";
-            EmptyState.TextWrapping = TextWrapping.Wrap;
-            EmptyState.TextAlignment = TextAlignment.Center;
-            EmptyState.MaxWidth = 520;
+            SubtitleText.Text = Loc.T("Collection.Kind");
+            EmptyState.Text = Loc.F("Memory.Unreadable", file, problem);
             EmptyState.Visibility = Visibility.Visible;
         }
 
@@ -172,7 +187,7 @@ namespace TidyMind
             cardDrag.Clear();
             selection.BeginRender();
 
-            string filter = SearchBox.Text == "Search..." ? "" : SearchBox.Text.Trim();
+            string filter = SearchBox.Text.Trim();
             List<Entity> inTab = entities.Where(e => e.TabId == tabStrip.ActiveTabId).ToList();
 
             int shown = 0;
@@ -186,11 +201,9 @@ namespace TidyMind
                 shown++;
             }
 
-            SubtitleText.Text = "COLLECTION  ·  " + inTab.Count + (inTab.Count == 1 ? " item" : " items");
+            SubtitleText.Text = Loc.Plural("Collection.Subtitle", inTab.Count);
             EmptyState.Visibility = shown == 0 ? Visibility.Visible : Visibility.Collapsed;
-            EmptyState.Text = inTab.Count == 0
-                ? "No items in this tab yet. Click “+ Add Entity” to start."
-                : "No items match your search.";
+            EmptyState.Text = Loc.T(inTab.Count == 0 ? "Collection.Empty" : "Collection.NoMatch");
             selection.EndRender(); // what's no longer on screen (other tab, filtered out) drops out of the selection
         }
 
@@ -209,8 +222,7 @@ namespace TidyMind
         // from disk.
         private bool DeleteEntities(IReadOnlyCollection<Entity> doomed)
         {
-            string what = doomed.Count == 1 ? "1 item" : doomed.Count + " items";
-            if (MessageBox.Show("Delete " + what + "? This can't be undone.", "Confirm Delete",
+            if (Msg.Show(Loc.Plural("Collection.DeleteMany", doomed.Count), Loc.T("Common.ConfirmDelete"),
                     MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
                 return false;
 
@@ -222,27 +234,8 @@ namespace TidyMind
 
         // ---- Search -------------------------------------------------------
 
-        private void SearchBox_GotFocus(object sender, RoutedEventArgs e)
-        {
-            if (SearchBox.Text == "Search...")
-            {
-                SearchBox.Text = "";
-                SearchBox.Foreground = B("#1C1B19");
-            }
-        }
-
-        private void SearchBox_LostFocus(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(SearchBox.Text))
-            {
-                SearchBox.Text = "Search...";
-                SearchBox.Foreground = B("#8A8A87");
-            }
-        }
-
         private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (SearchBox.Text == "Search...") return;
             searchPause.Stop();
             searchPause.Start();
         }
@@ -323,6 +316,8 @@ namespace TidyMind
             card.Children.Add(subtitle);
             if (entity.EntityType == EntityTypes.Vehicle)
                 ShowVehicleOnCard(entity, title, subtitle);
+            if (subtitle.Text.Length > 0)
+                subtitle.ToolTip = subtitle.Text; // the whole line, when a longer translation is cut short
 
             selection.AttachCard(card, entity); // first: a Ctrl+click selects, and neither opens nor drags
             CardEffects.AttachHoverLift(card, shadow);
@@ -330,18 +325,18 @@ namespace TidyMind
             cardDrag.Attach(card, entity);
 
             ContextMenu menu = new ContextMenu();
-            MenuItem edit = new MenuItem { Header = "Edit" };
+            MenuItem edit = new MenuItem { Header = Loc.T("Common.Edit") };
             edit.Click += (s, e) => EditEntity(entity);
-            MenuItem delete = new MenuItem { Header = "Delete" };
+            MenuItem delete = new MenuItem { Header = Loc.T("Common.Delete") };
             delete.Click += (s, e) => DeleteEntity(entity);
-            MenuItem reminder = new MenuItem { Header = "Add Reminder" };
+            MenuItem reminder = new MenuItem { Header = Loc.T("Common.AddReminder") };
             reminder.Click += (s, e) => new AddReminderWindow(entity.Name).ShowDialog();
             menu.Items.Add(edit);
             menu.Items.Add(delete);
             menu.Items.Add(reminder);
             menu.Items.Add(ExportMenu.Submenu(() => entity.Name, (path, format) => ExportService.ExportEntity(entity, path, format)));
             menu.Items.Add(new Separator());
-            menu.Items.Add(TextCopy.CopyItem(() => entity.Name, "Copy name"));
+            menu.Items.Add(TextCopy.CopyItem(() => entity.Name, Loc.T("Common.CopyName")));
             card.ContextMenu = menu;
 
             return card;
@@ -370,7 +365,7 @@ namespace TidyMind
                 return;
             }
             ExpiryLevel level = Expiry.Level(nearest.Value.Date, DateTime.Today);
-            subtitle.Text = nearest.Value.Name + " " + Expiry.Describe(nearest.Value.Date, DateTime.Today);
+            subtitle.Text = Loc.F("Entity.ExpiryLine", nearest.Value.Field.ExpiryName, Expiry.Describe(nearest.Value.Date, DateTime.Today));
             subtitle.Foreground = Expiry.Brush(level);
             subtitle.FontWeight = Expiry.Weight(level);
         }
@@ -379,7 +374,7 @@ namespace TidyMind
         {
             string color = e.Color ?? "";
             int sizeCount = e.Sizes?.Count ?? 0;
-            string sizes = sizeCount == 0 ? "" : sizeCount + (sizeCount == 1 ? " size" : " sizes");
+            string sizes = sizeCount == 0 ? "" : Loc.Plural("Entity.SizeCount", sizeCount);
             return string.IsNullOrEmpty(color) || string.IsNullOrEmpty(sizes)
                 ? color + sizes : color + " · " + sizes;
         }
@@ -399,24 +394,8 @@ namespace TidyMind
         private void OpenDetail(Entity entity)
         {
             currentDetailEntity = entity;
-
             DetailImage.Source = EntityImages.Load(entity);
-
-            DetailName.Text = entity.Name;
-            DetailPanel.Children.Clear();
-
-            if (EntityTypes.Fields(entity.EntityType).Count > 0)
-                AddDefinedDetails(entity);
-            else
-            {
-                AddDetailRow("Brand", entity.Brand);
-                AddDetailRow("Color", entity.Color);
-                AddDetailRow("Material", entity.Material);
-                AddDetailRow("Season", entity.Season);
-                AddDetailRow("Purchase Price", entity.PurchasePrice);
-                AddSizesDetail(entity);
-                AddDetailRow("Notes", entity.Notes);
-            }
+            FillDetail(entity);
 
             OverlayGrid.Visibility = Visibility.Visible;
             OverlayGrid.Opacity = 0;
@@ -425,6 +404,26 @@ namespace TidyMind
             OverlayGrid.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(180)));
             DetailCard.RenderTransform.BeginAnimation(TranslateTransform.YProperty,
                 new DoubleAnimation(20, 0, TimeSpan.FromMilliseconds(180)));
+        }
+
+        // The detail card's rows; filled again after a language switch.
+        private void FillDetail(Entity entity)
+        {
+            DetailName.Text = entity.Name;
+            DetailPanel.Children.Clear();
+
+            if (EntityTypes.Fields(entity.EntityType).Count > 0)
+                AddDefinedDetails(entity);
+            else
+            {
+                AddDetailRow(Loc.T("Entity.Field.Brand"), entity.Brand);
+                AddDetailRow(Loc.T("Entity.Field.Color"), entity.Color);
+                AddDetailRow(Loc.T("Entity.Field.Material"), Choices.Label(entity.Material));
+                AddDetailRow(Loc.T("Entity.Field.Season"), Choices.Label(entity.Season));
+                AddDetailRow(Loc.T("Entity.Field.PurchasePrice"), entity.PurchasePrice);
+                AddSizesDetail(entity);
+                AddDetailRow(Loc.T("Entity.Field.Notes"), entity.Notes);
+            }
         }
 
         // A type with a definition (EntityTypes): its fields, notes and logs; an expiry date also says how close it is.
@@ -464,7 +463,7 @@ namespace TidyMind
 
             DetailPanel.Children.Add(new TextBlock
             {
-                Text = "Sizes",
+                Text = Loc.T("Entity.Sizes"),
                 Foreground = (Brush)FindResource("TextSub"),
                 FontSize = 11,
                 Margin = new Thickness(0, 8, 0, 4)
@@ -472,7 +471,7 @@ namespace TidyMind
 
             foreach (SizeQuantity sq in entity.Sizes)
             {
-                TextBox size = TextCopy.Selectable(sq.Size + " - " + sq.Condition + " x" + sq.Quantity, 13, B("#1C1B19"));
+                TextBox size = TextCopy.Selectable(sq.Size + " - " + Choices.Label(sq.Condition) + " x" + sq.Quantity, 13, B("#1C1B19"));
                 size.Margin = new Thickness(0, 0, 0, 4);
                 DetailPanel.Children.Add(size);
             }
@@ -500,7 +499,7 @@ namespace TidyMind
         private void DetailDeleteButton_Click(object sender, RoutedEventArgs e)
         {
             Entity target = currentDetailEntity;
-            var result = MessageBox.Show("Delete '" + target.Name + "'?", "Confirm Delete",
+            var result = Msg.Show(Loc.F("Common.DeleteNamed", target.Name), Loc.T("Common.ConfirmDelete"),
                 MessageBoxButton.YesNo, MessageBoxImage.Warning);
 
             if (result == MessageBoxResult.Yes)
@@ -588,8 +587,7 @@ namespace TidyMind
             string stored = EntityImages.Store.Import(pickedFile);
             if (stored == null)
             {
-                MessageBox.Show("Couldn't copy that image into " + EntityImages.Store.Folder + ", so the new picture "
-                    + "wasn't added. The rest of the item is saved as usual.", "Couldn't Add Picture",
+                Msg.Show(Loc.F("Collection.PictureFailed", EntityImages.Store.Folder), Loc.T("Collection.PictureFailed.Caption"),
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
@@ -600,7 +598,7 @@ namespace TidyMind
 
         private void DeleteEntity(Entity entity)
         {
-            var result = MessageBox.Show("Delete '" + entity.Name + "'?", "Confirm Delete",
+            var result = Msg.Show(Loc.F("Common.DeleteNamed", entity.Name), Loc.T("Common.ConfirmDelete"),
                 MessageBoxButton.YesNo, MessageBoxImage.Warning);
 
             if (result == MessageBoxResult.Yes)

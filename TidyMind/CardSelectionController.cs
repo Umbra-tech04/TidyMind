@@ -140,9 +140,9 @@ namespace TidyMind
 
         private ContextMenu BulkMenu()
         {
-            MenuItem delete = new MenuItem { Header = "Delete " + selected.Count + " selected" };
+            MenuItem delete = new MenuItem { Header = Loc.F("Selection.DeleteSelected", selected.Count) };
             delete.Click += (s, e) => DeleteSelected();
-            MenuItem clear = new MenuItem { Header = "Clear selection" };
+            MenuItem clear = new MenuItem { Header = Loc.T("Selection.Clear") };
             clear.Click += (s, e) => ClearSelection();
             return new ContextMenu { Tag = new BulkMenuTag(), Items = { delete, clear } };
         }

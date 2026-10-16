@@ -46,9 +46,10 @@ namespace TidyMind
             }) ? todo : null;
         }
 
+        // Day plan blocks that are time for this to-do are ticked or unticked with it.
         public static bool SetDone(Guid id, bool done)
         {
-            return Update(todos =>
+            bool saved = Update(todos =>
             {
                 QuickTodo todo = todos.FirstOrDefault(t => t.Id == id);
                 if (todo == null) return false;
@@ -57,6 +58,9 @@ namespace TidyMind
                 todo.CompletedDate = done ? DateTime.Now : (DateTime?)null;
                 return true;
             });
+            if (saved)
+                DayPlanTodos.SyncBlocks(TodoLink.ForHome(id), done);
+            return saved;
         }
 
         public static bool Rename(Guid id, string text)
@@ -90,7 +94,8 @@ namespace TidyMind
             return AtomicFile.TryWriteAllText(TodosFile, JsonSerializer.Serialize(todos));
         }
 
-        private static bool TryRead(out List<QuickTodo> todos)
+        // False if the file exists but can't be read; `todos` is then empty and the file must not be saved over.
+        public static bool TryRead(out List<QuickTodo> todos)
         {
             todos = new List<QuickTodo>();
             if (!File.Exists(TodosFile))

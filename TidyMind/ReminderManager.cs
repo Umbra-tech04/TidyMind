@@ -6,6 +6,8 @@ using System.Text.Json;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32.TaskScheduler;
+using Windows.Data.Xml.Dom;
+using Windows.UI.Notifications;
 
 namespace TidyMind
 {
@@ -13,8 +15,6 @@ namespace TidyMind
     {
         private static readonly string RemindersFile = AppPaths.Data("reminders.json");
         private const string TaskNamePrefix = "TidyMind_Reminder_";
-
-        private static NotifyIcon trayIcon;
 
         public static List<Reminder> LoadReminders()
         {
@@ -313,18 +313,7 @@ namespace TidyMind
             if (due == null)
                 return;
 
-            ShowToast(due.Title, due.Message);
-
-            // Keep the process (and the tray icon) alive long enough for the
-            // balloon/toast to actually render before we exit.
-            Thread.Sleep(6000);
-
-            if (trayIcon != null)
-            {
-                trayIcon.Visible = false;
-                trayIcon.Dispose();
-                trayIcon = null;
-            }
+            ShowNotification(due);
         }
 
         // Under the lock: the reminder this task is for, with the file and its task already moved on (a one-off
@@ -445,19 +434,83 @@ namespace TidyMind
             }
         }
 
-        private static void ShowToast(string title, string message)
+        // ---- The notification ---------------------------------------------
+
+        // Windows reports a notification it couldn't show within moments of Show; a shown one reports nothing, so
+        // the reminder process always waits this long before it exits.
+        private static readonly TimeSpan NotificationFailureWait = TimeSpan.FromSeconds(3);
+
+        // What Windows throws for a sender it doesn't know.
+        private const int ElementNotFound = unchecked((int)0x80070490);
+
+        // A Windows notification: a banner, then kept in the Action Center. Windows sends it only for App.UserModelId
+        // on a Start Menu shortcut (the installer's; a build run from its own folder has none). If it can't be sent,
+        // the reason goes to reminders.log and a tray balloon shows instead; notifications the user turned off for
+        // TidyMind stay off.
+        private static void ShowNotification(Reminder due)
         {
-            if (trayIcon == null)
+            // In the saved language (App reads it before a reminder fires); reminders.log stays in English.
+            string title = string.IsNullOrWhiteSpace(due.Title) ? Loc.T("Reminder.Toast.Title")
+                : Loc.F("Reminder.Toast.TitleFor", DayPlanReminders.ShownTitle(due, DayPlanReminders.BlockIds()));
+            string message = due.Message ?? "";
+            string problem;
+            try
             {
-                trayIcon = new NotifyIcon();
-                trayIcon.Icon = System.Drawing.SystemIcons.Information;
-                trayIcon.Visible = true;
+                ToastNotifier notifier = ToastNotificationManager.CreateToastNotifier(App.UserModelId);
+                NotificationSetting setting = notifier.Setting;
+                if (setting != NotificationSetting.Enabled)
+                {
+                    Note("fire " + due.Id + ": not shown, Windows notifications from TidyMind are off (" + setting + ")");
+                    return;
+                }
+                problem = SendNotification(notifier, title, message);
+                if (problem == null)
+                {
+                    Note("fire " + due.Id + ": notification sent");
+                    return;
+                }
+            }
+            catch (Exception e)
+            {
+                // Whatever Windows threw (a COMException mostly), the reminder must still show. "Not found" comes
+                // without a message.
+                problem = e.GetType().Name + " 0x" + e.HResult.ToString("X8") + ": "
+                    + (e.HResult == ElementNotFound ? "no Start Menu shortcut has TidyMind's ID (" + App.UserModelId + ")" : e.Message);
             }
 
-            trayIcon.BalloonTipIcon = ToolTipIcon.Info;
-            trayIcon.BalloonTipTitle = string.IsNullOrWhiteSpace(title) ? "Reminder" : "Reminder: " + title;
-            trayIcon.BalloonTipText = message;
-            trayIcon.ShowBalloonTip(5000);
+            Note("fire " + due.Id + ": the Windows notification failed (" + problem + "); shown as a tray balloon instead");
+            ShowBalloon(title, message);
+        }
+
+        // Null once shown; otherwise what Windows reported.
+        private static string SendNotification(ToastNotifier notifier, string title, string message)
+        {
+            // Filled in as text nodes, never as markup: a title can hold any character.
+            XmlDocument content = new XmlDocument();
+            content.LoadXml("<toast><visual><binding template=\"ToastGeneric\"><text/><text/></binding></visual></toast>");
+            XmlNodeList lines = content.GetElementsByTagName("text");
+            lines[0].AppendChild(content.CreateTextNode(title));
+            lines[1].AppendChild(content.CreateTextNode(message));
+
+            ToastNotification toast = new ToastNotification(content);
+            TaskCompletionSource<string> failed = new TaskCompletionSource<string>();
+            toast.Failed += (sender, args) =>
+                failed.TrySetResult("0x" + args.ErrorCode.HResult.ToString("X8") + ": " + args.ErrorCode.Message);
+            notifier.Show(toast);
+            return failed.Task.Wait(NotificationFailureWait) ? failed.Task.Result : null;
+        }
+
+        // A tray icon's balloon. Windows takes it away with the icon, so the process stays a few seconds for it to
+        // be seen.
+        private static void ShowBalloon(string title, string message)
+        {
+            using (NotifyIcon icon = new NotifyIcon { Icon = System.Drawing.SystemIcons.Information, Visible = true })
+            {
+                // An empty text throws.
+                icon.ShowBalloonTip(5000, title, message.Length > 0 ? message : title, ToolTipIcon.Info);
+                Thread.Sleep(6000);
+                icon.Visible = false;
+            }
         }
 
         private static string GetTaskName(Guid id)
@@ -505,6 +558,27 @@ namespace TidyMind
                 taskDefinition.Settings.ExecutionTimeLimit = TimeSpan.FromMinutes(10);
 
                 taskService.RootFolder.RegisterTaskDefinition(GetTaskName(id), taskDefinition);
+            }
+        }
+
+        // The uninstaller (TidyMind.exe --remove-reminder-tasks): deletes every TidyMind_Reminder_* task, so none is left
+        // pointing at a removed exe. Nothing else changes: reminders.json stays, and the next start re-creates the tasks
+        // (RepairTasks). Throws if the tasks can't be read or deleted.
+        public static void RemoveAllReminderTasks()
+        {
+            using (TaskService taskService = new TaskService())
+            {
+                List<string> names = new List<string>();
+                foreach (Microsoft.Win32.TaskScheduler.Task task in taskService.RootFolder.Tasks)
+                {
+                    using (task)
+                    {
+                        if (task.Name.StartsWith(TaskNamePrefix, StringComparison.OrdinalIgnoreCase))
+                            names.Add(task.Name);
+                    }
+                }
+                foreach (string name in names)
+                    taskService.RootFolder.DeleteTask(name, false);
             }
         }
 

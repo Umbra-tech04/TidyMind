@@ -15,7 +15,7 @@ namespace TidyMind
         // write: does the export to the chosen path in the chosen format.
         public static MenuItem Submenu(Func<string> name, Action<string, ExportFormat> write)
         {
-            MenuItem export = new MenuItem { Header = "Export" };
+            MenuItem export = new MenuItem { Header = Loc.T("Memory.Menu.Export") };
             export.Items.Add(FormatItem("Excel", ExportFormat.Excel, name, write));
             export.Items.Add(FormatItem("Word", ExportFormat.Docx, name, write));
             export.Items.Add(FormatItem("PDF", ExportFormat.Pdf, name, write));
@@ -54,13 +54,13 @@ namespace TidyMind
             catch (Exception ex)
             {
                 try { File.Delete(temp); } catch (Exception) { /* best effort: nothing else to do with it */ }
-                MessageBox.Show("The export couldn't be saved.\n\n" + ex.Message
-                    + (existed ? "\n\nThe existing file was left unchanged." : ""), "Export",
+                Msg.Show(Loc.F("Export.Failed", ex.Message)
+                    + (existed ? "\n\n" + Loc.T("Export.ExistingKept") : ""), Loc.T("Export.Caption"),
                     MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
-            MessageBox.Show("Export complete.", "Export", MessageBoxButton.OK, MessageBoxImage.Information);
+            Msg.Show(Loc.T("Export.Complete"), Loc.T("Export.Caption"), MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private const int MaxNameLength = 100;
@@ -104,10 +104,10 @@ namespace TidyMind
         {
             switch (format)
             {
-                case ExportFormat.Excel: return "Excel files (*.xlsx)|*.xlsx";
-                case ExportFormat.Docx: return "Word documents (*.docx)|*.docx";
-                case ExportFormat.Pdf: return "PDF files (*.pdf)|*.pdf";
-                default: return "All files (*.*)|*.*";
+                case ExportFormat.Excel: return Loc.T("Export.Filter.Excel");
+                case ExportFormat.Docx: return Loc.T("Export.Filter.Word");
+                case ExportFormat.Pdf: return Loc.T("Export.Filter.Pdf");
+                default: return Loc.T("Files.AllFilter");
             }
         }
     }

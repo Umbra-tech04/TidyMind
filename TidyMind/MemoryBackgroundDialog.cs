@@ -16,7 +16,7 @@ namespace TidyMind
         // The choice, or null if the dialog was cancelled.
         public static BackgroundChoice Choose(DependencyObject owner, Profile profile)
         {
-            BackgroundDialog dialog = new BackgroundDialog("Edit background", profile.Name + "  ·  every tab of this memory",
+            BackgroundDialog dialog = new BackgroundDialog(Loc.T("Background.EditTitle"), Loc.F("Background.MemorySub", profile.Name),
                 profile.GetBackground(), ImageStore.Backgrounds, PageBackground.Washed,
                 (type, color, pickedImage) => PagePreview(profile, type, color, pickedImage));
             return dialog.Ask(owner);

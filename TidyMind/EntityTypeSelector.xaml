@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TidyMind"
         mc:Ignorable="d"
-        Title="Add item" Height="200" Width="380"
+        Title="{local:Tr Entity.Add.Item}" Height="200" Width="380"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BgMain}">
     <Grid>
@@ -16,15 +16,15 @@
 
         <Border Grid.Row="0" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
                 BorderThickness="0,0,0,1" Padding="20,16">
-            <TextBlock Text="What do you want to add?"
+            <TextBlock Text="{local:Tr Entity.WhatToAdd}"
                        FontSize="16" FontWeight="Bold"
                        Foreground="{StaticResource TextMain}"/>
         </Border>
 
         <WrapPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
-            <Button Content="Clothing" Style="{StaticResource GhostButtonStyle}" Width="150" Height="56" Margin="8"
+            <Button Content="{local:Tr Entity.Type.Clothing}" Style="{StaticResource GhostButtonStyle}" Width="150" Height="56" Margin="8"
                     FontSize="13" Tag="Clothing" Click="TypeButton_Click"/>
-            <Button Content="Vehicle" Style="{StaticResource GhostButtonStyle}" Width="150" Height="56" Margin="8"
+            <Button Content="{local:Tr Entity.Type.Vehicle}" Style="{StaticResource GhostButtonStyle}" Width="150" Height="56" Margin="8"
                     FontSize="13" Tag="Vehicle" Click="TypeButton_Click"/>
         </WrapPanel>
     </Grid>

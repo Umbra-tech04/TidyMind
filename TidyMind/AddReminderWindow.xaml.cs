@@ -12,7 +12,8 @@ namespace TidyMind
 {
     public partial class AddReminderWindow : Window
     {
-        private const string MessagePlaceholder = "What should I remind you about?";
+        // Shown in the empty message box (in the language of the moment the window opened).
+        private readonly string MessagePlaceholder = Loc.T("Reminder.Form.Placeholder");
 
         private readonly string title;
         private readonly Reminder editing; // null when adding a new one
@@ -31,9 +32,11 @@ namespace TidyMind
         {
             editing = existing;
 
-            Title = "Edit Reminder";
-            HeadingText.Text = "Edit Reminder";
-            SaveButton.Content = "Save Changes";
+            Title = Loc.T("Reminder.Form.EditTitle");
+            if (!string.IsNullOrWhiteSpace(existing.Title)) // a day plan block's reminder is named in the current language
+                SubtitleText.Text = Loc.F("Reminder.Form.For", DayPlanReminders.ShownTitle(existing, DayPlanReminders.BlockIds()));
+            HeadingText.Text = Loc.T("Reminder.Form.EditTitle");
+            SaveButton.Content = Loc.T("Reminder.Form.SaveChanges");
 
             MessageInput.Text = existing.Message;
             MessageInput.Foreground = (Brush)FindResource("TextMain");
@@ -54,8 +57,8 @@ namespace TidyMind
             this.title = string.IsNullOrWhiteSpace(title) ? "" : title;
 
             SubtitleText.Text = string.IsNullOrWhiteSpace(title)
-                ? "General reminder (not attached to anything)"
-                : "Reminder for: " + title;
+                ? Loc.T("Reminder.Form.General")
+                : Loc.F("Reminder.Form.For", title);
 
             MessageInput.Text = MessagePlaceholder;
             MessageInput.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8A8A87"));
@@ -79,7 +82,7 @@ namespace TidyMind
         protected override void OnClosing(CancelEventArgs e)
         {
             if (DialogResult != true && TypedMessage != openedMessage
-                && MessageBox.Show(this, "Discard changes?", "Unsaved Changes", MessageBoxButton.YesNo,
+                && Msg.Show(this, Loc.T("Common.DiscardChanges"), Loc.T("Common.UnsavedChanges"), MessageBoxButton.YesNo,
                     MessageBoxImage.Question) != MessageBoxResult.Yes)
                 e.Cancel = true;
 
@@ -112,7 +115,7 @@ namespace TidyMind
                 out string problemTitle, out string problem);
             if (reminder == null)
             {
-                MessageBox.Show(problem, problemTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                Msg.Show(this, problem, problemTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -130,8 +133,7 @@ namespace TidyMind
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is JsonException
                                        || ex is COMException)
             {
-                MessageBox.Show("Couldn't save the reminder: reminders.json can't be read or written, or Windows "
-                    + "Task Scheduler didn't accept it.", "Couldn't Save", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Msg.Show(this, Loc.T("Reminder.SaveFailed"), Loc.T("Common.CouldntSave"), MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 

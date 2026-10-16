@@ -62,8 +62,8 @@ namespace TidyMind
             if (AtomicFile.TryWriteAllText(file, JsonSerializer.Serialize(entities)))
                 return true;
 
-            MessageBox.Show("Couldn't save the items of '" + memory.Name + "': this file can't be written:\n" + file
-                + "\n\nYour last change wasn't saved.", "Couldn't Save", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Msg.Show(Loc.F("Collection.SaveFailed", memory.Name, file), Loc.T("Common.CouldntSave"), MessageBoxButton.OK,
+                MessageBoxImage.Warning);
             return false;
         }
     }

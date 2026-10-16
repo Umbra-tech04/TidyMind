@@ -19,9 +19,10 @@ namespace TidyMind
         {
             Show(layer, profile);
 
-            MenuItem edit = new MenuItem { Header = "Edit Background" };
+            MenuItem edit = new MenuItem { Header = Loc.T("Background.Edit") };
             edit.Click += (s, e) => Edit(page, layer, profile, saveProfiles);
             page.ContextMenu = new ContextMenu { Items = { edit } };
+            page.ContextMenu.Opened += (s, e) => edit.Header = Loc.T("Background.Edit"); // in the language of the moment
 
             // Cards, tabs and text boxes have their own menus (WPF opens the nearest one); buttons don't, so a
             // right-click on one would otherwise fall through to the page.
@@ -55,8 +56,7 @@ namespace TidyMind
             {
                 if (saveProfiles())
                     return true;
-                MessageBox.Show("Couldn't save: profiles.json can't be written. The background wasn't changed.",
-                    "Couldn't Save", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Msg.Show(Loc.T("Background.ProfilesNotSaved"), Loc.T("Common.CouldntSave"), MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }, ImageStore.Backgrounds);
 

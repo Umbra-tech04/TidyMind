@@ -10,7 +10,8 @@ namespace TidyMind
         Project,
         Entity,
         File, // a project's attached file; opens the project
-        Note  // a page of a project's notes; opens the project at that page
+        Note, // a page of a project's notes; opens the project at that page
+        PlanBlock // a day plan block (no Profile); opens that day's plan
     }
 
     // One searchable thing plus enough to navigate back to it.
@@ -30,8 +31,10 @@ namespace TidyMind
         public SearchableText Searchable => searchable ??= new SearchableText(Text ?? Title);
         private SearchableText? searchable;
 
-        // The project's or item's Id (Guid.Empty for a memory itself).
+        // The project's, item's or block's Id (Guid.Empty for a memory itself).
         public Guid ItemId { get; set; }
+
+        public DateTime Date { get; set; } // PlanBlock results: the block's day
     }
 
     public static class SearchIndexBuilder
@@ -49,7 +52,7 @@ namespace TidyMind
                 {
                     Kind = SearchResultKind.Memory,
                     Title = profile.Name,
-                    Location = profile.Type == ProfileType.Collection ? "Collection memory" : "Project memory",
+                    Location = Loc.T(profile.Type == ProfileType.Collection ? "Search.CollectionMemory" : "Search.ProjectMemory"),
                     Profile = profile
                 });
 
@@ -58,6 +61,7 @@ namespace TidyMind
                 else
                     AddProjects(index, profile);
             }
+            AddDayPlan(index);
 
             // Folded now, while the index is built, rather than on the first key typed.
             foreach (SearchResult result in index)
@@ -122,12 +126,31 @@ namespace TidyMind
                         Kind = SearchResultKind.Note,
                         Title = firstLine,
                         Text = text,
-                        Location = profile.Name + Arrow + project.Name + Arrow + "Page " + (i + 1),
+                        Location = profile.Name + Arrow + project.Name + Arrow + Loc.F("Search.Page", i + 1),
                         Profile = profile,
                         ItemId = project.Id,
                         Page = i
                     });
                 }
+            }
+        }
+
+        // Every block by its title and notes.
+        private static void AddDayPlan(List<SearchResult> index)
+        {
+            DayPlanStore.TryLoad(out DayPlanFile plan);
+            foreach (DayPlanBlock block in plan.Blocks)
+            {
+                index.Add(new SearchResult
+                {
+                    Kind = SearchResultKind.PlanBlock,
+                    Title = block.Title,
+                    Text = string.IsNullOrWhiteSpace(block.Notes) ? null : block.Title + "\n" + block.Notes,
+                    Location = Loc.T("Plan.Name") + Arrow + block.Date.ToString(Loc.T("Format.ShortWeekdayDate"), Loc.Culture)
+                        + ", " + block.TimeRange(),
+                    ItemId = block.Id,
+                    Date = block.Date.Date
+                });
             }
         }
 

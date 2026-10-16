@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Windows;
-using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -20,20 +18,26 @@ namespace TidyMind
         private const int DaybookDays = 8;             // today + the aggregator's 7 upcoming days
         private const double StackBelowWidth = 860;    // narrower than this, the week moves under the to-do sheet
 
-        private static readonly CultureInfo English = CultureInfo.InvariantCulture;
         private readonly IList<Profile> profiles;
         private readonly Action<SearchResult> navigate;
+        private readonly Action openTodayPlan;
         private Window host;
 
-        // discover: a "What can TidyMind do?" item was chosen (its TourSteps.Discovery start).
-        public HomeView(IList<Profile> profiles, Action<SearchResult> navigate, Action<string> discover)
+        public HomeView(IList<Profile> profiles, Action<SearchResult> navigate, Action openTodayPlan)
         {
             InitializeComponent();
             this.profiles = profiles;
             this.navigate = navigate;
+            this.openTodayPlan = openTodayPlan;
 
-            ShowDiscovery(discover);
+            ShowDiscovery();
             SizeChanged += (s, e) => ApplyWidth(e.NewSize.Width);
+            Loc.Track(this, () =>
+            {
+                ShowDiscovery();
+                Refresh();
+            });
+            QuickTodos.DoneChanged += () => ShowPlan(DateTime.Now); // a linked block's row follows its to-do
 
             // Overlays (calendar, reminders) and dialogs change data while Home stays on screen, and reminders
             // fire from Task Scheduler while the app is in the background; all of them end with the main window
@@ -80,9 +84,10 @@ namespace TidyMind
             DateTime now = DateTime.Now;
             DashboardData data = DashboardDataAggregator.Build(profiles, now);
 
-            DateText.Text = now.ToString("dddd, MMMM d", English);
+            DateText.Text = now.ToString(Loc.T("Format.WeekdayDayMonth"), Loc.Culture);
             GreetingText.Text = GreetingProvider.Pick(now);
 
+            ShowPlan(now);
             ShowDaybook(data, now.Date);
             ShowExpiries(data, now.Date);
 
@@ -101,46 +106,164 @@ namespace TidyMind
             Grid.SetColumnSpan(WeekPanel, stacked ? 3 : 1);
             Grid.SetColumnSpan(TodoSheet, stacked ? 3 : 1);
             WeekPanel.Margin = new Thickness(0, stacked ? 20 : 0, 0, 0);
-            DiscoveryItems.Columns = stacked ? 3 : 6;
 
             double side = width < 640 ? 20 : stacked ? 32 : 48;
             Page.Margin = new Thickness(side, stacked ? 28 : 40, side, 88);
+
+            // As many tiles a row as fit at their narrowest: four on a wide page, two on the narrowest.
+            double pageWidth = Math.Min(width - 2 * side, Page.MaxWidth);
+            DiscoveryItems.Columns = Math.Clamp((int)((pageWidth + TileGap) / TileMinWidth), 2, 4);
         }
 
         // ---- What can TidyMind do? ----------------------------------------
 
-        private void ShowDiscovery(Action<string> discover)
+        private const double TileMinWidth = 230;
+        private const double TileGap = 12;
+
+        // One tile per feature: its Segoe MDL2 glyph and its key; the name and line are "Home.Tile.<Key>.Title" and
+        // "Home.Tile.<Key>.Text".
+        private static readonly (string Glyph, string Key)[] Features =
         {
-            if (AppSettings.Load().HideDiscovery == true)
-            {
-                DiscoverySection.Visibility = Visibility.Collapsed;
-                return;
-            }
+            ("\uE821", "Projects"),    // Work
+            ("\uE736", "Notebook"),    // ReadingMode
+            ("\uE73A", "Todos"),       // CheckboxComposite
+            ("\uE7B8", "Collections"), // Package
+            ("\uEA8F", "Reminders"),   // Ringer
+            ("\uE787", "Calendar"),    // Calendar
+            ("\uE823", "DayPlan"),     // Recent
+            ("\uE70B", "QuickNotes"),  // QuickNote
+            ("\uE721", "Search"),      // Search
+            ("\uE790", "Backgrounds"), // Color
+            ("\uEDE1", "Export"),      // Export
+            ("\uE777", "Backup")       // UpdateRestore
+        };
 
-            DiscoveryTitle.Text = TourSteps.DiscoveryTitle;
-            HideDiscoveryLink.Content = TourSteps.DiscoveryHide;
-            Style style = (Style)FindResource("DiscoveryItemStyle");
-            foreach ((string title, string text, string start) in TourSteps.Discovery)
-            {
-                StackPanel content = new StackPanel();
-                content.Children.Add(Caption(title, 14, Res("TextMain"), FontWeights.SemiBold, new Thickness(0)));
-                TextBlock line = Caption(text, 12, Res("TextSub"), FontWeights.Normal, new Thickness(0, 2, 0, 0));
-                line.TextWrapping = TextWrapping.Wrap;
-                content.Children.Add(line);
-
-                Button item = new Button { Style = style, Content = content, Margin = new Thickness(0, 0, 4, 0) };
-                AutomationProperties.SetName(item, title + ". " + text);
-                item.Click += (s, e) => discover(start);
-                DiscoveryItems.Children.Add(item);
-            }
+        // Built again after a language switch.
+        private void ShowDiscovery()
+        {
+            DiscoveryItems.Margin = new Thickness(0, 0, -TileGap, -TileGap); // the tiles' right and bottom gaps reach past the edge
+            DiscoveryItems.Children.Clear();
+            foreach ((string glyph, string key) in Features)
+                DiscoveryItems.Children.Add(FeatureTile(glyph, Loc.T("Home.Tile." + key + ".Title"), Loc.T("Home.Tile." + key + ".Text")));
+            FoldDiscovery(AppSettings.Load().HideDiscovery == true);
         }
 
-        // For good; if settings.json can't be written, just for now.
-        private void HideDiscovery_Click(object sender, RoutedEventArgs e)
+        // Remembered for next time; if settings.json can't be written, just for now.
+        private void DiscoveryToggle_Click(object sender, RoutedEventArgs e)
         {
-            AppSettings.Update(s => s.HideDiscovery = true);
-            DiscoverySection.Visibility = Visibility.Collapsed;
+            bool fold = DiscoveryItems.Visibility == Visibility.Visible;
+            AppSettings.Update(s => s.HideDiscovery = fold ? true : null);
+            FoldDiscovery(fold);
         }
+
+        private void FoldDiscovery(bool folded)
+        {
+            DiscoveryItems.Visibility = folded ? Visibility.Collapsed : Visibility.Visible;
+            DiscoveryToggle.Content = Loc.T(folded ? "Home.Discovery.Show" : "Home.Discovery.Hide");
+        }
+
+        // To read, not to click: a quiet frame with the feature's mark, its name and one line. Nothing in it reacts
+        // to the mouse or takes the keyboard focus.
+        private FrameworkElement FeatureTile(string glyph, string title, string text)
+        {
+            Grid grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            grid.Children.Add(new Border
+            {
+                Width = 30,
+                Height = 30,
+                CornerRadius = new CornerRadius(8),
+                Background = Res("AccentSoft"),
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = new Thickness(0, 1, 12, 0),
+                Child = new TextBlock
+                {
+                    Text = glyph,
+                    FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                    FontSize = 15,
+                    Foreground = Res("Accent"),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
+                }
+            });
+
+            StackPanel words = new StackPanel();
+            Grid.SetColumn(words, 1);
+            words.Children.Add(Caption(title, 14, Res("TextMain"), FontWeights.SemiBold, new Thickness(0)));
+            TextBlock line = Caption(text, 12, Res("TextSub"), FontWeights.Normal, new Thickness(0, 2, 0, 0));
+            line.TextWrapping = TextWrapping.Wrap;
+            words.Children.Add(line);
+            grid.Children.Add(words);
+
+            return new Border
+            {
+                Background = Res("BgPanel"),
+                BorderBrush = Res("Border"),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(12),
+                Padding = new Thickness(14, 12, 14, 12),
+                Margin = new Thickness(0, 0, TileGap, TileGap),
+                SnapsToDevicePixels = true,
+                Child = grid
+            };
+        }
+
+        // ---- Today's plan ------------------------------------------------
+
+        private const int PlanRowsShown = 3;
+
+        // Today has day plan blocks: the week then doesn't call today empty.
+        private bool todayPlanned;
+
+        // The blocks still ahead today (the one going on now first), a few at most; a click on one opens the plan.
+        private void ShowPlan(DateTime now)
+        {
+            PlanRows.Children.Clear();
+            bool readable = DayPlanStore.TryLoad(out DayPlanFile plan);
+            List<DayPlanBlock> today = DayPlanStore.BlocksOn(plan, now.Date);
+            int minute = (int)now.TimeOfDay.TotalMinutes;
+            List<DayPlanBlock> ahead = today.Where(b => b.EndMinute > minute).ToList();
+            todayPlanned = today.Count > 0;
+            OpenPlanLink.Content = Loc.T(today.Count == 0 && readable ? "Home.Plan.PlanToday" : "Home.Plan.Open");
+
+            if (!readable)
+                PlanRows.Children.Add(Hint(Loc.T("Home.Plan.Unreadable"), new Thickness(0, 6, 0, 0)));
+            else if (ahead.Count == 0)
+                PlanRows.Children.Add(Hint(Loc.T(today.Count == 0 ? "Home.Plan.Nothing" : "Home.Plan.NothingMore"),
+                    new Thickness(0, 6, 0, 0)));
+
+            foreach (DayPlanBlock block in ahead.Take(PlanRowsShown))
+                PlanRows.Children.Add(PlanRow(block));
+            if (ahead.Count > PlanRowsShown)
+                PlanRows.Children.Add(Hint(Loc.F("Home.Plan.AndMore", ahead.Count - PlanRowsShown), new Thickness(0, 2, 0, 0)));
+        }
+
+        private FrameworkElement PlanRow(DayPlanBlock block)
+        {
+            Border row = HoverRow(new Thickness(10, 5, 10, 5));
+            row.Margin = new Thickness(-10, 0, 0, 0);
+            CardEffects.AttachClick(row, openTodayPlan);
+
+            Grid grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(96) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            TextBlock time = Caption(block.TimeRange(), 13, Res("TextSub"), FontWeights.Normal, new Thickness(0, 1, 0, 0));
+            Typography.SetNumeralAlignment(time, FontNumeralAlignment.Tabular);
+            grid.Children.Add(time);
+
+            TextBlock title = Caption(block.Title, 14, Res(block.Done ? "TextSub" : "TextMain"), FontWeights.Normal, new Thickness(0));
+            title.TextDecorations = block.Done ? TextDecorations.Strikethrough : null;
+            Grid.SetColumn(title, 1);
+            grid.Children.Add(title);
+
+            row.Child = grid;
+            return row;
+        }
+
+        private void OpenPlan_Click(object sender, RoutedEventArgs e) => openTodayPlan();
 
         // ---- This week ----------------------------------------------------
 
@@ -182,8 +305,8 @@ namespace TidyMind
             Grid.SetColumn(content, 1);
             foreach (DashboardAgendaItem item in items)
                 content.Children.Add(AgendaRow(item));
-            if (empty && isToday)
-                content.Children.Add(Hint("Nothing planned for today.", new Thickness(0, 6, 0, 0)));
+            if (empty && isToday && !todayPlanned)
+                content.Children.Add(Hint(Loc.T("Home.Week.NothingToday"), new Thickness(0, 6, 0, 0)));
             grid.Children.Add(content);
 
             row.Child = grid;
@@ -202,12 +325,12 @@ namespace TidyMind
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Background = Brushes.Transparent,
                 Cursor = Cursors.Hand,
-                ToolTip = "Open in calendar"
+                ToolTip = Loc.T("Home.Week.OpenInCalendar")
             };
 
             TextBlock number = new TextBlock
             {
-                Text = date.Day.ToString(English),
+                Text = date.Day.ToString(Loc.Culture),
                 FontFamily = (FontFamily)FindResource("DisplayFont"),
                 FontSize = 24,
                 FontWeight = isToday ? FontWeights.Normal : FontWeights.Light,
@@ -218,7 +341,7 @@ namespace TidyMind
 
             TextBlock weekday = new TextBlock
             {
-                Text = isToday ? "Today" : date.ToString("ddd", English),
+                Text = isToday ? Loc.T("Common.Today") : date.ToString("ddd", Loc.Culture),
                 FontSize = 11,
                 FontWeight = isToday ? FontWeights.SemiBold : FontWeights.Normal,
                 Foreground = isToday ? CardEffects.Accent : Res("TextSub"),
@@ -258,7 +381,7 @@ namespace TidyMind
 
             if (reminder)
             {
-                TextBox time = RowText(item.Time?.ToString("HH:mm", English) ?? "", 13, Res("TextSub"), menu);
+                TextBox time = RowText(item.Time?.ToString("HH:mm", Loc.Culture) ?? "", 13, Res("TextSub"), menu);
                 time.Margin = new Thickness(0, 1, 12, 0);
                 time.HorizontalAlignment = HorizontalAlignment.Right;
                 Typography.SetNumeralAlignment(time, FontNumeralAlignment.Tabular);
@@ -301,11 +424,12 @@ namespace TidyMind
 
             int past = data.Expiries.Count(x => x.Date < today);
             int coming = data.Expiries.Count - past;
-            ExpiriesLede.Text = string.Join(", ", new[]
-            {
-                past == 0 ? null : past + " already past",
-                coming == 0 ? null : coming + " in the next " + DashboardDataAggregator.ExpiryDays + " days"
-            }.Where(part => part != null)) + ".";
+            // Each part is a whole clause with its own count, so each language agrees its words with that count.
+            string? pastPart = past == 0 ? null : Loc.Plural("Home.Expiries.Past", past);
+            string? comingPart = coming == 0 ? null : Loc.Plural("Home.Expiries.Coming", coming, DashboardDataAggregator.ExpiryDays);
+            ExpiriesLede.Text = pastPart != null && comingPart != null
+                ? Loc.F("Home.Expiries.Pair", pastPart, comingPart)
+                : Loc.F("Home.Expiries.Single", pastPart ?? comingPart);
 
             foreach (DashboardExpiry expiry in data.Expiries)
                 ExpiryRows.Children.Add(ExpiryRow(expiry, today));

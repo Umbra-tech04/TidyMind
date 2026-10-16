@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TidyMind"
         mc:Ignorable="d"
-        Title="Add Entity" Height="650" Width="480"
+        Title="{local:Tr Entity.Add.Item}" Height="650" Width="480"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BgMain}">
     <Grid>
@@ -17,7 +17,7 @@
 
         <Border Grid.Row="0" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
                 BorderThickness="0,0,0,1" Padding="20,16">
-            <TextBlock x:Name="FormTitle" Text="Add Entity" FontSize="18" FontWeight="Bold"
+            <TextBlock x:Name="FormTitle" FontSize="18" FontWeight="Bold"
                        Foreground="{StaticResource TextMain}"/>
         </Border>
 
@@ -28,7 +28,7 @@
 
         <Border Grid.Row="2" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
                 BorderThickness="0,1,0,0" Padding="20,10">
-            <Button x:Name="SaveButton" Content="Save"
+            <Button x:Name="SaveButton" Content="{local:Tr Common.Save}"
                     Width="120" Height="34" HorizontalAlignment="Right"
                     FontWeight="Bold"
                     Click="SaveButton_Click"/>

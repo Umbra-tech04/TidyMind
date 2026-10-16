@@ -39,10 +39,10 @@ namespace TidyMind
 
         // Returns the entered text, or null if the user cancelled.
         public static string Prompt(DependencyObject owner, string heading, string label,
-            string initialValue = "", string confirmText = "Create",
+            string initialValue = "", string confirmText = null,
             bool multiline = false, bool allowEmpty = false)
         {
-            InputDialog dialog = new InputDialog(heading, label, initialValue, confirmText, multiline, allowEmpty);
+            InputDialog dialog = new InputDialog(heading, label, initialValue, confirmText ?? Loc.T("Input.Create"), multiline, allowEmpty);
 
             Window ownerWindow = owner as Window ?? Window.GetWindow(owner);
             if (ownerWindow != null)

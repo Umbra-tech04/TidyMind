@@ -1,0 +1,13 @@
+TidyMind - Terms
+
+TidyMind is free to use on your own computers.
+
+It is provided as is, without any warranty. It may contain mistakes, and the
+author is not responsible for lost data or any other damage that comes from
+using it. Keep your own backups of anything that matters to you (Settings >
+Back up all data).
+
+TidyMind uses open-source components. Their licences are listed in
+THIRD-PARTY-NOTICES.txt in the program folder and under Settings > Licenses.
+
+By installing TidyMind you accept these terms.

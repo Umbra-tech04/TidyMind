@@ -1,0 +1,87 @@
+<Window x:Class="TidyMind.DayPlanBlockDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:TidyMind"
+        Width="440"
+        SizeToContent="Height"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource BgMain}"
+        PreviewKeyDown="Window_PreviewKeyDown">
+    <Window.Resources>
+        <Style x:Key="LabelStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSub}"/>
+            <Setter Property="Margin" Value="0,16,0,8"/>
+        </Style>
+    </Window.Resources>
+
+    <StackPanel Margin="24,22,24,20">
+        <TextBlock x:Name="HeadingText" FontSize="17" FontWeight="Bold" Foreground="{StaticResource TextMain}"/>
+        <TextBlock x:Name="SubheadingText" FontSize="12" Foreground="{StaticResource TextSub}" Margin="0,4,0,0"/>
+
+        <TextBlock Text="{local:Tr Day.Title}" Style="{StaticResource LabelStyle}" Margin="0,20,0,8"/>
+        <Grid>
+            <TextBox x:Name="TitleInput" Style="{StaticResource NoteInputStyle}" FontWeight="SemiBold"
+                     TextChanged="TitleInput_TextChanged"/>
+            <TextBlock x:Name="TitlePlaceholder" Text="{local:Tr Plan.Dialog.TitlePlaceholder}" FontSize="14"
+                       Foreground="{StaticResource TextSub}" Margin="13,0,0,0" VerticalAlignment="Center"
+                       IsHitTestVisible="False"/>
+        </Grid>
+
+        <TextBlock Text="{local:Tr Plan.Dialog.DayAndTime}" Style="{StaticResource LabelStyle}"/>
+        <DatePicker x:Name="DayPicker" Width="180" Height="32" HorizontalAlignment="Left" Margin="0,0,0,8"
+                    VerticalContentAlignment="Center"/>
+        <StackPanel Orientation="Horizontal">
+            <ComboBox x:Name="StartHourBox" Width="62" Height="32" ToolTip="{local:Tr Plan.Dialog.StartHour}" AutomationProperties.Name="{local:Tr Plan.Dialog.StartHour}"/>
+            <TextBlock Text=":" Margin="4,0" VerticalAlignment="Center" Foreground="{StaticResource TextSub}"/>
+            <ComboBox x:Name="StartMinuteBox" Width="62" Height="32" ToolTip="{local:Tr Plan.Dialog.StartMinute}" AutomationProperties.Name="{local:Tr Plan.Dialog.StartMinute}"/>
+            <TextBlock Text="–" Margin="12,0" VerticalAlignment="Center" Foreground="{StaticResource TextSub}"/>
+            <ComboBox x:Name="EndHourBox" Width="62" Height="32" ToolTip="{local:Tr Plan.Dialog.EndHour}" AutomationProperties.Name="{local:Tr Plan.Dialog.EndHour}"/>
+            <TextBlock Text=":" Margin="4,0" VerticalAlignment="Center" Foreground="{StaticResource TextSub}"/>
+            <ComboBox x:Name="EndMinuteBox" Width="62" Height="32" ToolTip="{local:Tr Plan.Dialog.EndMinute}" AutomationProperties.Name="{local:Tr Plan.Dialog.EndMinute}"/>
+        </StackPanel>
+
+        <TextBlock Text="{local:Tr Day.Color}" Style="{StaticResource LabelStyle}"/>
+        <WrapPanel x:Name="SwatchPanel"/>
+
+        <TextBlock Text="{local:Tr Plan.Dialog.Notes}" Style="{StaticResource LabelStyle}"/>
+        <Grid>
+            <TextBox x:Name="NotesInput" Style="{StaticResource NoteInputStyle}" Height="72"
+                     AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                     TextChanged="NotesInput_TextChanged"/>
+            <TextBlock x:Name="NotesPlaceholder" Text="{local:Tr Plan.Dialog.NotesPlaceholder}" FontSize="14"
+                       Foreground="{StaticResource TextSub}" Margin="13,9,0,0" VerticalAlignment="Top"
+                       IsHitTestVisible="False"/>
+        </Grid>
+
+        <TextBlock Text="{local:Tr Plan.Dialog.Todo}" Style="{StaticResource LabelStyle}"/>
+        <ComboBox x:Name="TodoBox" Height="32" SelectionChanged="TodoBox_SelectionChanged"/>
+
+        <CheckBox x:Name="DoneCheck" Content="{local:Tr Plan.Done}" Margin="0,14,0,0"/>
+
+        <TextBlock Text="{local:Tr Plan.Dialog.Reminder}" Style="{StaticResource LabelStyle}"/>
+        <StackPanel Orientation="Horizontal">
+            <CheckBox x:Name="RemindCheck" Content="{local:Tr Plan.Dialog.RemindMe}" VerticalAlignment="Center"
+                      Checked="RemindCheck_Changed" Unchecked="RemindCheck_Changed"/>
+            <ComboBox x:Name="LeadBox" MinWidth="170" Height="32" Margin="14,0,0,0"
+                      AutomationProperties.Name="{local:Tr Plan.Dialog.RemindMe}"/>
+        </StackPanel>
+
+        <Grid Margin="0,22,0,0">
+            <Button x:Name="DeleteButton" Content="{local:Tr Common.Delete}" HorizontalAlignment="Left"
+                    Style="{StaticResource GhostButtonStyle}" Foreground="{StaticResource Danger}"
+                    Height="36" Padding="14,0" Visibility="Collapsed"
+                    Click="DeleteButton_Click"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="{local:Tr Common.Cancel}" IsCancel="True" Style="{StaticResource GhostButtonStyle}"
+                        MinWidth="92" Padding="14,0" Height="36" Margin="0,0,10,0"/>
+                <Button x:Name="SaveButton" Content="{local:Tr Common.Save}" ToolTip="{local:Tr Common.SaveTip}"
+                        MinWidth="104" Padding="14,0" Height="36" FontWeight="SemiBold"
+                        Click="SaveButton_Click"/>
+            </StackPanel>
+        </Grid>
+    </StackPanel>
+</Window>

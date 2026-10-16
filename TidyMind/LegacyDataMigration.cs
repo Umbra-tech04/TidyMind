@@ -68,7 +68,7 @@ namespace TidyMind
                     ? "No data from an older version was found."
                     : "Copied from " + source + ". The originals there were left untouched.";
                 if (!AtomicFile.TryWriteAllText(marker, note + Environment.NewLine + DateTime.Now.ToString("u") + Environment.NewLine))
-                    throw new IOException("Couldn't write " + marker + ".");
+                    throw new IOException(Loc.F("Migration.MarkerFailed", marker));
                 return true;
             }
             catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
@@ -150,7 +150,7 @@ namespace TidyMind
                 if (!SameContent(from, temp))
                 {
                     File.Delete(temp);
-                    throw new IOException(relative + " didn't copy correctly.");
+                    throw new IOException(Loc.F("Migration.CopyFailed", relative));
                 }
                 File.Move(temp, to);
             }

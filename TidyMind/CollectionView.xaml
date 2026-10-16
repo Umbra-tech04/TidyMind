@@ -33,11 +33,12 @@
                 <StackPanel x:Name="Toolbar" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                     <TextBox x:Name="SearchBox" Style="{StaticResource SearchBoxStyle}"
                              Width="240" Margin="0,0,10,0"
-                             Foreground="{StaticResource TextSub}" Text="Search..."
-                             GotFocus="SearchBox_GotFocus" LostFocus="SearchBox_LostFocus"
+                             Tag="{local:Tr Common.SearchPlaceholder}"
+                             AutomationProperties.Name="{local:Tr Common.SearchPlaceholder}"
                              TextChanged="SearchBox_TextChanged"/>
-                    <Button Content="+  Add item" Height="36" Padding="16,0"
-                            Click="AddEntityButton_Click"/>
+                    <Button Height="36" Padding="16,0" Click="AddEntityButton_Click">
+                        <TextBlock><Run Text="+  "/><Run Text="{local:Tr Collection.AddItem}"/></TextBlock>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
@@ -53,8 +54,8 @@
         <ScrollViewer x:Name="CardScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="16,0,16,20">
             <Grid x:Name="CardArea">
                 <WrapPanel x:Name="EntityPanel"/>
-                <TextBlock x:Name="EmptyState" Text="No items yet. Click “+ Add item” to start."
-                           FontSize="13" Foreground="{StaticResource TextSub}"
+                <TextBlock x:Name="EmptyState"
+                           FontSize="13" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="520" Foreground="{StaticResource TextSub}"
                            HorizontalAlignment="Center" Margin="0,60,0,0"
                            Visibility="Collapsed"/>
                 <Canvas x:Name="MarqueeCanvas" IsHitTestVisible="False"/>
@@ -97,6 +98,7 @@
                                      VerticalAlignment="Center" Margin="0,0,40,0"/>
                             <Button Content="✕" Width="30" Height="30"
                                     Style="{StaticResource IconButtonStyle}"
+                                    ToolTip="{local:Tr Common.Close}" AutomationProperties.Name="{local:Tr Common.Close}"
                                     HorizontalAlignment="Right" VerticalAlignment="Top"
                                     Click="CloseOverlay_Click"/>
                         </Grid>
@@ -107,9 +109,9 @@
 
                         <StackPanel Grid.Row="2" Orientation="Horizontal"
                                     HorizontalAlignment="Right" Margin="0,16,0,0">
-                            <Button Content="Edit" Width="90" Height="34"
+                            <Button Content="{local:Tr Common.Edit}" MinWidth="90" Padding="14,0" Height="34"
                                     Margin="0,0,10,0" Click="DetailEditButton_Click"/>
-                            <Button Content="Delete" Width="90" Height="34"
+                            <Button Content="{local:Tr Common.Delete}" MinWidth="90" Padding="14,0" Height="34"
                                     Style="{StaticResource GhostButtonStyle}" Foreground="{StaticResource Danger}"
                                     Click="DetailDeleteButton_Click"/>
                         </StackPanel>

@@ -22,9 +22,12 @@ namespace TidyMind
     // One step of a tour (TourSteps): what to point at, what to say, and what ends it.
     public class TourStep
     {
-        public string Id { get; init; } = "";
-        public string Title { get; init; } = "";
-        public string Text { get; init; } = "";
+        // Names the step and its texts: "Tour.<Key>.Title" and "Tour.<Key>.Text", in the current language.
+        public string Key { get; init; } = "";
+        public Func<object?[]>? TextArgs { get; init; }
+
+        public string Title => Loc.T("Tour." + Key + ".Title");
+        public string Text => TextArgs == null ? Loc.T("Tour." + Key + ".Text") : Loc.F("Tour." + Key + ".Text", TextArgs());
 
         // The element to spotlight, looked up again as the page changes. Null, or nothing found: the callout sits in
         // the middle and Next moves on.
@@ -40,6 +43,7 @@ namespace TidyMind
         public string? Signal { get; init; }
 
         // A card (welcome, basics done, the end) has its own buttons instead of Skip tour / Next and no progress dots.
+        // Primary and Secondary are the buttons' string keys.
         public string? Primary { get; init; }
         public TourChoice PrimaryChoice { get; init; } = TourChoice.Next;
         public string? Secondary { get; init; }
@@ -76,15 +80,16 @@ namespace TidyMind
             follow.Tick += (s, e) => Guard(Refresh);
         }
 
-        // Starts at steps[start]; a tour already running is closed first (without its end being reported).
-        public static void Run(IReadOnlyList<TourStep> steps, int start, Action<TourEnd> ended)
+        // Starts at the first step; a tour already running is closed first (without its end being reported).
+        public static void Run(IReadOnlyList<TourStep> steps, Action<TourEnd> ended)
         {
             Current?.Close();
             GuidedTour tour = new GuidedTour(steps, ended);
             Current = tour;
             TourSignals.Raised += tour.OnSignal;
+            Loc.LanguageChanged += tour.OnLanguageChanged;
             tour.follow.Start();
-            tour.Guard(() => tour.Show(start));
+            tour.Guard(() => tour.Show(0));
         }
 
         // Closes the tour and reports how it ended.
@@ -108,6 +113,7 @@ namespace TidyMind
             Current = null;
             follow.Stop();
             TourSignals.Raised -= OnSignal;
+            Loc.LanguageChanged -= OnLanguageChanged;
             try
             {
                 Detach();
@@ -182,6 +188,15 @@ namespace TidyMind
                     Show(index + 1);
             })), DispatcherPriority.Background);
         }
+
+        // The same step again in the new language, without running its Prepare a second time. The spotlight follows
+        // the target as the page relays out in the new language (OnLayout).
+        private void OnLanguageChanged() => Guard(() =>
+        {
+            callout = BuildCallout(Step);
+            adorner?.SetCallout(callout);
+            Refresh();
+        });
 
         // ---- Spotlight ----------------------------------------------------
 
@@ -327,7 +342,7 @@ namespace TidyMind
                 Margin = new Thickness(0, 6, 0, 0)
             };
             // Read out by screen readers as the step appears: where it is, its title and its sentence.
-            AutomationProperties.SetName(text, (step.IsCard ? "" : "Step " + (position + 1) + " of " + counted.Count + ". ")
+            AutomationProperties.SetName(text, (step.IsCard ? "" : Loc.F("Tour.StepOf", position + 1, counted.Count) + " ")
                 + step.Title + ". " + step.Text);
             AutomationProperties.SetLiveSetting(text, AutomationLiveSetting.Assertive);
             text.Loaded += (s, e) => UIElementAutomationPeer.CreatePeerForElement(text)?.RaiseAutomationEvent(AutomationEvents.LiveRegionChanged);
@@ -336,13 +351,13 @@ namespace TidyMind
             DockPanel buttons = new DockPanel { Margin = new Thickness(0, 16, 0, 0), LastChildFill = false };
             if (step.IsCard)
             {
-                Button main = CalloutButton(step.Primary!, step.PrimaryChoice, null);
+                Button main = CalloutButton(Loc.T(step.Primary!), step.PrimaryChoice, null);
                 main.Style = StrongButtonStyle();
                 DockPanel.SetDock(main, Dock.Right);
                 buttons.Children.Add(main);
                 if (step.Secondary != null)
                 {
-                    Button other = CalloutButton(step.Secondary, step.SecondaryChoice, "GhostButtonStyle");
+                    Button other = CalloutButton(Loc.T(step.Secondary), step.SecondaryChoice, "GhostButtonStyle");
                     other.Margin = new Thickness(0, 0, 8, 0);
                     DockPanel.SetDock(other, Dock.Right);
                     buttons.Children.Add(other);
@@ -350,11 +365,11 @@ namespace TidyMind
             }
             else
             {
-                Button skip = CalloutButton(TourSteps.SkipLabel, TourChoice.Dismiss, "GhostButtonStyle");
+                Button skip = CalloutButton(Loc.T("Tour.Button.Skip"), TourChoice.Dismiss, "GhostButtonStyle");
                 DockPanel.SetDock(skip, Dock.Left);
                 buttons.Children.Add(skip);
 
-                Button next = CalloutButton(TourSteps.NextLabel, TourChoice.Next, "LinkButtonStyle");
+                Button next = CalloutButton(Loc.T("Tour.Button.Next"), TourChoice.Next, "LinkButtonStyle");
                 next.Foreground = Res("BtnHover"); // the darker accent: 6:1 on white
                 next.FontSize = 13;
                 next.VerticalAlignment = VerticalAlignment.Center;

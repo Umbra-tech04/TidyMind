@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TidyMind"
         mc:Ignorable="d"
-        Title="Quick Notes" Height="420" Width="340"
+        Title="{local:Tr Main.Help.QuickNotes}" Height="420" Width="340"
         MinHeight="220" MinWidth="260"
         WindowStartupLocation="CenterScreen"
         ShowInTaskbar="False"
@@ -20,8 +20,8 @@
 
         <Border Grid.Row="0" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
                 BorderThickness="0,0,0,1" Padding="16,12">
-            <TextBlock Text="📝 Quick Notes" FontSize="14" FontWeight="Bold"
-                       Foreground="{StaticResource TextMain}"/>
+            <TextBlock FontSize="14" FontWeight="Bold"
+                       Foreground="{StaticResource TextMain}"><Run Text="📝 "/><Run Text="{local:Tr Main.Help.QuickNotes}"/></TextBlock>
         </Border>
 
         <TextBox x:Name="NotesTextBox" Grid.Row="1"

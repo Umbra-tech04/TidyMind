@@ -20,9 +20,14 @@ namespace TidyMind
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Tour { get; set; }
 
-        // Home's "What can TidyMind do?" row, hidden for good with its Hide link.
+        // Home's "What can TidyMind do?" tiles, folded away with Hide (true) until Show brings them back.
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? HideDiscovery { get; set; }
+
+        // The language the user picked (Loc: "en", "hu" or "sr-Latn"). Null until one is picked: the app then follows
+        // the Windows display language. A local preference: a restored backup keeps the current one (DataBackup).
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? Language { get; set; }
 
         // Fields this version doesn't know (written by another TidyMind version): kept so saving doesn't drop them.
         [JsonExtensionData]

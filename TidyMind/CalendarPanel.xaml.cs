@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -16,10 +15,8 @@ namespace TidyMind
     public partial class CalendarPanel : UserControl
     {
         private const double HiddenOffset = 440; // sheet width + its shadow
-        private static readonly CultureInfo English = CultureInfo.InvariantCulture;
         private static readonly SolidColorBrush ReminderDot = B("#4A4945");
 
-        private readonly DayOfWeek firstDayOfWeek = CultureInfo.CurrentCulture.DateTimeFormat.FirstDayOfWeek;
         private DateTime shownMonth;
         private bool open;
         private DateTime? highlightedDate;
@@ -29,6 +26,13 @@ namespace TidyMind
         {
             InitializeComponent();
             BuildWeekdayRow();
+            // The weekday row starts on the language's first day; month and day names follow it too.
+            Loc.Track(this, () =>
+            {
+                BuildWeekdayRow();
+                if (open)
+                    Render();
+            });
         }
 
         public bool IsOpen => open;
@@ -81,12 +85,13 @@ namespace TidyMind
 
         private void BuildWeekdayRow()
         {
+            WeekdayRow.Children.Clear();
             for (int i = 0; i < 7; i++)
             {
-                DayOfWeek day = (DayOfWeek)(((int)firstDayOfWeek + i) % 7);
+                DayOfWeek day = (DayOfWeek)(((int)Loc.FirstDayOfWeek + i) % 7);
                 WeekdayRow.Children.Add(new TextBlock
                 {
-                    Text = English.DateTimeFormat.GetAbbreviatedDayName(day).ToUpperInvariant(),
+                    Text = Loc.Culture.DateTimeFormat.GetAbbreviatedDayName(day).ToUpper(Loc.Culture),
                     FontSize = 10,
                     FontWeight = FontWeights.SemiBold,
                     Foreground = (Brush)FindResource("TextSub"),
@@ -97,24 +102,27 @@ namespace TidyMind
 
         private void Render()
         {
-            MonthText.Text = shownMonth.ToString("MMMM yyyy", English);
+            MonthText.Text = shownMonth.ToString(Loc.T("Format.YearMonth"), Loc.Culture);
 
             List<CalendarDay> days = CalendarService.LoadDays();
             List<Reminder> reminders = ReminderManager.TryLoadReminders();
+            DayPlanStore.TryLoad(out DayPlanFile plan); // unreadable: no markers (the day plan itself says why)
 
             DayGrid.Children.Clear();
-            int lead = ((int)shownMonth.DayOfWeek - (int)firstDayOfWeek + 7) % 7;
+            int lead = ((int)shownMonth.DayOfWeek - (int)Loc.FirstDayOfWeek + 7) % 7;
             DateTime start = shownMonth.AddDays(-lead);
             for (int i = 0; i < 42; i++)
             {
                 DateTime date = start.AddDays(i);
-                DayGrid.Children.Add(CreateDayCell(date, CalendarService.GetDay(days, date), CalendarService.RemindersOn(reminders, date)));
+                DayGrid.Children.Add(CreateDayCell(date, CalendarService.GetDay(days, date), CalendarService.RemindersOn(reminders, date),
+                    plan.Blocks.Count(b => b.Date.Date == date)));
             }
 
-            RenderMonthList(days, reminders);
+            RenderMonthList(days, reminders, plan);
         }
 
-        private FrameworkElement CreateDayCell(DateTime date, CalendarDay day, List<Reminder> reminders)
+        // planned: how many day plan blocks the day has.
+        private FrameworkElement CreateDayCell(DateTime date, CalendarDay day, List<Reminder> reminders, int planned)
         {
             bool inMonth = date.Month == shownMonth.Month;
             bool today = date == DateTime.Today;
@@ -151,7 +159,7 @@ namespace TidyMind
 
             content.Children.Add(new TextBlock
             {
-                Text = date.Day.ToString(),
+                Text = date.Day.ToString(Loc.Culture),
                 FontSize = 13,
                 FontWeight = today ? FontWeights.Bold : FontWeights.Normal,
                 Foreground = today ? CardEffects.Accent : (Brush)FindResource("TextMain"),
@@ -187,8 +195,24 @@ namespace TidyMind
                 });
             }
 
+            // A day plan: a short accent bar in the top-left corner (reminders have the dot in the other one).
+            if (planned > 0)
+            {
+                content.Children.Add(new Rectangle
+                {
+                    Width = 8,
+                    Height = 3,
+                    RadiusX = 1.5,
+                    RadiusY = 1.5,
+                    Fill = CardEffects.Accent,
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Top,
+                    Margin = new Thickness(6, 6, 0, 0)
+                });
+            }
+
             cell.Child = content;
-            cell.ToolTip = CreateTooltip(date, day, reminders);
+            cell.ToolTip = CreateTooltip(date, day, reminders, planned);
             ToolTipService.SetInitialShowDelay(cell, 300);
 
             cell.MouseEnter += (s, e) => cell.BorderBrush = CardEffects.Accent;
@@ -211,22 +235,22 @@ namespace TidyMind
                 if (body.Length > 0)
                     lines.Add(body);
             }
-            lines.AddRange(reminders.Select(r => r.NextFireTime.ToString("HH:mm") + "  " + r.Message));
+            lines.AddRange(reminders.Select(r => r.NextFireTime.ToString("HH:mm", Loc.Culture) + "  " + r.Message));
 
             return lines.Count == 0 ? null : string.Join(Environment.NewLine, lines);
         }
 
-        // Note + that day's reminders; nothing for an empty day.
-        private static object CreateTooltip(DateTime date, CalendarDay day, List<Reminder> reminders)
+        // Note, that day's reminders and how much of it is planned; nothing for an empty day.
+        private static object CreateTooltip(DateTime date, CalendarDay day, List<Reminder> reminders, int planned)
         {
             bool hasNote = day != null && day.HasEntry();
-            if (!hasNote && reminders.Count == 0)
+            if (!hasNote && reminders.Count == 0 && planned == 0)
                 return null;
 
             StackPanel tip = new StackPanel { MaxWidth = 280, Margin = new Thickness(2) };
             tip.Children.Add(new TextBlock
             {
-                Text = date.ToString("dddd, MMMM d", English),
+                Text = date.ToString(Loc.T("Format.WeekdayDayMonth"), Loc.Culture),
                 FontWeight = FontWeights.SemiBold,
                 Margin = new Thickness(0, 0, 0, 4)
             });
@@ -243,36 +267,47 @@ namespace TidyMind
             {
                 tip.Children.Add(new TextBlock
                 {
-                    Text = "🔔  " + reminder.NextFireTime.ToString("HH:mm") + "   " + reminder.Message,
+                    Text = "🔔  " + reminder.NextFireTime.ToString("HH:mm", Loc.Culture) + "   " + reminder.Message,
                     TextWrapping = TextWrapping.Wrap,
                     Opacity = 0.85
+                });
+            }
+
+            if (planned > 0)
+            {
+                tip.Children.Add(new TextBlock
+                {
+                    Text = "🗓  " + Loc.Plural("Calendar.PlanBlocks", planned),
+                    Opacity = 0.85,
+                    Margin = new Thickness(0, reminders.Count > 0 ? 4 : 0, 0, 0)
                 });
             }
 
             return tip;
         }
 
-        private void RenderMonthList(List<CalendarDay> days, List<Reminder> reminders)
+        private void RenderMonthList(List<CalendarDay> days, List<Reminder> reminders, DayPlanFile plan)
         {
-            string monthName = shownMonth.ToString("MMMM", English);
-            MonthListHeader.Text = "IN " + monthName.ToUpperInvariant();
+            string monthName = shownMonth.ToString("MMMM", Loc.Culture);
+            MonthListHeader.Text = Loc.F("Calendar.InMonth", monthName).ToUpper(Loc.Culture);
             MonthList.Children.Clear();
 
             for (DateTime date = shownMonth; date.Month == shownMonth.Month; date = date.AddDays(1))
             {
                 CalendarDay day = CalendarService.GetDay(days, date);
                 List<Reminder> onDay = CalendarService.RemindersOn(reminders, date);
-                if (day == null && onDay.Count == 0)
+                int planned = plan.Blocks.Count(b => b.Date.Date == date);
+                if (day == null && onDay.Count == 0 && planned == 0)
                     continue;
 
-                MonthList.Children.Add(CreateMonthRow(date, day, onDay));
+                MonthList.Children.Add(CreateMonthRow(date, day, onDay, planned));
             }
 
             if (MonthList.Children.Count == 0)
             {
                 MonthList.Children.Add(new TextBlock
                 {
-                    Text = "Nothing planned in " + monthName + " yet.",
+                    Text = Loc.F("Calendar.NothingInMonth", monthName),
                     FontSize = 12,
                     FontStyle = FontStyles.Italic,
                     Foreground = (Brush)FindResource("TextSub"),
@@ -281,7 +316,7 @@ namespace TidyMind
             }
         }
 
-        private FrameworkElement CreateMonthRow(DateTime date, CalendarDay day, List<Reminder> reminders)
+        private FrameworkElement CreateMonthRow(DateTime date, CalendarDay day, List<Reminder> reminders, int planned)
         {
             Color? color = ParseColor(day?.ColorHex);
 
@@ -318,7 +353,7 @@ namespace TidyMind
 
             TextBlock dateText = new TextBlock
             {
-                Text = date.ToString("ddd d", English),
+                Text = date.ToString(Loc.T("Format.ShortWeekdayDay"), Loc.Culture),
                 FontSize = 12,
                 FontWeight = FontWeights.SemiBold,
                 Foreground = date == DateTime.Today ? CardEffects.Accent : (Brush)FindResource("TextMain")
@@ -343,7 +378,7 @@ namespace TidyMind
             }
             foreach (Reminder reminder in reminders)
             {
-                string text = reminder.NextFireTime.ToString("HH:mm", English) + "  " + reminder.Message;
+                string text = reminder.NextFireTime.ToString("HH:mm", Loc.Culture) + "  " + reminder.Message;
                 StackPanel line = new StackPanel
                 {
                     Orientation = Orientation.Horizontal,
@@ -361,8 +396,18 @@ namespace TidyMind
                 });
                 lines.Children.Add(line);
             }
+            if (planned > 0)
+            {
+                lines.Children.Add(new TextBlock
+                {
+                    Text = Loc.Plural("Calendar.PlanBlocks", planned),
+                    FontSize = 12,
+                    Foreground = (Brush)FindResource("TextSub"),
+                    Margin = new Thickness(0, 1, 0, 0)
+                });
+            }
             if (lines.Children.Count == 0)
-                lines.Children.Add(new TextBlock { Text = "Colored", FontSize = 12, Foreground = (Brush)FindResource("TextSub") });
+                lines.Children.Add(new TextBlock { Text = Loc.T("Calendar.Colored"), FontSize = 12, Foreground = (Brush)FindResource("TextSub") });
             Grid.SetColumn(lines, 2);
             grid.Children.Add(lines);
 
@@ -376,7 +421,8 @@ namespace TidyMind
         {
             if (DayEditDialog.Edit(this, date))
                 Render();
-            Sheet.Focus(); // so Esc closes the panel again
+            if (open) // not when the dialog went on to the day plan, which closed the calendar
+                Sheet.Focus(); // so Esc closes the panel again
         }
 
         // After a right-click action changed a day: redraw, and give the panel focus back so Esc closes it again.

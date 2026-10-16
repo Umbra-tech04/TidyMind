@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -15,6 +17,7 @@ namespace TidyMind
     public partial class MainWindow : Window
     {
         private const string HomeKey = "__home__";
+        private const string DayPlanKey = "__dayplan__";
 
         private static readonly string[] MemoryColors =
         {
@@ -34,13 +37,19 @@ namespace TidyMind
             // Only within a group: dropping a collection among projects would look like a type change.
             memoryDrag = new DragReorder<Profile>(NavPanel, Orientation.Vertical, 2,
                 (dragged, target) => dragged.Type == target.Type, MoveMemory);
-            TakeTourLink.Content = TourSteps.HelpEntry;
+            ShowLanguage();
+            // The sidebar and the switch are drawn here; each page and window follows the switch on its own.
+            Loc.Track(this, () =>
+            {
+                ShowLanguage();
+                BuildNav();
+            });
 
             NavigateHome();
 
             // A fresh install (no memories, the tour never offered): the welcome card, once the window is up.
             if (profiles.Count == 0 && AppSettings.Load().Tour == null)
-                Loaded += (s, e) => GuidedTour.Run(new[] { TourSteps.Welcome }, 0, TourEnded);
+                Loaded += (s, e) => GuidedTour.Run(new[] { TourSteps.Welcome }, TourEnded);
         }
 
         // Native title bar is drawn by the OS, not our XAML — recolor it via DWM
@@ -79,13 +88,59 @@ namespace TidyMind
         [DllImport("dwmapi.dll")]
         private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int valueSize);
 
+        // ---- Language -----------------------------------------------------
+
+        private void ShowLanguage()
+        {
+            LanguageCode.Text = Loc.CurrentOption.ShortName;
+            AutomationProperties.SetName(LanguageButton, Loc.F("Language.Button.Name", Loc.CurrentOption.Name));
+        }
+
+        // The three languages, each in its own language, the current one ticked; a click switches at once. Opened from
+        // the keyboard too (Enter or Space on the button), with the arrow keys and Esc working in the list.
+        private void LanguageButton_Click(object sender, RoutedEventArgs e)
+        {
+            ContextMenu menu = new ContextMenu
+            {
+                PlacementTarget = LanguageButton,
+                Placement = PlacementMode.Top
+            };
+            foreach (LanguageOption language in Loc.Languages)
+            {
+                MenuItem item = new MenuItem
+                {
+                    Header = language.Name,
+                    IsChecked = language.Code == Loc.Current
+                };
+                item.Click += (s, args) =>
+                {
+                    if (language.Code != Loc.Current && !Loc.Switch(language.Code))
+                        Msg.Show(this, Loc.T("Settings.Language.NotSaved"), Loc.T("Settings.Language.Title"),
+                            MessageBoxButton.OK, MessageBoxImage.Warning);
+                };
+                menu.Items.Add(item);
+            }
+            menu.IsOpen = true;
+        }
+
         // ---- Navigation ---------------------------------------------------
 
         private void NavigateHome()
         {
             selectedKey = HomeKey;
-            ContentArea.Content = new HomeView(profiles, GoToSearchResult, Discover); // rebuilt (and re-read from disk) on every visit
+            ContentArea.Content = new HomeView(profiles, GoToSearchResult, () => ShowDayPlan(DateTime.Today)); // rebuilt (and re-read from disk) on every visit
             BuildNav();
+        }
+
+        // That day's plan; `select`: a block to bring into view (a search result). The calendar closes, so the
+        // plan isn't left behind it.
+        public void ShowDayPlan(DateTime date, Guid? select = null)
+        {
+            CloseCalendar();
+            selectedKey = DayPlanKey;
+            ContentArea.Content = new DayPlanView(profiles, date, select);
+            BuildNav();
+            TourSignals.Raise(TourSignals.DayPlanOpened);
         }
 
         private void NavigateTo(Profile profile)
@@ -107,36 +162,40 @@ namespace TidyMind
             NavPanel.Children.Clear();
             memoryDrag.Clear();
 
-            NavPanel.Children.Add(CreateNavItem("🏠", "Home", selectedKey == HomeKey,
+            NavPanel.Children.Add(CreateNavItem("🏠", Loc.T("Nav.Home"), selectedKey == HomeKey,
                 () => NavigateHome(), null, false));
+            Border dayPlan = CreateNavItem("🗓", Loc.T("Nav.DayPlan"), selectedKey == DayPlanKey,
+                () => ShowDayPlan(DateTime.Today), null, false);
+            dayPlan.Name = "NavDayPlan"; // the guided tour points at it
+            NavPanel.Children.Add(dayPlan);
 
             List<Profile> collections = profiles.Where(p => p.Type == ProfileType.Collection).ToList();
             List<Profile> projectMemories = profiles.Where(p => p.Type == ProfileType.Project).ToList();
 
-            NavPanel.Children.Add(CreateSectionHeader("COLLECTIONS"));
+            NavPanel.Children.Add(CreateSectionHeader(Loc.T("Nav.Collections")));
             foreach (Profile profile in collections)
                 NavPanel.Children.Add(CreateMemoryItem(profile));
             if (collections.Count == 0)
-                NavPanel.Children.Add(CreateEmptyHint("No collections yet"));
+                NavPanel.Children.Add(CreateEmptyHint(Loc.T("Nav.NoCollections")));
 
-            NavPanel.Children.Add(CreateSectionHeader("PROJECTS"));
+            NavPanel.Children.Add(CreateSectionHeader(Loc.T("Nav.Projects")));
             foreach (Profile profile in projectMemories)
                 NavPanel.Children.Add(CreateMemoryItem(profile));
             if (projectMemories.Count == 0)
-                NavPanel.Children.Add(CreateEmptyHint("No projects yet"));
+                NavPanel.Children.Add(CreateEmptyHint(Loc.T("Nav.NoProjects")));
         }
 
         private Border CreateMemoryItem(Profile profile)
         {
             ContextMenu menu = new ContextMenu();
 
-            MenuItem rename = new MenuItem { Header = "Rename" };
+            MenuItem rename = new MenuItem { Header = Loc.T("Common.Rename") };
             rename.Click += (s, e) => RenameMemory(profile);
-            MenuItem delete = new MenuItem { Header = "Delete" };
+            MenuItem delete = new MenuItem { Header = Loc.T("Common.Delete") };
             delete.Click += (s, e) => DeleteMemory(profile);
-            MenuItem reminder = new MenuItem { Header = "Add Reminder" };
+            MenuItem reminder = new MenuItem { Header = Loc.T("Common.AddReminder") };
             reminder.Click += (s, e) => new AddReminderWindow(profile.Name).ShowDialog();
-            MenuItem export = new MenuItem { Header = "Export" };
+            MenuItem export = new MenuItem { Header = Loc.T("Memory.Menu.Export") };
             export.Click += (s, e) => ExportMemory(profile);
 
             menu.Items.Add(rename);
@@ -144,7 +203,7 @@ namespace TidyMind
             menu.Items.Add(reminder);
             menu.Items.Add(export);
             menu.Items.Add(new Separator());
-            menu.Items.Add(TextCopy.CopyItem(() => profile.Name, "Copy name"));
+            menu.Items.Add(TextCopy.CopyItem(() => profile.Name, Loc.T("Common.CopyName")));
 
             Border item = CreateNavItem("📁", profile.Name, selectedKey == KeyOf(profile),
                 () => NavigateTo(profile), menu, true);
@@ -161,7 +220,7 @@ namespace TidyMind
                 profiles[i].Order = i;
 
             if (!ProfileManager.TrySaveProfiles(profiles))
-                WarnProfilesNotSaved("The new order will be lost when TidyMind closes.");
+                WarnProfilesNotSaved(Loc.T("Memory.NotSaved.Order"));
             BuildNav();
         }
 
@@ -240,7 +299,7 @@ namespace TidyMind
         {
             return new TextBlock
             {
-                Text = text,
+                Text = text.ToUpper(Loc.Culture),
                 FontSize = 10,
                 FontWeight = FontWeights.SemiBold,
                 Foreground = B("#8F8F8B"),
@@ -274,15 +333,15 @@ namespace TidyMind
 
         private void AddProfile(ProfileType type)
         {
+            bool collection = type == ProfileType.Collection;
             string name = InputDialog.Prompt(this,
-                type == ProfileType.Collection ? "New Collection" : "New Project",
-                "Give your new " + TypeLabel(type) + " a name.");
+                Loc.T(collection ? "Main.NewCollection" : "Main.NewProject"),
+                Loc.T(collection ? "Memory.New.CollectionPrompt" : "Memory.New.ProjectPrompt"));
             if (string.IsNullOrWhiteSpace(name)) return;
 
             if (NameTaken(name, type))
             {
-                MessageBox.Show("A " + TypeLabel(type) + " with that name already exists.", "New Memory",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                Msg.Show(NameTakenText(type), Loc.T("Memory.New.Caption"), MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -298,7 +357,7 @@ namespace TidyMind
             if (!ProfileManager.TrySaveProfiles(profiles))
             {
                 profiles.Remove(profile);
-                WarnProfilesNotSaved("The new " + TypeLabel(type) + " wasn't added.");
+                WarnProfilesNotSaved(Loc.T(collection ? "Memory.NotSaved.CollectionNotAdded" : "Memory.NotSaved.ProjectNotAdded"));
                 return;
             }
 
@@ -312,15 +371,14 @@ namespace TidyMind
         {
             string oldName = profile.Name;
             string newName = InputDialog.Prompt(this,
-                profile.Type == ProfileType.Collection ? "Rename Collection" : "Rename Project",
-                "Enter a new name.", oldName, "Rename");
+                Loc.T(profile.Type == ProfileType.Collection ? "Memory.Rename.CollectionTitle" : "Memory.Rename.ProjectTitle"),
+                Loc.T("Common.RenamePrompt"), oldName, Loc.T("Common.Rename"));
 
             if (string.IsNullOrWhiteSpace(newName) || newName == oldName) return;
 
             if (NameTaken(newName, profile.Type, except: profile))
             {
-                MessageBox.Show("A " + TypeLabel(profile.Type) + " with that name already exists.", "Rename Memory",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                Msg.Show(NameTakenText(profile.Type), Loc.T("Memory.Rename.Caption"), MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -328,7 +386,7 @@ namespace TidyMind
             if (!ProfileManager.TrySaveProfiles(profiles))
             {
                 profile.Name = oldName;
-                WarnProfilesNotSaved("The name wasn't changed.");
+                WarnProfilesNotSaved(Loc.T("Memory.NotSaved.NameUnchanged"));
                 return;
             }
             NavigateTo(profile);
@@ -339,10 +397,10 @@ namespace TidyMind
         // nothing is deleted.
         private void DeleteMemory(Profile profile)
         {
-            MessageBoxResult result = MessageBox.Show(
-                "Delete '" + profile.Name + "'? This will delete all its data."
-                + (profile.IsSample == true ? "\n\n" + TourSteps.DeleteNote : ""),
-                "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            MessageBoxResult result = Msg.Show(
+                Loc.F("Memory.Delete.Confirm", profile.Name)
+                + (profile.IsSample == true ? "\n\n" + Loc.T("Tour.DeleteNote") : ""),
+                Loc.T("Common.ConfirmDelete"), MessageBoxButton.YesNo, MessageBoxImage.Warning);
 
             if (result != MessageBoxResult.Yes) return;
 
@@ -351,7 +409,7 @@ namespace TidyMind
             if (!ProfileManager.TrySaveProfiles(profiles))
             {
                 profiles.Insert(index, profile);
-                WarnProfilesNotSaved("Nothing was deleted.");
+                WarnProfilesNotSaved(Loc.T("Memory.NotSaved.NothingDeleted"));
                 return;
             }
 
@@ -369,8 +427,7 @@ namespace TidyMind
 
         private static void WarnProfilesNotSaved(string consequence)
         {
-            MessageBox.Show("Couldn't save the list of memories: this file can't be written:\n"
-                + AppPaths.Data("profiles.json") + "\n\n" + consequence, "Couldn't Save",
+            Msg.Show(Loc.F("Memory.NotSaved", AppPaths.Data("profiles.json"), consequence), Loc.T("Common.CouldntSave"),
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
@@ -387,10 +444,8 @@ namespace TidyMind
             return profile.Id.ToString("N");
         }
 
-        private static string TypeLabel(ProfileType type)
-        {
-            return type == ProfileType.Collection ? "collection" : "project";
-        }
+        private static string NameTakenText(ProfileType type) =>
+            Loc.T(type == ProfileType.Collection ? "Memory.CollectionNameTaken" : "Memory.ProjectNameTaken");
 
         // The page background, card pictures, attached files and item pictures of a memory being deleted, kept in
         // the app-wide folders, so they aren't left behind there. An unreadable file just means nothing to clean up.
@@ -431,10 +486,9 @@ namespace TidyMind
 
         private void ExportAll()
         {
-            if (profiles.Count == 0)
+            if (profiles.Count == 0 && !ExportService.HasDayPlan())
             {
-                MessageBox.Show("There are no memories to export.", "Export",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                Msg.Show(Loc.T("Export.Nothing"), Loc.T("Export.Caption"), MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -476,6 +530,11 @@ namespace TidyMind
 
         private void GoToSearchResult(SearchResult result)
         {
+            if (result.Kind == SearchResultKind.PlanBlock)
+            {
+                ShowDayPlan(result.Date, result.ItemId);
+                return;
+            }
             NavigateTo(result.Profile);
             if (result.Kind == SearchResultKind.Memory) return;
             if (result.Kind == SearchResultKind.Note)
@@ -504,45 +563,39 @@ namespace TidyMind
         private void TakeTour_Click(object sender, RoutedEventArgs e)
         {
             HelpPopup.IsOpen = false;
-            StartTour(null);
-        }
-
-        // Home's "What can TidyMind do?" cards: the tour from that card's step, or Settings for Backup.
-        private void Discover(string start)
-        {
-            if (start == TourSteps.BackupCard)
-                SettingsButton_Click(this, new RoutedEventArgs());
-            else
-                StartTour(start);
+            StartTour();
         }
 
         // Makes sure the example memories exist (asking first, unless the welcome card's Start already did), then runs
-        // the tour from that step. The user's own memories are never touched.
-        private void StartTour(string? stepId, bool confirmed = false)
+        // the tour. The user's own memories are never touched.
+        private void StartTour(bool confirmed = false)
         {
             if (!WelcomeMemory.Exists(profiles))
             {
-                if (!confirmed && MessageBox.Show(this, TourSteps.ConfirmText, TourSteps.ConfirmTitle,
+                if (!confirmed && Msg.Show(this, Loc.T("Tour.Confirm.Text"), Loc.T("Tour.Confirm.Title"),
                         MessageBoxButton.OKCancel, MessageBoxImage.Information) != MessageBoxResult.OK)
                     return;
                 bool added = WelcomeMemory.TryCreate(profiles, NextColor);
                 BuildNav();
                 if (!added)
                 {
-                    MessageBox.Show(this, "The example memory couldn't be written to\n" + AppPaths.DataFolder
-                        + "\n\nNothing was changed.", TourSteps.ConfirmTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Msg.Show(this, Loc.F("Tour.Confirm.WriteFailed", AppPaths.DataFolder), Loc.T("Tour.Confirm.Title"),
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
             }
 
             if (AppSettings.Load().Tour == null)
                 AppSettings.Update(s => s.Tour = AppSettings.TourShown);
-            List<TourStep> steps = TourSteps.Build(this);
-            GuidedTour.Run(steps, TourSteps.IndexOf(steps, stepId), TourEnded);
+            GuidedTour.Run(TourSteps.Build(this), TourEnded);
         }
 
         private void TourEnded(TourEnd end)
         {
+            // Every end but Begin (which only swaps the welcome card for the tour): nothing is left open.
+            if (end != TourEnd.Begin)
+                TourSteps.CloseOpened();
+
             switch (end)
             {
                 case TourEnd.Finished:
@@ -552,7 +605,7 @@ namespace TidyMind
                     AppSettings.Update(s => s.Tour = s.Tour == AppSettings.TourCompleted ? s.Tour : AppSettings.TourDismissed);
                     break;
                 case TourEnd.Begin:
-                    StartTour(null, confirmed: true);
+                    StartTour(confirmed: true);
                     break;
             }
         }
@@ -574,6 +627,16 @@ namespace TidyMind
             Guid? notebook = sample == null ? null : WelcomeMemory.NotebookProject(sample);
             if (notebook != null)
                 GoToSearchResult(new SearchResult { Kind = SearchResultKind.Project, Profile = sample, ItemId = notebook.Value });
+        }
+
+        // A word the tour's search step suggests: the last word of the example collection's last item ("bike" from
+        // "City bike"), so it finds something in whichever language the examples were written.
+        public string SampleSearchWord()
+        {
+            Profile? sample = WelcomeMemory.Find(profiles, ProfileType.Collection);
+            string? name = sample == null ? null : EntityStore.LoadOrEmpty(sample).OrderBy(e => e.Order).LastOrDefault()?.Name;
+            string? word = name?.Split(' ', StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
+            return word?.ToLower(Loc.Culture) ?? Loc.T("Tour.Search.Example");
         }
 
         public FrameworkElement? SampleNavItem(ProfileType type)

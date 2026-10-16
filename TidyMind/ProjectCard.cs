@@ -332,7 +332,7 @@ namespace TidyMind
             {
                 TextBlock next = new TextBlock
                 {
-                    Text = "Next: " + model.NextTask,
+                    Text = Loc.F("Card.Next", model.NextTask),
                     FontSize = 12,
                     LineHeight = 16,
                     LineStackingStrategy = LineStackingStrategy.BlockLineHeight,
@@ -397,10 +397,10 @@ namespace TidyMind
 
         private static string TaskSummary(ProjectCardModel model)
         {
-            if (model.Total == 0) return "No tasks yet";
+            if (model.Total == 0) return Loc.T("Card.NoTasks");
             // Complete: the right side already says "100%", so the left just counts the tasks.
-            if (model.Complete) return model.Total == 1 ? "1 task" : model.Total + " tasks";
-            return model.Done + " of " + model.Total + (model.Total == 1 ? " task" : " tasks");
+            if (model.Complete) return Loc.Plural("Card.Tasks", model.Total);
+            return Loc.Plural("Card.TasksDone", model.Total, model.Done);
         }
 
         // The percentage once there's something to measure.

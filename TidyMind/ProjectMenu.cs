@@ -20,21 +20,21 @@ namespace TidyMind
         {
             ContextMenu menu = new ContextMenu();
 
-            MenuItem rename = new MenuItem { Header = "Rename" };
+            MenuItem rename = new MenuItem { Header = Loc.T("Common.Rename") };
             rename.Click += (s, e) =>
             {
                 if (!Rename(owner, project)) return;
                 save();
                 redraw();
             };
-            MenuItem customize = new MenuItem { Header = "Customize Card" };
+            MenuItem customize = new MenuItem { Header = Loc.T("Card.Customize") };
             customize.Click += (s, e) =>
             {
                 if (!Customize(owner, project, save)) return;
                 redraw();
                 TourSignals.Raise(TourSignals.CardCustomized);
             };
-            MenuItem delete = new MenuItem { Header = "Delete" };
+            MenuItem delete = new MenuItem { Header = Loc.T("Common.Delete") };
             delete.Click += (s, e) =>
             {
                 if (!ConfirmDelete(project)) return;
@@ -42,7 +42,7 @@ namespace TidyMind
                     reload?.Invoke();
                 redraw();
             };
-            MenuItem reminder = new MenuItem { Header = "Add Reminder" };
+            MenuItem reminder = new MenuItem { Header = Loc.T("Common.AddReminder") };
             reminder.Click += (s, e) => new AddReminderWindow(project.Name).ShowDialog();
 
             menu.Items.Add(rename);
@@ -51,14 +51,15 @@ namespace TidyMind
             menu.Items.Add(reminder);
             menu.Items.Add(ExportMenu.Submenu(() => project.Name, (path, format) => ExportService.ExportProject(project, path, format)));
             menu.Items.Add(new Separator());
-            menu.Items.Add(TextCopy.CopyItem(() => project.Name, "Copy name"));
-            menu.Items.Add(TextCopy.CopyItem(() => AsText(project), "Copy with tasks"));
+            menu.Items.Add(TextCopy.CopyItem(() => project.Name, Loc.T("Common.CopyName")));
+            menu.Items.Add(TextCopy.CopyItem(() => AsText(project), Loc.T("Card.CopyWithTasks")));
             return menu;
         }
 
         private static bool Rename(DependencyObject owner, Project project)
         {
-            string newName = InputDialog.Prompt(owner, "Rename Project", "Enter a new name.", project.Name, "Rename");
+            string newName = InputDialog.Prompt(owner, Loc.T("Memory.Rename.ProjectTitle"), Loc.T("Common.RenamePrompt"), project.Name,
+                Loc.T("Common.Rename"));
             if (string.IsNullOrWhiteSpace(newName) || newName == project.Name) return false;
 
             project.Name = newName;
@@ -97,7 +98,7 @@ namespace TidyMind
 
         private static bool ConfirmDelete(Project project)
         {
-            return MessageBox.Show("Delete '" + project.Name + "'?", "Confirm Delete",
+            return Msg.Show(Loc.F("Common.DeleteNamed", project.Name), Loc.T("Common.ConfirmDelete"),
                 MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
         }
 

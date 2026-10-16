@@ -37,11 +37,8 @@ namespace TidyMind
 
         public static bool ConfirmDelete(Guid id)
         {
-            MessageBoxResult result = MessageBox.Show(
-                "Delete this reminder?",
-                "Confirm Delete",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
+            MessageBoxResult result = Msg.Show(Loc.T("Reminder.DeleteConfirm"), Loc.T("Common.ConfirmDelete"),
+                MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (result != MessageBoxResult.Yes)
                 return false;
 
@@ -53,9 +50,7 @@ namespace TidyMind
             catch (Exception e) when (e is IOException || e is JsonException || e is UnauthorizedAccessException
                                       || e is COMException)
             {
-                MessageBox.Show("Couldn't delete the reminder: reminders.json can't be read or written, or Windows "
-                    + "Task Scheduler didn't accept the change.", "Couldn't Delete",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                Msg.Show(Loc.T("Reminder.DeleteFailed"), Loc.T("Common.CouldntDelete"), MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
         }

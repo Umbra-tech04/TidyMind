@@ -364,3 +364,7 @@ FodyWeavers.xsd
 
 # Local review reports, never committed
 noslop-reports/
+
+# Installer build output (installer/build-installer.ps1)
+dist/
+installer/obj/

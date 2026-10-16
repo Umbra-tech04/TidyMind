@@ -10,17 +10,20 @@ namespace TidyMind
     public enum ValueKind { Text, Number, Choice, Date }
 
     // One field of a type described here: how the item form, the detail card, search and export show it. Values go
-    // in and out as stored text (Values).
+    // in and out as stored text (Values). Key is the field's stable name; what it's called on screen comes from it.
     public class FieldDefinition
     {
-        public string Label { get; init; } = "";
+        public string Key { get; init; } = "";
+        public string Label => Loc.T("Entity.Field." + Key);
         public ValueKind Kind { get; init; }
+
+        // Stored as written here, in English, whatever the language: shown through Choices.Label.
         public string[] Choices { get; init; } = Array.Empty<string>();
 
-        // A date that runs out (insurance, inspection): highlighted when close, listed on Home. Name is how it's
+        // A date that runs out (insurance, inspection): highlighted when close, listed on Home. ExpiryName is how it's
         // called in a short line ("Inspection in 12 days").
         public bool IsExpiry { get; init; }
-        public string ExpiryName { get; init; } = "";
+        public string ExpiryName => Loc.T("Entity.Expiry." + Key);
 
         public Func<Entity, string?> Get { get; init; } = _ => null;
         public Action<Entity, string?> Set { get; init; } = (_, _) => { };
@@ -29,7 +32,7 @@ namespace TidyMind
     public class LogColumn
     {
         public string Key { get; init; } = "";
-        public string Label { get; init; } = "";
+        public string Label => Loc.T("Entity.Column." + Key);
         public ValueKind Kind { get; init; }
     }
 
@@ -38,7 +41,7 @@ namespace TidyMind
     public class LogDefinition
     {
         public string Key { get; init; } = "";
-        public string Label { get; init; } = "";
+        public string Label => Loc.T("Entity.Log." + Key);
         public LogColumn[] Columns { get; init; } = Array.Empty<LogColumn>();
         public Func<IReadOnlyList<Dictionary<string, string>>, string?>? Summary { get; init; }
     }
@@ -47,21 +50,23 @@ namespace TidyMind
     // and ExportService and has no definition here; Fields and Logs are empty for it.
     public static class EntityTypes
     {
+        // Stored in each item (Entity.EntityType) as these English names, whatever the language; on screen they are
+        // "Entity.Type.<name>".
         public const string Clothing = "Clothing";
         public const string Vehicle = "Vehicle";
 
         private static readonly FieldDefinition[] VehicleFields =
         {
-            new FieldDefinition { Label = "Kind", Kind = ValueKind.Choice, Choices = new[] { "Car", "Motorcycle", "Bicycle", "Other" },
+            new FieldDefinition { Key = "Kind", Kind = ValueKind.Choice, Choices = new[] { "Car", "Motorcycle", "Bicycle", "Other" },
                 Get = e => e.VehicleKind, Set = (e, v) => e.VehicleKind = v },
-            new FieldDefinition { Label = "Plate", Kind = ValueKind.Text, Get = e => e.Plate, Set = (e, v) => e.Plate = v },
-            new FieldDefinition { Label = "Year", Kind = ValueKind.Number,
+            new FieldDefinition { Key = "Plate", Kind = ValueKind.Text, Get = e => e.Plate, Set = (e, v) => e.Plate = v },
+            new FieldDefinition { Key = "Year", Kind = ValueKind.Number,
                 Get = e => e.Year?.ToString(CultureInfo.InvariantCulture), Set = (e, v) => e.Year = Values.ToInt(v) },
-            new FieldDefinition { Label = "Odometer (km)", Kind = ValueKind.Number,
+            new FieldDefinition { Key = "Odometer", Kind = ValueKind.Number,
                 Get = e => e.OdometerKm?.ToString(CultureInfo.InvariantCulture), Set = (e, v) => e.OdometerKm = Values.ToInt(v) },
-            new FieldDefinition { Label = "Insurance expires", Kind = ValueKind.Date, IsExpiry = true, ExpiryName = "Insurance",
+            new FieldDefinition { Key = "Insurance", Kind = ValueKind.Date, IsExpiry = true,
                 Get = e => Values.FromDate(e.InsuranceExpires), Set = (e, v) => e.InsuranceExpires = Values.ParseDate(v) },
-            new FieldDefinition { Label = "Inspection expires", Kind = ValueKind.Date, IsExpiry = true, ExpiryName = "Inspection",
+            new FieldDefinition { Key = "Inspection", Kind = ValueKind.Date, IsExpiry = true,
                 Get = e => Values.FromDate(e.InspectionExpires), Set = (e, v) => e.InspectionExpires = Values.ParseDate(v) }
         };
 
@@ -69,32 +74,32 @@ namespace TidyMind
         {
             new LogDefinition
             {
-                Key = "Service", Label = "Service log",
+                Key = "Service",
                 Columns = new[]
                 {
-                    new LogColumn { Key = "Date", Label = "Date", Kind = ValueKind.Date },
-                    new LogColumn { Key = "Work", Label = "What was done", Kind = ValueKind.Text },
-                    new LogColumn { Key = "Km", Label = "Km", Kind = ValueKind.Number },
-                    new LogColumn { Key = "Cost", Label = "Cost", Kind = ValueKind.Number },
-                    new LogColumn { Key = "Where", Label = "Where", Kind = ValueKind.Text }
+                    new LogColumn { Key = "Date", Kind = ValueKind.Date },
+                    new LogColumn { Key = "Work", Kind = ValueKind.Text },
+                    new LogColumn { Key = "Km", Kind = ValueKind.Number },
+                    new LogColumn { Key = "Cost", Kind = ValueKind.Number },
+                    new LogColumn { Key = "Where", Kind = ValueKind.Text }
                 }
             },
             new LogDefinition
             {
-                Key = "Fuel", Label = "Fuel log",
+                Key = "Fuel",
                 Columns = new[]
                 {
-                    new LogColumn { Key = "Date", Label = "Date", Kind = ValueKind.Date },
-                    new LogColumn { Key = "Liters", Label = "Liters", Kind = ValueKind.Number },
-                    new LogColumn { Key = "Price", Label = "Price", Kind = ValueKind.Number },
-                    new LogColumn { Key = "Km", Label = "Km", Kind = ValueKind.Number }
+                    new LogColumn { Key = "Date", Kind = ValueKind.Date },
+                    new LogColumn { Key = "Liters", Kind = ValueKind.Number },
+                    new LogColumn { Key = "Price", Kind = ValueKind.Number },
+                    new LogColumn { Key = "Km", Kind = ValueKind.Number }
                 },
                 Summary = FuelConsumption
             }
         };
 
         // What the item's Name is called in the form ("Make and model" for a vehicle, the card title).
-        public static string NameLabel(string? type) => type == Vehicle ? "Make and model" : "Name";
+        public static string NameLabel(string? type) => Loc.T(type == Vehicle ? "Entity.Field.MakeModel" : "Entity.Field.Name");
 
         public static IReadOnlyList<FieldDefinition> Fields(string? type) =>
             type == Vehicle ? VehicleFields : Array.Empty<FieldDefinition>();
@@ -102,28 +107,29 @@ namespace TidyMind
         public static IReadOnlyList<LogDefinition> Logs(string? type) =>
             type == Vehicle ? VehicleLogs : Array.Empty<LogDefinition>();
 
-        // The item's expiry dates that are set, with their short names.
-        public static IEnumerable<(string Name, DateTime Date)> Expiries(Entity entity)
+        // The item's expiry dates that are set, with their fields (Field.ExpiryName is the short name).
+        public static IEnumerable<(FieldDefinition Field, DateTime Date)> Expiries(Entity entity)
         {
             foreach (FieldDefinition field in Fields(entity.EntityType).Where(f => f.IsExpiry))
             {
                 DateTime? date = Values.ParseDate(field.Get(entity));
                 if (date != null)
-                    yield return (field.ExpiryName, date.Value);
+                    yield return (field, date.Value);
             }
         }
 
         // The soonest one (an expired date first): what a card shows.
-        public static (string Name, DateTime Date)? NearestExpiry(Entity entity)
+        public static (FieldDefinition Field, DateTime Date)? NearestExpiry(Entity entity)
         {
-            List<(string Name, DateTime Date)> all = Expiries(entity).OrderBy(x => x.Date).ToList();
+            List<(FieldDefinition Field, DateTime Date)> all = Expiries(entity).OrderBy(x => x.Date).ToList();
             return all.Count == 0 ? null : all[0];
         }
 
         public static List<Dictionary<string, string>> Rows(Entity entity, LogDefinition log) =>
             entity.Logs != null && entity.Logs.TryGetValue(log.Key, out var rows) && rows != null ? rows : new List<Dictionary<string, string>>();
 
-        // The type's fields, notes and logs that have something in them, as label and text (detail card, export).
+        // The type's fields, notes and logs that have something in them, as label and text in the current language
+        // (detail card, export, search).
         public static List<(string Label, string Value)> Describe(Entity entity)
         {
             List<(string, string)> lines = new List<(string, string)>();
@@ -131,10 +137,10 @@ namespace TidyMind
             {
                 string? value = field.Get(entity);
                 if (!string.IsNullOrWhiteSpace(value))
-                    lines.Add((field.Label, value));
+                    lines.Add((field.Label, field.Kind == ValueKind.Choice ? Choices.Label(value) : value));
             }
             if (!string.IsNullOrWhiteSpace(entity.Notes))
-                lines.Add(("Notes", entity.Notes));
+                lines.Add((Loc.T("Entity.Field.Notes"), entity.Notes));
             foreach (LogDefinition log in Logs(entity.EntityType))
             {
                 List<Dictionary<string, string>> rows = Rows(entity, log);
@@ -189,7 +195,7 @@ namespace TidyMind
                 return null;
 
             double per100 = liters.Value / (kmNow.Value - kmBefore.Value) * 100;
-            return "Consumption: " + per100.ToString("0.0", CultureInfo.InvariantCulture) + " l/100 km (last two fill-ups)";
+            return Loc.F("Entity.Fuel.Consumption", per100);
         }
     }
 
@@ -199,7 +205,8 @@ namespace TidyMind
     {
         private static readonly string[] DateFormats =
             { "yyyy-MM-dd", "yyyy.MM.dd", "yyyy.MM.dd.", "yyyy. MM. dd.", "yyyy/MM/dd" };
-        // Anything else (e.g. "5/1/2027") is read in the computer's own date order, as the date pickers show it.
+        // Anything else (e.g. "5/1/2027") is read in the computer's own date order (Windows' regional format, not
+        // the app's language).
 
         // Typed text in its stored form: "" for nothing, null if it can't be read as that kind.
         public static string? Normalize(ValueKind kind, string text)
@@ -278,10 +285,29 @@ namespace TidyMind
             text = text.Trim();
             if (DateTime.TryParseExact(text, DateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime exact))
                 return exact.Date;
-            return DateTime.TryParse(text, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime parsed) ? parsed.Date : null;
+            return DateTime.TryParse(text, Loc.RegionalCulture, DateTimeStyles.None, out DateTime parsed) ? parsed.Date : null;
         }
 
         public static string? FromDate(DateTime? date) => date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    }
+
+    // The fixed choices of the item form (Material, Season, a size's Condition, a vehicle's Kind). An item stores the
+    // choice as its English text, so stored data never depends on the language; on screen it's shown as
+    // "Choice.<letters and digits of it>" in the current language. A value that isn't one of them (typed into the
+    // file, or from another version) is shown as it is.
+    public static class Choices
+    {
+        public static readonly string[] Material = { "Cotton", "Polyester", "Wool", "Linen", "Silk", "Denim", "Leather", "Synthetic", "Mixed" };
+        public static readonly string[] Season = { "All-season", "Summer", "Winter", "Spring/Autumn" };
+        public static readonly string[] Condition = { "New", "Good", "Worn", "To donate", "To throw away" };
+
+        public static string Label(string? value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return value ?? "";
+            string key = "Choice." + new string(value.Where(char.IsLetterOrDigit).ToArray());
+            return Loc.Find(key) ?? value;
+        }
     }
 
     public enum ExpiryLevel { Later, Soon, Expired }
@@ -302,11 +328,11 @@ namespace TidyMind
         public static string Describe(DateTime date, DateTime today)
         {
             int days = (date.Date - today.Date).Days;
-            if (days > 1) return "in " + days + " days";
-            if (days == 1) return "tomorrow";
-            if (days == 0) return "expires today";
-            if (days == -1) return "expired yesterday";
-            return "expired " + -days + " days ago";
+            if (days > 1) return Loc.Plural("Expiry.InDays", days);
+            if (days == 1) return Loc.T("Expiry.Tomorrow");
+            if (days == 0) return Loc.T("Expiry.Today");
+            if (days == -1) return Loc.T("Expiry.Yesterday");
+            return Loc.Plural("Expiry.DaysAgo", -days);
         }
 
         public static Brush Brush(ExpiryLevel level) => (Brush)Application.Current.FindResource(

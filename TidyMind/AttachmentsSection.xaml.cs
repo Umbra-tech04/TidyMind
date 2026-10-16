@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -69,7 +68,7 @@ namespace TidyMind
 
         private void BrowseButton_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog dialog = new OpenFileDialog { Multiselect = true, Filter = "All files (*.*)|*.*", Title = "Attach Files" };
+            OpenFileDialog dialog = new OpenFileDialog { Multiselect = true, Filter = Loc.T("Files.AllFilter"), Title = Loc.T("Files.AttachCaption") };
             if (dialog.ShowDialog(Window.GetWindow(this)) == true)
                 AddFiles(dialog.FileNames);
         }
@@ -109,9 +108,8 @@ namespace TidyMind
         {
             List<string> files = paths.Where(File.Exists).ToList();
             if (files.Count < paths.Count)
-                MessageBox.Show(Window.GetWindow(this), "Folders can't be attached, only files." +
-                        (files.Count > 0 ? " The files were added." : ""),
-                    "Attach Files", MessageBoxButton.OK, MessageBoxImage.Information);
+                Msg.Show(Window.GetWindow(this), Loc.T(files.Count > 0 ? "Files.FoldersSkipped" : "Files.FoldersOnly"),
+                    Loc.T("Files.AttachCaption"), MessageBoxButton.OK, MessageBoxImage.Information);
 
             List<PendingCopy> queue = new List<PendingCopy>();
             foreach (string path in files)
@@ -144,10 +142,8 @@ namespace TidyMind
             }
 
             return size <= AttachmentStore.LargeFileBytes
-                || MessageBox.Show(Window.GetWindow(this),
-                       "'" + Path.GetFileName(path) + "' is " + FormatSize(size) + ". Copying it takes a while and uses that " +
-                       "much disk space. Attach it anyway?", "Large File",
-                       MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
+                || Msg.Show(Window.GetWindow(this), Loc.F("Files.Large", Path.GetFileName(path), FormatSize(size)),
+                       Loc.T("Files.LargeCaption"), MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
         }
 
         // Copies one file in off the UI thread, its row showing the progress meanwhile.
@@ -184,8 +180,8 @@ namespace TidyMind
             if (attachment != null)
                 attachments.Add(attachment);
             else if (!stopped)
-                MessageBox.Show(Window.GetWindow(this), "Couldn't add '" + copy.Name + "': it couldn't be read or copied.",
-                    "Couldn't Add File", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Msg.Show(Window.GetWindow(this), Loc.F("Files.AddFailed", copy.Name), Loc.T("Files.AddFailedCaption"),
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
             Render();
         }
 
@@ -207,7 +203,7 @@ namespace TidyMind
             Button remove = new Button
             {
                 Style = (Style)FindResource("RowDeleteStyle"),
-                ToolTip = "Remove",
+                ToolTip = Loc.T("Files.Remove"),
                 Visibility = Visibility.Hidden,
                 VerticalAlignment = VerticalAlignment.Center
             };
@@ -215,7 +211,7 @@ namespace TidyMind
             Grid.SetColumn(remove, 2);
 
             FrameworkElement text = RowText(attachment.DisplayName,
-                FormatSize(attachment.SizeBytes) + "  ·  " + attachment.AddedDate.ToString("MMM d, yyyy", CultureInfo.InvariantCulture));
+                FormatSize(attachment.SizeBytes) + "  ·  " + attachment.AddedDate.ToString(Loc.T("Format.ShortDate"), Loc.Culture));
             Grid.SetColumn(text, 1);
 
             Border row = RowFrame(new Grid
@@ -229,7 +225,7 @@ namespace TidyMind
                 Children = { Thumbnail(attachment), text, remove }
             });
             row.Cursor = Cursors.Hand;
-            row.ToolTip = "Open " + attachment.DisplayName;
+            row.ToolTip = Loc.F("Files.OpenNamed", attachment.DisplayName);
 
             Brush hover = (Brush)FindResource("BgSubtle");
             row.MouseEnter += (s, e) =>
@@ -398,15 +394,15 @@ namespace TidyMind
 
         private ContextMenu Menu(Attachment attachment)
         {
-            MenuItem open = new MenuItem { Header = "Open" };
+            MenuItem open = new MenuItem { Header = Loc.T("Files.Open") };
             open.Click += (s, e) => Open(attachment);
-            MenuItem show = new MenuItem { Header = "Show in folder" };
+            MenuItem show = new MenuItem { Header = Loc.T("Files.ShowInFolder") };
             show.Click += (s, e) => ShowInFolder(attachment);
-            MenuItem saveCopy = new MenuItem { Header = "Save a copy as..." };
+            MenuItem saveCopy = new MenuItem { Header = Loc.T("Files.SaveCopy") };
             saveCopy.Click += (s, e) => SaveCopy(attachment);
-            MenuItem rename = new MenuItem { Header = "Rename" };
+            MenuItem rename = new MenuItem { Header = Loc.T("Common.Rename") };
             rename.Click += (s, e) => Rename(attachment);
-            MenuItem remove = new MenuItem { Header = "Remove" };
+            MenuItem remove = new MenuItem { Header = Loc.T("Files.Remove") };
             remove.Click += (s, e) => Remove(attachment);
 
             return new ContextMenu { Items = { open, show, saveCopy, rename, new Separator(), remove } };
@@ -418,9 +414,8 @@ namespace TidyMind
             if (AttachmentStore.Exists(attachment))
                 return true;
 
-            if (MessageBox.Show(Window.GetWindow(this),
-                    "This file is no longer on disk. Remove '" + attachment.DisplayName + "' from the project?",
-                    "File Missing", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+            if (Msg.Show(Window.GetWindow(this), Loc.F("Files.Missing", attachment.DisplayName), Loc.T("Files.MissingCaption"),
+                    MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
                 RemoveEntry(attachment);
             return false;
         }
@@ -434,9 +429,8 @@ namespace TidyMind
             }
             catch (Win32Exception) // e.g. no program is set up to open this kind of file
             {
-                MessageBox.Show(Window.GetWindow(this), "Couldn't open '" + attachment.DisplayName +
-                        "': Windows has no program set up for this kind of file.",
-                    "Couldn't Open", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Msg.Show(Window.GetWindow(this), Loc.F("Files.NoProgram", attachment.DisplayName), Loc.T("Files.NoProgramCaption"),
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -450,7 +444,7 @@ namespace TidyMind
         {
             if (!StillOnDisk(attachment)) return;
 
-            SaveFileDialog dialog = new SaveFileDialog { FileName = attachment.DisplayName, Filter = "All files (*.*)|*.*" };
+            SaveFileDialog dialog = new SaveFileDialog { FileName = attachment.DisplayName, Filter = Loc.T("Files.AllFilter") };
             if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
             try
             {
@@ -458,15 +452,16 @@ namespace TidyMind
             }
             catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
             {
-                MessageBox.Show(Window.GetWindow(this), "Couldn't save the copy: " + e.Message,
-                    "Couldn't Save", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Msg.Show(Window.GetWindow(this), Loc.F("Files.SaveCopyFailed", e.Message), Loc.T("Common.CouldntSave"),
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
         // Only the name shown here changes; the stored copy keeps its own name (and extension, which picks its icon).
         private void Rename(Attachment attachment)
         {
-            string name = InputDialog.Prompt(this, "Rename File", "Enter a new name.", attachment.DisplayName, "Rename");
+            string name = InputDialog.Prompt(this, Loc.T("Files.RenameTitle"), Loc.T("Common.RenamePrompt"), attachment.DisplayName,
+                Loc.T("Common.Rename"));
             if (string.IsNullOrWhiteSpace(name) || name == attachment.DisplayName) return;
             attachment.DisplayName = name.Trim();
             Render();
@@ -474,8 +469,8 @@ namespace TidyMind
 
         private void Remove(Attachment attachment)
         {
-            if (MessageBox.Show(Window.GetWindow(this), "Remove '" + attachment.DisplayName + "' from this project?",
-                    "Remove File", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+            if (Msg.Show(Window.GetWindow(this), Loc.F("Files.RemoveConfirm", attachment.DisplayName), Loc.T("Files.RemoveCaption"),
+                    MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
                 RemoveEntry(attachment);
         }
 
@@ -497,12 +492,12 @@ namespace TidyMind
 
         private static string FormatSize(long bytes)
         {
-            if (bytes < 1024) return bytes + " B";
+            if (bytes < 1024) return Loc.F("Files.Size.B", bytes);
             double kb = bytes / 1024.0;
-            if (kb < 1024) return kb.ToString("0", CultureInfo.InvariantCulture) + " KB";
+            if (kb < 1024) return Loc.F("Files.Size.KB", kb);
             double mb = kb / 1024;
-            if (mb < 1024) return mb.ToString(mb < 10 ? "0.0" : "0", CultureInfo.InvariantCulture) + " MB";
-            return (mb / 1024).ToString("0.0", CultureInfo.InvariantCulture) + " GB";
+            if (mb < 1024) return Loc.F(mb < 10 ? "Files.Size.MBSmall" : "Files.Size.MB", mb);
+            return Loc.F("Files.Size.GB", mb / 1024);
         }
     }
 }

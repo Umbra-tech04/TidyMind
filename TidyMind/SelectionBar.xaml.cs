@@ -8,9 +8,12 @@ namespace TidyMind
     // anything is selected.
     public partial class SelectionBar : UserControl
     {
+        private int shown;
+
         public SelectionBar()
         {
             InitializeComponent();
+            Loc.Track(this, () => Show(shown));
         }
 
         public event Action DeleteClicked;
@@ -18,7 +21,8 @@ namespace TidyMind
 
         public void Show(int count)
         {
-            CountText.Text = count + " selected";
+            shown = count;
+            CountText.Text = Loc.F("Selection.Count", count);
         }
 
         private void Delete_Click(object sender, RoutedEventArgs e) => DeleteClicked?.Invoke();

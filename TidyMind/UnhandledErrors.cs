@@ -54,13 +54,8 @@ namespace TidyMind
             reporting = true;
             try
             {
-                MessageBox.Show(
-                    "Something went wrong: " + e.Exception.Message + "\n\n"
-                    + (closing
-                        ? "TidyMind has to close. "
-                        : "TidyMind will keep running, but your last change may not have been saved. ")
-                    + "The details were written to " + LogPath + ".",
-                    "Unexpected Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Msg.Show(Loc.F(closing ? "Error.MustClose" : "Error.KeepRunning", e.Exception.Message, LogPath),
+                    Loc.T("Error.Caption"), MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -79,9 +74,8 @@ namespace TidyMind
             if (background || !e.IsTerminating)
                 return;
 
-            MessageBox.Show("Something went wrong and TidyMind has to close: " + exception?.Message + "\n\n"
-                + "Your last change may not have been saved. The details were written to " + LogPath + ".",
-                "Unexpected Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            Msg.Show(Loc.F("Error.Background", exception?.Message, LogPath), Loc.T("Error.Caption"), MessageBoxButton.OK,
+                MessageBoxImage.Error);
         }
 
         // A background task (e.g. decoding a picture) that failed and that nothing waited for.

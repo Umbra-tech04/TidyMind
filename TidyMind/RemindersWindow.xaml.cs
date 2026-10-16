@@ -21,6 +21,7 @@ namespace TidyMind
             InitializeComponent();
             RenderReminders();
             Activated += (s, e) => RenderReminders();
+            Loc.Track(this, RenderReminders);
         }
 
         public static void ShowOrFocus()
@@ -94,10 +95,7 @@ namespace TidyMind
             if (reminders.Count == 0)
             {
                 TextBlock empty = new TextBlock();
-                empty.Text = problem == null
-                    ? "No reminders yet."
-                    : "Couldn't read reminders.json: " + problem + "\n\nThe file was left as it is. Fix it or restore it "
-                      + "from a backup to see and add reminders.";
+                empty.Text = problem == null ? Loc.T("Reminders.Empty") : Loc.F("Reminders.Unreadable", problem);
                 empty.TextWrapping = TextWrapping.Wrap;
                 empty.TextAlignment = TextAlignment.Center;
                 empty.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8A8A87"));
@@ -107,9 +105,10 @@ namespace TidyMind
                 return;
             }
 
+            HashSet<Guid>? blockIds = DayPlanReminders.BlockIds();
             foreach (Reminder reminder in reminders)
             {
-                Border row = CreateReminderRow(reminder);
+                Border row = CreateReminderRow(reminder, blockIds);
                 RemindersPanel.Children.Add(row);
 
                 if (reminder.Id == highlightedId)
@@ -121,7 +120,7 @@ namespace TidyMind
             }
         }
 
-        private Border CreateReminderRow(Reminder reminder)
+        private Border CreateReminderRow(Reminder reminder, ISet<Guid>? blockIds)
         {
             Border row = new Border();
             row.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
@@ -141,13 +140,14 @@ namespace TidyMind
 
             if (!string.IsNullOrWhiteSpace(reminder.Title))
             {
-                TextBox forText = TextCopy.Selectable("For: " + reminder.Title, 11, (Brush)FindResource("Accent"));
+                TextBox forText = TextCopy.Selectable(Loc.F("Reminders.For", DayPlanReminders.ShownTitle(reminder, blockIds)), 11,
+                    (Brush)FindResource("Accent"));
                 forText.Margin = new Thickness(0, 4, 0, 0);
                 info.Children.Add(forText);
             }
 
-            TextBox details = TextCopy.Selectable(reminder.NextFireTime.ToString("yyyy-MM-dd HH:mm") + "   •   " + reminder.RepeatType,
-                11, (Brush)FindResource("TextSub"));
+            TextBox details = TextCopy.Selectable(reminder.NextFireTime.ToString(Loc.T("Format.DateTime"), Loc.Culture) + "   •   "
+                + ReminderForm.RepeatLabel(reminder.RepeatType), 11, (Brush)FindResource("TextSub"));
             details.Margin = new Thickness(0, 4, 0, 0);
             info.Children.Add(details);
 
@@ -155,8 +155,8 @@ namespace TidyMind
             grid.Children.Add(info);
 
             Button deleteButton = new Button();
-            deleteButton.Content = "Delete";
-            deleteButton.Width = 80;
+            deleteButton.Content = Loc.T("Common.Delete");
+            deleteButton.MinWidth = 80;
             deleteButton.Height = 30;
             deleteButton.Style = (Style)Application.Current.FindResource("GhostButtonStyle");
             deleteButton.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#C0392B"));

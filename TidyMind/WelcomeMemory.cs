@@ -8,13 +8,13 @@ using System.Windows.Media.Imaging;
 
 namespace TidyMind
 {
-    // The guided tour's example data: a project memory and a small collection, both called "Welcome" and marked
-    // Profile.IsSample. Written through the normal stores, so search, export, backup and delete treat them like any
-    // other memory.
+    // The guided tour's example data: a project memory and a small collection, both called "Welcome" (in the language
+    // shown when they're made) and marked Profile.IsSample. Written through the normal stores, so search, export, backup and delete treat them like any
+    // other memory. They are written in the language shown when they are created and are the user's data from then
+    // on: a later language switch doesn't translate them. Choice values (Material, Season, the vehicle's Kind) are
+    // stored in English like every item's, and shown in the current language.
     public static class WelcomeMemory
     {
-        public const string Name = "Welcome";
-
         public static Profile? Find(IEnumerable<Profile> profiles, ProfileType type) =>
             profiles.FirstOrDefault(p => p.IsSample == true && p.Type == type);
 
@@ -41,7 +41,7 @@ namespace TidyMind
                 Profile memory = new Profile
                 {
                     Id = Guid.NewGuid(),
-                    Name = Name,
+                    Name = Loc.T("Welcome.Name"),
                     Color = nextColor(),
                     Type = type,
                     Order = order++,
@@ -73,8 +73,8 @@ namespace TidyMind
 
         private static bool WriteProjects(Profile memory, List<string> pictures)
         {
-            MemoryTab start = new MemoryTab { Id = Guid.NewGuid(), Name = "Getting started", Order = 0 };
-            MemoryTab home = new MemoryTab { Id = Guid.NewGuid(), Name = "Around the house", Order = 1 };
+            MemoryTab start = new MemoryTab { Id = Guid.NewGuid(), Name = Loc.T("Welcome.Tab.Start"), Order = 0 };
+            MemoryTab home = new MemoryTab { Id = Guid.NewGuid(), Name = Loc.T("Welcome.Tab.Home"), Order = 1 };
 
             string? picture = MakeCardPicture();
             if (picture != null)
@@ -85,41 +85,42 @@ namespace TidyMind
             {
                 new Project
                 {
-                    Id = Guid.NewGuid(), Name = "Notebook", TabId = start.Id, Order = 0, LastModified = now,
-                    Description = "A project keeps tasks, notes and files for one thing you are working on.",
-                    Tasks = Tasks(("Read the first page", true), ("Add a page of your own", false)),
+                    Id = Guid.NewGuid(), Name = Loc.T("Welcome.Notebook.Name"), TabId = start.Id, Order = 0, LastModified = now,
+                    Description = Loc.T("Welcome.Notebook.Description"),
+                    Tasks = Tasks((Loc.T("Welcome.Notebook.Task1"), true), (Loc.T("Welcome.Notebook.Task2"), false)),
                     NotePages = new List<NotePage>
                     {
-                        new NotePage { Body = "This is page one.\nThe arrow above turns to the next page." },
-                        new NotePage { Body = "This is page two.\nOn the last page, the arrow starts a new page." }
+                        new NotePage { Body = Loc.T("Welcome.Notebook.Page1") },
+                        new NotePage { Body = Loc.T("Welcome.Notebook.Page2") }
                     }
                 },
                 new Project
                 {
-                    Id = Guid.NewGuid(), Name = "Plan a weekend trip", TabId = start.Id, Order = 1, LastModified = now,
-                    Tasks = Tasks(("Pick a date", true), ("Book a place to stay", true), ("Pack a bag", false), ("Check the weather", false)),
+                    Id = Guid.NewGuid(), Name = Loc.T("Welcome.Trip.Name"), TabId = start.Id, Order = 1, LastModified = now,
+                    Tasks = Tasks((Loc.T("Welcome.Trip.Task1"), true), (Loc.T("Welcome.Trip.Task2"), true), (Loc.T("Welcome.Trip.Task3"), false),
+                        (Loc.T("Welcome.Trip.Task4"), false)),
                     CardBackgroundType = BackgroundFill.Color, CardBackgroundColor = "#1F6B6B"
                 },
                 new Project
                 {
-                    Id = Guid.NewGuid(), Name = "Reading list", TabId = start.Id, Order = 2, LastModified = now,
-                    Tasks = Tasks(("Finish the current book", false)),
+                    Id = Guid.NewGuid(), Name = Loc.T("Welcome.Reading.Name"), TabId = start.Id, Order = 2, LastModified = now,
+                    Tasks = Tasks((Loc.T("Welcome.Reading.Task1"), false)),
                     CardBackgroundType = picture != null ? BackgroundFill.Image : BackgroundFill.None,
                     CardBackgroundImagePath = picture
                 },
                 new Project
                 {
-                    Id = Guid.NewGuid(), Name = "Fix the bike", TabId = home.Id, Order = 3, LastModified = now,
-                    Tasks = Tasks(("Buy a new tube", false), ("Oil the chain", false)),
+                    Id = Guid.NewGuid(), Name = Loc.T("Welcome.Bike.Name"), TabId = home.Id, Order = 3, LastModified = now,
+                    Tasks = Tasks((Loc.T("Welcome.Bike.Task1"), false), (Loc.T("Welcome.Bike.Task2"), false)),
                     CardBackgroundType = BackgroundFill.Color, CardBackgroundColor = "#C1562F"
                 }
             };
 
             List<TodoEntry> todos = new List<TodoEntry>
             {
-                new TodoEntry { Text = "Water the plants" },
-                new TodoEntry { Text = "Call the bank about the new card" },
-                new TodoEntry { Text = "Buy coffee" }
+                new TodoEntry { Id = Guid.NewGuid(), Text = Loc.T("Welcome.Todo1") },
+                new TodoEntry { Id = Guid.NewGuid(), Text = Loc.T("Welcome.Todo2") },
+                new TodoEntry { Id = Guid.NewGuid(), Text = Loc.T("Welcome.Todo3") }
             };
 
             return TabStore.TrySave(memory, new List<MemoryTab> { start, home })
@@ -129,28 +130,29 @@ namespace TidyMind
 
         private static bool WriteCollection(Profile memory)
         {
-            MemoryTab things = new MemoryTab { Id = Guid.NewGuid(), Name = "Things", Order = 0 };
+            MemoryTab things = new MemoryTab { Id = Guid.NewGuid(), Name = Loc.T("Welcome.Tab.Things"), Order = 0 };
             DateTime now = DateTime.Now;
             List<Entity> items = new List<Entity>
             {
                 new Entity
                 {
-                    Id = Guid.NewGuid(), EntityType = EntityTypes.Clothing, Name = "Rain jacket", TabId = things.Id, Order = 0,
-                    CreatedDate = now, Color = "Navy", Material = "Polyester", Season = "Spring/Autumn",
-                    Notes = "A collection keeps a list of things you own.",
+                    Id = Guid.NewGuid(), EntityType = EntityTypes.Clothing, Name = Loc.T("Welcome.Jacket.Name"), TabId = things.Id, Order = 0,
+                    CreatedDate = now, Color = Loc.T("Welcome.Jacket.Color"), Material = "Polyester", Season = "Spring/Autumn",
+                    Notes = Loc.T("Welcome.Jacket.Notes"),
                     Sizes = new List<SizeQuantity> { new SizeQuantity { Size = "M", Quantity = 1 } }
                 },
                 new Entity
                 {
-                    Id = Guid.NewGuid(), EntityType = EntityTypes.Clothing, Name = "Wool sweater", TabId = things.Id, Order = 1,
-                    CreatedDate = now, Color = "Grey", Material = "Wool", Season = "Winter",
+                    Id = Guid.NewGuid(), EntityType = EntityTypes.Clothing, Name = Loc.T("Welcome.Sweater.Name"), TabId = things.Id, Order = 1,
+                    CreatedDate = now, Color = Loc.T("Welcome.Sweater.Color"), Material = "Wool", Season = "Winter",
                     Sizes = new List<SizeQuantity> { new SizeQuantity { Size = "L", Quantity = 2 } }
                 },
+                // The last item: the tour's search step suggests the last word of its name (MainWindow.SampleSearchWord).
                 new Entity
                 {
-                    Id = Guid.NewGuid(), EntityType = EntityTypes.Vehicle, Name = "City bike", TabId = things.Id, Order = 2,
+                    Id = Guid.NewGuid(), EntityType = EntityTypes.Vehicle, Name = Loc.T("Welcome.Bike.Item"), TabId = things.Id, Order = 2,
                     CreatedDate = now, VehicleKind = "Bicycle", Year = 2021,
-                    Notes = "Vehicles can also keep logs, like fuel or service."
+                    Notes = Loc.T("Welcome.Bike.ItemNotes")
                 }
             };
 

@@ -1,6 +1,8 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.Win32;
 
@@ -17,6 +19,29 @@ namespace TidyMind
             VersionText.Text = "TidyMind " + DataBackup.AppVersion;
             DataFolderText.Text = AppPaths.DataFolder;
             DataFolderText.ToolTip = AppPaths.DataFolder;
+            BuildLanguageChoices();
+        }
+
+        // One segment per language; picking one switches the whole app at once (Loc.Switch), this window included.
+        private void BuildLanguageChoices()
+        {
+            foreach (LanguageOption language in Loc.Languages)
+            {
+                RadioButton choice = new RadioButton
+                {
+                    Content = language.Name,
+                    GroupName = "Language",
+                    Style = (Style)FindResource("SegmentStyle"),
+                    IsChecked = language.Code == Loc.Current
+                };
+                choice.Checked += (s, e) =>
+                {
+                    if (language.Code != Loc.Current && !Loc.Switch(language.Code))
+                        Msg.Show(this, Loc.T("Settings.Language.NotSaved"), Loc.T("Settings.Language.Title"),
+                            MessageBoxButton.OK, MessageBoxImage.Warning);
+                };
+                LanguageChoices.Children.Add(choice);
+            }
         }
 
         // Esc closes, as in the other dialogs.
@@ -42,8 +67,8 @@ namespace TidyMind
         {
             SaveFileDialog dialog = new SaveFileDialog
             {
-                FileName = "TidyMind-backup-" + DateTime.Now.ToString("yyyy-MM-dd-HHmm") + ".zip",
-                Filter = "ZIP files (*.zip)|*.zip"
+                FileName = Loc.F("Settings.Backup.FileName", DateTime.Now.ToString("yyyy-MM-dd-HHmm", CultureInfo.InvariantCulture)),
+                Filter = Loc.T("Settings.Backup.Filter")
             };
             if (dialog.ShowDialog(this) != true) return;
 
@@ -55,7 +80,7 @@ namespace TidyMind
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is InvalidDataException)
             {
                 Mouse.OverrideCursor = null;
-                MessageBox.Show(this, "The backup couldn't be saved.\n\n" + ex.Message, "Backup",
+                Msg.Show(this, Loc.F("Settings.Backup.Failed", ex.Message), Loc.T("Settings.Backup.Caption"),
                     MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
@@ -64,26 +89,26 @@ namespace TidyMind
                 Mouse.OverrideCursor = null;
             }
 
-            MessageBox.Show(this, "Backup saved: " + dialog.FileName, "Backup", MessageBoxButton.OK, MessageBoxImage.Information);
+            Msg.Show(this, Loc.F("Settings.Backup.Saved", dialog.FileName), Loc.T("Settings.Backup.Caption"), MessageBoxButton.OK,
+                MessageBoxImage.Information);
         }
 
         // Checked, confirmed, then DataBackup.Restore (which keeps the current data on any failure), then a restart, so
         // nothing still in memory from the old data can be saved over the restored files.
         private void RestoreButton_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog dialog = new OpenFileDialog { Filter = "TidyMind backups (*.zip)|*.zip" };
+            OpenFileDialog dialog = new OpenFileDialog { Filter = Loc.T("Settings.Restore.Filter") };
             if (dialog.ShowDialog(this) != true) return;
 
             string? problem = DataBackup.CheckBackup(dialog.FileName);
             if (problem != null)
             {
-                MessageBox.Show(this, problem, "Restore from Backup", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Msg.Show(this, problem, Loc.T("Settings.Restore.Caption"), MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            if (MessageBox.Show(this, "Restore from this backup?\n" + dialog.FileName + "\n\nYour current data will be "
-                    + "replaced. A copy of it is saved first, then TidyMind restarts.", "Restore from Backup", MessageBoxButton.YesNo, MessageBoxImage.Warning,
-                    MessageBoxResult.No) != MessageBoxResult.Yes)
+            if (Msg.Show(this, Loc.F("Settings.Restore.Confirm", dialog.FileName), Loc.T("Settings.Restore.Caption"),
+                    MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
 
             // Quick Notes saves what's typed when it closes: now, into the current data, not later over the restored one.
@@ -101,9 +126,9 @@ namespace TidyMind
                                        || ex is NotSupportedException || ex is ArgumentException)
             {
                 Mouse.OverrideCursor = null;
-                MessageBox.Show(this, "The backup wasn't restored: " + ex.Message + "\n\nYour current data was left as it was."
-                    + (safetyCopy != null && File.Exists(safetyCopy) ? "\nA safety copy of it was also saved here:\n" + safetyCopy : ""),
-                    "Restore from Backup", MessageBoxButton.OK, MessageBoxImage.Error);
+                Msg.Show(this, Loc.F("Settings.Restore.Failed", ex.Message)
+                    + (safetyCopy != null && File.Exists(safetyCopy) ? "\n" + Loc.F("Settings.Restore.FailedSafetyCopy", safetyCopy) : ""),
+                    Loc.T("Settings.Restore.Caption"), MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
             finally
@@ -111,8 +136,8 @@ namespace TidyMind
                 Mouse.OverrideCursor = null;
             }
 
-            MessageBox.Show(this, "The backup was restored. Your previous data was saved here:\n" + safetyCopy
-                + "\n\nTidyMind will now restart.", "Restore from Backup", MessageBoxButton.OK, MessageBoxImage.Information);
+            Msg.Show(this, Loc.F("Settings.Restore.Done", safetyCopy), Loc.T("Settings.Restore.Caption"), MessageBoxButton.OK,
+                MessageBoxImage.Information);
             DataBackup.Restart();
         }
 
@@ -127,8 +152,8 @@ namespace TidyMind
             catch (Exception ex) when (ex is System.ComponentModel.Win32Exception || ex is IOException
                                        || ex is UnauthorizedAccessException)
             {
-                MessageBox.Show(this, "The data folder couldn't be opened:\n" + AppPaths.DataFolder + "\n\n" + ex.Message,
-                    "Open Data Folder", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Msg.Show(this, Loc.F("Settings.DataFolder.Failed", AppPaths.DataFolder, ex.Message),
+                    Loc.T("Settings.DataFolder.Caption"), MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
     }

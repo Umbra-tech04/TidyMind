@@ -5,7 +5,8 @@ using System.Text;
 namespace TidyMind
 {
     // How every search box matches text: ignoring case and accents, so "arvizturo" finds "Árvíztűrő" (and "ő", "ű"
-    // match "o", "u"). Both sides are decomposed (FormD) and their combining marks dropped.
+    // match "o", "u"; Serbian "č", "ć", "š", "ž" match "c", "s", "z"). Both sides are decomposed (FormD) and their
+    // combining marks dropped; "đ", which has no decomposition, is folded to "d" by hand.
     public static class TextSearch
     {
         public static bool Contains(string text, string query) => IndexOf(text, query, out _) >= 0;
@@ -34,6 +35,13 @@ namespace TidyMind
                 if (c < 128 || char.IsSurrogate(c)) // plain ASCII (the common case) and emoji halves: nothing to strip
                 {
                     Add(folded, origin, char.ToLowerInvariant(c), i);
+                    continue;
+                }
+
+                // A stroke isn't a combining mark, so FormD leaves đ whole: "dak" should still find "đak".
+                if (c == 'đ' || c == 'Đ')
+                {
+                    Add(folded, origin, 'd', i);
                     continue;
                 }
 

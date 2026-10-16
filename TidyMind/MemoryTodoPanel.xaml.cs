@@ -27,6 +27,13 @@ namespace TidyMind
         public MemoryTodoPanel()
         {
             InitializeComponent();
+            Loc.Track(this, () =>
+            {
+                if (memory == null)
+                    return; // not loaded with a memory yet
+                ErrorText.Text = Loc.F("Todo.ListUnreadable", MemoryFiles.Todos(memory));
+                Render();
+            });
         }
 
         // saveProfiles: writes the main window's list of memories, where the folded state is kept.
@@ -40,7 +47,7 @@ namespace TidyMind
             // An unreadable file is left alone (never saved over), and the list is shown with the reason.
             Input.IsEnabled = readable;
             ErrorText.Visibility = readable ? Visibility.Collapsed : Visibility.Visible;
-            ErrorText.Text = "Couldn't read " + MemoryFiles.Todos(memory) + ". Fix or remove that file to use this list.";
+            ErrorText.Text = Loc.F("Todo.ListUnreadable", MemoryFiles.Todos(memory));
 
             Render();
         }
@@ -71,8 +78,7 @@ namespace TidyMind
             if (MemoryTodoService.TrySave(memory, todos))
                 return true;
 
-            MessageBox.Show("Couldn't save the to-do list of '" + memory.Name + "': this file can't be written:\n"
-                + MemoryFiles.Todos(memory) + "\n\nYour last change wasn't saved.", "Couldn't Save",
+            Msg.Show(Loc.F("Todo.SaveFailed", memory.Name, MemoryFiles.Todos(memory)), Loc.T("Common.CouldntSave"),
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return false;
         }
@@ -94,7 +100,7 @@ namespace TidyMind
             if (text.Length == 0) return;
 
             // Not saved: the item isn't added, and the text stays in the box to try again.
-            TodoEntry entry = new TodoEntry { Text = text };
+            TodoEntry entry = new TodoEntry { Id = Guid.NewGuid(), Text = text };
             todos.Add(entry);
             if (!Save())
             {
@@ -131,7 +137,7 @@ namespace TidyMind
             bool folded = collapsed && hasItems;
 
             int done = todos.Count(t => t.IsDone);
-            CountText.Text = hasItems ? done + "/" + todos.Count + " done" : "";
+            CountText.Text = hasItems ? Loc.F("Todo.Count", done, todos.Count) : "";
             TodoEntry next = todos.FirstOrDefault(t => !t.IsDone);
             NextRun.Text = next?.Text ?? "";
             NextText.Visibility = folded && next != null ? Visibility.Visible : Visibility.Collapsed;
@@ -140,8 +146,8 @@ namespace TidyMind
             Header.IsEnabled = hasItems;
             Arrow.Text = folded ? CollapsedGlyph : ExpandedGlyph;
             Arrow.Visibility = hasItems ? Visibility.Visible : Visibility.Collapsed;
-            Header.ToolTip = folded ? "Unfold the to-do list" : "Fold the to-do list";
-            AutomationProperties.SetName(Header, folded ? "To-do list, folded" : "To-do list, open");
+            Header.ToolTip = Loc.T(folded ? "Todo.Unfold" : "Todo.Fold");
+            AutomationProperties.SetName(Header, Loc.T(folded ? "Todo.ListFolded" : "Todo.ListOpen"));
             Header.Margin = new Thickness(0, 0, 0, folded ? 0 : 4);
 
             Body.Visibility = folded ? Visibility.Collapsed : Visibility.Visible;
@@ -180,6 +186,8 @@ namespace TidyMind
                     entry.IsDone = !entry.IsDone; // not saved: the tick goes back
                     check.IsChecked = entry.IsDone;
                 }
+                else
+                    DayPlanTodos.SyncBlocks(TodoLink.ForMemory(memory, entry.Id), entry.IsDone);
                 PaintDone(text, entry.IsDone);
                 UpdateHeader();
             };

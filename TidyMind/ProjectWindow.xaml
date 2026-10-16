@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TidyMind"
         mc:Ignorable="d"
-        Title="Project Details" Width="580" Height="670" MinWidth="560" MinHeight="540"
+        Title="{local:Tr ProjectWindow.Title}" Width="580" Height="670" MinWidth="560" MinHeight="540"
         ResizeMode="CanResize"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BgMain}">
@@ -117,28 +117,28 @@
 
         <Border Grid.Row="0" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
                 BorderThickness="0,0,0,1" Padding="32,14">
-            <TextBlock Text="Project Details" FontSize="18" FontWeight="Bold"
+            <TextBlock Text="{local:Tr ProjectWindow.Title}" FontSize="18" FontWeight="Bold"
                        Foreground="{StaticResource TextMain}"/>
         </Border>
 
         <ScrollViewer Grid.Row="1" Background="{StaticResource BgMain}">
             <StackPanel Margin="32,24,32,28">
-                <TextBlock Text="Project Name" Style="{StaticResource SectionLabelStyle}"/>
+                <TextBlock Text="{local:Tr ProjectWindow.Name}" Style="{StaticResource SectionLabelStyle}"/>
                 <TextBox x:Name="NameBox" Style="{StaticResource FieldStyle}" FontSize="15" FontWeight="SemiBold"
                          TextChanged="NameBox_TextChanged"/>
-                <TextBlock x:Name="NameError" Text="A project needs a name." FontSize="12" Margin="2,6,0,0"
+                <TextBlock x:Name="NameError" Text="{local:Tr ProjectWindow.NameRequired}" FontSize="12" Margin="2,6,0,0"
                            Foreground="{StaticResource Danger}" Visibility="Collapsed"/>
 
                 <Border Style="{StaticResource SectionDividerStyle}"/>
 
                 <!-- Files: documents and pictures attached to the project -->
-                <TextBlock Text="Files" Style="{StaticResource SectionLabelStyle}"/>
+                <TextBlock Text="{local:Tr ProjectWindow.Files}" Style="{StaticResource SectionLabelStyle}"/>
                 <local:AttachmentsSection x:Name="Files"/>
 
                 <Border Style="{StaticResource SectionDividerStyle}"/>
 
                 <!-- Description: the tallest field; scrolls inside its frame once the text outgrows it -->
-                <TextBlock Text="Description" Style="{StaticResource SectionLabelStyle}"/>
+                <TextBlock Text="{local:Tr ProjectWindow.Description}" Style="{StaticResource SectionLabelStyle}"/>
                 <Border x:Name="EditorFrame" Height="240" Background="{StaticResource BgInput}"
                         BorderBrush="{StaticResource Border}" BorderThickness="1" CornerRadius="8">
                     <Grid>
@@ -148,8 +148,9 @@
                         </Grid.RowDefinitions>
                         <local:FormatToolbar x:Name="DescriptionToolbar"/>
 
-                        <!-- The field people read most: fills the frame, then scrolls within it -->
-                        <RichTextBox x:Name="DescriptionBox" Grid.Row="1"
+                        <!-- The field people read most: fills the frame, then scrolls within it. Language is fixed: WPF
+                             writes it into the stored text (xml:lang), which must not change with the app's language. -->
+                        <RichTextBox x:Name="DescriptionBox" Grid.Row="1" Language="en-US"
                                      VerticalScrollBarVisibility="Auto"
                                      Background="Transparent" BorderThickness="0" Padding="10,10"
                                      Foreground="{StaticResource TextMain}" CaretBrush="{StaticResource TextMain}"
@@ -168,14 +169,15 @@
                 <Border Style="{StaticResource SectionDividerStyle}"/>
 
                 <!-- Tasks: about 4 rows visible; the list scrolls past that, then hands the wheel to the window -->
-                <TextBlock Text="Tasks" Style="{StaticResource SectionLabelStyle}"/>
+                <TextBlock Text="{local:Tr ProjectWindow.Tasks}" Style="{StaticResource SectionLabelStyle}"/>
                 <Grid Margin="0,0,0,10">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBox x:Name="TaskInput" Style="{StaticResource FieldStyle}" Tag="Add a task…" KeyDown="TaskInput_KeyDown"/>
-                    <Button Grid.Column="1" Content="Add Task"
+                    <TextBox x:Name="TaskInput" Style="{StaticResource FieldStyle}" Tag="{local:Tr ProjectWindow.TaskPlaceholder}"
+                             AutomationProperties.Name="{local:Tr ProjectWindow.TaskPlaceholder}" KeyDown="TaskInput_KeyDown"/>
+                    <Button Grid.Column="1" Content="{local:Tr ProjectWindow.AddTask}"
                             Height="40" Margin="8,0,0,0" Padding="16,0"
                             Click="AddTaskButton_Click"/>
                 </Grid>
@@ -194,7 +196,7 @@
                                     <ScrollViewer x:Name="Rows" Focusable="False" VerticalScrollBarVisibility="Auto">
                                         <ItemsPresenter/>
                                     </ScrollViewer>
-                                    <TextBlock x:Name="emptyHint" Text="No tasks yet. Add the first one above."
+                                    <TextBlock x:Name="emptyHint" Text="{local:Tr ProjectWindow.NoTasks}"
                                                FontSize="13" Foreground="{StaticResource TextSub}"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                                TextWrapping="Wrap" TextAlignment="Center" Margin="12"
@@ -261,7 +263,7 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-                <TextBlock Text="Right-click a task for more (copy its text)." FontSize="12"
+                <TextBlock Text="{local:Tr ProjectWindow.TaskHint}" FontSize="12"
                            Foreground="{StaticResource TextSub}" Margin="2,8,0,0" TextWrapping="Wrap"/>
 
                 <Border Style="{StaticResource SectionDividerStyle}"/>
@@ -277,25 +279,25 @@
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="Notes" Style="{StaticResource SectionLabelStyle}" Margin="0" VerticalAlignment="Center"/>
+                    <TextBlock Text="{local:Tr ProjectWindow.Notes}" Style="{StaticResource SectionLabelStyle}" Margin="0" VerticalAlignment="Center"/>
                     <Button x:Name="PrevPageButton" Grid.Column="1" Style="{StaticResource IconButtonStyle}"
-                            Width="30" Height="30" Margin="16,0,0,0" ToolTip="Previous page  (Ctrl+PageUp)"
+                            Width="30" Height="30" Margin="16,0,0,0" ToolTip="{local:Tr ProjectWindow.PrevPage}" AutomationProperties.Name="{local:Tr ProjectWindow.PrevPage}"
                             Click="PrevPage_Click">
                         <TextBlock Text="&#xE76B;" FontFamily="Segoe MDL2 Assets" FontSize="11"/>
                     </Button>
                     <TextBlock x:Name="PageIndicator" Grid.Column="2" MinWidth="56" TextAlignment="Center"
                                VerticalAlignment="Center" FontSize="13" Foreground="{StaticResource TextSub}"/>
                     <Button x:Name="NextPageButton" Grid.Column="3" Style="{StaticResource IconButtonStyle}"
-                            Width="30" Height="30" ToolTip="Next page  (Ctrl+PageDown); on the last page, a new page"
+                            Width="30" Height="30" ToolTip="{local:Tr ProjectWindow.NextPage}" AutomationProperties.Name="{local:Tr ProjectWindow.NextPage}"
                             Click="NextPage_Click">
                         <TextBlock Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="11"/>
                     </Button>
                     <Button x:Name="DeletePageButton" Grid.Column="5" Style="{StaticResource IconButtonStyle}"
-                            Width="30" Height="30" ToolTip="Delete page" Click="DeletePage_Click">
+                            Width="30" Height="30" Click="DeletePage_Click">
                         <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
                     </Button>
                     <Button x:Name="PageListButton" Grid.Column="6" Style="{StaticResource IconButtonStyle}"
-                            Width="30" Height="30" Margin="6,0,0,0" ToolTip="All pages" Click="PageList_Click">
+                            Width="30" Height="30" Margin="6,0,0,0" ToolTip="{local:Tr ProjectWindow.AllPages}" AutomationProperties.Name="{local:Tr ProjectWindow.AllPages}" Click="PageList_Click">
                         <TextBlock Text="&#xE700;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
                     </Button>
                     <Popup x:Name="PageListPopup" PlacementTarget="{Binding ElementName=PageListButton}"
@@ -331,10 +333,10 @@
                                 </AdornerDecorator.RenderTransform>
                                 <Grid>
                                     <!-- 5: the editor's built-in page padding, so the placeholder sits where typing starts -->
-                                    <TextBlock x:Name="NotesPlaceholder" Text="Start writing..." Margin="5,0,0,0" FontFamily="Segoe UI" FontSize="15"
+                                    <TextBlock x:Name="NotesPlaceholder" Text="{local:Tr ProjectWindow.NotesPlaceholder}" Margin="5,0,0,0" FontFamily="Segoe UI" FontSize="15"
                                                LineHeight="24" LineStackingStrategy="BlockLineHeight"
                                                Foreground="{StaticResource TextSub}" IsHitTestVisible="False"/>
-                                    <RichTextBox x:Name="NotesBox"
+                                    <RichTextBox x:Name="NotesBox" Language="en-US"
                                                  VerticalScrollBarVisibility="Auto"
                                                  Background="Transparent" BorderThickness="0" Padding="0"
                                                  Foreground="{StaticResource TextMain}" CaretBrush="{StaticResource TextMain}"
@@ -361,8 +363,8 @@
         <!-- Sticky footer: Save stays in reach however long the content gets -->
         <Border Grid.Row="2" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
                 BorderThickness="0,1,0,0" Padding="32,12">
-            <Button x:Name="SaveButton" Content="Save"
-                    Width="128" Height="38" HorizontalAlignment="Right"
+            <Button x:Name="SaveButton" Content="{local:Tr Common.Save}"
+                    MinWidth="128" Padding="16,0" Height="38" HorizontalAlignment="Right"
                     FontWeight="SemiBold"
                     Click="SaveButton_Click"/>
         </Border>

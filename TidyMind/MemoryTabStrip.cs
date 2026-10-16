@@ -14,7 +14,7 @@ namespace TidyMind
     {
         private readonly StackPanel strip;
         private readonly Profile memory;
-        private readonly string itemWord;
+        private readonly string movedKey;
         private readonly Func<Guid, int> countItemsInTab;
         private readonly Action<Guid, Guid> moveItems;
 
@@ -30,13 +30,14 @@ namespace TidyMind
         // Raised when the visible set of items may have changed (tab switched, added or deleted).
         public event Action TabsChanged;
 
-        // tabs: the memory's tabs as read by TabStore.TryLoadOrCreate (at least one, sorted).
+        // tabs: the memory's tabs as read by TabStore.TryLoadOrCreate (at least one, sorted). movedKey: the plural
+        // string that asks before a tab with items is deleted ({0} items, {1} the tab, {2} where they go).
         public MemoryTabStrip(FrameworkElement view, StackPanel strip, Profile memory,
-            List<MemoryTab> tabs, string itemWord, Func<Guid, int> countItemsInTab, Action<Guid, Guid> moveItems)
+            List<MemoryTab> tabs, string movedKey, Func<Guid, int> countItemsInTab, Action<Guid, Guid> moveItems)
         {
             this.strip = strip;
             this.memory = memory;
-            this.itemWord = itemWord;
+            this.movedKey = movedKey;
             this.countItemsInTab = countItemsInTab;
             this.moveItems = moveItems;
 
@@ -79,10 +80,11 @@ namespace TidyMind
                 Width = 30,
                 Height = 30,
                 FontSize = 15,
-                ToolTip = "Add tab",
+                ToolTip = Loc.T("Tabs.Add"),
                 Margin = new Thickness(2, 0, 0, 0),
                 Style = (Style)Application.Current.FindResource("IconButtonStyle")
             };
+            System.Windows.Automation.AutomationProperties.SetName(add, Loc.T("Tabs.Add"));
             add.Click += (s, e) => AddTab();
             strip.Children.Add(add);
         }
@@ -125,9 +127,9 @@ namespace TidyMind
             tabDrag.Attach(pill, tab);
 
             ContextMenu menu = new ContextMenu();
-            MenuItem rename = new MenuItem { Header = "Rename" };
+            MenuItem rename = new MenuItem { Header = Loc.T("Common.Rename") };
             rename.Click += (s, e) => BeginRename(tab);
-            MenuItem delete = new MenuItem { Header = "Delete", IsEnabled = tabs.Count > 1 };
+            MenuItem delete = new MenuItem { Header = Loc.T("Common.Delete"), IsEnabled = tabs.Count > 1 };
             delete.Click += (s, e) => DeleteTab(tab);
             menu.Items.Add(rename);
             menu.Items.Add(delete);
@@ -221,9 +223,9 @@ namespace TidyMind
         {
             commitPendingRename?.Invoke();
 
-            string name = "New Tab";
+            string name = Loc.T("Tabs.NewName");
             for (int n = 2; tabs.Any(t => t.Name == name); n++)
-                name = "New Tab " + n;
+                name = Loc.F("Tabs.NewNameNumbered", n);
 
             MemoryTab tab = new MemoryTab
             {
@@ -275,10 +277,8 @@ namespace TidyMind
 
             if (count > 0)
             {
-                MessageBoxResult result = MessageBox.Show(
-                    "Delete the tab '" + tab.Name + "'?\n\nIts " + count + " " + itemWord + (count == 1 ? "" : "s") +
-                    " will be moved to '" + target.Name + "'.",
-                    "Delete Tab", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                MessageBoxResult result = Msg.Show(Loc.Plural(movedKey, count, tab.Name, target.Name),
+                    Loc.T("Tabs.Delete.Caption"), MessageBoxButton.YesNo, MessageBoxImage.Warning);
                 if (result != MessageBoxResult.Yes) return;
 
                 moveItems(tab.Id, target.Id);
@@ -297,8 +297,7 @@ namespace TidyMind
         private void Save()
         {
             if (!TabStore.TrySave(memory, tabs))
-                MessageBox.Show("Couldn't save the tabs of '" + memory.Name + "': this file can't be written:\n"
-                    + MemoryFiles.Tabs(memory) + "\n\nYour last change to the tabs wasn't saved.", "Couldn't Save",
+                Msg.Show(Loc.F("Tabs.SaveFailed", memory.Name, MemoryFiles.Tabs(memory)), Loc.T("Common.CouldntSave"),
                     MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 

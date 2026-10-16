@@ -57,8 +57,9 @@ namespace TidyMind
                 Margin = new Thickness(3),
                 Cursor = Cursors.Hand,
                 Background = BrushOf(hex),
-                ToolTip = name
+                ToolTip = Loc.T("TextColor." + name)
             };
+            System.Windows.Automation.AutomationProperties.SetName(swatch, Loc.T("TextColor." + name));
             CardEffects.AttachClick(swatch, () =>
             {
                 ColorPopup.IsOpen = false;
@@ -78,17 +79,17 @@ namespace TidyMind
         private ContextMenu BuildContextMenu()
         {
             // Each label previews its own formatting (on the label only, not the shortcut beside it).
-            MenuItem bold = FormatMenuItem(new TextBlock { Text = "Bold", FontWeight = FontWeights.Bold }, "Ctrl+B", EditingCommands.ToggleBold);
-            MenuItem italic = FormatMenuItem(new TextBlock { Text = "Italic", FontStyle = FontStyles.Italic }, "Ctrl+I", EditingCommands.ToggleItalic);
-            MenuItem underline = FormatMenuItem(new TextBlock { Text = "Underline", TextDecorations = TextDecorations.Underline }, "Ctrl+U", EditingCommands.ToggleUnderline);
+            MenuItem bold = FormatMenuItem(new TextBlock { Text = Loc.T("Format.Bold"), FontWeight = FontWeights.Bold }, "Ctrl+B", EditingCommands.ToggleBold);
+            MenuItem italic = FormatMenuItem(new TextBlock { Text = Loc.T("Format.Italic"), FontStyle = FontStyles.Italic }, "Ctrl+I", EditingCommands.ToggleItalic);
+            MenuItem underline = FormatMenuItem(new TextBlock { Text = Loc.T("Format.Underline"), TextDecorations = TextDecorations.Underline }, "Ctrl+U", EditingCommands.ToggleUnderline);
 
-            MenuItem color = new MenuItem { Header = "Text color" };
+            MenuItem color = new MenuItem { Header = Loc.T("Format.TextColor") };
             foreach (var (name, hex) in TextColors)
             {
                 Brush brush = BrushOf(hex);
                 MenuItem item = new MenuItem
                 {
-                    Header = name,
+                    Header = Loc.T("TextColor." + name),
                     Icon = new Ellipse { Width = 12, Height = 12, Fill = brush, Stroke = BrushOf("#33000000"), StrokeThickness = 1 }
                 };
                 item.Click += (s, e) => ApplyColor(brush);

@@ -8,11 +8,10 @@ namespace TidyMind
 {
     public static class TabStore
     {
-        public const string DefaultTabName = "Unnamed";
-
         // Loads the memory's tabs (sorted). With no tabs yet (no file, or an empty one), they are made from the tabs
         // the memory's items already point at, in the items' order, so a lost tabs file costs only the tab names and
-        // never which items belong together; with no such items, just the default tab.
+        // never which items belong together; with no such items, just the default tab. A tab made here is named in
+        // the language shown at the time, and keeps that name (it's the user's to rename).
         // False (with the reason) if the file exists but can't be read: nothing is created or saved then.
         public static bool TryLoadOrCreate(Profile memory, IEnumerable<Guid> itemTabIds,
             out List<MemoryTab> tabs, out string problem)
@@ -44,7 +43,7 @@ namespace TidyMind
                 tabs = ids.Select((id, i) => new MemoryTab
                 {
                     Id = id,
-                    Name = i == 0 ? DefaultTabName : DefaultTabName + " " + (i + 1),
+                    Name = i == 0 ? Loc.T("Tabs.DefaultName") : Loc.F("Tabs.DefaultNameNumbered", i + 1),
                     Order = i
                 }).ToList();
                 TrySave(memory, tabs);

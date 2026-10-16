@@ -26,11 +26,13 @@ namespace TidyMind
             QuestPDF.Settings.License = LicenseType.Community;
         }
 
+        // Labels are in the language shown when the export is made; the file's layout is the same in every language.
         private class ExportItem
         {
             public string Group;
             public string Name;
             public string ImagePath;
+            public bool HasPictureField; // an item: in a PDF without its picture, the picture's path is listed instead
             public List<(string Label, string Value)> Fields;
         }
 
@@ -52,12 +54,12 @@ namespace TidyMind
             if (profile.Type == ProfileType.Collection)
             {
                 items = BuildEntityItems(EntityStore.Load(profile));
-                title = profile.Name + " — Collection Export";
+                title = Loc.F("Export.Title.Collection", profile.Name);
             }
             else
             {
                 items = BuildProjectItems(profile);
-                title = profile.Name + " — Project Export";
+                title = Loc.F("Export.Title.Project", profile.Name);
             }
 
             WriteExport(items, title, filePath, format);
@@ -71,6 +73,7 @@ namespace TidyMind
                 {
                     foreach (Profile profile in profiles)
                         AddMemorySheet(workbook, profile);
+                    AddDayPlanSheet(workbook, BuildDayPlanItems());
                     workbook.SaveAs(filePath);
                 }
                 return;
@@ -85,8 +88,52 @@ namespace TidyMind
                 else
                     items.AddRange(BuildProjectItems(profile, profile.Name));
             }
+            items.AddRange(BuildDayPlanItems());
 
-            WriteExport(items, "TidyMind — Export All", filePath, format);
+            WriteExport(items, Loc.T("Export.Title.All"), filePath, format);
+        }
+
+        // ---- Day plan -----------------------------------------------------
+
+        public static bool HasDayPlan() => DayPlanStore.TryLoad(out DayPlanFile plan) && plan.Blocks.Count > 0;
+
+        // One item per planned day, in date order, a line per block. An unreadable dayplan.json is left out, like a
+        // memory's unreadable to-do list.
+        private static List<ExportItem> BuildDayPlanItems()
+        {
+            if (!DayPlanStore.TryLoad(out DayPlanFile plan))
+                return new List<ExportItem>();
+
+            return plan.Blocks.Select(b => b.Date.Date).Distinct().OrderBy(d => d)
+                .Select(day => new ExportItem
+                {
+                    Group = Loc.T("Plan.Name"),
+                    Name = day.ToString(Loc.T("Format.FullDate"), Loc.Culture),
+                    Fields = DayPlanStore.BlocksOn(plan, day).Select(b => (b.TimeRange(), DescribeBlock(b))).ToList()
+                })
+                .ToList();
+        }
+
+        private static string DescribeBlock(DayPlanBlock block) =>
+            (block.Done ? Loc.F("Export.BlockDone", block.Title) : block.Title)
+            + (string.IsNullOrWhiteSpace(block.Notes) ? "" : " — " + block.Notes.Trim());
+
+        // A "Day plan" sheet in the same card layout as the memories: a card per day, a row per block.
+        private static void AddDayPlanSheet(XLWorkbook workbook, List<ExportItem> days)
+        {
+            if (days.Count == 0)
+                return;
+
+            IXLWorksheet sheet = workbook.Worksheets.Add(SanitizeSheetName(workbook, Loc.T("Plan.Name")));
+            int row = 1;
+            foreach (ExportItem day in days)
+            {
+                WriteCardHeader(sheet, ref row, day.Name);
+                foreach ((string label, string value) in day.Fields)
+                    WriteCardField(sheet, ref row, label, value);
+                row += 2;
+            }
+            FinalizeCardSheet(sheet);
         }
 
         // A single card (its right-click menu): the same layout as in a whole-memory export, just that one block.
@@ -105,7 +152,7 @@ namespace TidyMind
                 return;
             }
 
-            WriteExport(new List<ExportItem> { ProjectItem(project) }, project.Name + " — Project Export", filePath, format);
+            WriteExport(new List<ExportItem> { ProjectItem(project) }, Loc.F("Export.Title.Project", project.Name), filePath, format);
         }
 
         public static void ExportEntity(Entity entity, string filePath, ExportFormat format)
@@ -123,7 +170,7 @@ namespace TidyMind
                 return;
             }
 
-            WriteExport(new List<ExportItem> { EntityItem(entity) }, entity.Name + " — Collection Export", filePath, format);
+            WriteExport(new List<ExportItem> { EntityItem(entity) }, Loc.F("Export.Title.Collection", entity.Name), filePath, format);
         }
 
         // The memory's inline to-do list (if it has one) comes first, then its projects.
@@ -133,7 +180,12 @@ namespace TidyMind
 
             List<TodoEntry> todos = LoadTodos(memory);
             if (todos.Count > 0)
-                items.Add(new ExportItem { Group = group, Name = "To-do", Fields = new List<(string, string)> { ("Items", FormatTodos(todos)) } });
+                items.Add(new ExportItem
+                {
+                    Group = group,
+                    Name = Loc.T("Home.Todo.Title"),
+                    Fields = new List<(string, string)> { (Loc.T("Export.Items"), FormatTodos(todos)) }
+                });
 
             foreach (Project project in ProjectStore.Load(memory))
                 items.Add(ProjectItem(project, group));
@@ -148,9 +200,9 @@ namespace TidyMind
             item.Name = project.Name;
             item.Fields = new List<(string, string)>
             {
-                ("Description", RichTextHelper.ToPlainText(project.Description)),
-                ("Tasks", FormatTasks(project.Tasks)),
-                ("Notes", project.NotesAsPlainText())
+                (Loc.T("ProjectWindow.Description"), RichTextHelper.ToPlainText(project.Description)),
+                (Loc.T("ProjectWindow.Tasks"), FormatTasks(project.Tasks)),
+                (Loc.T("ProjectWindow.Notes"), project.NotesAsPlainText())
             };
             return item;
         }
@@ -166,23 +218,22 @@ namespace TidyMind
             item.Group = group;
             item.Name = entity.Name;
             item.ImagePath = EntityImages.FullPath(entity);
+            item.HasPictureField = true;
             if (EntityTypes.Fields(entity.EntityType).Count > 0)
             {
                 // A type with a definition (Vehicle): its fields, notes and logs.
                 item.Fields = EntityTypes.Describe(entity);
-                item.Fields.Add(("Image Path", item.ImagePath ?? ""));
                 return item;
             }
             item.Fields = new List<(string, string)>
             {
-                ("Brand", entity.Brand ?? ""),
-                ("Color", entity.Color ?? ""),
-                ("Material", entity.Material ?? ""),
-                ("Season", entity.Season ?? ""),
-                ("Purchase Price", entity.PurchasePrice ?? ""),
-                ("Sizes", FormatSizes(entity.Sizes)),
-                ("Notes", entity.Notes ?? ""),
-                ("Image Path", item.ImagePath ?? "")
+                (Loc.T("Entity.Field.Brand"), entity.Brand ?? ""),
+                (Loc.T("Entity.Field.Color"), entity.Color ?? ""),
+                (Loc.T("Entity.Field.Material"), Choices.Label(entity.Material)),
+                (Loc.T("Entity.Field.Season"), Choices.Label(entity.Season)),
+                (Loc.T("Entity.Field.PurchasePrice"), entity.PurchasePrice ?? ""),
+                (Loc.T("Entity.Sizes"), FormatSizes(entity.Sizes)),
+                (Loc.T("Entity.Field.Notes"), entity.Notes ?? "")
             };
             return item;
         }
@@ -194,14 +245,14 @@ namespace TidyMind
 
             List<string> parts = new List<string>();
             foreach (TaskItem task in tasks)
-                parts.Add(task.Title + " (" + (task.IsDone ? "done" : "undone") + ")");
+                parts.Add(Loc.F(task.IsDone ? "Export.Done" : "Export.Open", task.Title));
 
             return string.Join("; ", parts);
         }
 
         private static string FormatTodos(List<TodoEntry> todos)
         {
-            return string.Join("; ", todos.Select(t => t.Text + " (" + (t.IsDone ? "done" : "undone") + ")"));
+            return string.Join("; ", todos.Select(t => Loc.F(t.IsDone ? "Export.Done" : "Export.Open", t.Text)));
         }
 
         // An unreadable file just leaves the to-do list out of the export.
@@ -217,7 +268,7 @@ namespace TidyMind
 
             List<string> parts = new List<string>();
             foreach (SizeQuantity sq in sizes)
-                parts.Add(sq.Size + "/" + sq.Condition + " x" + sq.Quantity);
+                parts.Add(sq.Size + "/" + Choices.Label(sq.Condition) + " x" + sq.Quantity);
 
             return string.Join("; ", parts);
         }
@@ -275,12 +326,12 @@ namespace TidyMind
                 return;
             }
 
-            WriteCardField(sheet, ref row, "Brand", entity.Brand);
-            WriteCardField(sheet, ref row, "Color", entity.Color);
-            WriteCardField(sheet, ref row, "Material", entity.Material);
-            WriteCardField(sheet, ref row, "Season", entity.Season);
-            WriteCardField(sheet, ref row, "Purchase Price", entity.PurchasePrice);
-            WriteCardField(sheet, ref row, "Notes", entity.Notes);
+            WriteCardField(sheet, ref row, Loc.T("Entity.Field.Brand"), entity.Brand);
+            WriteCardField(sheet, ref row, Loc.T("Entity.Field.Color"), entity.Color);
+            WriteCardField(sheet, ref row, Loc.T("Entity.Field.Material"), Choices.Label(entity.Material));
+            WriteCardField(sheet, ref row, Loc.T("Entity.Field.Season"), Choices.Label(entity.Season));
+            WriteCardField(sheet, ref row, Loc.T("Entity.Field.PurchasePrice"), entity.PurchasePrice);
+            WriteCardField(sheet, ref row, Loc.T("Entity.Field.Notes"), entity.Notes);
             WriteSizeRows(sheet, ref row, entity.Sizes);
         }
 
@@ -292,8 +343,8 @@ namespace TidyMind
             List<TodoEntry> todos = LoadTodos(memory);
             if (todos.Count > 0)
             {
-                WriteCardHeader(sheet, ref row, "To-do");
-                WriteCardField(sheet, ref row, "Items", FormatTodos(todos));
+                WriteCardHeader(sheet, ref row, Loc.T("Home.Todo.Title"));
+                WriteCardField(sheet, ref row, Loc.T("Export.Items"), FormatTodos(todos));
                 row += 2;
             }
 
@@ -310,9 +361,9 @@ namespace TidyMind
         {
             WriteCardHeader(sheet, ref row, project.Name);
 
-            WriteCardField(sheet, ref row, "Description", RichTextHelper.ToPlainText(project.Description));
-            WriteCardField(sheet, ref row, "Tasks", FormatTasks(project.Tasks));
-            WriteCardField(sheet, ref row, "Notes", project.NotesAsPlainText());
+            WriteCardField(sheet, ref row, Loc.T("ProjectWindow.Description"), RichTextHelper.ToPlainText(project.Description));
+            WriteCardField(sheet, ref row, Loc.T("ProjectWindow.Tasks"), FormatTasks(project.Tasks));
+            WriteCardField(sheet, ref row, Loc.T("ProjectWindow.Notes"), project.NotesAsPlainText());
         }
 
         private static void WriteCardHeader(IXLWorksheet sheet, ref int row, string name)
@@ -320,7 +371,7 @@ namespace TidyMind
             sheet.Range(row, 1, row, 2).Merge();
 
             IXLCell cell = sheet.Cell(row, 1);
-            cell.Value = string.IsNullOrWhiteSpace(name) ? "(unnamed)" : FitCell(name);
+            cell.Value = string.IsNullOrWhiteSpace(name) ? Loc.T("Export.Unnamed") : FitCell(name);
             cell.Style.Font.Bold = true;
             cell.Style.Font.FontSize = 13;
             cell.Style.Font.FontColor = XLColor.White;
@@ -346,22 +397,22 @@ namespace TidyMind
             if (text.Length <= MaxCellText)
                 return text;
             int keep = char.IsHighSurrogate(text[MaxCellText - 1]) ? MaxCellText - 1 : MaxCellText;
-            return text.Substring(0, keep) + " … (cut)";
+            return text.Substring(0, keep) + " … " + Loc.T("Export.CutMark");
         }
 
         private static void WriteSizeRows(IXLWorksheet sheet, ref int row, List<SizeQuantity> sizes)
         {
             if (sizes == null || sizes.Count == 0)
             {
-                WriteCardField(sheet, ref row, "Sizes", "-");
+                WriteCardField(sheet, ref row, Loc.T("Entity.Sizes"), "-");
                 return;
             }
 
             bool first = true;
             foreach (SizeQuantity sq in sizes)
             {
-                StyleCardLabel(sheet, row, first ? "Sizes" : "");
-                sheet.Cell(row, 2).Value = "Size " + sq.Size + " - " + sq.Condition + " x" + sq.Quantity;
+                StyleCardLabel(sheet, row, first ? Loc.T("Entity.Sizes") : "");
+                sheet.Cell(row, 2).Value = Loc.F("Export.SizeRow", sq.Size, Choices.Label(sq.Condition), sq.Quantity);
                 first = false;
                 row++;
             }
@@ -386,11 +437,11 @@ namespace TidyMind
             // Excel also refuses a name starting or ending with an apostrophe, and compares names ignoring case, so
             // memories called "Work" and "work" need different sheet names.
             char[] invalid = { '\\', '/', '*', '?', ':', '[', ']' };
-            string clean = new string((name ?? "Sheet").Select(c => invalid.Contains(c) || char.IsControl(c) ? '_' : c)
+            string clean = new string((name ?? Loc.T("Export.Sheet")).Select(c => invalid.Contains(c) || char.IsControl(c) ? '_' : c)
                 .ToArray()).Trim('\'');
 
             if (string.IsNullOrWhiteSpace(clean))
-                clean = "Sheet";
+                clean = Loc.T("Export.Sheet");
             if (clean.Length > 31)
                 clean = clean.Substring(0, 31);
 
@@ -498,9 +549,6 @@ namespace TidyMind
         {
             foreach (var field in fields)
             {
-                if (field.Label == "Image Path")
-                    continue;
-
                 Paragraph p = container.InsertParagraph();
                 p.Append(field.Label + ": ").Bold();
                 p.Append(string.IsNullOrEmpty(field.Value) ? "-" : field.Value);
@@ -551,9 +599,6 @@ namespace TidyMind
 
                                         foreach (var field in item.Fields)
                                         {
-                                            if (field.Label == "Image Path")
-                                                continue;
-
                                             string value = string.IsNullOrEmpty(field.Value) ? "-" : field.Value;
 
                                             info.Item().Text(text =>
@@ -569,7 +614,10 @@ namespace TidyMind
                             {
                                 column.Item().PaddingTop(8).Text(item.Name).FontSize(12).Bold();
 
-                                foreach (var field in item.Fields)
+                                IEnumerable<(string Label, string Value)> fields = item.HasPictureField
+                                    ? item.Fields.Append((Loc.T("Export.ImagePath"), item.ImagePath ?? ""))
+                                    : item.Fields;
+                                foreach (var field in fields)
                                 {
                                     string value = string.IsNullOrEmpty(field.Value) ? "-" : field.Value;
 

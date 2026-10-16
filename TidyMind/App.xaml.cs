@@ -5,6 +5,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Markup;
 using System.Windows.Media.Animation;
 
 namespace TidyMind
@@ -14,6 +15,11 @@ namespace TidyMind
         private const string InstanceMutexName = @"Local\TidyMind_SingleInstance";
         private const string ActivateEventName = @"Local\TidyMind_Activate";
         private const int ASFW_ANY = -1;
+        private const string RemoveTasksArgument = "--remove-reminder-tasks";
+
+        // TidyMind's ID to Windows: taskbar grouping, reminder notifications, the user's notification settings. Must
+        // equal MyAppUserModelId in installer/TidyMind.iss; never change it.
+        public const string UserModelId = "TidyMind.App";
 
         // Held for the app's whole life; static so it's never collected (which would release it).
         private static Mutex instanceMutex;
@@ -25,7 +31,33 @@ namespace TidyMind
             base.OnStartup(e);
 
             int remindAt = Array.IndexOf(e.Args, "--remind");
-            UnhandledErrors.Install(this, backgroundProcess: remindAt >= 0 && remindAt < e.Args.Length - 1);
+            bool removeTasks = Array.IndexOf(e.Args, RemoveTasksArgument) >= 0;
+            UnhandledErrors.Install(this, backgroundProcess: removeTasks || (remindAt >= 0 && remindAt < e.Args.Length - 1));
+
+            // Run by the uninstaller (installer/TidyMind.iss) before the program files go: deletes the reminder tasks
+            // and exits, no UI, no data read or changed. Exit code 1 if that failed (the uninstall carries on regardless;
+            // the reason goes to error.log).
+            if (removeTasks)
+            {
+                int exitCode = 0;
+                try
+                {
+                    ReminderManager.RemoveAllReminderTasks();
+                }
+                catch (Exception ex)
+                {
+                    exitCode = 1;
+                    UnhandledErrors.LogQuietly("removing reminder tasks (uninstall)", ex);
+                }
+                Shutdown(exitCode);
+                return;
+            }
+
+            // The saved language (or the Windows display language): for every message from here on, the reminder's
+            // notification included.
+            Loc.Initialize();
+            FrameworkElement.LanguageProperty.OverrideMetadata(typeof(FrameworkElement),
+                new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(Loc.Culture.IetfLanguageTag)));
 
             // Launched by a Task Scheduler reminder: show the toast and exit, no UI. Checked before the one-copy
             // rule, so reminders still fire while the app is open.
@@ -34,6 +66,10 @@ namespace TidyMind
                 Shutdown();
                 return;
             }
+
+            // Before any window, so the taskbar groups them under the Start Menu shortcut. Only here: a reminder names
+            // the ID itself, and its fallback balloon must go out under the exe when no shortcut has the ID.
+            SetCurrentProcessExplicitAppUserModelID(UserModelId);
 
             WaitForRestartedFrom(e.Args);
             if (!ClaimSingleInstance())
@@ -44,10 +80,8 @@ namespace TidyMind
 
             if (!LegacyDataMigration.TryRun(out string problem))
             {
-                MessageBox.Show("TidyMind couldn't copy your data into its new folder:\n" + AppPaths.DataFolder
-                    + "\n\n" + problem + "\n\nYour existing data was left untouched. Free up disk space or check the "
-                    + "folder's permissions, then start TidyMind again.", "Couldn't Start", MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                Msg.Show(Loc.F("App.Start.LegacyCopy", AppPaths.DataFolder, problem), Loc.T("App.Start.Caption"),
+                    MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown();
                 return;
             }
@@ -56,18 +90,15 @@ namespace TidyMind
             // replace it; so the app stops here and leaves the file for the user to fix or restore.
             if (!ProfileManager.TryLoadProfiles(out List<Profile> profiles, out problem))
             {
-                MessageBox.Show("TidyMind couldn't read its list of memories:\n" + AppPaths.Data("profiles.json")
-                    + "\n\n" + problem + "\n\nThe file wasn't changed. Fix it or restore it from a backup, then start "
-                    + "TidyMind again.", "Couldn't Start", MessageBoxButton.OK, MessageBoxImage.Error);
+                Msg.Show(Loc.F("App.Start.Profiles", AppPaths.Data("profiles.json"), problem), Loc.T("App.Start.Caption"),
+                    MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown();
                 return;
             }
 
             if (!MemoryLayoutMigration.TryRun(profiles, out problem))
             {
-                MessageBox.Show("TidyMind couldn't copy your memories into their new folders under:\n"
-                    + AppPaths.Data("Memories") + "\n\n" + problem + "\n\nYour existing data was left untouched. Free up "
-                    + "disk space or check the folder's permissions, then start TidyMind again.", "Couldn't Start",
+                Msg.Show(Loc.F("App.Start.Layout", AppPaths.Data("Memories"), problem), Loc.T("App.Start.Caption"),
                     MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown();
                 return;
@@ -83,6 +114,11 @@ namespace TidyMind
                 new KeyEventHandler(GlobalPreviewKeyDown));
             EventManager.RegisterClassHandler(typeof(Window), FrameworkElement.LoadedEvent,
                 new RoutedEventHandler(AnimateWindowOpen));
+            // A window opened after a language switch: the start-up default above is still the old language.
+            EventManager.RegisterClassHandler(typeof(Window), FrameworkElement.LoadedEvent,
+                new RoutedEventHandler((s, args) => Loc.SetLanguage((Window)s)));
+            EventManager.RegisterClassHandler(typeof(DatePicker), FrameworkElement.LoadedEvent,
+                new RoutedEventHandler((s, args) => Loc.PrepareDatePicker((DatePicker)s)));
             TextEditing.DisableOvertype();
 
             MainWindow window = new MainWindow(profiles);
@@ -179,6 +215,9 @@ namespace TidyMind
 
         [DllImport("user32.dll")]
         private static extern bool AllowSetForegroundWindow(int processId);
+
+        [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+        private static extern int SetCurrentProcessExplicitAppUserModelID(string appId);
 
         // Fades the content, not the window: top-level Opacity needs AllowsTransparency. All windows share the
         // BgMain background, so the fade never shows a colour change.

@@ -25,9 +25,13 @@ namespace TidyMind
         {
             repeatBox.Items.Clear();
             foreach (RepeatType type in Enum.GetValues(typeof(RepeatType)))
-                repeatBox.Items.Add(new ComboBoxItem { Content = type.ToString() });
+                repeatBox.Items.Add(new ComboBoxItem { Content = RepeatLabel(type) });
             repeatBox.SelectedIndex = (int)initial;
         }
+
+        // How a repeat is called on screen ("Once", "Daily"…). The stored value is the RepeatType's number.
+        public static string RepeatLabel(RepeatType type) =>
+            Enum.IsDefined(type) ? Loc.T("Repeat." + type) : type.ToString();
 
         // Where a new reminder's time starts: a later day at 09:00, today the next minute (so saving without
         // changes still lands in the future).
@@ -46,20 +50,20 @@ namespace TidyMind
 
             if (string.IsNullOrWhiteSpace(message))
             {
-                problemTitle = "Missing Message";
-                problem = "Please enter a reminder message.";
+                problemTitle = Loc.T("Reminder.Problem.MessageTitle");
+                problem = Loc.T("Reminder.Problem.Message");
                 return null;
             }
             if (date == null)
             {
-                problemTitle = "Missing Date";
-                problem = "Please pick a date.";
+                problemTitle = Loc.T("Reminder.Problem.DateTitle");
+                problem = Loc.T("Reminder.Problem.Date");
                 return null;
             }
             if (hourBox.SelectedIndex < 0 || minuteBox.SelectedIndex < 0)
             {
-                problemTitle = "Missing Time";
-                problem = "Please pick an hour and a minute.";
+                problemTitle = Loc.T("Reminder.Problem.TimeTitle");
+                problem = Loc.T("Reminder.Problem.Time");
                 return null;
             }
 
@@ -67,8 +71,8 @@ namespace TidyMind
             DateTime fireTime = new DateTime(d.Year, d.Month, d.Day, hourBox.SelectedIndex, minuteBox.SelectedIndex, 0, DateTimeKind.Local);
             if (fireTime <= DateTime.Now)
             {
-                problemTitle = "Time in the Past";
-                problem = "That time has already passed. Please pick a time in the future.";
+                problemTitle = Loc.T("Reminder.Problem.PastTitle");
+                problem = Loc.T("Reminder.Problem.Past");
                 return null;
             }
 

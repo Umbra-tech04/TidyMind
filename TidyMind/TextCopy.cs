@@ -53,9 +53,9 @@ namespace TidyMind
             };
         }
 
-        public static MenuItem CopyItem(Func<string> text, string header = "Copy")
+        public static MenuItem CopyItem(Func<string> text, string header = null)
         {
-            MenuItem item = new MenuItem { Header = header };
+            MenuItem item = new MenuItem { Header = header ?? Loc.T("Common.Copy") };
             item.Click += (s, e) => Copy(text());
             return item;
         }

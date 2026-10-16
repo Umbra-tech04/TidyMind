@@ -16,7 +16,8 @@ namespace TidyMind
     {
         // Mid-to-dark, saturated but not neon: white card text stays legible on them even above the bottom scrim.
         // Azure is the app's own accent. The same names and hex values for cards and pages, so "Teal" is the same
-        // color in both places (a page shows it washed out). Shown 5 x 2; the name is each swatch's tooltip.
+        // color in both places (a page shows it washed out). Shown 5 x 2; the name ("Color.<Name>" in the current
+        // language) is each swatch's tooltip. Only the hex value is ever stored.
         public static readonly (string Name, string Hex)[] Palette =
         {
             ("Rust", "#C1562F"),
@@ -92,7 +93,7 @@ namespace TidyMind
 
         private void ChooseImage_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog dialog = new OpenFileDialog { Title = "Choose an image", Filter = ImageStore.FileFilter };
+            OpenFileDialog dialog = new OpenFileDialog { Title = Loc.T("Background.ChooseImageTitle"), Filter = ImageStore.FileFilter };
             if (dialog.ShowDialog(this) != true)
                 return;
 
@@ -100,8 +101,8 @@ namespace TidyMind
             ImageSource image = store.Decode(dialog.FileName);
             if (image == null)
             {
-                MessageBox.Show(this, "That file can't be opened as an image. Choose a JPG, PNG or WebP picture.",
-                    "Choose Image", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Msg.Show(this, Loc.T("Background.NotAnImage"), Loc.T("Background.ChooseImageTitle"), MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
                 return;
             }
 
@@ -127,9 +128,9 @@ namespace TidyMind
             }
 
             bool hasImage = type == BackgroundFill.Image;
-            ImageText.Text = !hasImage ? "No image"
+            ImageText.Text = !hasImage ? Loc.T("Background.NoImage")
                 : pickedFile != null ? System.IO.Path.GetFileName(pickedFile)
-                : "Current image";
+                : Loc.T("Background.CurrentImage");
 
             RemoveButton.IsEnabled = type != BackgroundFill.None;
             RemoveButton.Opacity = RemoveButton.IsEnabled ? 1 : 0.45;
@@ -160,7 +161,7 @@ namespace TidyMind
                 Margin = new Thickness(0, 0, 4, 4),
                 Cursor = Cursors.Hand,
                 Background = Brushes.Transparent,
-                ToolTip = name,
+                ToolTip = Loc.T("Color." + name),
                 Child = fill
             };
             CardEffects.AttachClick(ring, () => Pick(hex));

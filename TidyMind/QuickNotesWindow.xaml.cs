@@ -66,9 +66,8 @@ namespace TidyMind
             if (savePending && !TrySave())
             {
                 e.Cancel = true;
-                MessageBox.Show(this, "Couldn't save your notes: this file can't be written:\n" + NotesFilePath
-                    + "\n\nThe window stays open so nothing is lost. Close it again once the file can be written.",
-                    "Couldn't Save", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Msg.Show(this, Loc.F("Notes.SaveFailedOnClose", NotesFilePath), Loc.T("Common.CouldntSave"),
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             base.OnClosing(e);
         }
@@ -90,13 +89,11 @@ namespace TidyMind
             {
                 if (AtomicFile.TryWriteAllText(path, NotesTextBox.Text))
                 {
-                    MessageBox.Show("Couldn't save your notes to quicknotes.txt, so they were saved here instead:\n" + path,
-                        "Couldn't Save", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Msg.Show(Loc.F("Notes.Rescued", path), Loc.T("Common.CouldntSave"), MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
             }
-            MessageBox.Show("Couldn't save your notes anywhere: neither quicknotes.txt nor a separate file could be "
-                + "written.", "Couldn't Save", MessageBoxButton.OK, MessageBoxImage.Error);
+            Msg.Show(Loc.T("Notes.Lost"), Loc.T("Common.CouldntSave"), MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
         // An unreadable file is never saved over: the box says why and can't be typed in.
@@ -113,8 +110,9 @@ namespace TidyMind
             {
                 unreadable = true;
                 NotesTextBox.IsReadOnly = true;
-                NotesTextBox.Text = "Couldn't read quicknotes.txt: " + e.Message + "\n\nThe file was left as it is. "
-                    + "Close this window and open it again once the file can be read.";
+                string problem = e.Message;
+                NotesTextBox.Text = Loc.F("Notes.Unreadable", problem);
+                Loc.Track(this, () => NotesTextBox.Text = Loc.F("Notes.Unreadable", problem));
             }
 
             isLoading = false;
@@ -150,8 +148,7 @@ namespace TidyMind
             {
                 // Once per failing stretch, not on every pause in typing; the next pause tries again.
                 warnedSaveFailed = true;
-                MessageBox.Show("Couldn't save: quicknotes.txt can't be written. Your notes are still here and will be "
-                    + "saved as soon as it works again.", "Couldn't Save", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Msg.Show(Loc.T("Notes.SaveFailed"), Loc.T("Common.CouldntSave"), MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

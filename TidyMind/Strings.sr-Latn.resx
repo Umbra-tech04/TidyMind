@@ -1,0 +1,2264 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Agenda.DeleteNote.Confirm" xml:space="preserve">
+    <value>Obrisati belešku za {0}? Boja dana ostaje.</value>
+  </data>
+  <data name="Agenda.DeleteNote.Failed" xml:space="preserve">
+    <value>Beleška nije obrisana: calendar.json ne može da se pročita ili upiše.</value>
+  </data>
+  <data name="App.Start.Caption" xml:space="preserve">
+    <value>Pokretanje nije uspelo</value>
+  </data>
+  <data name="App.Start.Layout" xml:space="preserve">
+    <value>TidyMind nije mogao da kopira tvoje memorije u njihove nove fascikle u:
+{0}
+
+{1}
+
+Postojeći podaci nisu dirani. Oslobodi prostor na disku ili proveri dozvole fascikle, pa ponovo pokreni TidyMind.</value>
+  </data>
+  <data name="App.Start.LegacyCopy" xml:space="preserve">
+    <value>TidyMind nije mogao da kopira tvoje podatke u svoju novu fasciklu:
+{0}
+
+{1}
+
+Postojeći podaci nisu dirani. Oslobodi prostor na disku ili proveri dozvole fascikle, pa ponovo pokreni TidyMind.</value>
+  </data>
+  <data name="App.Start.Profiles" xml:space="preserve">
+    <value>TidyMind nije mogao da pročita spisak memorija:
+{0}
+
+{1}
+
+Datoteka nije promenjena. Popravi je ili je vrati iz rezervne kopije, pa ponovo pokreni TidyMind.</value>
+  </data>
+  <data name="Background.ChooseImage" xml:space="preserve">
+    <value>Izaberi sliku…</value>
+  </data>
+  <data name="Background.ChooseImageTitle" xml:space="preserve">
+    <value>Izbor slike</value>
+  </data>
+  <data name="Background.CopyFailed" xml:space="preserve">
+    <value>Slika nije mogla da se kopira u {0}.</value>
+  </data>
+  <data name="Background.CurrentImage" xml:space="preserve">
+    <value>Trenutna slika</value>
+  </data>
+  <data name="Background.Edit" xml:space="preserve">
+    <value>Uredi pozadinu</value>
+  </data>
+  <data name="Background.EditTitle" xml:space="preserve">
+    <value>Uređivanje pozadine</value>
+  </data>
+  <data name="Background.Image" xml:space="preserve">
+    <value>SLIKA</value>
+  </data>
+  <data name="Background.ImageFilter" xml:space="preserve">
+    <value>Slike (*.jpg;*.jpeg;*.png;*.webp)|*.jpg;*.jpeg;*.png;*.webp</value>
+  </data>
+  <data name="Background.MemorySub" xml:space="preserve">
+    <value>{0}  ·  svi odeljci ove memorije</value>
+  </data>
+  <data name="Background.NoImage" xml:space="preserve">
+    <value>Nema slike</value>
+  </data>
+  <data name="Background.NotAnImage" xml:space="preserve">
+    <value>Ta datoteka ne može da se otvori kao slika. Izaberi JPG, PNG ili WebP sliku.</value>
+  </data>
+  <data name="Background.ProfilesNotSaved" xml:space="preserve">
+    <value>Čuvanje nije uspelo: profiles.json ne može da se upiše. Pozadina nije promenjena.</value>
+  </data>
+  <data name="Background.Remove" xml:space="preserve">
+    <value>Ukloni prilagođavanje</value>
+  </data>
+  <data name="Backup.Error.FileUnreadable" xml:space="preserve">
+    <value>Datoteka {0} iz rezervne kopije ne može da se pročita ({1}), pa nije vraćena.</value>
+  </data>
+  <data name="Backup.Error.Newer" xml:space="preserve">
+    <value>Ovu rezervnu kopiju napravila je novija verzija TidyMind-a ({0}), pa ovde ne može da se vrati.</value>
+  </data>
+  <data name="Backup.Error.NoExe" xml:space="preserve">
+    <value>TidyMind ne može da pronađe sopstvenu lokaciju.</value>
+  </data>
+  <data name="Backup.Error.NoManifest" xml:space="preserve">
+    <value>Ova datoteka nije TidyMind rezervna kopija (nema {0}).</value>
+  </data>
+  <data name="Backup.Error.NoParentFolder" xml:space="preserve">
+    <value>Fascikla sa podacima nema nadređenu fasciklu.</value>
+  </data>
+  <data name="Backup.Error.NoProfiles" xml:space="preserve">
+    <value>Rezervna kopija nema profiles.json, pa nije vraćena.</value>
+  </data>
+  <data name="Backup.Error.NotBackup" xml:space="preserve">
+    <value>Ova datoteka nije TidyMind rezervna kopija.</value>
+  </data>
+  <data name="Backup.Error.OldProfiles" xml:space="preserve">
+    <value>Datoteka profiles.json u rezervnoj kopiji ima memorije bez Id-a (iz starije verzije TidyMind-a), pa nije vraćena.</value>
+  </data>
+  <data name="Backup.Error.OutsideFolder" xml:space="preserve">
+    <value>Rezervna kopija sadrži datoteku koja bi završila van fascikle sa podacima ({0}), pa nije vraćena.</value>
+  </data>
+  <data name="Backup.Error.SafetyCopy" xml:space="preserve">
+    <value>Sigurnosna kopija trenutnih podataka nije mogla da se proveri, pa ništa nije promenjeno.</value>
+  </data>
+  <data name="Backup.Error.Unreadable" xml:space="preserve">
+    <value>Datoteka ne može da se pročita kao rezervna kopija: {0}</value>
+  </data>
+  <data name="Backup.Restart.Failed" xml:space="preserve">
+    <value>TidyMind nije mogao sam ponovo da se pokrene: {0}
+
+Sada će se zatvoriti, otvori ga ponovo.</value>
+  </data>
+  <data name="Calendar.CloseTip" xml:space="preserve">
+    <value>Zatvori  (Esc)</value>
+  </data>
+  <data name="Calendar.Colored" xml:space="preserve">
+    <value>Obojeno</value>
+  </data>
+  <data name="Calendar.Hint" xml:space="preserve">
+    <value>Klikni na dan za boju, belešku ili dnevni plan  ·  desni klik dodaje podsetnik</value>
+  </data>
+  <data name="Calendar.InMonth" xml:space="preserve">
+    <value>{0}</value>
+  </data>
+  <data name="Calendar.NextMonth" xml:space="preserve">
+    <value>Sledeći mesec</value>
+  </data>
+  <data name="Calendar.NextYear" xml:space="preserve">
+    <value>Sledeća godina</value>
+  </data>
+  <data name="Calendar.NothingInMonth" xml:space="preserve">
+    <value>Za mesec {0} još ništa nije planirano.</value>
+  </data>
+  <data name="Calendar.PlanBlocks.Few" xml:space="preserve">
+    <value>Dnevni plan: {0} bloka</value>
+  </data>
+  <data name="Calendar.PlanBlocks.One" xml:space="preserve">
+    <value>Dnevni plan: {0} blok</value>
+  </data>
+  <data name="Calendar.PlanBlocks.Other" xml:space="preserve">
+    <value>Dnevni plan: {0} blokova</value>
+  </data>
+  <data name="Calendar.PrevMonth" xml:space="preserve">
+    <value>Prethodni mesec</value>
+  </data>
+  <data name="Calendar.PrevYear" xml:space="preserve">
+    <value>Prethodna godina</value>
+  </data>
+  <data name="Calendar.Today" xml:space="preserve">
+    <value>Nazad na danas</value>
+  </data>
+  <data name="Card.CopyWithTasks" xml:space="preserve">
+    <value>Kopiraj sa zadacima</value>
+  </data>
+  <data name="Card.Customize" xml:space="preserve">
+    <value>Prilagodi karticu</value>
+  </data>
+  <data name="Card.CustomizeTitle" xml:space="preserve">
+    <value>Prilagođavanje kartice</value>
+  </data>
+  <data name="Card.Next" xml:space="preserve">
+    <value>Sledeće: {0}</value>
+  </data>
+  <data name="Card.NoTasks" xml:space="preserve">
+    <value>Još nema zadataka</value>
+  </data>
+  <data name="Card.Tasks.Few" xml:space="preserve">
+    <value>{0} zadatka</value>
+  </data>
+  <data name="Card.Tasks.One" xml:space="preserve">
+    <value>{0} zadatak</value>
+  </data>
+  <data name="Card.Tasks.Other" xml:space="preserve">
+    <value>{0} zadataka</value>
+  </data>
+  <data name="Card.TasksDone.Few" xml:space="preserve">
+    <value>{1} od {0} zadatka</value>
+  </data>
+  <data name="Card.TasksDone.One" xml:space="preserve">
+    <value>{1} od {0} zadatka</value>
+  </data>
+  <data name="Card.TasksDone.Other" xml:space="preserve">
+    <value>{1} od {0} zadataka</value>
+  </data>
+  <data name="Choice.Allseason" xml:space="preserve">
+    <value>Za sve sezone</value>
+  </data>
+  <data name="Choice.Bicycle" xml:space="preserve">
+    <value>Bicikl</value>
+  </data>
+  <data name="Choice.Car" xml:space="preserve">
+    <value>Automobil</value>
+  </data>
+  <data name="Choice.Cotton" xml:space="preserve">
+    <value>Pamuk</value>
+  </data>
+  <data name="Choice.Denim" xml:space="preserve">
+    <value>Teksas</value>
+  </data>
+  <data name="Choice.Good" xml:space="preserve">
+    <value>Dobro</value>
+  </data>
+  <data name="Choice.Leather" xml:space="preserve">
+    <value>Koža</value>
+  </data>
+  <data name="Choice.Linen" xml:space="preserve">
+    <value>Lan</value>
+  </data>
+  <data name="Choice.Mixed" xml:space="preserve">
+    <value>Mešavina</value>
+  </data>
+  <data name="Choice.Motorcycle" xml:space="preserve">
+    <value>Motocikl</value>
+  </data>
+  <data name="Choice.New" xml:space="preserve">
+    <value>Novo</value>
+  </data>
+  <data name="Choice.Other" xml:space="preserve">
+    <value>Ostalo</value>
+  </data>
+  <data name="Choice.Polyester" xml:space="preserve">
+    <value>Poliester</value>
+  </data>
+  <data name="Choice.Silk" xml:space="preserve">
+    <value>Svila</value>
+  </data>
+  <data name="Choice.SpringAutumn" xml:space="preserve">
+    <value>Prolećna/jesenja</value>
+  </data>
+  <data name="Choice.Summer" xml:space="preserve">
+    <value>Letnja</value>
+  </data>
+  <data name="Choice.Synthetic" xml:space="preserve">
+    <value>Sintetika</value>
+  </data>
+  <data name="Choice.Todonate" xml:space="preserve">
+    <value>Za poklanjanje</value>
+  </data>
+  <data name="Choice.Tothrowaway" xml:space="preserve">
+    <value>Za bacanje</value>
+  </data>
+  <data name="Choice.Winter" xml:space="preserve">
+    <value>Zimska</value>
+  </data>
+  <data name="Choice.Wool" xml:space="preserve">
+    <value>Vuna</value>
+  </data>
+  <data name="Choice.Worn" xml:space="preserve">
+    <value>Iznošeno</value>
+  </data>
+  <data name="Collection.AddItem" xml:space="preserve">
+    <value>Dodaj stavku</value>
+  </data>
+  <data name="Collection.DeleteMany.Few" xml:space="preserve">
+    <value>Obrisati {0} stavke? Ovo ne može da se poništi.</value>
+  </data>
+  <data name="Collection.DeleteMany.One" xml:space="preserve">
+    <value>Obrisati {0} stavku? Ovo ne može da se poništi.</value>
+  </data>
+  <data name="Collection.DeleteMany.Other" xml:space="preserve">
+    <value>Obrisati {0} stavki? Ovo ne može da se poništi.</value>
+  </data>
+  <data name="Collection.Empty" xml:space="preserve">
+    <value>U ovom odeljku još nema stavki. Klikni na „+ Dodaj stavku“ da počneš.</value>
+  </data>
+  <data name="Collection.Kind" xml:space="preserve">
+    <value>KOLEKCIJA</value>
+  </data>
+  <data name="Collection.NoMatch" xml:space="preserve">
+    <value>Nijedna stavka ne odgovara pretrazi.</value>
+  </data>
+  <data name="Collection.PictureFailed" xml:space="preserve">
+    <value>Slika nije mogla da se kopira u {0}, pa nova slika nije dodata. Ostatak stavke je sačuvan kao i obično.</value>
+  </data>
+  <data name="Collection.PictureFailed.Caption" xml:space="preserve">
+    <value>Dodavanje slike nije uspelo</value>
+  </data>
+  <data name="Collection.SaveFailed" xml:space="preserve">
+    <value>Stavke kolekcije „{0}“ nisu sačuvane jer ova datoteka ne može da se upiše:
+{1}
+
+Tvoja poslednja izmena nije sačuvana.</value>
+  </data>
+  <data name="Collection.Subtitle.Few" xml:space="preserve">
+    <value>KOLEKCIJA  ·  {0} stavke</value>
+  </data>
+  <data name="Collection.Subtitle.One" xml:space="preserve">
+    <value>KOLEKCIJA  ·  {0} stavka</value>
+  </data>
+  <data name="Collection.Subtitle.Other" xml:space="preserve">
+    <value>KOLEKCIJA  ·  {0} stavki</value>
+  </data>
+  <data name="Color.Azure" xml:space="preserve">
+    <value>Azurna</value>
+  </data>
+  <data name="Color.Brick" xml:space="preserve">
+    <value>Cigla</value>
+  </data>
+  <data name="Color.Charcoal" xml:space="preserve">
+    <value>Ugljeno siva</value>
+  </data>
+  <data name="Color.Forest" xml:space="preserve">
+    <value>Šumska zelena</value>
+  </data>
+  <data name="Color.Ink" xml:space="preserve">
+    <value>Mastilo plava</value>
+  </data>
+  <data name="Color.Ochre" xml:space="preserve">
+    <value>Oker</value>
+  </data>
+  <data name="Color.Plum" xml:space="preserve">
+    <value>Šljiva</value>
+  </data>
+  <data name="Color.Rust" xml:space="preserve">
+    <value>Rđa</value>
+  </data>
+  <data name="Color.Slate" xml:space="preserve">
+    <value>Škriljac</value>
+  </data>
+  <data name="Color.Teal" xml:space="preserve">
+    <value>Petrolej</value>
+  </data>
+  <data name="Common.AddReminder" xml:space="preserve">
+    <value>Dodaj podsetnik</value>
+  </data>
+  <data name="Common.Cancel" xml:space="preserve">
+    <value>Otkaži</value>
+  </data>
+  <data name="Common.Close" xml:space="preserve">
+    <value>Zatvori</value>
+  </data>
+  <data name="Common.ConfirmDelete" xml:space="preserve">
+    <value>Potvrda brisanja</value>
+  </data>
+  <data name="Common.Copy" xml:space="preserve">
+    <value>Kopiraj</value>
+  </data>
+  <data name="Common.CopyName" xml:space="preserve">
+    <value>Kopiraj naziv</value>
+  </data>
+  <data name="Common.CouldntDelete" xml:space="preserve">
+    <value>Brisanje nije uspelo</value>
+  </data>
+  <data name="Common.CouldntSave" xml:space="preserve">
+    <value>Čuvanje nije uspelo</value>
+  </data>
+  <data name="Common.Cut" xml:space="preserve">
+    <value>Iseci</value>
+  </data>
+  <data name="Common.Delete" xml:space="preserve">
+    <value>Obriši</value>
+  </data>
+  <data name="Common.DeleteNamed" xml:space="preserve">
+    <value>Obrisati „{0}“?</value>
+  </data>
+  <data name="Common.DiscardChanges" xml:space="preserve">
+    <value>Odbaciti izmene?</value>
+  </data>
+  <data name="Common.Edit" xml:space="preserve">
+    <value>Izmeni</value>
+  </data>
+  <data name="Common.Error" xml:space="preserve">
+    <value>Greška</value>
+  </data>
+  <data name="Common.No" xml:space="preserve">
+    <value>&amp;Ne</value>
+  </data>
+  <data name="Common.Ok" xml:space="preserve">
+    <value>U redu</value>
+  </data>
+  <data name="Common.Paste" xml:space="preserve">
+    <value>Nalepi</value>
+  </data>
+  <data name="Common.Rename" xml:space="preserve">
+    <value>Preimenuj</value>
+  </data>
+  <data name="Common.RenamePrompt" xml:space="preserve">
+    <value>Unesi novo ime.</value>
+  </data>
+  <data name="Common.Save" xml:space="preserve">
+    <value>Sačuvaj</value>
+  </data>
+  <data name="Common.SaveTip" xml:space="preserve">
+    <value>Sačuvaj  (Ctrl+Enter)</value>
+  </data>
+  <data name="Common.SearchPlaceholder" xml:space="preserve">
+    <value>Pretraga...</value>
+  </data>
+  <data name="Common.SelectDate" xml:space="preserve">
+    <value>Izaberi datum</value>
+  </data>
+  <data name="Common.Today" xml:space="preserve">
+    <value>Danas</value>
+  </data>
+  <data name="Common.Tomorrow" xml:space="preserve">
+    <value>Sutra</value>
+  </data>
+  <data name="Common.UnsavedChanges" xml:space="preserve">
+    <value>Nesačuvane izmene</value>
+  </data>
+  <data name="Common.Yes" xml:space="preserve">
+    <value>&amp;Da</value>
+  </data>
+  <data name="Common.Yesterday" xml:space="preserve">
+    <value>Juče</value>
+  </data>
+  <data name="Day.Clear" xml:space="preserve">
+    <value>Očisti dan</value>
+  </data>
+  <data name="Day.ClearTip" xml:space="preserve">
+    <value>Uklanja boju, naslov i belešku ovog dana.</value>
+  </data>
+  <data name="Day.Color" xml:space="preserve">
+    <value>BOJA</value>
+  </data>
+  <data name="Day.Note" xml:space="preserve">
+    <value>BELEŠKA</value>
+  </data>
+  <data name="Day.NotePlaceholder" xml:space="preserve">
+    <value>Šta treba uraditi…</value>
+  </data>
+  <data name="Day.OpenPlan.Few" xml:space="preserve">
+    <value>Otvori dnevni plan ({0} bloka)</value>
+  </data>
+  <data name="Day.OpenPlan.One" xml:space="preserve">
+    <value>Otvori dnevni plan ({0} blok)</value>
+  </data>
+  <data name="Day.OpenPlan.Other" xml:space="preserve">
+    <value>Otvori dnevni plan ({0} blokova)</value>
+  </data>
+  <data name="Day.PlanThisDay" xml:space="preserve">
+    <value>Isplaniraj ovaj dan</value>
+  </data>
+  <data name="Day.SaveFailed" xml:space="preserve">
+    <value>Čuvanje nije uspelo: calendar.json ne može da se pročita ili upiše. Ostali dani u kalendaru nisu dirani.</value>
+  </data>
+  <data name="Day.Title" xml:space="preserve">
+    <value>NASLOV</value>
+  </data>
+  <data name="Day.TitlePlaceholder" xml:space="preserve">
+    <value>npr. Servis automobila</value>
+  </data>
+  <data name="Entity.Add.Clothing" xml:space="preserve">
+    <value>Dodaj odeću</value>
+  </data>
+  <data name="Entity.Add.Item" xml:space="preserve">
+    <value>Dodaj stavku</value>
+  </data>
+  <data name="Entity.Add.Vehicle" xml:space="preserve">
+    <value>Dodaj vozilo</value>
+  </data>
+  <data name="Entity.AddSize" xml:space="preserve">
+    <value>Dodaj veličinu</value>
+  </data>
+  <data name="Entity.ChooseImage" xml:space="preserve">
+    <value>Izaberi sliku</value>
+  </data>
+  <data name="Entity.Column.Cost" xml:space="preserve">
+    <value>Trošak</value>
+  </data>
+  <data name="Entity.Column.Date" xml:space="preserve">
+    <value>Datum</value>
+  </data>
+  <data name="Entity.Column.Km" xml:space="preserve">
+    <value>Km</value>
+  </data>
+  <data name="Entity.Column.Liters" xml:space="preserve">
+    <value>Litara</value>
+  </data>
+  <data name="Entity.Column.Price" xml:space="preserve">
+    <value>Cena</value>
+  </data>
+  <data name="Entity.Column.Where" xml:space="preserve">
+    <value>Gde</value>
+  </data>
+  <data name="Entity.Column.Work" xml:space="preserve">
+    <value>Šta je urađeno</value>
+  </data>
+  <data name="Entity.CurrentImage" xml:space="preserve">
+    <value>Trenutna slika</value>
+  </data>
+  <data name="Entity.Edit.Clothing" xml:space="preserve">
+    <value>Izmeni odeću</value>
+  </data>
+  <data name="Entity.Edit.Item" xml:space="preserve">
+    <value>Izmeni stavku</value>
+  </data>
+  <data name="Entity.Edit.Vehicle" xml:space="preserve">
+    <value>Izmeni vozilo</value>
+  </data>
+  <data name="Entity.Expiry.Inspection" xml:space="preserve">
+    <value>Tehnički pregled</value>
+  </data>
+  <data name="Entity.Expiry.Insurance" xml:space="preserve">
+    <value>Osiguranje</value>
+  </data>
+  <data name="Entity.ExpiryLine" xml:space="preserve">
+    <value>{0}: {1}</value>
+  </data>
+  <data name="Entity.Field.Brand" xml:space="preserve">
+    <value>Brend</value>
+  </data>
+  <data name="Entity.Field.Color" xml:space="preserve">
+    <value>Boja</value>
+  </data>
+  <data name="Entity.Field.Image" xml:space="preserve">
+    <value>Slika</value>
+  </data>
+  <data name="Entity.Field.Inspection" xml:space="preserve">
+    <value>Tehnički pregled ističe</value>
+  </data>
+  <data name="Entity.Field.Insurance" xml:space="preserve">
+    <value>Osiguranje ističe</value>
+  </data>
+  <data name="Entity.Field.Kind" xml:space="preserve">
+    <value>Vrsta</value>
+  </data>
+  <data name="Entity.Field.MakeModel" xml:space="preserve">
+    <value>Marka i model</value>
+  </data>
+  <data name="Entity.Field.Material" xml:space="preserve">
+    <value>Materijal</value>
+  </data>
+  <data name="Entity.Field.Name" xml:space="preserve">
+    <value>Naziv</value>
+  </data>
+  <data name="Entity.Field.Notes" xml:space="preserve">
+    <value>Beleške</value>
+  </data>
+  <data name="Entity.Field.Odometer" xml:space="preserve">
+    <value>Kilometraža (km)</value>
+  </data>
+  <data name="Entity.Field.Plate" xml:space="preserve">
+    <value>Registarska tablica</value>
+  </data>
+  <data name="Entity.Field.PurchasePrice" xml:space="preserve">
+    <value>Nabavna cena</value>
+  </data>
+  <data name="Entity.Field.Season" xml:space="preserve">
+    <value>Sezona</value>
+  </data>
+  <data name="Entity.Field.Sizes" xml:space="preserve">
+    <value>Veličine, stanje i količina</value>
+  </data>
+  <data name="Entity.Field.Year" xml:space="preserve">
+    <value>Godište</value>
+  </data>
+  <data name="Entity.Fuel.Consumption" xml:space="preserve">
+    <value>Potrošnja: {0:0.0} l/100 km (poslednja dva točenja)</value>
+  </data>
+  <data name="Entity.ImageFilter" xml:space="preserve">
+    <value>Slike|*.jpg;*.jpeg;*.png;*.bmp;*.gif</value>
+  </data>
+  <data name="Entity.Log.Fuel" xml:space="preserve">
+    <value>Evidencija goriva</value>
+  </data>
+  <data name="Entity.Log.Service" xml:space="preserve">
+    <value>Servisna knjižica</value>
+  </data>
+  <data name="Entity.NeedsNumber" xml:space="preserve">
+    <value>Polje „{0}“ mora da sadrži broj.</value>
+  </data>
+  <data name="Entity.NoImage" xml:space="preserve">
+    <value>Nije izabrana slika</value>
+  </data>
+  <data name="Entity.Required" xml:space="preserve">
+    <value>Polje „{0}“ je obavezno.</value>
+  </data>
+  <data name="Entity.Size.Less" xml:space="preserve">
+    <value>Jedan manje</value>
+  </data>
+  <data name="Entity.Size.More" xml:space="preserve">
+    <value>Jedan više</value>
+  </data>
+  <data name="Entity.Size.Remove" xml:space="preserve">
+    <value>Ukloni ovu veličinu</value>
+  </data>
+  <data name="Entity.SizeCount.Few" xml:space="preserve">
+    <value>{0} veličine</value>
+  </data>
+  <data name="Entity.SizeCount.One" xml:space="preserve">
+    <value>{0} veličina</value>
+  </data>
+  <data name="Entity.SizeCount.Other" xml:space="preserve">
+    <value>{0} veličina</value>
+  </data>
+  <data name="Entity.Sizes" xml:space="preserve">
+    <value>Veličine</value>
+  </data>
+  <data name="Entity.Type.Clothing" xml:space="preserve">
+    <value>Odeća</value>
+  </data>
+  <data name="Entity.Type.Vehicle" xml:space="preserve">
+    <value>Vozilo</value>
+  </data>
+  <data name="Entity.WhatToAdd" xml:space="preserve">
+    <value>Šta želiš da dodaš?</value>
+  </data>
+  <data name="Error.Background" xml:space="preserve">
+    <value>Nešto nije u redu i TidyMind mora da se zatvori: {0}
+
+Tvoja poslednja izmena možda nije sačuvana. Detalji su upisani u {1}.</value>
+  </data>
+  <data name="Error.Caption" xml:space="preserve">
+    <value>Neočekivana greška</value>
+  </data>
+  <data name="Error.KeepRunning" xml:space="preserve">
+    <value>Nešto nije u redu: {0}
+
+TidyMind nastavlja da radi, ali tvoja poslednja izmena možda nije sačuvana. Detalji su upisani u {1}.</value>
+  </data>
+  <data name="Error.MustClose" xml:space="preserve">
+    <value>Nešto nije u redu: {0}
+
+TidyMind mora da se zatvori. Detalji su upisani u {1}.</value>
+  </data>
+  <data name="Expiry.DaysAgo.Few" xml:space="preserve">
+    <value>isteklo pre {0} dana</value>
+  </data>
+  <data name="Expiry.DaysAgo.One" xml:space="preserve">
+    <value>isteklo pre {0} dan</value>
+  </data>
+  <data name="Expiry.DaysAgo.Other" xml:space="preserve">
+    <value>isteklo pre {0} dana</value>
+  </data>
+  <data name="Expiry.InDays.Few" xml:space="preserve">
+    <value>za {0} dana</value>
+  </data>
+  <data name="Expiry.InDays.One" xml:space="preserve">
+    <value>za {0} dan</value>
+  </data>
+  <data name="Expiry.InDays.Other" xml:space="preserve">
+    <value>za {0} dana</value>
+  </data>
+  <data name="Expiry.Today" xml:space="preserve">
+    <value>ističe danas</value>
+  </data>
+  <data name="Expiry.Tomorrow" xml:space="preserve">
+    <value>sutra</value>
+  </data>
+  <data name="Expiry.Yesterday" xml:space="preserve">
+    <value>isteklo juče</value>
+  </data>
+  <data name="Export.BlockDone" xml:space="preserve">
+    <value>{0} (završeno)</value>
+  </data>
+  <data name="Export.Caption" xml:space="preserve">
+    <value>Izvoz</value>
+  </data>
+  <data name="Export.ChooseFormat" xml:space="preserve">
+    <value>Izaberi format za izvoz</value>
+  </data>
+  <data name="Export.Complete" xml:space="preserve">
+    <value>Izvoz je završen.</value>
+  </data>
+  <data name="Export.CutMark" xml:space="preserve">
+    <value>(skraćeno)</value>
+  </data>
+  <data name="Export.Done" xml:space="preserve">
+    <value>{0} (završeno)</value>
+  </data>
+  <data name="Export.ExcelNote" xml:space="preserve">
+    <value>Excel tabela</value>
+  </data>
+  <data name="Export.ExistingKept" xml:space="preserve">
+    <value>Postojeća datoteka je ostala nepromenjena.</value>
+  </data>
+  <data name="Export.Failed" xml:space="preserve">
+    <value>Izvoz nije mogao da se sačuva.
+
+{0}</value>
+  </data>
+  <data name="Export.Filter.Excel" xml:space="preserve">
+    <value>Excel datoteke (*.xlsx)|*.xlsx</value>
+  </data>
+  <data name="Export.Filter.Pdf" xml:space="preserve">
+    <value>PDF datoteke (*.pdf)|*.pdf</value>
+  </data>
+  <data name="Export.Filter.Word" xml:space="preserve">
+    <value>Word dokumenti (*.docx)|*.docx</value>
+  </data>
+  <data name="Export.ImagePath" xml:space="preserve">
+    <value>Putanja slike</value>
+  </data>
+  <data name="Export.Items" xml:space="preserve">
+    <value>Stavke</value>
+  </data>
+  <data name="Export.Nothing" xml:space="preserve">
+    <value>Nema memorija ni dnevnih planova za izvoz.</value>
+  </data>
+  <data name="Export.Open" xml:space="preserve">
+    <value>{0} (nije završeno)</value>
+  </data>
+  <data name="Export.PdfNote" xml:space="preserve">
+    <value>Dokument za štampu sa slikama</value>
+  </data>
+  <data name="Export.Sheet" xml:space="preserve">
+    <value>List</value>
+  </data>
+  <data name="Export.SizeRow" xml:space="preserve">
+    <value>Veličina {0} - {1} x{2}</value>
+  </data>
+  <data name="Export.Title.All" xml:space="preserve">
+    <value>TidyMind — izvoz svega</value>
+  </data>
+  <data name="Export.Title.Collection" xml:space="preserve">
+    <value>{0} — izvoz kolekcije</value>
+  </data>
+  <data name="Export.Title.Project" xml:space="preserve">
+    <value>{0} — izvoz projekta</value>
+  </data>
+  <data name="Export.Unnamed" xml:space="preserve">
+    <value>(bez naziva)</value>
+  </data>
+  <data name="Export.WordNote" xml:space="preserve">
+    <value>Formatiran dokument sa slikama</value>
+  </data>
+  <data name="Files.AddFailed" xml:space="preserve">
+    <value>„{0}“ nije dodata jer ne može da se pročita ili kopira.</value>
+  </data>
+  <data name="Files.AddFailedCaption" xml:space="preserve">
+    <value>Dodavanje datoteke nije uspelo</value>
+  </data>
+  <data name="Files.AllFilter" xml:space="preserve">
+    <value>Sve datoteke (*.*)|*.*</value>
+  </data>
+  <data name="Files.AttachCaption" xml:space="preserve">
+    <value>Prilaganje datoteka</value>
+  </data>
+  <data name="Files.Browse" xml:space="preserve">
+    <value>Pregledaj...</value>
+  </data>
+  <data name="Files.DropHere" xml:space="preserve">
+    <value>Prevuci datoteke ovde ili</value>
+  </data>
+  <data name="Files.FoldersOnly" xml:space="preserve">
+    <value>Fascikle ne mogu da se prilože, samo datoteke.</value>
+  </data>
+  <data name="Files.FoldersSkipped" xml:space="preserve">
+    <value>Fascikle ne mogu da se prilože, samo datoteke. Datoteke su dodate.</value>
+  </data>
+  <data name="Files.Large" xml:space="preserve">
+    <value>„{0}“ ima {1}. Kopiranje traje neko vreme i zauzima toliko prostora na disku. Ipak je priložiti?</value>
+  </data>
+  <data name="Files.LargeCaption" xml:space="preserve">
+    <value>Velika datoteka</value>
+  </data>
+  <data name="Files.Missing" xml:space="preserve">
+    <value>Ova datoteka više nije na disku. Ukloniti „{0}“ iz projekta?</value>
+  </data>
+  <data name="Files.MissingCaption" xml:space="preserve">
+    <value>Datoteka nedostaje</value>
+  </data>
+  <data name="Files.NoProgram" xml:space="preserve">
+    <value>„{0}“ nije mogla da se otvori jer u Windowsu nije podešen program za ovu vrstu datoteke.</value>
+  </data>
+  <data name="Files.NoProgramCaption" xml:space="preserve">
+    <value>Otvaranje nije uspelo</value>
+  </data>
+  <data name="Files.Open" xml:space="preserve">
+    <value>Otvori</value>
+  </data>
+  <data name="Files.OpenNamed" xml:space="preserve">
+    <value>Otvori {0}</value>
+  </data>
+  <data name="Files.Remove" xml:space="preserve">
+    <value>Ukloni</value>
+  </data>
+  <data name="Files.RemoveCaption" xml:space="preserve">
+    <value>Uklanjanje datoteke</value>
+  </data>
+  <data name="Files.RemoveConfirm" xml:space="preserve">
+    <value>Ukloniti „{0}“ iz ovog projekta?</value>
+  </data>
+  <data name="Files.RenameTitle" xml:space="preserve">
+    <value>Preimenovanje datoteke</value>
+  </data>
+  <data name="Files.SaveCopy" xml:space="preserve">
+    <value>Sačuvaj kopiju kao...</value>
+  </data>
+  <data name="Files.SaveCopyFailed" xml:space="preserve">
+    <value>Kopija nije sačuvana: {0}</value>
+  </data>
+  <data name="Files.ShowInFolder" xml:space="preserve">
+    <value>Prikaži u fascikli</value>
+  </data>
+  <data name="Files.Size.B" xml:space="preserve">
+    <value>{0} B</value>
+  </data>
+  <data name="Files.Size.GB" xml:space="preserve">
+    <value>{0:0.0} GB</value>
+  </data>
+  <data name="Files.Size.KB" xml:space="preserve">
+    <value>{0:0} KB</value>
+  </data>
+  <data name="Files.Size.MB" xml:space="preserve">
+    <value>{0:0} MB</value>
+  </data>
+  <data name="Files.Size.MBSmall" xml:space="preserve">
+    <value>{0:0.0} MB</value>
+  </data>
+  <data name="Format.Bold" xml:space="preserve">
+    <value>Podebljano</value>
+  </data>
+  <data name="Format.BoldTip" xml:space="preserve">
+    <value>Podebljano  (Ctrl+B)</value>
+  </data>
+  <data name="Format.DateTime" xml:space="preserve">
+    <value>dd. MM. yyyy. HH:mm</value>
+  </data>
+  <data name="Format.FullDate" xml:space="preserve">
+    <value>dddd, d. MMMM yyyy.</value>
+  </data>
+  <data name="Format.Italic" xml:space="preserve">
+    <value>Kurziv</value>
+  </data>
+  <data name="Format.ItalicTip" xml:space="preserve">
+    <value>Kurziv  (Ctrl+I)</value>
+  </data>
+  <data name="Format.LongDate" xml:space="preserve">
+    <value>d. MMMM yyyy.</value>
+  </data>
+  <data name="Format.ShortDate" xml:space="preserve">
+    <value>d. MMM yyyy.</value>
+  </data>
+  <data name="Format.ShortMonthDay" xml:space="preserve">
+    <value>d. MMM</value>
+  </data>
+  <data name="Format.ShortWeekdayDate" xml:space="preserve">
+    <value>ddd, d. MMM yyyy.</value>
+  </data>
+  <data name="Format.ShortWeekdayDay" xml:space="preserve">
+    <value>ddd d.</value>
+  </data>
+  <data name="Format.TextColor" xml:space="preserve">
+    <value>Boja teksta</value>
+  </data>
+  <data name="Format.Underline" xml:space="preserve">
+    <value>Podvučeno</value>
+  </data>
+  <data name="Format.UnderlineTip" xml:space="preserve">
+    <value>Podvučeno  (Ctrl+U)</value>
+  </data>
+  <data name="Format.WeekdayDayMonth" xml:space="preserve">
+    <value>dddd, d. MMMM</value>
+  </data>
+  <data name="Format.YearMonth" xml:space="preserve">
+    <value>MMMM yyyy.</value>
+  </data>
+  <data name="Greeting.Afternoon.1" xml:space="preserve">
+    <value>Dobar dan.</value>
+  </data>
+  <data name="Greeting.Afternoon.2" xml:space="preserve">
+    <value>Pola dana je iza nas.</value>
+  </data>
+  <data name="Greeting.Afternoon.3" xml:space="preserve">
+    <value>Popodne je. Kako ide?</value>
+  </data>
+  <data name="Greeting.Afternoon.4" xml:space="preserve">
+    <value>Sredina dana. Tempo se drži.</value>
+  </data>
+  <data name="Greeting.Afternoon.5" xml:space="preserve">
+    <value>Popodnevna pauza?</value>
+  </data>
+  <data name="Greeting.Evening.1" xml:space="preserve">
+    <value>Dobro veče.</value>
+  </data>
+  <data name="Greeting.Evening.2" xml:space="preserve">
+    <value>Večernji mir.</value>
+  </data>
+  <data name="Greeting.Evening.3" xml:space="preserve">
+    <value>Dan se polako završava.</value>
+  </data>
+  <data name="Greeting.Evening.4" xml:space="preserve">
+    <value>Veče je. Šta je ostalo za danas?</value>
+  </data>
+  <data name="Greeting.Morning.1" xml:space="preserve">
+    <value>Dobro jutro.</value>
+  </data>
+  <data name="Greeting.Morning.2" xml:space="preserve">
+    <value>Rano je, a ti si već tu.</value>
+  </data>
+  <data name="Greeting.Morning.3" xml:space="preserve">
+    <value>Jutro je. Prvo kafa, pa onda na posao?</value>
+  </data>
+  <data name="Greeting.Morning.4" xml:space="preserve">
+    <value>Nov dan, nova lista.</value>
+  </data>
+  <data name="Greeting.Morning.5" xml:space="preserve">
+    <value>Lepo jutro. Polako, bez žurbe.</value>
+  </data>
+  <data name="Greeting.Night.1" xml:space="preserve">
+    <value>Kasno je.</value>
+  </data>
+  <data name="Greeting.Night.2" xml:space="preserve">
+    <value>Noćna smena?</value>
+  </data>
+  <data name="Greeting.Night.3" xml:space="preserve">
+    <value>Tihi sati. Je li sve u redu?</value>
+  </data>
+  <data name="Greeting.Night.4" xml:space="preserve">
+    <value>Još nisi na spavanju. U redu je, ali misli i na san.</value>
+  </data>
+  <data name="Greeting.Night.5" xml:space="preserve">
+    <value>Oko ponoći je. Odmori se ako možeš.</value>
+  </data>
+  <data name="Home.Discovery.Hide" xml:space="preserve">
+    <value>Sakrij</value>
+  </data>
+  <data name="Home.Discovery.Show" xml:space="preserve">
+    <value>Prikaži</value>
+  </data>
+  <data name="Home.Discovery.Title" xml:space="preserve">
+    <value>Šta sve TidyMind može?</value>
+  </data>
+  <data name="Home.Expiries.Coming.Few" xml:space="preserve">
+    <value>{0} roka ističu u narednih {1} dana</value>
+  </data>
+  <data name="Home.Expiries.Coming.One" xml:space="preserve">
+    <value>{0} rok ističe u narednih {1} dana</value>
+  </data>
+  <data name="Home.Expiries.Coming.Other" xml:space="preserve">
+    <value>{0} rokova ističe u narednih {1} dana</value>
+  </data>
+  <data name="Home.Expiries.Pair" xml:space="preserve">
+    <value>{0}, {1}.</value>
+  </data>
+  <data name="Home.Expiries.Past.Few" xml:space="preserve">
+    <value>{0} roka su već istekla</value>
+  </data>
+  <data name="Home.Expiries.Past.One" xml:space="preserve">
+    <value>{0} rok je već istekao</value>
+  </data>
+  <data name="Home.Expiries.Past.Other" xml:space="preserve">
+    <value>{0} rokova je već isteklo</value>
+  </data>
+  <data name="Home.Expiries.Single" xml:space="preserve">
+    <value>{0}.</value>
+  </data>
+  <data name="Home.Expiries.Title" xml:space="preserve">
+    <value>Rokovi koji ističu</value>
+  </data>
+  <data name="Home.Plan.AndMore" xml:space="preserve">
+    <value>i još {0}</value>
+  </data>
+  <data name="Home.Plan.Nothing" xml:space="preserve">
+    <value>Ništa nije planirano.</value>
+  </data>
+  <data name="Home.Plan.NothingMore" xml:space="preserve">
+    <value>Za danas nema više planova.</value>
+  </data>
+  <data name="Home.Plan.Open" xml:space="preserve">
+    <value>Otvori</value>
+  </data>
+  <data name="Home.Plan.PlanToday" xml:space="preserve">
+    <value>Isplaniraj danas</value>
+  </data>
+  <data name="Home.Plan.Title" xml:space="preserve">
+    <value>Današnji plan</value>
+  </data>
+  <data name="Home.Plan.Unreadable" xml:space="preserve">
+    <value>Dnevni plan nije mogao da se pročita.</value>
+  </data>
+  <data name="Home.Tile.Backgrounds.Text" xml:space="preserve">
+    <value>Daj stranicama i karticama boju ili sliku.</value>
+  </data>
+  <data name="Home.Tile.Backgrounds.Title" xml:space="preserve">
+    <value>Pozadine</value>
+  </data>
+  <data name="Home.Tile.Backup.Text" xml:space="preserve">
+    <value>Sačuvaj sve podatke u jednu datoteku i vrati ih odatle.</value>
+  </data>
+  <data name="Home.Tile.Backup.Title" xml:space="preserve">
+    <value>Rezervna kopija</value>
+  </data>
+  <data name="Home.Tile.Calendar.Text" xml:space="preserve">
+    <value>Oboji dan, zapiši belešku uz njega i pogledaj svoje podsetnike.</value>
+  </data>
+  <data name="Home.Tile.Calendar.Title" xml:space="preserve">
+    <value>Kalendar</value>
+  </data>
+  <data name="Home.Tile.Collections.Text" xml:space="preserve">
+    <value>Vodi spisak stvari koje poseduješ, poput odeće ili automobila.</value>
+  </data>
+  <data name="Home.Tile.Collections.Title" xml:space="preserve">
+    <value>Kolekcije</value>
+  </data>
+  <data name="Home.Tile.DayPlan.Text" xml:space="preserve">
+    <value>Podeli dan na vremenske blokove i čekiraj ih kad završiš.</value>
+  </data>
+  <data name="Home.Tile.DayPlan.Title" xml:space="preserve">
+    <value>Dnevni plan</value>
+  </data>
+  <data name="Home.Tile.Export.Text" xml:space="preserve">
+    <value>Sačuvaj jednu memoriju ili sve njih kao Excel, Word ili PDF.</value>
+  </data>
+  <data name="Home.Tile.Export.Title" xml:space="preserve">
+    <value>Izvoz</value>
+  </data>
+  <data name="Home.Tile.Notebook.Text" xml:space="preserve">
+    <value>Piši beleške na stranicama koje možeš da listaš.</value>
+  </data>
+  <data name="Home.Tile.Notebook.Title" xml:space="preserve">
+    <value>Beležnica</value>
+  </data>
+  <data name="Home.Tile.Projects.Text" xml:space="preserve">
+    <value>Isplaniraj bilo šta uz zadatke, beleške i datoteke.</value>
+  </data>
+  <data name="Home.Tile.Projects.Title" xml:space="preserve">
+    <value>Projekti</value>
+  </data>
+  <data name="Home.Tile.QuickNotes.Text" xml:space="preserve">
+    <value>Jedan blok za beleške, otvaraš ga sa bilo koje stranice pomoću Ctrl+Shift+N.</value>
+  </data>
+  <data name="Home.Tile.QuickNotes.Title" xml:space="preserve">
+    <value>Brze beleške</value>
+  </data>
+  <data name="Home.Tile.Reminders.Text" xml:space="preserve">
+    <value>Dobij Windows obaveštenje na vreme, jednom ili redovno.</value>
+  </data>
+  <data name="Home.Tile.Reminders.Title" xml:space="preserve">
+    <value>Podsetnici</value>
+  </data>
+  <data name="Home.Tile.Search.Text" xml:space="preserve">
+    <value>Pronađi projekte, stavke, datoteke, beleške i planove pomoću Ctrl+Shift+F.</value>
+  </data>
+  <data name="Home.Tile.Search.Title" xml:space="preserve">
+    <value>Pretraga</value>
+  </data>
+  <data name="Home.Tile.Todos.Text" xml:space="preserve">
+    <value>Vodi listu obaveza na Početnoj i u svakoj memoriji za projekte.</value>
+  </data>
+  <data name="Home.Tile.Todos.Title" xml:space="preserve">
+    <value>Obaveze</value>
+  </data>
+  <data name="Home.Todo.Title" xml:space="preserve">
+    <value>Obaveze</value>
+  </data>
+  <data name="Home.Week.NothingToday" xml:space="preserve">
+    <value>Za danas ništa nije planirano.</value>
+  </data>
+  <data name="Home.Week.OpenInCalendar" xml:space="preserve">
+    <value>Otvori u kalendaru</value>
+  </data>
+  <data name="Home.Week.Title" xml:space="preserve">
+    <value>Ove nedelje</value>
+  </data>
+  <data name="Input.Create" xml:space="preserve">
+    <value>Napravi</value>
+  </data>
+  <data name="Input.Empty" xml:space="preserve">
+    <value>Ovo ne sme da ostane prazno.</value>
+  </data>
+  <data name="Language.Button.Name" xml:space="preserve">
+    <value>Jezik: {0}</value>
+  </data>
+  <data name="Language.Button.Tooltip" xml:space="preserve">
+    <value>Jezik</value>
+  </data>
+  <data name="Log.AddRow" xml:space="preserve">
+    <value>Dodaj red</value>
+  </data>
+  <data name="Log.AddRowTo" xml:space="preserve">
+    <value>Dodaj red: {0}</value>
+  </data>
+  <data name="Log.DeleteConfirm" xml:space="preserve">
+    <value>Obrisati ovaj red?</value>
+  </data>
+  <data name="Log.DeleteRow" xml:space="preserve">
+    <value>Obriši red</value>
+  </data>
+  <data name="Log.Empty" xml:space="preserve">
+    <value>Još nema unosa.</value>
+  </data>
+  <data name="Log.NeedsDate" xml:space="preserve">
+    <value>Polje „{0}“ mora da sadrži datum, na primer 2026-10-13.</value>
+  </data>
+  <data name="Log.NeedsNumber" xml:space="preserve">
+    <value>Polje „{0}“ mora da sadrži broj, na primer 1250 ili 6,5.</value>
+  </data>
+  <data name="Log.SortBy" xml:space="preserve">
+    <value>Sortiraj po: {0}</value>
+  </data>
+  <data name="Main.Corner.Calendar" xml:space="preserve">
+    <value>Kalendar  (Ctrl+Shift+C)</value>
+  </data>
+  <data name="Main.Corner.Help" xml:space="preserve">
+    <value>Prečice</value>
+  </data>
+  <data name="Main.Corner.QuickNotes" xml:space="preserve">
+    <value>Brze beleške  (Ctrl+Shift+N)</value>
+  </data>
+  <data name="Main.Corner.Reminders" xml:space="preserve">
+    <value>Podsetnici  (Ctrl+Shift+R)</value>
+  </data>
+  <data name="Main.Help.Calendar" xml:space="preserve">
+    <value>Kalendar</value>
+  </data>
+  <data name="Main.Help.DayPlan" xml:space="preserve">
+    <value>Dnevni plan u bočnoj traci deli dan na vremenske blokove; plan bilo kog dana otvara se iz kalendara.</value>
+  </data>
+  <data name="Main.Help.QuickNotes" xml:space="preserve">
+    <value>Brze beleške</value>
+  </data>
+  <data name="Main.Help.Reminders" xml:space="preserve">
+    <value>Podsetnici</value>
+  </data>
+  <data name="Main.Help.Search" xml:space="preserve">
+    <value>Pretraga svega</value>
+  </data>
+  <data name="Main.Help.Title" xml:space="preserve">
+    <value>Prečice na tastaturi</value>
+  </data>
+  <data name="Main.NewCollection" xml:space="preserve">
+    <value>Nova kolekcija</value>
+  </data>
+  <data name="Main.NewProject" xml:space="preserve">
+    <value>Novi projekat</value>
+  </data>
+  <data name="Memory.CollectionNameTaken" xml:space="preserve">
+    <value>Kolekcija sa tim imenom već postoji.</value>
+  </data>
+  <data name="Memory.Delete.Confirm" xml:space="preserve">
+    <value>Obrisati „{0}“? Biće obrisani svi njeni podaci.</value>
+  </data>
+  <data name="Memory.Menu.Export" xml:space="preserve">
+    <value>Izvezi</value>
+  </data>
+  <data name="Memory.New.Caption" xml:space="preserve">
+    <value>Nova memorija</value>
+  </data>
+  <data name="Memory.New.CollectionPrompt" xml:space="preserve">
+    <value>Daj ime novoj kolekciji.</value>
+  </data>
+  <data name="Memory.New.ProjectPrompt" xml:space="preserve">
+    <value>Daj ime novom projektu.</value>
+  </data>
+  <data name="Memory.NotSaved" xml:space="preserve">
+    <value>Spisak memorija nije sačuvan jer ova datoteka ne može da se upiše:
+{0}
+
+{1}</value>
+  </data>
+  <data name="Memory.NotSaved.CollectionNotAdded" xml:space="preserve">
+    <value>Nova kolekcija nije dodata.</value>
+  </data>
+  <data name="Memory.NotSaved.NameUnchanged" xml:space="preserve">
+    <value>Ime nije promenjeno.</value>
+  </data>
+  <data name="Memory.NotSaved.NothingDeleted" xml:space="preserve">
+    <value>Ništa nije obrisano.</value>
+  </data>
+  <data name="Memory.NotSaved.Order" xml:space="preserve">
+    <value>Novi redosled će se izgubiti kada se TidyMind zatvori.</value>
+  </data>
+  <data name="Memory.NotSaved.ProjectNotAdded" xml:space="preserve">
+    <value>Novi projekat nije dodat.</value>
+  </data>
+  <data name="Memory.ProjectNameTaken" xml:space="preserve">
+    <value>Projekat sa tim imenom već postoji.</value>
+  </data>
+  <data name="Memory.Rename.Caption" xml:space="preserve">
+    <value>Preimenovanje memorije</value>
+  </data>
+  <data name="Memory.Rename.CollectionTitle" xml:space="preserve">
+    <value>Preimenovanje kolekcije</value>
+  </data>
+  <data name="Memory.Rename.ProjectTitle" xml:space="preserve">
+    <value>Preimenovanje projekta</value>
+  </data>
+  <data name="Memory.Unreadable" xml:space="preserve">
+    <value>Datoteka {0} nije mogla da se pročita:
+{1}
+
+Datoteka je ostala kakva je bila. Popravi je ili je vrati iz rezervne kopije, pa ponovo otvori ovu memoriju.</value>
+  </data>
+  <data name="Migration.CopyFailed" xml:space="preserve">
+    <value>Datoteka {0} nije ispravno kopirana.</value>
+  </data>
+  <data name="Migration.MarkerFailed" xml:space="preserve">
+    <value>Datoteka {0} nije mogla da se upiše.</value>
+  </data>
+  <data name="Migration.ProfilesFailed" xml:space="preserve">
+    <value>profiles.json ne može da se upiše.</value>
+  </data>
+  <data name="Nav.Collections" xml:space="preserve">
+    <value>Kolekcije</value>
+  </data>
+  <data name="Nav.DayPlan" xml:space="preserve">
+    <value>Dnevni plan</value>
+  </data>
+  <data name="Nav.Home" xml:space="preserve">
+    <value>Početna</value>
+  </data>
+  <data name="Nav.NoCollections" xml:space="preserve">
+    <value>Još nema kolekcija</value>
+  </data>
+  <data name="Nav.NoProjects" xml:space="preserve">
+    <value>Još nema projekata</value>
+  </data>
+  <data name="Nav.Projects" xml:space="preserve">
+    <value>Projekti</value>
+  </data>
+  <data name="Notes.Lost" xml:space="preserve">
+    <value>Beleške nisu mogle nigde da se sačuvaju: ni quicknotes.txt ni posebna datoteka nisu mogli da se upišu.</value>
+  </data>
+  <data name="Notes.Rescued" xml:space="preserve">
+    <value>Beleške nisu mogle da se sačuvaju u quicknotes.txt, pa su sačuvane ovde:
+{0}</value>
+  </data>
+  <data name="Notes.SaveFailed" xml:space="preserve">
+    <value>Čuvanje nije uspelo: quicknotes.txt ne može da se upiše. Beleške su i dalje ovde i biće sačuvane čim to ponovo bude moguće.</value>
+  </data>
+  <data name="Notes.SaveFailedOnClose" xml:space="preserve">
+    <value>Beleške nisu sačuvane jer ova datoteka ne može da se upiše:
+{0}
+
+Prozor ostaje otvoren da se ništa ne izgubi. Zatvori ga ponovo kada datoteka bude mogla da se upiše.</value>
+  </data>
+  <data name="Notes.Unreadable" xml:space="preserve">
+    <value>Datoteka quicknotes.txt nije mogla da se pročita: {0}
+
+Datoteka je ostala kakva je bila. Zatvori ovaj prozor i otvori ga ponovo kada datoteka bude mogla da se pročita.</value>
+  </data>
+  <data name="Plan.AddBlock" xml:space="preserve">
+    <value>Dodaj blok</value>
+  </data>
+  <data name="Plan.Block.Moved" xml:space="preserve">
+    <value>Blok je premešten.</value>
+  </data>
+  <data name="Plan.Block.NotChanged" xml:space="preserve">
+    <value>Blok nije promenjen.</value>
+  </data>
+  <data name="Plan.Block.NotChangedEither" xml:space="preserve">
+    <value>Ni blok nije promenjen.</value>
+  </data>
+  <data name="Plan.Block.NotDeleted" xml:space="preserve">
+    <value>Blok nije obrisan.</value>
+  </data>
+  <data name="Plan.Block.NotMoved" xml:space="preserve">
+    <value>Blok nije premešten.</value>
+  </data>
+  <data name="Plan.Block.NotSaved" xml:space="preserve">
+    <value>Blok nije sačuvan.</value>
+  </data>
+  <data name="Plan.Block.Saved" xml:space="preserve">
+    <value>Blok je sačuvan.</value>
+  </data>
+  <data name="Plan.BlockName" xml:space="preserve">
+    <value>{0}, {1}</value>
+  </data>
+  <data name="Plan.BlockNameDone" xml:space="preserve">
+    <value>{0}, {1}, završeno</value>
+  </data>
+  <data name="Plan.Delete.Confirm" xml:space="preserve">
+    <value>Obrisati „{0}“ ({1}) iz plana?</value>
+  </data>
+  <data name="Plan.Delete.Failed" xml:space="preserve">
+    <value>Blok nije obrisan jer ova datoteka ne može da se pročita ili upiše:
+{0}</value>
+  </data>
+  <data name="Plan.Delete.ReminderRemoved" xml:space="preserve">
+    <value>Njegov podsetnik je uklonjen.</value>
+  </data>
+  <data name="Plan.Detail.Overlaps" xml:space="preserve">
+    <value>Preklapa se sa drugim blokom</value>
+  </data>
+  <data name="Plan.Detail.Reminder" xml:space="preserve">
+    <value>Podsetnik: {0}</value>
+  </data>
+  <data name="Plan.Detail.Todo" xml:space="preserve">
+    <value>Obaveza: {0}  ·  {1}</value>
+  </data>
+  <data name="Plan.Detail.TodoMissing" xml:space="preserve">
+    <value>Njegova obaveza nije pronađena</value>
+  </data>
+  <data name="Plan.Dialog.DayAndTime" xml:space="preserve">
+    <value>DAN I VREME</value>
+  </data>
+  <data name="Plan.Dialog.Edit" xml:space="preserve">
+    <value>Izmena bloka</value>
+  </data>
+  <data name="Plan.Dialog.EditWindow" xml:space="preserve">
+    <value>Izmena bloka</value>
+  </data>
+  <data name="Plan.Dialog.EndHour" xml:space="preserve">
+    <value>Sat završetka</value>
+  </data>
+  <data name="Plan.Dialog.EndMinute" xml:space="preserve">
+    <value>Minut završetka</value>
+  </data>
+  <data name="Plan.Dialog.New" xml:space="preserve">
+    <value>Novi blok</value>
+  </data>
+  <data name="Plan.Dialog.NewWindow" xml:space="preserve">
+    <value>Novi blok</value>
+  </data>
+  <data name="Plan.Dialog.NotLinked" xml:space="preserve">
+    <value>Nije povezano</value>
+  </data>
+  <data name="Plan.Dialog.Notes" xml:space="preserve">
+    <value>BELEŠKE</value>
+  </data>
+  <data name="Plan.Dialog.NotesPlaceholder" xml:space="preserve">
+    <value>Bilo šta što treba zapamtiti…</value>
+  </data>
+  <data name="Plan.Dialog.RemindMe" xml:space="preserve">
+    <value>Podseti me</value>
+  </data>
+  <data name="Plan.Dialog.Reminder" xml:space="preserve">
+    <value>PODSETNIK</value>
+  </data>
+  <data name="Plan.Dialog.StartHour" xml:space="preserve">
+    <value>Sat početka</value>
+  </data>
+  <data name="Plan.Dialog.StartMinute" xml:space="preserve">
+    <value>Minut početka</value>
+  </data>
+  <data name="Plan.Dialog.TitlePlaceholder" xml:space="preserve">
+    <value>npr. Domaći iz matematike</value>
+  </data>
+  <data name="Plan.Dialog.Todo" xml:space="preserve">
+    <value>OBAVEZA</value>
+  </data>
+  <data name="Plan.Done" xml:space="preserve">
+    <value>Završeno</value>
+  </data>
+  <data name="Plan.Duration.Hours" xml:space="preserve">
+    <value>{0} h</value>
+  </data>
+  <data name="Plan.Duration.HoursMinutes" xml:space="preserve">
+    <value>{0} h {1} min</value>
+  </data>
+  <data name="Plan.Duration.Minutes" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="Plan.Lead.AtStart" xml:space="preserve">
+    <value>Na početku</value>
+  </data>
+  <data name="Plan.Lead.HourBefore" xml:space="preserve">
+    <value>1 sat ranije</value>
+  </data>
+  <data name="Plan.Lead.MinutesBefore.Few" xml:space="preserve">
+    <value>{0} minuta ranije</value>
+  </data>
+  <data name="Plan.Lead.MinutesBefore.One" xml:space="preserve">
+    <value>{0} minut ranije</value>
+  </data>
+  <data name="Plan.Lead.MinutesBefore.Other" xml:space="preserve">
+    <value>{0} minuta ranije</value>
+  </data>
+  <data name="Plan.List" xml:space="preserve">
+    <value>Lista</value>
+  </data>
+  <data name="Plan.List.Empty" xml:space="preserve">
+    <value>Za ovaj dan još ništa nije planirano.</value>
+  </data>
+  <data name="Plan.List.Free" xml:space="preserve">
+    <value>Slobodno  {0}–{1}</value>
+  </data>
+  <data name="Plan.Mark.Linked" xml:space="preserve">
+    <value>Povezano sa obavezom</value>
+  </data>
+  <data name="Plan.Mark.Reminder" xml:space="preserve">
+    <value>Podsetnik</value>
+  </data>
+  <data name="Plan.MarkDone" xml:space="preserve">
+    <value>Označi kao završeno</value>
+  </data>
+  <data name="Plan.MarkNotDone" xml:space="preserve">
+    <value>Označi kao nezavršeno</value>
+  </data>
+  <data name="Plan.Name" xml:space="preserve">
+    <value>Dnevni plan</value>
+  </data>
+  <data name="Plan.NextDay" xml:space="preserve">
+    <value>Sledeći dan</value>
+  </data>
+  <data name="Plan.Now" xml:space="preserve">
+    <value>Sada</value>
+  </data>
+  <data name="Plan.PrevDay" xml:space="preserve">
+    <value>Prethodni dan</value>
+  </data>
+  <data name="Plan.Problem.Day" xml:space="preserve">
+    <value>Izaberi dan.</value>
+  </data>
+  <data name="Plan.Problem.DayCaption" xml:space="preserve">
+    <value>Nedostaje dan</value>
+  </data>
+  <data name="Plan.Problem.EndAfterStart" xml:space="preserve">
+    <value>Blok mora da se završi posle početka.</value>
+  </data>
+  <data name="Plan.Problem.MinLength.Few" xml:space="preserve">
+    <value>Blok mora da traje najmanje {0} minuta.</value>
+  </data>
+  <data name="Plan.Problem.MinLength.One" xml:space="preserve">
+    <value>Blok mora da traje najmanje {0} minut.</value>
+  </data>
+  <data name="Plan.Problem.MinLength.Other" xml:space="preserve">
+    <value>Blok mora da traje najmanje {0} minuta.</value>
+  </data>
+  <data name="Plan.Problem.ReminderPast" xml:space="preserve">
+    <value>To vreme podsetnika je već prošlo. Izaberi kasniji početak ili manje vremena unapred, ili isključi Podseti me.</value>
+  </data>
+  <data name="Plan.Problem.TimesCaption" xml:space="preserve">
+    <value>Proveri vreme</value>
+  </data>
+  <data name="Plan.Problem.Title" xml:space="preserve">
+    <value>Upiši naslov.</value>
+  </data>
+  <data name="Plan.Problem.TitleCaption" xml:space="preserve">
+    <value>Nedostaje naslov</value>
+  </data>
+  <data name="Plan.Problem.WithinDay" xml:space="preserve">
+    <value>Blok mora da ostane u okviru svog dana (od 00:00 do 24:00).</value>
+  </data>
+  <data name="Plan.Reminder.Failed" xml:space="preserve">
+    <value>Njegov podsetnik nije mogao da se promeni: reminders.json ne može da se pročita ili upiše, ili Windows Planer zadataka nije prihvatio izmenu.</value>
+  </data>
+  <data name="Plan.Reminder.Removed" xml:space="preserve">
+    <value>Njegov podsetnik je uklonjen jer je to vreme već prošlo.</value>
+  </data>
+  <data name="Plan.SaveFailed" xml:space="preserve">
+    <value>Dnevni plan nije sačuvan jer ova datoteka ne može da se pročita ili upiše:
+{0}
+
+{1}</value>
+  </data>
+  <data name="Plan.Summary.Blocks.Few" xml:space="preserve">
+    <value>{0} bloka</value>
+  </data>
+  <data name="Plan.Summary.Blocks.One" xml:space="preserve">
+    <value>{0} blok</value>
+  </data>
+  <data name="Plan.Summary.Blocks.Other" xml:space="preserve">
+    <value>{0} blokova</value>
+  </data>
+  <data name="Plan.Summary.Done.Few" xml:space="preserve">
+    <value>{0} završena</value>
+  </data>
+  <data name="Plan.Summary.Done.One" xml:space="preserve">
+    <value>{0} završen</value>
+  </data>
+  <data name="Plan.Summary.Done.Other" xml:space="preserve">
+    <value>{0} završeno</value>
+  </data>
+  <data name="Plan.Summary.Empty" xml:space="preserve">
+    <value>Još ništa nije planirano: prevuci preko vremenske linije ili upotrebi Dodaj blok.</value>
+  </data>
+  <data name="Plan.Summary.Overlapping.Few" xml:space="preserve">
+    <value>{0} se preklapaju</value>
+  </data>
+  <data name="Plan.Summary.Overlapping.One" xml:space="preserve">
+    <value>{0} se preklapa</value>
+  </data>
+  <data name="Plan.Summary.Overlapping.Other" xml:space="preserve">
+    <value>{0} se preklapa</value>
+  </data>
+  <data name="Plan.Summary.Planned" xml:space="preserve">
+    <value>planirano {0}</value>
+  </data>
+  <data name="Plan.TimeDone" xml:space="preserve">
+    <value>{0}  ·  završeno</value>
+  </data>
+  <data name="Plan.Timeline" xml:space="preserve">
+    <value>Vremenska linija</value>
+  </data>
+  <data name="Plan.Todo.Add" xml:space="preserve">
+    <value>Dodaj u plan</value>
+  </data>
+  <data name="Plan.Todo.AddName" xml:space="preserve">
+    <value>Dodaj u plan: {0}</value>
+  </data>
+  <data name="Plan.Todo.CantChange" xml:space="preserve">
+    <value>Obaveza „{0}“ nije mogla da se promeni jer njena lista ne može da se pročita ili upiše.</value>
+  </data>
+  <data name="Plan.Todo.DragTip" xml:space="preserve">
+    <value>Prevuci na vremensku liniju da je isplaniraš</value>
+  </data>
+  <data name="Plan.Todo.From" xml:space="preserve">
+    <value>Od {0}</value>
+  </data>
+  <data name="Plan.Todo.NotAdded" xml:space="preserve">
+    <value>Obaveza nije dodata u plan.</value>
+  </data>
+  <data name="Plan.Todos" xml:space="preserve">
+    <value>Obaveze</value>
+  </data>
+  <data name="Plan.Todos.None" xml:space="preserve">
+    <value>Za ovaj dan nema otvorenih obaveza.</value>
+  </data>
+  <data name="Plan.Todos.Unusable" xml:space="preserve">
+    <value>Lista obaveza „{0}“ ne može da se pročita ili upiše.</value>
+  </data>
+  <data name="Plan.TodosHint" xml:space="preserve">
+    <value>Još nisu u planu za ovaj dan. Prevuci jednu na vremensku liniju ili pritisni + da je dodaš.</value>
+  </data>
+  <data name="Plan.Unreadable" xml:space="preserve">
+    <value>Dnevni plan nije mogao da se pročita:
+{0}
+
+Datoteka nije promenjena. Popravi je ili obriši, pa ćeš ponovo moći da planiraš dane; do tada ovde ništa ne može da se menja.</value>
+  </data>
+  <data name="Project.Add" xml:space="preserve">
+    <value>Dodaj projekat</value>
+  </data>
+  <data name="Project.AddPrompt" xml:space="preserve">
+    <value>Kako se zove projekat?</value>
+  </data>
+  <data name="Project.DeleteMany.Few" xml:space="preserve">
+    <value>Obrisati {0} projekta? Ovo ne može da se poništi.</value>
+  </data>
+  <data name="Project.DeleteMany.One" xml:space="preserve">
+    <value>Obrisati {0} projekat? Ovo ne može da se poništi.</value>
+  </data>
+  <data name="Project.DeleteMany.Other" xml:space="preserve">
+    <value>Obrisati {0} projekata? Ovo ne može da se poništi.</value>
+  </data>
+  <data name="Project.Empty" xml:space="preserve">
+    <value>U ovom odeljku još nema projekata. Klikni na „+ Dodaj projekat“ da počneš.</value>
+  </data>
+  <data name="Project.Kind" xml:space="preserve">
+    <value>PROJEKTI</value>
+  </data>
+  <data name="Project.NoMatch" xml:space="preserve">
+    <value>Nijedan projekat ne odgovara pretrazi.</value>
+  </data>
+  <data name="Project.SaveFailed" xml:space="preserve">
+    <value>Projekti memorije „{0}“ nisu sačuvani jer ova datoteka ne može da se upiše:
+{1}
+
+Tvoja poslednja izmena nije sačuvana.</value>
+  </data>
+  <data name="Project.Subtitle.Few" xml:space="preserve">
+    <value>PROJEKTI  ·  {0} stavke</value>
+  </data>
+  <data name="Project.Subtitle.One" xml:space="preserve">
+    <value>PROJEKTI  ·  {0} stavka</value>
+  </data>
+  <data name="Project.Subtitle.Other" xml:space="preserve">
+    <value>PROJEKTI  ·  {0} stavki</value>
+  </data>
+  <data name="ProjectWindow.AddTask" xml:space="preserve">
+    <value>Dodaj zadatak</value>
+  </data>
+  <data name="ProjectWindow.AllPages" xml:space="preserve">
+    <value>Sve stranice</value>
+  </data>
+  <data name="ProjectWindow.ClearPage" xml:space="preserve">
+    <value>Očisti stranicu</value>
+  </data>
+  <data name="ProjectWindow.ClearPageCaption" xml:space="preserve">
+    <value>Potvrda brisanja sadržaja</value>
+  </data>
+  <data name="ProjectWindow.ClearPageConfirm" xml:space="preserve">
+    <value>Očistiti ovu stranicu i sve što je na njoj napisano?</value>
+  </data>
+  <data name="ProjectWindow.DeletePage" xml:space="preserve">
+    <value>Obriši stranicu</value>
+  </data>
+  <data name="ProjectWindow.DeletePageConfirm" xml:space="preserve">
+    <value>Obrisati stranicu {0} i sve što je na njoj napisano?</value>
+  </data>
+  <data name="ProjectWindow.Description" xml:space="preserve">
+    <value>Opis</value>
+  </data>
+  <data name="ProjectWindow.EmptyPage" xml:space="preserve">
+    <value>(prazno)</value>
+  </data>
+  <data name="ProjectWindow.Files" xml:space="preserve">
+    <value>Datoteke</value>
+  </data>
+  <data name="ProjectWindow.Name" xml:space="preserve">
+    <value>Naziv projekta</value>
+  </data>
+  <data name="ProjectWindow.NameRequired" xml:space="preserve">
+    <value>Projekat mora da ima naziv.</value>
+  </data>
+  <data name="ProjectWindow.NextPage" xml:space="preserve">
+    <value>Sledeća stranica  (Ctrl+PageDown); na poslednjoj stranici, nova stranica</value>
+  </data>
+  <data name="ProjectWindow.NoTasks" xml:space="preserve">
+    <value>Još nema zadataka. Dodaj prvi iznad.</value>
+  </data>
+  <data name="ProjectWindow.Notes" xml:space="preserve">
+    <value>Beleške</value>
+  </data>
+  <data name="ProjectWindow.NotesPlaceholder" xml:space="preserve">
+    <value>Počni da pišeš...</value>
+  </data>
+  <data name="ProjectWindow.PrevPage" xml:space="preserve">
+    <value>Prethodna stranica  (Ctrl+PageUp)</value>
+  </data>
+  <data name="ProjectWindow.RenameTask" xml:space="preserve">
+    <value>Preimenovanje zadatka</value>
+  </data>
+  <data name="ProjectWindow.RenameTaskPrompt" xml:space="preserve">
+    <value>Unesi novi naziv ovog zadatka.</value>
+  </data>
+  <data name="ProjectWindow.StillCopying" xml:space="preserve">
+    <value>Datoteke se još dodaju. Prekinuti dodavanje i zatvoriti?</value>
+  </data>
+  <data name="ProjectWindow.StillCopyingCaption" xml:space="preserve">
+    <value>Kopiranje datoteka je u toku</value>
+  </data>
+  <data name="ProjectWindow.TaskHint" xml:space="preserve">
+    <value>Desni klik na zadatak nudi još opcija (kopiranje teksta).</value>
+  </data>
+  <data name="ProjectWindow.TaskPlaceholder" xml:space="preserve">
+    <value>Dodaj zadatak…</value>
+  </data>
+  <data name="ProjectWindow.Tasks" xml:space="preserve">
+    <value>Zadaci</value>
+  </data>
+  <data name="ProjectWindow.Title" xml:space="preserve">
+    <value>Detalji projekta</value>
+  </data>
+  <data name="Reminder.DeleteConfirm" xml:space="preserve">
+    <value>Obrisati ovaj podsetnik?</value>
+  </data>
+  <data name="Reminder.DeleteFailed" xml:space="preserve">
+    <value>Podsetnik nije obrisan: reminders.json ne može da se pročita ili upiše, ili Windows Planer zadataka nije prihvatio izmenu.</value>
+  </data>
+  <data name="Reminder.Form.Date" xml:space="preserve">
+    <value>Datum</value>
+  </data>
+  <data name="Reminder.Form.EditTitle" xml:space="preserve">
+    <value>Izmena podsetnika</value>
+  </data>
+  <data name="Reminder.Form.For" xml:space="preserve">
+    <value>Podsetnik za: {0}</value>
+  </data>
+  <data name="Reminder.Form.General" xml:space="preserve">
+    <value>Opšti podsetnik (nije vezan ni za šta)</value>
+  </data>
+  <data name="Reminder.Form.Hour" xml:space="preserve">
+    <value>Sat</value>
+  </data>
+  <data name="Reminder.Form.Message" xml:space="preserve">
+    <value>Poruka</value>
+  </data>
+  <data name="Reminder.Form.Minute" xml:space="preserve">
+    <value>Minut</value>
+  </data>
+  <data name="Reminder.Form.Placeholder" xml:space="preserve">
+    <value>Na šta da te podsetim?</value>
+  </data>
+  <data name="Reminder.Form.Repeat" xml:space="preserve">
+    <value>Ponavljanje</value>
+  </data>
+  <data name="Reminder.Form.Save" xml:space="preserve">
+    <value>Sačuvaj podsetnik</value>
+  </data>
+  <data name="Reminder.Form.SaveChanges" xml:space="preserve">
+    <value>Sačuvaj izmene</value>
+  </data>
+  <data name="Reminder.Problem.Date" xml:space="preserve">
+    <value>Izaberi datum.</value>
+  </data>
+  <data name="Reminder.Problem.DateTitle" xml:space="preserve">
+    <value>Nedostaje datum</value>
+  </data>
+  <data name="Reminder.Problem.Message" xml:space="preserve">
+    <value>Upiši tekst podsetnika.</value>
+  </data>
+  <data name="Reminder.Problem.MessageTitle" xml:space="preserve">
+    <value>Nedostaje poruka</value>
+  </data>
+  <data name="Reminder.Problem.Past" xml:space="preserve">
+    <value>To vreme je već prošlo. Izaberi neko buduće vreme.</value>
+  </data>
+  <data name="Reminder.Problem.PastTitle" xml:space="preserve">
+    <value>Vreme je prošlo</value>
+  </data>
+  <data name="Reminder.Problem.Time" xml:space="preserve">
+    <value>Izaberi sat i minut.</value>
+  </data>
+  <data name="Reminder.Problem.TimeTitle" xml:space="preserve">
+    <value>Nedostaje vreme</value>
+  </data>
+  <data name="Reminder.SaveFailed" xml:space="preserve">
+    <value>Podsetnik nije sačuvan: reminders.json ne može da se pročita ili upiše, ili ga Windows Planer zadataka nije prihvatio.</value>
+  </data>
+  <data name="Reminder.Toast.Title" xml:space="preserve">
+    <value>Podsetnik</value>
+  </data>
+  <data name="Reminder.Toast.TitleFor" xml:space="preserve">
+    <value>Podsetnik: {0}</value>
+  </data>
+  <data name="Reminders.Empty" xml:space="preserve">
+    <value>Još nema podsetnika.</value>
+  </data>
+  <data name="Reminders.For" xml:space="preserve">
+    <value>Za: {0}</value>
+  </data>
+  <data name="Reminders.Unreadable" xml:space="preserve">
+    <value>Datoteka reminders.json nije mogla da se pročita: {0}
+
+Datoteka je ostala kakva je bila. Popravi je ili je vrati iz rezervne kopije, pa ćeš moći da vidiš i dodaješ podsetnike.</value>
+  </data>
+  <data name="Repeat.Daily" xml:space="preserve">
+    <value>Svakog dana</value>
+  </data>
+  <data name="Repeat.Monthly" xml:space="preserve">
+    <value>Svakog meseca</value>
+  </data>
+  <data name="Repeat.Once" xml:space="preserve">
+    <value>Jednom</value>
+  </data>
+  <data name="Repeat.Weekly" xml:space="preserve">
+    <value>Svake nedelje</value>
+  </data>
+  <data name="Repeat.Yearly" xml:space="preserve">
+    <value>Svake godine</value>
+  </data>
+  <data name="Search.CollectionMemory" xml:space="preserve">
+    <value>Memorija za kolekcije</value>
+  </data>
+  <data name="Search.Keys" xml:space="preserve">
+    <value>↑ ↓  kretanje    ·    Enter  otvaranje    ·    Esc  zatvaranje</value>
+  </data>
+  <data name="Search.Kind.File" xml:space="preserve">
+    <value>Datoteka</value>
+  </data>
+  <data name="Search.Kind.Item" xml:space="preserve">
+    <value>Stavka</value>
+  </data>
+  <data name="Search.Kind.Memory" xml:space="preserve">
+    <value>Memorija</value>
+  </data>
+  <data name="Search.Kind.Note" xml:space="preserve">
+    <value>Beleška</value>
+  </data>
+  <data name="Search.Kind.Plan" xml:space="preserve">
+    <value>Plan</value>
+  </data>
+  <data name="Search.Kind.Project" xml:space="preserve">
+    <value>Projekat</value>
+  </data>
+  <data name="Search.NoMatch" xml:space="preserve">
+    <value>Nema rezultata za „{0}“.</value>
+  </data>
+  <data name="Search.Page" xml:space="preserve">
+    <value>Stranica {0}</value>
+  </data>
+  <data name="Search.Placeholder" xml:space="preserve">
+    <value>Pretraži memorije, projekte i stavke…</value>
+  </data>
+  <data name="Search.ProjectMemory" xml:space="preserve">
+    <value>Memorija za projekte</value>
+  </data>
+  <data name="Selection.Clear" xml:space="preserve">
+    <value>Poništi izbor</value>
+  </data>
+  <data name="Selection.ClearTip" xml:space="preserve">
+    <value>Poništi izbor  (Esc)</value>
+  </data>
+  <data name="Selection.Count" xml:space="preserve">
+    <value>Izabrano: {0}</value>
+  </data>
+  <data name="Selection.DeleteSelected" xml:space="preserve">
+    <value>Obriši izabrane ({0})</value>
+  </data>
+  <data name="Settings.Backup.Button" xml:space="preserve">
+    <value>Napravi kopiju…</value>
+  </data>
+  <data name="Settings.Backup.Caption" xml:space="preserve">
+    <value>Rezervna kopija</value>
+  </data>
+  <data name="Settings.Backup.Failed" xml:space="preserve">
+    <value>Rezervna kopija nije mogla da se sačuva.
+
+{0}</value>
+  </data>
+  <data name="Settings.Backup.FileName" xml:space="preserve">
+    <value>TidyMind-rezervna-kopija-{0}.zip</value>
+  </data>
+  <data name="Settings.Backup.Filter" xml:space="preserve">
+    <value>ZIP datoteke (*.zip)|*.zip</value>
+  </data>
+  <data name="Settings.Backup.Note" xml:space="preserve">
+    <value>Čuva sve što TidyMind skladišti u jednu ZIP datoteku.</value>
+  </data>
+  <data name="Settings.Backup.Saved" xml:space="preserve">
+    <value>Rezervna kopija je sačuvana: {0}</value>
+  </data>
+  <data name="Settings.Backup.Title" xml:space="preserve">
+    <value>Rezervna kopija svih podataka</value>
+  </data>
+  <data name="Settings.DataFolder.Button" xml:space="preserve">
+    <value>Otvori</value>
+  </data>
+  <data name="Settings.DataFolder.Caption" xml:space="preserve">
+    <value>Otvaranje fascikle sa podacima</value>
+  </data>
+  <data name="Settings.DataFolder.Failed" xml:space="preserve">
+    <value>Fascikla sa podacima nije mogla da se otvori:
+{0}
+
+{1}</value>
+  </data>
+  <data name="Settings.DataFolder.Title" xml:space="preserve">
+    <value>Otvori fasciklu sa podacima</value>
+  </data>
+  <data name="Settings.ExportAll.Button" xml:space="preserve">
+    <value>Izvezi…</value>
+  </data>
+  <data name="Settings.ExportAll.Note" xml:space="preserve">
+    <value>Čitljiv izveštaj, a ne rezervna kopija.</value>
+  </data>
+  <data name="Settings.ExportAll.Title" xml:space="preserve">
+    <value>Izvoz svih memorija</value>
+  </data>
+  <data name="Settings.Language.NotSaved" xml:space="preserve">
+    <value>Jezik je promenjen, ali nije mogao da se sačuva u settings.json, pa će se TidyMind sledeći put pokrenuti na prethodnom jeziku.</value>
+  </data>
+  <data name="Settings.Language.Note" xml:space="preserve">
+    <value>Svi prozori se odmah prebacuju.</value>
+  </data>
+  <data name="Settings.Language.Title" xml:space="preserve">
+    <value>Jezik</value>
+  </data>
+  <data name="Settings.Licenses" xml:space="preserve">
+    <value>Licence</value>
+  </data>
+  <data name="Settings.Restore.Button" xml:space="preserve">
+    <value>Vrati…</value>
+  </data>
+  <data name="Settings.Restore.Caption" xml:space="preserve">
+    <value>Vraćanje iz rezervne kopije</value>
+  </data>
+  <data name="Settings.Restore.Confirm" xml:space="preserve">
+    <value>Vratiti ovu rezervnu kopiju?
+{0}
+
+Tvoji trenutni podaci biće zamenjeni. Prvo se pravi njihova kopija, a zatim se TidyMind ponovo pokreće.</value>
+  </data>
+  <data name="Settings.Restore.Done" xml:space="preserve">
+    <value>Rezervna kopija je vraćena. Tvoji prethodni podaci su sačuvani ovde:
+{0}
+
+TidyMind će se sada ponovo pokrenuti.</value>
+  </data>
+  <data name="Settings.Restore.Failed" xml:space="preserve">
+    <value>Rezervna kopija nije vraćena: {0}
+
+Tvoji trenutni podaci su ostali nepromenjeni.</value>
+  </data>
+  <data name="Settings.Restore.FailedSafetyCopy" xml:space="preserve">
+    <value>Njihova sigurnosna kopija je sačuvana i ovde:
+{0}</value>
+  </data>
+  <data name="Settings.Restore.Filter" xml:space="preserve">
+    <value>TidyMind rezervne kopije (*.zip)|*.zip</value>
+  </data>
+  <data name="Settings.Restore.Note" xml:space="preserve">
+    <value>Zamenjuje trenutne podatke. TidyMind se ponovo pokreće.</value>
+  </data>
+  <data name="Settings.Restore.Title" xml:space="preserve">
+    <value>Vraćanje iz rezervne kopije</value>
+  </data>
+  <data name="Settings.Section.Backup" xml:space="preserve">
+    <value>Rezervna kopija</value>
+  </data>
+  <data name="Settings.Section.Data" xml:space="preserve">
+    <value>Podaci</value>
+  </data>
+  <data name="Settings.Section.General" xml:space="preserve">
+    <value>Opšte</value>
+  </data>
+  <data name="Settings.Title" xml:space="preserve">
+    <value>Podešavanja</value>
+  </data>
+  <data name="Swatch.NoColor" xml:space="preserve">
+    <value>Bez boje</value>
+  </data>
+  <data name="Tabs.Add" xml:space="preserve">
+    <value>Dodaj odeljak</value>
+  </data>
+  <data name="Tabs.DefaultName" xml:space="preserve">
+    <value>Bez naziva</value>
+  </data>
+  <data name="Tabs.DefaultNameNumbered" xml:space="preserve">
+    <value>Bez naziva {0}</value>
+  </data>
+  <data name="Tabs.Delete.Caption" xml:space="preserve">
+    <value>Brisanje odeljka</value>
+  </data>
+  <data name="Tabs.DeleteMove.Items.Few" xml:space="preserve">
+    <value>Obrisati odeljak „{1}“?
+
+Njegove {0} stavke biće premeštene u „{2}“.</value>
+  </data>
+  <data name="Tabs.DeleteMove.Items.One" xml:space="preserve">
+    <value>Obrisati odeljak „{1}“?
+
+Njegova {0} stavka biće premeštena u „{2}“.</value>
+  </data>
+  <data name="Tabs.DeleteMove.Items.Other" xml:space="preserve">
+    <value>Obrisati odeljak „{1}“?
+
+Njegovih {0} stavki biće premešteno u „{2}“.</value>
+  </data>
+  <data name="Tabs.DeleteMove.Projects.Few" xml:space="preserve">
+    <value>Obrisati odeljak „{1}“?
+
+Njegova {0} projekta biće premeštena u „{2}“.</value>
+  </data>
+  <data name="Tabs.DeleteMove.Projects.One" xml:space="preserve">
+    <value>Obrisati odeljak „{1}“?
+
+Njegov {0} projekat biće premešten u „{2}“.</value>
+  </data>
+  <data name="Tabs.DeleteMove.Projects.Other" xml:space="preserve">
+    <value>Obrisati odeljak „{1}“?
+
+Njegovih {0} projekata biće premešteno u „{2}“.</value>
+  </data>
+  <data name="Tabs.NewName" xml:space="preserve">
+    <value>Novi odeljak</value>
+  </data>
+  <data name="Tabs.NewNameNumbered" xml:space="preserve">
+    <value>Novi odeljak {0}</value>
+  </data>
+  <data name="Tabs.SaveFailed" xml:space="preserve">
+    <value>Odeljci memorije „{0}“ nisu sačuvani jer ova datoteka ne može da se upiše:
+{1}
+
+Tvoja poslednja izmena odeljaka nije sačuvana.</value>
+  </data>
+  <data name="TextColor.Blue" xml:space="preserve">
+    <value>Plava</value>
+  </data>
+  <data name="TextColor.Default" xml:space="preserve">
+    <value>Podrazumevana</value>
+  </data>
+  <data name="TextColor.Gray" xml:space="preserve">
+    <value>Siva</value>
+  </data>
+  <data name="TextColor.Green" xml:space="preserve">
+    <value>Zelena</value>
+  </data>
+  <data name="TextColor.Orange" xml:space="preserve">
+    <value>Narandžasta</value>
+  </data>
+  <data name="TextColor.Purple" xml:space="preserve">
+    <value>Ljubičasta</value>
+  </data>
+  <data name="TextColor.Red" xml:space="preserve">
+    <value>Crvena</value>
+  </data>
+  <data name="Todo.Add" xml:space="preserve">
+    <value>Dodaj</value>
+  </data>
+  <data name="Todo.AllDone" xml:space="preserve">
+    <value>Za sada je sve završeno.</value>
+  </data>
+  <data name="Todo.Count" xml:space="preserve">
+    <value>{0}/{1} završeno</value>
+  </data>
+  <data name="Todo.Empty" xml:space="preserve">
+    <value>Lista je prazna.</value>
+  </data>
+  <data name="Todo.Fold" xml:space="preserve">
+    <value>Skupi listu obaveza</value>
+  </data>
+  <data name="Todo.FromDate" xml:space="preserve">
+    <value>od {0}</value>
+  </data>
+  <data name="Todo.FromYesterday" xml:space="preserve">
+    <value>od juče</value>
+  </data>
+  <data name="Todo.Header" xml:space="preserve">
+    <value>OBAVEZE</value>
+  </data>
+  <data name="Todo.HideDone" xml:space="preserve">
+    <value>Sakrij završene</value>
+  </data>
+  <data name="Todo.ListFolded" xml:space="preserve">
+    <value>Lista obaveza, skupljena</value>
+  </data>
+  <data name="Todo.ListOpen" xml:space="preserve">
+    <value>Lista obaveza, otvorena</value>
+  </data>
+  <data name="Todo.ListUnreadable" xml:space="preserve">
+    <value>Datoteka {0} nije mogla da se pročita. Popravi je ili obriši, pa ćeš moći da koristiš ovu listu.</value>
+  </data>
+  <data name="Todo.Next" xml:space="preserve">
+    <value>Sledeće:</value>
+  </data>
+  <data name="Todo.Placeholder" xml:space="preserve">
+    <value>Dodaj obavezu…</value>
+  </data>
+  <data name="Todo.PlaceholderEnter" xml:space="preserve">
+    <value>Upiši obavezu i pritisni Enter…</value>
+  </data>
+  <data name="Todo.SaveFailed" xml:space="preserve">
+    <value>Lista obaveza memorije „{0}“ nije sačuvana jer ova datoteka ne može da se upiše:
+{1}
+
+Tvoja poslednja izmena nije sačuvana.</value>
+  </data>
+  <data name="Todo.ShowDone" xml:space="preserve">
+    <value>Prikaži završene ({0})</value>
+  </data>
+  <data name="Todo.Unfold" xml:space="preserve">
+    <value>Otvori listu obaveza</value>
+  </data>
+  <data name="Todo.Unreadable" xml:space="preserve">
+    <value>Čuvanje nije uspelo: quicktodos.json ne može da se pročita.</value>
+  </data>
+  <data name="Tour.BasicsDone.Text" xml:space="preserve">
+    <value>To su bile svakodnevne stvari, a trikovi traju još otprilike minut.</value>
+  </data>
+  <data name="Tour.BasicsDone.Title" xml:space="preserve">
+    <value>Osnove su savladane</value>
+  </data>
+  <data name="Tour.Button.Finish" xml:space="preserve">
+    <value>Završi</value>
+  </data>
+  <data name="Tour.Button.Next" xml:space="preserve">
+    <value>Dalje</value>
+  </data>
+  <data name="Tour.Button.NotNow" xml:space="preserve">
+    <value>Ne sada</value>
+  </data>
+  <data name="Tour.Button.Skip" xml:space="preserve">
+    <value>Preskoči obilazak</value>
+  </data>
+  <data name="Tour.Button.Start" xml:space="preserve">
+    <value>Kreni u obilazak</value>
+  </data>
+  <data name="Tour.Button.Tricks" xml:space="preserve">
+    <value>Nastavi sa trikovima</value>
+  </data>
+  <data name="Tour.CardLook.Text" xml:space="preserve">
+    <value>Klikni desnim tasterom na ovu karticu i izaberi Prilagodi karticu da joj daš boju ili sliku.</value>
+  </data>
+  <data name="Tour.CardLook.Title" xml:space="preserve">
+    <value>Promeni izgled kartice</value>
+  </data>
+  <data name="Tour.CloseProject.Text" xml:space="preserve">
+    <value>Klikni na Sačuvaj da zatvoriš projekat i zadržiš izmene.</value>
+  </data>
+  <data name="Tour.CloseProject.Title" xml:space="preserve">
+    <value>Zatvori projekat</value>
+  </data>
+  <data name="Tour.Collections.Text" xml:space="preserve">
+    <value>Otvori ovu kolekciju u bočnoj traci da vidiš spisak stvari koje poseduješ.</value>
+  </data>
+  <data name="Tour.Collections.Title" xml:space="preserve">
+    <value>Kolekcije</value>
+  </data>
+  <data name="Tour.Confirm.Text" xml:space="preserve">
+    <value>Ovim se dodaje primer memorije. Tvoji podaci se ne menjaju.</value>
+  </data>
+  <data name="Tour.Confirm.Title" xml:space="preserve">
+    <value>Kreni u obilazak</value>
+  </data>
+  <data name="Tour.Confirm.WriteFailed" xml:space="preserve">
+    <value>Primer memorije nije mogao da se upiše u
+{0}
+
+Ništa nije promenjeno.</value>
+  </data>
+  <data name="Tour.Corner.Text" xml:space="preserve">
+    <value>Ovi dugmići sa bilo koje stranice otvaraju brze beleške, tvoje podsetnike i kalendar.</value>
+  </data>
+  <data name="Tour.Corner.Title" xml:space="preserve">
+    <value>Beleške, podsetnici i kalendar</value>
+  </data>
+  <data name="Tour.DayPlan.Text" xml:space="preserve">
+    <value>Otvori Dnevni plan i podeli dan na vremenske blokove, na primer Teretana 17:00–18:30.</value>
+  </data>
+  <data name="Tour.DayPlan.Title" xml:space="preserve">
+    <value>Isplaniraj dan</value>
+  </data>
+  <data name="Tour.DeleteNote" xml:space="preserve">
+    <value>Ovo je primer memorije.</value>
+  </data>
+  <data name="Tour.End.Text" xml:space="preserve">
+    <value>Pomoć i prečice su iza dugmeta ?, a primere memorija možeš bilo kada da obrišeš iz bočne trake.</value>
+  </data>
+  <data name="Tour.End.Title" xml:space="preserve">
+    <value>To je sve od obilaska</value>
+  </data>
+  <data name="Tour.HelpEntry" xml:space="preserve">
+    <value>Kreni u obilazak</value>
+  </data>
+  <data name="Tour.OpenProject.Text" xml:space="preserve">
+    <value>Klikni na ovu karticu da otvoriš projekat.</value>
+  </data>
+  <data name="Tour.OpenProject.Title" xml:space="preserve">
+    <value>Otvori projekat</value>
+  </data>
+  <data name="Tour.PageBackground.Text" xml:space="preserve">
+    <value>Klikni desnim tasterom na prazan deo stranice i izaberi Uredi pozadinu.</value>
+  </data>
+  <data name="Tour.PageBackground.Title" xml:space="preserve">
+    <value>Promeni pozadinu stranice</value>
+  </data>
+  <data name="Tour.Search.Example" xml:space="preserve">
+    <value>bicikl</value>
+  </data>
+  <data name="Tour.Search.Text" xml:space="preserve">
+    <value>Pritisni Ctrl+Shift+F i upiši neku reč, na primer {0}.</value>
+  </data>
+  <data name="Tour.Search.Title" xml:space="preserve">
+    <value>Pretraži sve</value>
+  </data>
+  <data name="Tour.SelectCards.Text" xml:space="preserve">
+    <value>Prevuci pravougaonik preko praznog prostora oko kartica da izabereš više njih odjednom.</value>
+  </data>
+  <data name="Tour.SelectCards.Title" xml:space="preserve">
+    <value>Izaberi više kartica</value>
+  </data>
+  <data name="Tour.StepOf" xml:space="preserve">
+    <value>Korak {0} od {1}.</value>
+  </data>
+  <data name="Tour.TodoList.Text" xml:space="preserve">
+    <value>Upiši obavezu i pritisni Enter, pa klikni na njen tekst da ga izmeniš.</value>
+  </data>
+  <data name="Tour.TodoList.Title" xml:space="preserve">
+    <value>Vodi listu obaveza</value>
+  </data>
+  <data name="Tour.TurnPage.Text" xml:space="preserve">
+    <value>Klikni na strelicu nadesno da pređeš na drugu stranicu, pa klikni ponovo da započneš novu.</value>
+  </data>
+  <data name="Tour.TurnPage.Title" xml:space="preserve">
+    <value>Okreni stranicu</value>
+  </data>
+  <data name="Tour.Welcome.Text" xml:space="preserve">
+    <value>Memorija je jedna oblast tvog života, a sve memorije su u bočnoj traci. Memorija za projekte sadrži projekte, svaki sa svojim zadacima, beleškama i datotekama. Memorija za kolekcije čuva spisak stvari koje poseduješ, poput odeće ili bicikla.</value>
+  </data>
+  <data name="Tour.Welcome.Title" xml:space="preserve">
+    <value>TidyMind ti želi dobrodošlicu</value>
+  </data>
+  <data name="Welcome.Bike.Item" xml:space="preserve">
+    <value>Gradski bicikl</value>
+  </data>
+  <data name="Welcome.Bike.ItemNotes" xml:space="preserve">
+    <value>Za vozila možeš da vodiš i dnevnike, na primer goriva ili servisa.</value>
+  </data>
+  <data name="Welcome.Bike.Name" xml:space="preserve">
+    <value>Popravka bicikla</value>
+  </data>
+  <data name="Welcome.Bike.Task1" xml:space="preserve">
+    <value>Kupi novu unutrašnju gumu</value>
+  </data>
+  <data name="Welcome.Bike.Task2" xml:space="preserve">
+    <value>Podmaži lanac</value>
+  </data>
+  <data name="Welcome.Jacket.Color" xml:space="preserve">
+    <value>Teget</value>
+  </data>
+  <data name="Welcome.Jacket.Name" xml:space="preserve">
+    <value>Kišna jakna</value>
+  </data>
+  <data name="Welcome.Jacket.Notes" xml:space="preserve">
+    <value>Kolekcija čuva spisak stvari koje poseduješ.</value>
+  </data>
+  <data name="Welcome.Name" xml:space="preserve">
+    <value>Upoznavanje</value>
+  </data>
+  <data name="Welcome.Notebook.Description" xml:space="preserve">
+    <value>Projekat čuva zadatke, beleške i datoteke za jednu stvar na kojoj radiš.</value>
+  </data>
+  <data name="Welcome.Notebook.Name" xml:space="preserve">
+    <value>Beležnica</value>
+  </data>
+  <data name="Welcome.Notebook.Page1" xml:space="preserve">
+    <value>Ovo je prva stranica.
+Strelica iznad vodi na sledeću stranicu.</value>
+  </data>
+  <data name="Welcome.Notebook.Page2" xml:space="preserve">
+    <value>Ovo je druga stranica.
+Na poslednjoj stranici strelica započinje novu.</value>
+  </data>
+  <data name="Welcome.Notebook.Task1" xml:space="preserve">
+    <value>Pročitaj prvu stranicu</value>
+  </data>
+  <data name="Welcome.Notebook.Task2" xml:space="preserve">
+    <value>Dodaj svoju stranicu</value>
+  </data>
+  <data name="Welcome.Reading.Name" xml:space="preserve">
+    <value>Lista za čitanje</value>
+  </data>
+  <data name="Welcome.Reading.Task1" xml:space="preserve">
+    <value>Završi knjigu koju trenutno čitaš</value>
+  </data>
+  <data name="Welcome.Sweater.Color" xml:space="preserve">
+    <value>Siva</value>
+  </data>
+  <data name="Welcome.Sweater.Name" xml:space="preserve">
+    <value>Vuneni džemper</value>
+  </data>
+  <data name="Welcome.Tab.Home" xml:space="preserve">
+    <value>Po kući</value>
+  </data>
+  <data name="Welcome.Tab.Start" xml:space="preserve">
+    <value>Prvi koraci</value>
+  </data>
+  <data name="Welcome.Tab.Things" xml:space="preserve">
+    <value>Stvari</value>
+  </data>
+  <data name="Welcome.Todo1" xml:space="preserve">
+    <value>Zalij biljke</value>
+  </data>
+  <data name="Welcome.Todo2" xml:space="preserve">
+    <value>Pozovi banku zbog nove kartice</value>
+  </data>
+  <data name="Welcome.Todo3" xml:space="preserve">
+    <value>Kupi kafu</value>
+  </data>
+  <data name="Welcome.Trip.Name" xml:space="preserve">
+    <value>Vikend izlet</value>
+  </data>
+  <data name="Welcome.Trip.Task1" xml:space="preserve">
+    <value>Izaberi datum</value>
+  </data>
+  <data name="Welcome.Trip.Task2" xml:space="preserve">
+    <value>Rezerviši smeštaj</value>
+  </data>
+  <data name="Welcome.Trip.Task3" xml:space="preserve">
+    <value>Spakuj torbu</value>
+  </data>
+  <data name="Welcome.Trip.Task4" xml:space="preserve">
+    <value>Proveri vremensku prognozu</value>
+  </data>
+</root>

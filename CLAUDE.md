@@ -1,0 +1,58 @@
+# TidyMind
+
+A Windows desktop app (WPF, .NET 10, `net10.0-windows10.0.19041.0`) for personal organizing. A *memory* is one area of life, either a **project memory** (projects with tasks, notes, files, plus a to-do list) or a **collection memory** (items such as clothing or vehicles with fields and logs). Also: Home dashboard, Calendar, Day Plan, Reminders (Windows notifications), Quick Notes, global search, export (Excel/Word/PDF), backup/restore, a guided tour. UI languages: English, Hungarian, Serbian (Latin).
+
+## Layout
+- `TidyMind/` the app (one project, flat): windows/views (`*.xaml` + `.xaml.cs`), data layer (`*Store.cs`, `*Service.cs`, `Profile.cs`, `Project.cs`, `Entity.cs`, …), `Loc.cs`/`Msg.cs`/`Strings*.resx` (localization).
+- `installer/` Inno Setup script `TidyMind.iss`, `build-installer.ps1`, `TERMS.txt`, `PRIVACY.txt`. Output goes to `dist/` (git-ignored).
+- `tests/Harness/` console harness that starts the real app (`App.OnStartup`) against a **temp** data folder and drives it.
+- `noslop-reports/` review notes, screenshots, glossary. Git-ignored, never committed.
+
+## Data storage
+- Everything lives in `%LOCALAPPDATA%\TidyMind` (`AppPaths.DataFolder`, `AppPaths.Data(name)`); never build paths from the working directory.
+- Top-level files: `profiles.json` (the memories), `reminders.json`, `calendar.json`, `quicktodos.json`, `quicknotes.txt`, `dayplan.json`, `settings.json`; image/attachment folders (`CardImages`, `BackgroundImages`, `EntityImages`, `Attachments`); logs `error.log`, `reminders.log` (always English).
+- Each memory has its own folder `Memories\<Id>\` (named by `Profile.Id`, see `MemoryFiles`): `projects.json` or `entities.json`, `tabs.json`, `todos.json`.
+- Writes go through `AtomicFile` (temp file, then replace). Model classes carry `[JsonExtensionData]` so fields from other versions survive a save.
+- Unreadable file: the `TryLoad` pattern. Say "couldn't read", never save over it (views are read-only then).
+- Migrations (`LegacyDataMigration`, `MemoryLayoutMigration`) never overwrite existing files.
+- A new data type must also be covered by backup/restore (`DataBackup` zips the whole data folder and validates on restore), export (`ExportService`), and search (`SearchIndexBuilder`).
+- Stored values are culture-invariant (dates `yyyy-MM-dd`, numbers with `.`). A restore keeps the current language (`DataBackup.KeepLanguage`).
+
+## Shared helpers: reuse, don't duplicate
+`TextSearch` (accent-insensitive matching) · `TextEditing`/`TextCopy` (inline editors, copy) · `IconButtonStyle`, `HoverIconButtonStyle`, `GhostButtonStyle`, `LinkButtonStyle`, `SegmentStyle`, `SearchBoxStyle`, `NoteInputStyle` (`App.xaml`) · `ImageCache`/`ImageStore`/`EntityImages` (pictures) · `AttachmentStore` · `EntityTypes` (field/log definitions, `Values`, `Expiry`, `Choices`) with `LogEditor` · `CardEffects`, `DragReorder`, `CardSelectionController`, `SwatchRow` · `AgendaMenus` · reminders: `ReminderManager`, `ReminderForm`, `ReminderActions` · Day Plan: `DayPlanStore`, `DayPlanBlock`, `DayPlanActions`, `DayPlanReminders`, `DayPlanTodos`, `DayPlanView`, `DayPlanBlockDialog`.
+
+## Reminders
+- Each reminder is one Task Scheduler task `TidyMind_Reminder_<Id>` running `TidyMind.exe --remind "<Id>"` (no UI) at its next time; repeating ones are re-registered after firing.
+- `reminders.json` changes run under the named mutex `Local\TidyMind_Reminders` in `ReminderManager`. The app itself is single-instance (`Local\TidyMind_SingleInstance`).
+- Toast: sent under the AppUserModelID `TidyMind.App` (`App.UserModelId`, must equal the installer's `MyAppUserModelId`; the Start Menu shortcut carries it). Falls back to a tray balloon. The text uses the saved language (`Loc.Initialize` runs before `--remind` is handled).
+- The uninstaller runs `TidyMind.exe --remove-reminder-tasks`; the app also repairs missing/stale tasks at start (`RepairTasksInBackground`).
+
+## Installer
+- Build: `powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1` → `dist\TidyMind-Setup-<version>.exe` (needs Inno Setup 6).
+- **Never change `AppId`** in `TidyMind.iss` (upgrades and uninstall find the install by it).
+- Per-user install, no admin. Uninstall keeps `%LOCALAPPDATA%\TidyMind` unless the user answers Yes to the "delete data?" prompt (silent uninstall always keeps it).
+- Wizard languages: English + Hungarian only, following the Windows UI language. Inno Setup ships no Serbian file, so Serbian is not offered. TERMS.txt/PRIVACY.txt are English only.
+
+## Localization
+- All user-visible text goes through `Loc.T/F/Plural` or `{local:Tr Key}` in XAML, and every key must exist in all three files: `Strings.resx` (English), `Strings.hu.resx`, `Strings.sr-Latn.resx`. Keys are named by area (`Home.Tile.Projects.Title`); full sentences with `{0}` placeholders, never concatenated fragments.
+- Counts use `Loc.Plural(key, n, …)` with `key.One/.Few/.Other` (en: One/Other; hu: Other only; sr: One/Few/Other).
+- Message boxes use `Msg.Show` (buttons in the app language), not `MessageBox.Show`.
+- Code-built UI that stays open must redraw on a switch: `Loc.Track(element, refresh)`.
+- **Stored data never contains display strings.** Stored values stay English invariant identifiers (entity types, choice values such as Material, `DayPlanReminders.ReminderTitle`); look display text up at runtime (`Choices.Label`, `ShownTitle`). User content and the Welcome sample are never retranslated.
+- The notebook/description `RichTextBox`es in `ProjectWindow.xaml` have `Language="en-US"` on purpose: WPF writes `xml:lang` into stored text, so a changing UI language would rewrite saved notes.
+- Search folds `đ/Đ` to `d` by hand in `TextSearch` (it doesn't decompose); the other hu/sr letters fold through normalization.
+- Check: `dotnet bin\Debug\net10.0-windows10.0.19041.0\Harness.dll loc <tempData> <shotsDir>` (key parity, placeholders, no unused keys, hardcoded-text scan, all windows in 3 languages, live switching). Edit the `.resx` files directly.
+
+## Commands
+```
+dotnet build TidyMind\TidyMind.csproj                       # must be 0 warnings
+dotnet build tests\Harness\Harness.csproj
+cd tests\Harness
+dotnet bin\Debug\net10.0-windows10.0.19041.0\Harness.dll <mode> <tempDataFolder> [shotsFolder|uiCulture]
+```
+Modes: `ui` (tour + Home), `plan` (Day Plan), `loc` (localization), `locfirst <data> <hu-HU|sr-Cyrl-RS|de-DE>` (first-launch language), `locdata1` then `locdata2` on the same folder (data byte-identical across switches and a restart), `toast <data> [en|hu|sr-Latn]` (sends one real notification). The harness refuses a data folder inside the real one and stops if real `TidyMind_Reminder_*` tasks exist; reminder tests create and remove tasks.
+
+## Hard rules
+- **Never start the app against the real data folder.** Tests and manual runs use a temp data folder (the harness redirects `AppPaths.DataFolder`).
+- Do not commit or push unless asked. `noslop-reports/` and `dist/` are git-ignored.
+- The build must have 0 warnings.

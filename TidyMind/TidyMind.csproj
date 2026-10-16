@@ -2,7 +2,10 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <!-- The Windows 10 version brings in the Windows API for reminder notifications (ReminderManager). Runs from
+         1607 on, like the installer's MinVersion; the analyzer flags any call that needs a newer Windows. -->
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.14393.0</SupportedOSPlatformVersion>
     <Nullable>annotations</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>

@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -42,13 +41,13 @@ namespace TidyMind
         private static ContextMenu ForEntry(DependencyObject owner, DateTime date, string copyText, Action changed,
             Func<bool> edit, Func<bool> delete)
         {
-            MenuItem editItem = new MenuItem { Header = "Edit" };
+            MenuItem editItem = new MenuItem { Header = Loc.T("Common.Edit") };
             editItem.Click += (s, e) =>
             {
                 if (edit())
                     changed();
             };
-            MenuItem deleteItem = new MenuItem { Header = "Delete" };
+            MenuItem deleteItem = new MenuItem { Header = Loc.T("Common.Delete") };
             deleteItem.Click += (s, e) =>
             {
                 if (delete())
@@ -69,7 +68,7 @@ namespace TidyMind
         {
             MenuItem item = new MenuItem
             {
-                Header = "Add Reminder",
+                Header = Loc.T("Common.AddReminder"),
                 IsEnabled = date.Date >= DateTime.Today // a reminder can't fire in the past
             };
             item.Click += (s, e) =>
@@ -83,17 +82,16 @@ namespace TidyMind
         // Removes the day's note (title and text); its color stays.
         private static bool ConfirmDeleteNote(DateTime date)
         {
-            MessageBoxResult result = MessageBox.Show(
-                "Delete the note for " + date.ToString("dddd, MMMM d", CultureInfo.InvariantCulture) + "? The day's color stays.",
-                "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            MessageBoxResult result = Msg.Show(
+                Loc.F("Agenda.DeleteNote.Confirm", date.ToString(Loc.T("Format.WeekdayDayMonth"), Loc.Culture)),
+                Loc.T("Common.ConfirmDelete"), MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (result != MessageBoxResult.Yes)
                 return false;
 
             if (CalendarService.DeleteNote(date))
                 return true;
 
-            MessageBox.Show("Couldn't delete the note: calendar.json can't be read or written.", "Couldn't Delete",
-                MessageBoxButton.OK, MessageBoxImage.Warning);
+            Msg.Show(Loc.T("Agenda.DeleteNote.Failed"), Loc.T("Common.CouldntDelete"), MessageBoxButton.OK, MessageBoxImage.Warning);
             return false;
         }
     }

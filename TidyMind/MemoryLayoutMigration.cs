@@ -44,7 +44,7 @@ namespace TidyMind
                 }
 
                 if (!ProfileManager.TrySaveProfiles(profiles))
-                    throw new IOException("profiles.json couldn't be written.");
+                    throw new IOException(Loc.T("Migration.ProfilesFailed"));
                 return true;
             }
             catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
@@ -110,7 +110,7 @@ namespace TidyMind
             string copy = Path.Combine(staging, Path.GetFileName(target));
             File.Copy(source, copy);
             if (!File.ReadAllBytes(source).AsSpan().SequenceEqual(File.ReadAllBytes(copy)))
-                throw new IOException(Path.GetFileName(source) + " didn't copy correctly.");
+                throw new IOException(Loc.F("Migration.CopyFailed", Path.GetFileName(source)));
         }
     }
 }

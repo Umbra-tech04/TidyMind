@@ -107,7 +107,7 @@ namespace TidyMind
             ResultsArea.Visibility = query.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
             ResultsScroller.Visibility = results.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
             MessageText.Visibility = results.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-            MessageText.Text = "Nothing matches “" + query + "”.";
+            MessageText.Text = Loc.F("Search.NoMatch", query);
 
             ResultsScroller.ScrollToTop();
             if (results.Count > 0)
@@ -293,6 +293,7 @@ namespace TidyMind
                 case SearchResultKind.Project: return "\uE7C3"; // page
                 case SearchResultKind.File: return "\uE723";    // paperclip
                 case SearchResultKind.Note: return "\uE70B";    // note
+                case SearchResultKind.PlanBlock: return "\uE823"; // clock
                 default: return "\uE8EC";                       // tag
             }
         }
@@ -301,11 +302,12 @@ namespace TidyMind
         {
             switch (kind)
             {
-                case SearchResultKind.Memory: return "Memory";
-                case SearchResultKind.Project: return "Project";
-                case SearchResultKind.File: return "File";
-                case SearchResultKind.Note: return "Note";
-                default: return "Item";
+                case SearchResultKind.Memory: return Loc.T("Search.Kind.Memory");
+                case SearchResultKind.Project: return Loc.T("Search.Kind.Project");
+                case SearchResultKind.File: return Loc.T("Search.Kind.File");
+                case SearchResultKind.Note: return Loc.T("Search.Kind.Note");
+                case SearchResultKind.PlanBlock: return Loc.T("Search.Kind.Plan");
+                default: return Loc.T("Search.Kind.Item");
             }
         }
 

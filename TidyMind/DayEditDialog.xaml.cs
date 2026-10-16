@@ -1,12 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Shapes;
 
 namespace TidyMind
 {
@@ -14,14 +11,8 @@ namespace TidyMind
     // reminders are a separate thing, added from a day's right-click menu (in the calendar or on Home).
     public partial class DayEditDialog : Window
     {
-        public static readonly string[] Palette =
-        {
-            "#2E7BC4", "#27AE60", "#1ABC9C", "#F2C94C", "#F2994A", "#EB5757", "#E86FB0", "#9B51E0", "#8A8A87"
-        };
-
         private readonly DateTime date;
-        private string selectedColor;
-        private readonly List<KeyValuePair<Border, string>> swatches = new List<KeyValuePair<Border, string>>();
+        private readonly SwatchRow swatches;
 
         private DayEditDialog(DateTime date)
         {
@@ -30,19 +21,19 @@ namespace TidyMind
 
             // A note from before titles existed opens split: its first line as the title, the rest as the note.
             CalendarDay day = CalendarService.GetDay(CalendarService.LoadDays(), this.date);
-            selectedColor = day?.ColorHex;
             TitleInput.Text = day?.Heading() ?? "";
             NoteInput.Text = day?.Body() ?? "";
             ClearButton.Visibility = day != null ? Visibility.Visible : Visibility.Collapsed;
 
-            Title = this.date.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture);
-            HeadingText.Text = this.date.ToString("dddd, MMMM d", CultureInfo.InvariantCulture);
-            SubheadingText.Text = this.date.Year + (this.date == DateTime.Today ? "  ·  Today" : "");
+            Title = this.date.ToString(Loc.T("Format.LongDate"), Loc.Culture);
+            HeadingText.Text = this.date.ToString(Loc.T("Format.WeekdayDayMonth"), Loc.Culture);
+            SubheadingText.Text = this.date.Year.ToString(CultureInfo.InvariantCulture)
+                + (this.date == DateTime.Today ? "  ·  " + Loc.T("Common.Today") : "");
+            DayPlanStore.TryLoad(out DayPlanFile plan);
+            int planned = plan.Blocks.Count(b => b.Date.Date == this.date);
+            OpenPlanButton.Content = planned == 0 ? Loc.T("Day.PlanThisDay") : Loc.Plural("Day.OpenPlan", planned);
 
-            AddSwatch(null);
-            foreach (string hex in Palette)
-                AddSwatch(hex);
-            PaintSwatches();
+            swatches = new SwatchRow(SwatchPanel, day?.ColorHex);
             opened = CurrentInput();
 
             Loaded += (s, e) =>
@@ -55,13 +46,13 @@ namespace TidyMind
         // What the dialog showed when it opened, to tell whether Esc, Cancel or X would throw anything away.
         private readonly string opened;
 
-        private string CurrentInput() => selectedColor + "\n" + TitleInput.Text + "\n" + NoteInput.Text;
+        private string CurrentInput() => swatches.Selected + "\n" + TitleInput.Text + "\n" + NoteInput.Text;
 
         // Closing without saving (Esc, Cancel, X) asks first when something was changed; Save and Clear don't.
         protected override void OnClosing(CancelEventArgs e)
         {
             if (DialogResult != true && CurrentInput() != opened
-                && MessageBox.Show(this, "Discard changes?", "Unsaved Changes", MessageBoxButton.YesNo,
+                && Msg.Show(this, Loc.T("Common.DiscardChanges"), Loc.T("Common.UnsavedChanges"), MessageBoxButton.YesNo,
                     MessageBoxImage.Question) != MessageBoxResult.Yes)
                 e.Cancel = true;
 
@@ -78,61 +69,21 @@ namespace TidyMind
             else
                 dialog.WindowStartupLocation = WindowStartupLocation.CenterScreen;
 
-            return dialog.ShowDialog() == true;
+            bool saved = dialog.ShowDialog() == true;
+            if (dialog.openPlan)
+                ((MainWindow)Application.Current.MainWindow).ShowDayPlan(date);
+            return saved;
         }
 
-        private void AddSwatch(string hex)
+        private bool openPlan;
+
+        // Closes like Cancel (asking first if something was changed), then the day's plan opens.
+        private void OpenPlanButton_Click(object sender, RoutedEventArgs e)
         {
-            Border fill = new Border
-            {
-                CornerRadius = new CornerRadius(11),
-                Background = hex == null ? Brushes.White : B(hex)
-            };
-
-            if (hex == null)
-            {
-                // "No colour": a white dot with a thin diagonal slash.
-                fill.BorderBrush = B("#D5D5D2");
-                fill.BorderThickness = new Thickness(1);
-                fill.Child = new Line
-                {
-                    X1 = 16, Y1 = 5, X2 = 5, Y2 = 16,
-                    Stroke = B("#BDBDB9"),
-                    StrokeThickness = 1.5
-                };
-            }
-
-            Border ring = new Border
-            {
-                Width = 30,
-                Height = 30,
-                CornerRadius = new CornerRadius(15),
-                BorderThickness = new Thickness(2),
-                Padding = new Thickness(2),
-                Margin = new Thickness(0, 0, 4, 0),
-                Cursor = Cursors.Hand,
-                Background = Brushes.Transparent,
-                ToolTip = hex == null ? "No color" : null,
-                Child = fill
-            };
-
-            CardEffects.AttachClick(ring, () =>
-            {
-                selectedColor = hex;
-                PaintSwatches();
-            });
-
-            swatches.Add(new KeyValuePair<Border, string>(ring, hex));
-            SwatchPanel.Children.Add(ring);
-        }
-
-        private void PaintSwatches()
-        {
-            foreach (KeyValuePair<Border, string> swatch in swatches)
-            {
-                bool selected = string.Equals(swatch.Value, selectedColor, StringComparison.OrdinalIgnoreCase);
-                swatch.Key.BorderBrush = selected ? (Brush)FindResource("TextMain") : Brushes.Transparent;
-            }
+            openPlan = true;
+            Close();
+            if (IsVisible)
+                openPlan = false; // "Discard changes?" was answered No: stay here
         }
 
         // ---- Title and note -----------------------------------------------
@@ -162,7 +113,7 @@ namespace TidyMind
 
         private void Save()
         {
-            if (CalendarService.SaveDay(date, selectedColor, TitleInput.Text, NoteInput.Text))
+            if (CalendarService.SaveDay(date, swatches.Selected, TitleInput.Text, NoteInput.Text))
                 DialogResult = true;
             else
                 ShowSaveFailed();
@@ -179,8 +130,7 @@ namespace TidyMind
         // The dialog stays open, so the typed note isn't lost and saving can be tried again.
         private void ShowSaveFailed()
         {
-            MessageBox.Show(this, "Couldn't save: calendar.json can't be read or written. Your other calendar days were left untouched.",
-                "Couldn't Save", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Msg.Show(this, Loc.T("Day.SaveFailed"), Loc.T("Common.CouldntSave"), MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         // Enter belongs to the note (new line); Ctrl+Enter saves.
@@ -191,11 +141,6 @@ namespace TidyMind
                 Save();
                 e.Handled = true;
             }
-        }
-
-        private static SolidColorBrush B(string hex)
-        {
-            return new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
         }
     }
 }

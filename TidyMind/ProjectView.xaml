@@ -34,11 +34,12 @@
                 <StackPanel x:Name="Toolbar" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                     <TextBox x:Name="SearchBox" Style="{StaticResource SearchBoxStyle}"
                              Width="240" Margin="0,0,10,0"
-                             Foreground="{StaticResource TextSub}" Text="Search..."
-                             GotFocus="SearchBox_GotFocus" LostFocus="SearchBox_LostFocus"
+                             Tag="{local:Tr Common.SearchPlaceholder}"
+                             AutomationProperties.Name="{local:Tr Common.SearchPlaceholder}"
                              TextChanged="SearchBox_TextChanged"/>
-                    <Button Content="+  Add Project" Height="36" Padding="16,0"
-                            Click="AddProjectButton_Click"/>
+                    <Button Height="36" Padding="16,0" Click="AddProjectButton_Click">
+                        <TextBlock><Run Text="+  "/><Run Text="{local:Tr Project.Add}"/></TextBlock>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
@@ -57,8 +58,8 @@
         <ScrollViewer x:Name="CardScroll" Grid.Row="3" VerticalScrollBarVisibility="Auto" Padding="16,0,16,24">
             <Grid x:Name="CardArea">
                 <WrapPanel x:Name="ProjectPanel"/>
-                <TextBlock x:Name="EmptyState" Text="No projects yet. Click “+ Add Project” to start."
-                           FontSize="13" Foreground="{StaticResource TextSub}"
+                <TextBlock x:Name="EmptyState"
+                           FontSize="13" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="520" Foreground="{StaticResource TextSub}"
                            HorizontalAlignment="Center" Margin="0,60,0,0"
                            Visibility="Collapsed"/>
                 <Canvas x:Name="MarqueeCanvas" IsHitTestVisible="False"/>

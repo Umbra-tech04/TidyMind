@@ -68,8 +68,8 @@ namespace TidyMind
         protected override void OnClosing(CancelEventArgs e)
         {
             // Closing stops a file still being copied in (nothing half-copied is kept), so ask first.
-            if (Files.IsCopying && MessageBox.Show(this, "Files are still being added. Stop adding them and close?",
-                    "Files Still Copying", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+            if (Files.IsCopying && Msg.Show(this, Loc.T("ProjectWindow.StillCopying"), Loc.T("ProjectWindow.StillCopyingCaption"),
+                    MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
             {
                 e.Cancel = true;
                 return;
@@ -201,11 +201,11 @@ namespace TidyMind
             ContextMenu menu = new ContextMenu();
 
             MenuItem renameItem = new MenuItem();
-            renameItem.Header = "Rename";
+            renameItem.Header = Loc.T("Common.Rename");
             renameItem.Click += (s, args) => RenameTask(task);
 
             MenuItem deleteItem = new MenuItem();
-            deleteItem.Header = "Delete";
+            deleteItem.Header = Loc.T("Common.Delete");
             deleteItem.Click += (s, args) => DeleteTask(task);
 
             menu.Items.Add(renameItem);
@@ -222,8 +222,8 @@ namespace TidyMind
 
         private void RenameTask(TaskItem task)
         {
-            string newTitle = InputDialog.Prompt(this, "Rename Task", "Enter a new name for this task.",
-                task.Title, "Rename");
+            string newTitle = InputDialog.Prompt(this, Loc.T("ProjectWindow.RenameTask"), Loc.T("ProjectWindow.RenameTaskPrompt"),
+                task.Title, Loc.T("Common.Rename"));
             if (string.IsNullOrWhiteSpace(newTitle) || newTitle == task.Title) return;
             task.Title = newTitle;
             TaskList.Items.Refresh();
@@ -307,7 +307,8 @@ namespace TidyMind
             // With one page the button clears it instead (nothing to do on an empty one).
             bool single = pages.Count == 1;
             SetEnabled(DeletePageButton, !single || !CurrentPageIsBlank());
-            DeletePageButton.ToolTip = single ? "Clear page" : "Delete page";
+            DeletePageButton.ToolTip = Loc.T(single ? "ProjectWindow.ClearPage" : "ProjectWindow.DeletePage");
+            System.Windows.Automation.AutomationProperties.SetName(DeletePageButton, (string)DeletePageButton.ToolTip);
         }
 
         private static void SetEnabled(Button button, bool enabled)
@@ -399,8 +400,8 @@ namespace TidyMind
         {
             if (pages.Count <= 1)
             {
-                if (CurrentPageIsBlank() || MessageBox.Show(this, "Clear this page and everything written on it?",
-                        "Confirm Clear", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                if (CurrentPageIsBlank() || Msg.Show(this, Loc.T("ProjectWindow.ClearPageConfirm"), Loc.T("ProjectWindow.ClearPageCaption"),
+                        MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
                     return;
 
                 NotesBox.Document.Blocks.Clear();
@@ -408,8 +409,8 @@ namespace TidyMind
                 return;
             }
 
-            if (!CurrentPageIsBlank() && MessageBox.Show(this, "Delete page " + (currentPage + 1) + " and everything written on it?",
-                    "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            if (!CurrentPageIsBlank() && Msg.Show(this, Loc.F("ProjectWindow.DeletePageConfirm", currentPage + 1), Loc.T("Common.ConfirmDelete"),
+                    MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
                 return;
 
             pages.RemoveAt(currentPage);
@@ -444,7 +445,7 @@ namespace TidyMind
             {
                 int page = i;
                 string firstLine = RichTextHelper.ToPlainText(pageBodies[i]).Split('\n')
-                    .Select(line => line.Trim()).FirstOrDefault(line => line.Length > 0) ?? "(empty)";
+                    .Select(line => line.Trim()).FirstOrDefault(line => line.Length > 0) ?? Loc.T("ProjectWindow.EmptyPage");
                 Button row = new Button
                 {
                     Content = (i + 1) + ". " + firstLine,

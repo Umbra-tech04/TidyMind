@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TidyMind"
         mc:Ignorable="d"
-        Title="Export" Width="340"
+        Title="{local:Tr Export.Caption}" Width="340"
         SizeToContent="Height"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
@@ -50,12 +50,12 @@
 
         <Border Grid.Row="0" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
                 BorderThickness="0,0,0,1" Padding="20,16">
-            <TextBlock Text="Export" FontSize="18" FontWeight="Bold"
+            <TextBlock Text="{local:Tr Export.Caption}" FontSize="18" FontWeight="Bold"
                        Foreground="{StaticResource TextMain}"/>
         </Border>
 
         <StackPanel Grid.Row="1" Margin="20,20,20,10">
-            <TextBlock Text="Choose export format" Foreground="{StaticResource TextSub}"
+            <TextBlock Text="{local:Tr Export.ChooseFormat}" Foreground="{StaticResource TextSub}"
                        FontSize="11" Margin="0,0,0,14"/>
 
             <Button Style="{StaticResource ExportOptionButton}"
@@ -64,7 +64,7 @@
                     <TextBlock Text="📊" FontSize="22" VerticalAlignment="Center" Margin="0,0,14,0"/>
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="Excel (XLSX)" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextMain}"/>
-                        <TextBlock Text="Native Excel spreadsheet" FontSize="10" Foreground="{StaticResource TextSub}"/>
+                        <TextBlock Text="{local:Tr Export.ExcelNote}" FontSize="10" TextWrapping="Wrap" Foreground="{StaticResource TextSub}"/>
                     </StackPanel>
                 </StackPanel>
             </Button>
@@ -75,7 +75,7 @@
                     <TextBlock Text="📝" FontSize="22" VerticalAlignment="Center" Margin="0,0,14,0"/>
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="Word (DOCX)" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextMain}"/>
-                        <TextBlock Text="Formatted document with images" FontSize="10" Foreground="{StaticResource TextSub}"/>
+                        <TextBlock Text="{local:Tr Export.WordNote}" FontSize="10" TextWrapping="Wrap" Foreground="{StaticResource TextSub}"/>
                     </StackPanel>
                 </StackPanel>
             </Button>
@@ -86,14 +86,14 @@
                     <TextBlock Text="📄" FontSize="22" VerticalAlignment="Center" Margin="0,0,14,0"/>
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="PDF" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextMain}"/>
-                        <TextBlock Text="Printable document with images" FontSize="10" Foreground="{StaticResource TextSub}"/>
+                        <TextBlock Text="{local:Tr Export.PdfNote}" FontSize="10" TextWrapping="Wrap" Foreground="{StaticResource TextSub}"/>
                     </StackPanel>
                 </StackPanel>
             </Button>
         </StackPanel>
 
         <Border Grid.Row="2" Padding="20,10">
-            <Button x:Name="CancelButton" Content="Cancel"
+            <Button x:Name="CancelButton" Content="{local:Tr Common.Cancel}"
                     Style="{StaticResource GhostButtonStyle}"
                     Height="30" Width="90" HorizontalAlignment="Right"
                     Click="CancelButton_Click"/>

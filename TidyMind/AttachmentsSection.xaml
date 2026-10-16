@@ -1,6 +1,7 @@
 <UserControl x:Class="TidyMind.AttachmentsSection"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:TidyMind">
     <StackPanel>
         <!-- Drop zone: files dropped here (or picked with Browse) are copied in and listed below. Solid accent
              border and a light tint while files are dragged over it. -->
@@ -16,9 +17,9 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="&#xE898;" FontFamily="Segoe MDL2 Assets" FontSize="16"
                            Foreground="{StaticResource TextSub}" VerticalAlignment="Center" Margin="2,0,12,0"/>
-                <TextBlock Grid.Column="1" Text="Drop files here or" FontSize="13"
+                <TextBlock Grid.Column="1" Text="{local:Tr Files.DropHere}" FontSize="13" TextWrapping="Wrap"
                            Foreground="{StaticResource TextSub}" VerticalAlignment="Center"/>
-                <Button Grid.Column="2" Content="Browse..." Style="{StaticResource GhostButtonStyle}"
+                <Button Grid.Column="2" Content="{local:Tr Files.Browse}" Style="{StaticResource GhostButtonStyle}"
                         Height="32" Padding="14,0" Click="BrowseButton_Click"/>
             </Grid>
         </Border>
