@@ -8,13 +8,28 @@ using System.Windows.Shapes;
 namespace TidyMind
 {
     // A memory's page background (Edit Background, projects and collections), drawn behind everything on the page.
-    // It stays faint by design, so every dark-on-light element on top (header, search box, tabs, cards) keeps
-    // working unchanged: a palette color is laid over the off-white page at low opacity; a picture is washed out
-    // under white.
+    // A palette color stays a faint tint over the off-white page. A picture shows as clearly as Settings > Background
+    // pictures says (ImageVisibility), under a thin white film; the page puts its header and tabs on a light plate
+    // over it (MemoryPageBackground), so dark text stays readable on bright, dark and busy photos.
     public static class PageBackground
     {
         public const double ColorOpacity = 0.18; // a tint, not a fill
-        public const double ImageWash = 0.82;    // white over the picture: a watermark, not a photo
+
+        public const int DefaultImageVisibility = 70;
+        public const int MinImageVisibility = 20;
+
+        // One film for every picture on screen: the slider changes it live, everywhere at once.
+        private static readonly SolidColorBrush ImageWash = new SolidColorBrush(Colors.White);
+
+        static PageBackground() => ImageVisibility = AppSettings.Load().BackgroundImageVisibility ?? DefaultImageVisibility;
+
+        // How much of a background picture shows, in percent: 100 the photo as it is, MinImageVisibility a faint
+        // watermark. The white film over it is the rest.
+        public static int ImageVisibility
+        {
+            get => (int)System.Math.Round((1 - ImageWash.Opacity) * 100);
+            set => ImageWash.Opacity = 1 - System.Math.Clamp(value, MinImageVisibility, 100) / 100.0;
+        }
 
         // Fills `layer` (a panel spanning the page, behind its content, over the off-white base) for a background.
         // `image` overrides the stored picture (a dialog preview). Nothing is drawn for None or a missing picture.
@@ -47,7 +62,7 @@ namespace TidyMind
         private static void AddPicture(Panel layer, ImageSource picture)
         {
             layer.Children.Add(new Rectangle { Fill = new ImageBrush(picture) { Stretch = Stretch.UniformToFill } });
-            layer.Children.Add(new Rectangle { Fill = Brushes.White, Opacity = ImageWash });
+            layer.Children.Add(new Rectangle { Fill = ImageWash });
         }
 
         // Added on the layer's own UI thread once decoded; skipped if the layer has been refilled since (another

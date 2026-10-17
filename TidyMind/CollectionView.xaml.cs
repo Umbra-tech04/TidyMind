@@ -42,7 +42,7 @@ namespace TidyMind
             };
             memory = profile;
             // An open item overlay isn't empty page: no background menu there.
-            MemoryPageBackground.Attach(Page, BackgroundLayer, profile, saveProfiles, OverlayGrid);
+            MemoryPageBackground.Attach(Page, BackgroundLayer, profile, saveProfiles, HeaderPlate, OverlayGrid);
             TitleText.Text = profile.Name;
 
             // Counts, cards, an open detail card and the reason a file couldn't be read, in the new language; names

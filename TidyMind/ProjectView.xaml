@@ -18,6 +18,15 @@
         <!-- The memory's own background (Edit Background), behind everything -->
         <Grid x:Name="BackgroundLayer" Grid.RowSpan="4" IsHitTestVisible="False" ClipToBounds="True"/>
 
+        <!-- On a background picture: a light plate behind the header and tabs, so their text reads on any photo
+             (MemoryPageBackground shows it). Its own element, so the shadow doesn't fall on the text. -->
+        <Border x:Name="HeaderPlate" Grid.RowSpan="3" Margin="14,12,14,0" CornerRadius="14" Background="{StaticResource BgPlate}"
+                IsHitTestVisible="False" Visibility="Collapsed">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="18" ShadowDepth="2" Opacity="0.16" Color="#000000"/>
+            </Border.Effect>
+        </Border>
+
         <!-- Header -->
         <Border Grid.Row="0" Padding="28,24,28,16">
             <Grid>
@@ -60,6 +69,7 @@
                 <WrapPanel x:Name="ProjectPanel"/>
                 <TextBlock x:Name="EmptyState"
                            FontSize="13" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="520" Foreground="{StaticResource TextSub}"
+                           Background="{StaticResource BgPlate}" Padding="16,10"
                            HorizontalAlignment="Center" Margin="0,60,0,0"
                            Visibility="Collapsed"/>
                 <Canvas x:Name="MarqueeCanvas" IsHitTestVisible="False"/>

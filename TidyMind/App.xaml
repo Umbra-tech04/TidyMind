@@ -9,6 +9,7 @@
         <SolidColorBrush x:Key="BgPanel"      Color="#FFFFFF"/>
         <SolidColorBrush x:Key="BgInput"      Color="#FFFFFF"/>
         <SolidColorBrush x:Key="BgSubtle"     Color="#F0F0EE"/>
+        <SolidColorBrush x:Key="BgPlate"      Color="#E0F5F5F3"/> <!-- BgMain at 88%: under text on a background picture -->
         <SolidColorBrush x:Key="TextMain"     Color="#1C1B19"/>
         <SolidColorBrush x:Key="TextSub"      Color="#6E6E6B"/> <!-- 5.1:1 on white, 4.7:1 on BgMain (readable small text) -->
         <SolidColorBrush x:Key="TextBody"     Color="#3A3936"/> <!-- secondary reading text: softer than TextMain, darker than TextSub -->

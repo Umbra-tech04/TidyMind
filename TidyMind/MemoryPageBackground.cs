@@ -14,13 +14,16 @@ namespace TidyMind
     {
         // page: the view's root grid; layer: a panel spanning it, behind its content.
         // saveProfiles: writes the main window's list of memories (the profile is an item of that list).
-        // excluded: parts of the page whose right-clicks aren't "empty space" (e.g. an open detail overlay).
-        public static void Attach(Grid page, Panel layer, Profile profile, Func<bool> saveProfiles, params FrameworkElement[] excluded)
+        // plate: drawn behind the page's header and tabs while a picture is the background, so their text stays
+        // readable on it. excluded: parts of the page whose right-clicks aren't "empty space" (e.g. an open detail
+        // overlay).
+        public static void Attach(Grid page, Panel layer, Profile profile, Func<bool> saveProfiles, FrameworkElement plate,
+            params FrameworkElement[] excluded)
         {
-            Show(layer, profile);
+            Show(layer, profile, plate);
 
             MenuItem edit = new MenuItem { Header = Loc.T("Background.Edit") };
-            edit.Click += (s, e) => Edit(page, layer, profile, saveProfiles);
+            edit.Click += (s, e) => Edit(page, layer, profile, saveProfiles, plate);
             page.ContextMenu = new ContextMenu { Items = { edit } };
             page.ContextMenu.Opened += (s, e) => edit.Header = Loc.T("Background.Edit"); // in the language of the moment
 
@@ -39,14 +42,15 @@ namespace TidyMind
             };
         }
 
-        private static void Show(Panel layer, Profile profile)
+        private static void Show(Panel layer, Profile profile, FrameworkElement plate)
         {
             PageBackground.Fill(layer, profile.BackgroundType, profile.BackgroundColor, storedImage: profile.BackgroundImagePath);
+            plate.Visibility = profile.BackgroundType == BackgroundFill.Image ? Visibility.Visible : Visibility.Collapsed;
         }
 
         // A picked picture is copied into BackgroundImages/ and an old one deleted only once the save worked
         // (BackgroundChoice.ApplyTo).
-        private static void Edit(Grid page, Panel layer, Profile profile, Func<bool> saveProfiles)
+        private static void Edit(Grid page, Panel layer, Profile profile, Func<bool> saveProfiles, FrameworkElement plate)
         {
             BackgroundChoice choice = MemoryBackgroundDialog.Choose(page, profile);
             if (choice == null)
@@ -61,7 +65,7 @@ namespace TidyMind
             }, ImageStore.Backgrounds);
 
             if (!saved) return;
-            Show(layer, profile);
+            Show(layer, profile, plate);
             TourSignals.Raise(TourSignals.PageBackgroundChanged);
         }
 

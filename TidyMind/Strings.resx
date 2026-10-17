@@ -1865,6 +1865,15 @@ The file was left as it is. Fix it or restore it from a backup to see and add re
   <data name="Selection.DeleteSelected" xml:space="preserve">
     <value>Delete {0} selected</value>
   </data>
+  <data name="Settings.BackgroundImage.Note" xml:space="preserve">
+    <value>How clearly a memory&apos;s background picture shows behind its page.</value>
+  </data>
+  <data name="Settings.BackgroundImage.Title" xml:space="preserve">
+    <value>Background pictures</value>
+  </data>
+  <data name="Settings.BackgroundImage.Value" xml:space="preserve">
+    <value>{0}%</value>
+  </data>
   <data name="Settings.Backup.Button" xml:space="preserve">
     <value>Back up…</value>
   </data>

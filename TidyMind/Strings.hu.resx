@@ -1787,6 +1787,15 @@ A fájl változatlan maradt. Javítsd ki, vagy állítsd vissza egy mentésből,
   <data name="Selection.DeleteSelected" xml:space="preserve">
     <value>Kijelöltek törlése ({0})</value>
   </data>
+  <data name="Settings.BackgroundImage.Note" xml:space="preserve">
+    <value>Mennyire jól látszik egy memória háttérképe az oldala mögött.</value>
+  </data>
+  <data name="Settings.BackgroundImage.Title" xml:space="preserve">
+    <value>Háttérképek</value>
+  </data>
+  <data name="Settings.BackgroundImage.Value" xml:space="preserve">
+    <value>{0}%</value>
+  </data>
   <data name="Settings.Backup.Button" xml:space="preserve">
     <value>Biztonsági mentés…</value>
   </data>

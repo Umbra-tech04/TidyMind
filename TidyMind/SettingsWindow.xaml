@@ -87,23 +87,44 @@
 
         <TextBlock Text="{local:Tr Settings.Section.General}" Style="{StaticResource SectionLabelStyle}" Margin="2,16,0,8"/>
         <Border Style="{StaticResource CardStyle}">
-            <Grid Style="{StaticResource RowStyle}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="{local:Tr Settings.Language.Title}" Style="{StaticResource RowTitleStyle}"/>
-                    <TextBlock Text="{local:Tr Settings.Language.Note}" Style="{StaticResource RowNoteStyle}"/>
-                </StackPanel>
-                <!-- English / Magyar / Srpski, each named in its own language (filled from Loc.Languages) -->
-                <Border Grid.Column="1" Margin="16,0,0,0" Height="32" Padding="2" VerticalAlignment="Center"
-                        Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
-                        BorderThickness="1" CornerRadius="4">
-                    <StackPanel x:Name="LanguageChoices" Orientation="Horizontal"
-                                AutomationProperties.Name="{local:Tr Settings.Language.Title}"/>
-                </Border>
-            </Grid>
+            <StackPanel>
+                <Grid Style="{StaticResource RowStyle}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{local:Tr Settings.Language.Title}" Style="{StaticResource RowTitleStyle}"/>
+                        <TextBlock Text="{local:Tr Settings.Language.Note}" Style="{StaticResource RowNoteStyle}"/>
+                    </StackPanel>
+                    <!-- English / Magyar / Srpski, each named in its own language (filled from Loc.Languages) -->
+                    <Border Grid.Column="1" Margin="16,0,0,0" Height="32" Padding="2" VerticalAlignment="Center"
+                            Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
+                            BorderThickness="1" CornerRadius="4">
+                        <StackPanel x:Name="LanguageChoices" Orientation="Horizontal"
+                                    AutomationProperties.Name="{local:Tr Settings.Language.Title}"/>
+                    </Border>
+                </Grid>
+                <Border Style="{StaticResource RowDividerStyle}"/>
+                <!-- How clearly a memory's background picture shows (PageBackground.ImageVisibility); applies as it moves -->
+                <Grid Style="{StaticResource RowStyle}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{local:Tr Settings.BackgroundImage.Title}" Style="{StaticResource RowTitleStyle}"/>
+                        <TextBlock Text="{local:Tr Settings.BackgroundImage.Note}" Style="{StaticResource RowNoteStyle}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                        <Slider x:Name="BackgroundVisibilitySlider" Width="150" Minimum="20" Maximum="100" SmallChange="5"
+                                LargeChange="10" TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center"
+                                AutomationProperties.Name="{local:Tr Settings.BackgroundImage.Title}"/>
+                        <TextBlock x:Name="BackgroundVisibilityText" Width="40" Margin="8,0,0,0" TextAlignment="Right"
+                                   VerticalAlignment="Center" Foreground="{StaticResource TextSub}"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
         </Border>
 
         <TextBlock Text="{local:Tr Settings.Section.Notifications}" Style="{StaticResource SectionLabelStyle}"/>

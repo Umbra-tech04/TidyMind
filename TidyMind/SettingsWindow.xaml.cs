@@ -12,6 +12,10 @@ namespace TidyMind
     {
         private readonly Action onExportAll;
 
+        // The slider applies at once; settings.json is written once it rests, not on every step of a drag.
+        private readonly System.Windows.Threading.DispatcherTimer backgroundSave =
+            new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
+
         public SettingsWindow(Action onExportAll)
         {
             InitializeComponent();
@@ -22,6 +26,16 @@ namespace TidyMind
             BuildLanguageChoices();
             // Taller than a small screen: it scrolls instead of running off it.
             MaxHeight = SystemParameters.WorkArea.Height - 24;
+            BackgroundVisibilitySlider.Value = PageBackground.ImageVisibility;
+            BackgroundVisibilitySlider.ValueChanged += BackgroundVisibilitySlider_ValueChanged;
+            ShowBackgroundVisibility();
+            Loc.Track(this, ShowBackgroundVisibility);
+            backgroundSave.Tick += (s, e) => SaveBackgroundVisibility();
+            Closed += (s, e) =>
+            {
+                if (backgroundSave.IsEnabled)
+                    SaveBackgroundVisibility(); // closed right after a change
+            };
             AutoUpdateSwitch.IsChecked = AppSettings.Load().CheckForUpdates != false;
             ShowUpdates();
             Loc.Track(this, ShowUpdates);
@@ -218,6 +232,29 @@ namespace TidyMind
         }
 
         // Not remembered if settings.json can't be written; the switch then shows what's stored.
+        // Every background picture on screen follows the slider as it moves (the open page behind this window too).
+        private void BackgroundVisibilitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            int percent = (int)Math.Round(e.NewValue);
+            if (percent == PageBackground.ImageVisibility)
+                return;
+            PageBackground.ImageVisibility = percent;
+            ShowBackgroundVisibility();
+            backgroundSave.Stop();
+            backgroundSave.Start();
+        }
+
+        private void ShowBackgroundVisibility() =>
+            BackgroundVisibilityText.Text = Loc.F("Settings.BackgroundImage.Value", PageBackground.ImageVisibility);
+
+        // The default isn't written out (null), so a later default can still reach whoever never moved the slider.
+        private void SaveBackgroundVisibility()
+        {
+            backgroundSave.Stop();
+            int percent = PageBackground.ImageVisibility;
+            AppSettings.Update(s => s.BackgroundImageVisibility = percent == PageBackground.DefaultImageVisibility ? null : percent);
+        }
+
         private void AutoUpdateSwitch_Click(object sender, RoutedEventArgs e)
         {
             bool on = AutoUpdateSwitch.IsChecked == true;

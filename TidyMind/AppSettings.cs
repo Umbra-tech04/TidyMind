@@ -29,6 +29,11 @@ namespace TidyMind
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Language { get; set; }
 
+        // Settings > Background pictures: how much of a memory's background picture shows, in percent; null means
+        // PageBackground.DefaultImageVisibility.
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? BackgroundImageVisibility { get; set; }
+
         // Settings > Updates: false turns the automatic check off; null (the default) means on.
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? CheckForUpdates { get; set; }
