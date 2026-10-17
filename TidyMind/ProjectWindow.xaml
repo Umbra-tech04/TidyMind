@@ -183,9 +183,11 @@
                             Click="AddTaskButton_Click"/>
                 </Grid>
 
-                <ListBox x:Name="TaskList" MinHeight="60"
+                <!-- Several tasks at once: Ctrl or Shift+click, Ctrl+A; Delete or a selected row's × deletes them -->
+                <ListBox x:Name="TaskList" MinHeight="60" SelectionMode="Extended"
                          Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
                          BorderThickness="1" Padding="0"
+                         PreviewMouseLeftButtonDown="TaskList_PreviewMouseLeftButtonDown"
                          PreviewMouseRightButtonUp="TaskList_PreviewMouseRightButtonUp"
                          KeyDown="TaskList_KeyDown">
                     <ListBox.Template>
@@ -215,7 +217,7 @@
                         </ItemsPanelTemplate>
                     </ListBox.ItemsPanel>
                     <ListBox.ItemContainerStyle>
-                        <!-- A clean list row: light tint on hover and when selected -->
+                        <!-- A clean list row: light tint on hover; accent tint and edge when selected (SelectionLook) -->
                         <Style TargetType="ListBoxItem">
                             <Setter Property="Padding" Value="10,4,6,4"/>
                             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -224,6 +226,7 @@
                                 <Setter.Value>
                                     <ControlTemplate TargetType="ListBoxItem">
                                         <Border x:Name="row" Background="Transparent" CornerRadius="6"
+                                                BorderBrush="Transparent" BorderThickness="1"
                                                 Padding="{TemplateBinding Padding}" MinHeight="34">
                                             <ContentPresenter VerticalAlignment="Center"/>
                                         </Border>
@@ -233,6 +236,7 @@
                                             </Trigger>
                                             <Trigger Property="IsSelected" Value="True">
                                                 <Setter TargetName="row" Property="Background" Value="{StaticResource AccentSoft}"/>
+                                                <Setter TargetName="row" Property="BorderBrush" Value="{StaticResource Accent}"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>

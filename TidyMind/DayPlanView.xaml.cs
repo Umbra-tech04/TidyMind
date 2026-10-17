@@ -43,6 +43,7 @@ namespace TidyMind
         private List<PlanTodo> todos = new List<PlanTodo>();
         private List<string> unusableTodos = new List<string>();
         private HashSet<Guid> reminders = new HashSet<Guid>();
+        private readonly ItemSelection<Guid> selection;
 
         public DayPlanView(IList<Profile> memories, DateTime date, Guid? select = null)
         {
@@ -51,6 +52,12 @@ namespace TidyMind
             this.date = date.Date;
             focusBlock = select;
             Surface.Height = DayPlanBlock.DayEnd * PerMinute;
+            // By Id: every redraw reads the blocks again. A block's list row and timeline card are one item.
+            selection = new ItemSelection<Guid>(Sheet, DeleteSelected, PaintSelected);
+            selection.ClearOnBlankClick(Sheet);
+            selection.SelectionChanged += UpdateSelectionBar;
+            SelectionBar.DeleteClicked += () => selection.DeleteSelected();
+            SelectionBar.CancelClicked += selection.ClearSelection;
 
             clock.Tick += (s, e) => PlaceNowLine();
             Loaded += (s, e) => clock.Start();
@@ -70,10 +77,18 @@ namespace TidyMind
             reminders = ReminderManager.TryLoadReminders().Select(r => r.Id).ToHashSet();
 
             ShowHeader();
-            ShowList();
-            ShowTimeline();
+            ShowBlocks();
             ShowTodos();
             ShowMode();
+        }
+
+        // Both views, so the selection always knows every block's list row and timeline card.
+        private void ShowBlocks()
+        {
+            selection.BeginRender();
+            ShowList();
+            ShowTimeline();
+            selection.EndRender();
         }
 
         private void ShowDate(DateTime day)
@@ -150,10 +165,13 @@ namespace TidyMind
         private void View_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             bool narrow = e.NewSize.Width < NarrowBelow;
-            Grid.SetRow(HeaderButtons, narrow ? 1 : 0);
-            Grid.SetColumn(HeaderButtons, narrow ? 0 : 1);
-            HeaderButtons.HorizontalAlignment = narrow ? HorizontalAlignment.Left : HorizontalAlignment.Stretch;
-            HeaderButtons.Margin = narrow ? new Thickness(-6, 12, 0, 0) : new Thickness(16, 0, 0, 2);
+            foreach (FrameworkElement place in new FrameworkElement[] { HeaderButtons, SelectionBar })
+            {
+                Grid.SetRow(place, narrow ? 1 : 0);
+                Grid.SetColumn(place, narrow ? 0 : 1);
+                place.HorizontalAlignment = narrow ? HorizontalAlignment.Left : HorizontalAlignment.Stretch;
+                place.Margin = narrow ? new Thickness(-6, 12, 0, 0) : new Thickness(16, 0, 0, 2);
+            }
         }
 
         private void PrevDay_Click(object sender, RoutedEventArgs e) => ShowDate(date.AddDays(-1));
@@ -201,6 +219,81 @@ namespace TidyMind
             if (outcome == DayPlanBlockDialog.Outcome.Saved)
                 focusBlock = block.Id;
             Refresh();
+        }
+
+        // ---- Several blocks at once ---------------------------------------
+
+        // While any block is selected, the selection bar stands in for the header's buttons.
+        private void UpdateSelectionBar()
+        {
+            bool any = selection.Count > 0;
+            SelectionBar.Show(selection.Count);
+            SelectionBar.Visibility = any ? Visibility.Visible : Visibility.Collapsed;
+            HeaderButtons.Visibility = any ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        // List row: the selected fill and edge, else the hover tint and the focus edge as before.
+        private static void PaintListRow(Border row, bool on) =>
+            SelectionLook.PaintRow(row, on, row.IsMouseOver ? Res("BgSubtle") : Brushes.Transparent,
+                row.IsKeyboardFocused ? Res("Accent") : Brushes.Transparent);
+
+        // Timeline card: the accent edge (also its focus look) over its own color, and a check first in its row of
+        // marks (before the link, bell and done box), so nothing on the card is covered.
+        private void PaintSelected(FrameworkElement element, bool on)
+        {
+            Border box = (Border)element;
+            if (box.Parent != Surface)
+            {
+                PaintListRow(box, on);
+                return;
+            }
+            box.BorderBrush = on || box.IsKeyboardFocused ? Res("Accent") : Brushes.Transparent;
+            StackPanel marks = ((Grid)box.Child).Children.OfType<StackPanel>().First(p => Grid.GetColumn(p) == 2);
+            FrameworkElement? badge = marks.Children.OfType<FrameworkElement>().FirstOrDefault(c => c.Tag as string == SelectedBadge);
+            if (on && badge == null)
+            {
+                badge = SelectionLook.CheckBadge(16);
+                badge.Tag = SelectedBadge;
+                badge.VerticalAlignment = VerticalAlignment.Top;
+                badge.Margin = new Thickness(0, 0, 4, 0);
+                marks.Children.Insert(0, badge);
+            }
+            else if (!on && badge != null)
+                marks.Children.Remove(badge);
+        }
+
+        private const string SelectedBadge = "SelectedBadge";
+
+        // A selected row's × takes the whole selection along; otherwise just that block goes.
+        private void DeleteFromRow(DayPlanBlock block)
+        {
+            if (selection.IsSelected(block.Id) && selection.Count > 1)
+                selection.DeleteSelected();
+            else
+                Delete(block);
+        }
+
+        // One question for all of them; each goes the way one does (DayPlanActions). Redrawn either way: a reminder
+        // may have gone even where its block couldn't.
+        // One selected block goes the way Delete on it always went. Several: the keyboard stays in the plan, on the
+        // first block after them, else the one before them, else Add block.
+        private bool DeleteSelected(IReadOnlyList<Guid> ids)
+        {
+            List<DayPlanBlock> doomed = blocks.Where(b => ids.Contains(b.Id)).ToList();
+            if (doomed.Count == 1)
+            {
+                Delete(doomed[0]);
+                return !blocks.Any(b => b.Id == doomed[0].Id);
+            }
+            int first = blocks.FindIndex(b => ids.Contains(b.Id)), last = blocks.FindLastIndex(b => ids.Contains(b.Id));
+            DayPlanBlock? neighbour = blocks.Skip(last + 1).FirstOrDefault(b => !ids.Contains(b.Id))
+                ?? blocks.Take(first).LastOrDefault();
+            bool deleted = DayPlanActions.ConfirmDelete(doomed);
+            focusBlock = deleted ? neighbour?.Id : null;
+            Refresh();
+            if (deleted && neighbour == null)
+                AddButton.Focus();
+            return deleted;
         }
 
         // The keyboard stays in the plan: on the next block, else the one before, else Add block.
@@ -352,7 +445,7 @@ namespace TidyMind
         private void Surface_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             if (e.WidthChanged)
-                ShowTimeline();
+                ShowBlocks();
         }
 
         private void ShowTimeline()
@@ -577,7 +670,8 @@ namespace TidyMind
             card.Child = grid;
 
             card.GotKeyboardFocus += (s, e) => card.BorderBrush = Res("Accent");
-            card.LostKeyboardFocus += (s, e) => card.BorderBrush = Brushes.Transparent;
+            card.LostKeyboardFocus += (s, e) => card.BorderBrush = selection.IsSelected(block.Id) ? Res("Accent") : Brushes.Transparent;
+            selection.Attach(card, block.Id); // before the drag: a Ctrl or Shift click selects, and neither moves nor sizes
             BlockKeys(card, block);
             AttachBlockDrag(card, block);
             return card;
@@ -664,7 +758,7 @@ namespace TidyMind
                 if (drag == DragMode.None)
                     return;
                 EndDrag(card);
-                ShowTimeline();
+                ShowBlocks();
             };
         }
 
@@ -953,7 +1047,7 @@ namespace TidyMind
             AutomationProperties.SetName(edit, Loc.T("Common.Edit"));
             edit.Click += (s, e) => Edit(block);
             Button delete = new Button { Style = (Style)FindResource("RowDeleteStyle") };
-            delete.Click += (s, e) => Delete(block);
+            delete.Click += (s, e) => DeleteFromRow(block);
             actions.Children.Add(edit);
             actions.Children.Add(delete);
             Grid.SetColumn(marks, 3);
@@ -961,11 +1055,12 @@ namespace TidyMind
 
             void UpdateActions() =>
                 actions.Visibility = row.IsMouseOver || row.IsKeyboardFocusWithin ? Visibility.Visible : Visibility.Hidden;
-            row.MouseEnter += (s, e) => { row.Background = Res("BgSubtle"); UpdateActions(); };
-            row.MouseLeave += (s, e) => { row.Background = Brushes.Transparent; UpdateActions(); };
+            row.MouseEnter += (s, e) => { PaintListRow(row, selection.IsSelected(block.Id)); UpdateActions(); };
+            row.MouseLeave += (s, e) => { PaintListRow(row, selection.IsSelected(block.Id)); UpdateActions(); };
             row.IsKeyboardFocusWithinChanged += (s, e) => UpdateActions();
-            row.GotKeyboardFocus += (s, e) => row.BorderBrush = Res("Accent");
-            row.LostKeyboardFocus += (s, e) => row.BorderBrush = Brushes.Transparent;
+            row.GotKeyboardFocus += (s, e) => PaintListRow(row, selection.IsSelected(block.Id));
+            row.LostKeyboardFocus += (s, e) => PaintListRow(row, selection.IsSelected(block.Id));
+            selection.Attach(row, block.Id); // first: a Ctrl or Shift click selects, and neither ticks nor edits
             row.MouseLeftButtonDown += (s, e) =>
             {
                 row.Focus();

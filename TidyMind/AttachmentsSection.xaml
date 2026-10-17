@@ -24,7 +24,9 @@
             </Grid>
         </Border>
 
-        <!-- The attached files, all of them: the window scrolls, not the list (like the task list). -->
-        <StackPanel x:Name="FileRows" Margin="0,8,0,0" Visibility="Collapsed"/>
+        <!-- The attached files, all of them: the window scrolls, not the list (like the task list). Ctrl or Shift+click,
+             Ctrl+A select several (ItemSelection); Delete removes them. -->
+        <StackPanel x:Name="FileRows" Margin="0,8,0,0" Visibility="Collapsed" Focusable="True" FocusVisualStyle="{x:Null}"
+                    Background="Transparent"/>
     </StackPanel>
 </UserControl>

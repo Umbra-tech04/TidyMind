@@ -73,7 +73,7 @@ namespace TidyMind
                 return;
             }
 
-            selection = new CardSelectionController<Project>(this, CardScroll, CardArea, MarqueeCanvas,
+            selection = new CardSelectionController<Project>(CardScroll, CardArea, MarqueeCanvas,
                 CardEffects.CardRadius, DeleteProjects);
             selection.SelectionChanged += UpdateSelectionBar;
             SelectionBar.DeleteClicked += () => selection.DeleteSelected();
@@ -194,12 +194,14 @@ namespace TidyMind
                 TourSignals.Raise(TourSignals.CardsSelected);
         }
 
-        // One confirmation for the lot, then the same delete as a single project's menu (card pictures included),
-        // and the grid read back from disk.
-        private bool DeleteProjects(IReadOnlyCollection<Project> projects)
+        // One confirmation for the lot (for one, the question its menu asks), then the same delete as a single
+        // project's menu (card pictures included), and the grid read back from disk.
+        private bool DeleteProjects(IReadOnlyList<Project> projects)
         {
-            if (Msg.Show(Loc.Plural("Project.DeleteMany", projects.Count), Loc.T("Common.ConfirmDelete"),
-                    MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            bool asked = projects.Count == 1
+                ? ProjectMenu.ConfirmDelete(projects[0])
+                : BulkDelete.Confirm(Window.GetWindow(this), "Bulk.Delete.Projects", projects.Select(p => p.Name).ToList(), Loc.T("Bulk.CantUndo"));
+            if (!asked)
                 return false;
 
             ProjectMenu.Delete(projects, p =>
@@ -234,7 +236,7 @@ namespace TidyMind
             ShapePath progressRing = visual.Progress;
             card.Margin = new Thickness(12);
             card.Cursor = Cursors.Hand;
-            selection.AttachCard(card, project); // first: a Ctrl+click selects, and neither opens nor drags
+            selection.Attach(card, project); // first: a Ctrl or Shift click selects, and neither opens nor drags
 
             CardEffects.AttachHoverLift(card, visual.Shadow, progressRing == null ? null : () => PulseRing(progressRing));
 

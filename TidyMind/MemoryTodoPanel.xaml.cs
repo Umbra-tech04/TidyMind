@@ -23,10 +23,14 @@ namespace TidyMind
         private List<TodoEntry> todos = new List<TodoEntry>();
         private bool readable = true;
         private bool collapsed;
+        private readonly ItemSelection<TodoEntry> selection;
 
         public MemoryTodoPanel()
         {
             InitializeComponent();
+            selection = new ItemSelection<TodoEntry>(ListScroll, DeleteSelected,
+                (row, on) => SelectionLook.PaintRow((Border)row, on, Brushes.Transparent, Brushes.Transparent));
+            selection.ClearOnBlankClick(ListScroll);
             Loc.Track(this, () =>
             {
                 if (memory == null)
@@ -124,8 +128,10 @@ namespace TidyMind
         private void Render()
         {
             ItemList.Children.Clear();
+            selection.BeginRender();
             foreach (TodoEntry entry in todos)
                 ItemList.Children.Add(CreateRow(entry));
+            selection.EndRender();
             UpdateHeader();
         }
 
@@ -157,6 +163,11 @@ namespace TidyMind
         private FrameworkElement CreateRow(TodoEntry entry)
         {
             Grid row = new Grid { MinHeight = 30, Background = Brushes.Transparent };
+            // The frame shows the row as selected (ItemSelection); taken first, so a Ctrl or Shift click neither
+            // ticks nor edits.
+            Border frame = new Border { Child = row, CornerRadius = new CornerRadius(6), BorderThickness = new Thickness(1) };
+            SelectionLook.PaintRow(frame, false, Brushes.Transparent, Brushes.Transparent);
+            selection.Attach(frame, entry);
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -208,7 +219,7 @@ namespace TidyMind
                 VerticalAlignment = VerticalAlignment.Center,
                 Visibility = Visibility.Hidden
             };
-            delete.Click += (s, e) => Delete(entry);
+            delete.Click += (s, e) => DeleteFromRow(entry);
             Grid.SetColumn(delete, 2);
             row.Children.Add(delete);
 
@@ -218,8 +229,25 @@ namespace TidyMind
             row.MouseLeave += (s, e) => UpdateDeleteVisibility();
             row.IsKeyboardFocusWithinChanged += (s, e) => UpdateDeleteVisibility();
 
-            TextCopy.AttachMenu(row, () => entry.Text);
-            return row;
+            TextCopy.AttachMenu(frame, () => entry.Text);
+            return frame;
+        }
+
+        // A selected row's × takes the whole selection along (asking first); otherwise just that row goes.
+        private void DeleteFromRow(TodoEntry entry)
+        {
+            if (selection.IsSelected(entry) && selection.Count > 1)
+                selection.DeleteSelected();
+            else
+                Delete(entry);
+        }
+
+        // Several: one question, then one save without them (or, if that fails, all of them back).
+        private bool DeleteSelected(IReadOnlyList<TodoEntry> entries)
+        {
+            if (entries.Count > 1 && !BulkDelete.Confirm(Window.GetWindow(this), "Bulk.Delete.Todos", entries.Select(t => t.Text).ToList()))
+                return false;
+            return Remove(entries);
         }
 
         private void PaintDone(TextBox text, bool done)
@@ -242,17 +270,21 @@ namespace TidyMind
             return false;
         }
 
-        // Focus goes back to the input. If the removal can't be saved, the item stays where it was.
-        private void Delete(TodoEntry entry)
+        private void Delete(TodoEntry entry) => Remove(new[] { entry });
+
+        // One item or several, in one save. Focus goes back to the input. If the removal can't be saved, the items
+        // stay where they were (false). A day plan block made from one keeps its time and shows its to-do as gone.
+        private bool Remove(IReadOnlyList<TodoEntry> entries)
         {
-            int index = todos.IndexOf(entry);
-            if (index < 0)
-                return;
-            todos.RemoveAt(index);
-            if (!Save())
-                todos.Insert(index, entry);
+            List<TodoEntry> before = todos.ToList();
+            if (todos.RemoveAll(entries.Contains) == 0)
+                return false;
+            bool saved = Save();
+            if (!saved)
+                todos = before;
             Render();
             Input.Focus();
+            return saved;
         }
     }
 }

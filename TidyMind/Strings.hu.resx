@@ -143,6 +143,45 @@ A fájl nem változott. Javítsd ki, vagy állítsd vissza egy mentésből, azt�
 
 Most bezárul, nyisd meg újra.</value>
   </data>
+  <data name="Bulk.CantUndo" xml:space="preserve">
+    <value>Ez nem vonható vissza.</value>
+  </data>
+  <data name="Bulk.Delete.Blocks.Other" xml:space="preserve">
+    <value>Törölsz {0} idősávot a tervből?</value>
+  </data>
+  <data name="Bulk.Delete.Items.Other" xml:space="preserve">
+    <value>Törölsz {0} elemet?</value>
+  </data>
+  <data name="Bulk.Delete.Memories.Other" xml:space="preserve">
+    <value>Törölsz {0} memóriát?</value>
+  </data>
+  <data name="Bulk.Delete.Projects.Other" xml:space="preserve">
+    <value>Törölsz {0} projektet?</value>
+  </data>
+  <data name="Bulk.Delete.Reminders.Other" xml:space="preserve">
+    <value>Törölsz {0} emlékeztetőt?</value>
+  </data>
+  <data name="Bulk.Delete.Tasks.Other" xml:space="preserve">
+    <value>Törölsz {0} feladatot?</value>
+  </data>
+  <data name="Bulk.Delete.Todos.Other" xml:space="preserve">
+    <value>Törölsz {0} teendőt?</value>
+  </data>
+  <data name="Bulk.Kept.Other" xml:space="preserve">
+    <value>Nem sikerült törölni ({0}):</value>
+  </data>
+  <data name="Bulk.MemoriesWarning" xml:space="preserve">
+    <value>Mindegyik a teljes tartalmával együtt törlődik: a projektjeivel vagy elemeivel, a teendőlistájával, a jegyzeteivel, a képeivel és a mellékelt fájljaival. Ez nem vonható vissza.</value>
+  </data>
+  <data name="Bulk.More.Other" xml:space="preserve">
+    <value>és még {0}</value>
+  </data>
+  <data name="Bulk.Remove.Files.Other" xml:space="preserve">
+    <value>Eltávolítasz {0} fájlt ebből a projektből?</value>
+  </data>
+  <data name="Bulk.SampleAmong" xml:space="preserve">
+    <value>Az egyik közülük a példamemória.</value>
+  </data>
   <data name="Calendar.CloseTip" xml:space="preserve">
     <value>Bezárás  (Esc)</value>
   </data>
@@ -265,9 +304,6 @@ Most bezárul, nyisd meg újra.</value>
   </data>
   <data name="Collection.AddItem" xml:space="preserve">
     <value>Új elem</value>
-  </data>
-  <data name="Collection.DeleteMany.Other" xml:space="preserve">
-    <value>Törölsz {0} elemet? Ez nem vonható vissza.</value>
   </data>
   <data name="Collection.Empty" xml:space="preserve">
     <value>Ezen a fülön még nincs elem. Kattints az „+ Új elem” gombra a kezdéshez.</value>
@@ -793,6 +829,9 @@ A TidyMindnak be kell zárnia. A részletek ide kerültek: {1}.</value>
   <data name="Files.RemoveConfirm" xml:space="preserve">
     <value>Eltávolítod ebből a projektből: „{0}”?</value>
   </data>
+  <data name="Files.RemoveManyCaption" xml:space="preserve">
+    <value>Fájlok eltávolítása</value>
+  </data>
   <data name="Files.RenameTitle" xml:space="preserve">
     <value>Fájl átnevezése</value>
   </data>
@@ -1280,6 +1319,16 @@ A fájl változatlan maradt. Zárd be ezt az ablakot, és nyisd meg újra, amint
   <data name="Plan.Delete.ReminderRemoved" xml:space="preserve">
     <value>Az emlékeztetője törölve lett.</value>
   </data>
+  <data name="Plan.DeleteMany.Failed" xml:space="preserve">
+    <value>Nem sikerült törölni az idősávokat, mert ez a fájl nem olvasható vagy nem írható:
+{0}</value>
+  </data>
+  <data name="Plan.DeleteMany.ReminderFailed" xml:space="preserve">
+    <value>Az emlékeztetőiket nem sikerült törölni: a reminders.json nem olvasható vagy nem írható, vagy a Windows Feladatütemező nem fogadta el a módosítást. Ezek az idősávok megmaradtak.</value>
+  </data>
+  <data name="Plan.DeleteMany.RemindersRemoved" xml:space="preserve">
+    <value>Az emlékeztetőik törölve lettek.</value>
+  </data>
   <data name="Plan.Detail.Overlaps" xml:space="preserve">
     <value>Átfedésben van egy másik idősávval</value>
   </data>
@@ -1496,9 +1545,6 @@ A fájl nem változott. Javítsd ki vagy töröld, és újra tervezhetsz napokat
   <data name="Project.AddPrompt" xml:space="preserve">
     <value>Mi legyen a projekt neve?</value>
   </data>
-  <data name="Project.DeleteMany.Other" xml:space="preserve">
-    <value>Törölsz {0} projektet? Ez nem vonható vissza.</value>
-  </data>
   <data name="Project.Empty" xml:space="preserve">
     <value>Ezen a fülön még nincs projekt. Kattints a „+ Projekt hozzáadása” gombra a kezdéshez.</value>
   </data>
@@ -1581,7 +1627,7 @@ Az utolsó módosításod nem lett mentve.</value>
     <value>Fájlok másolása folyamatban</value>
   </data>
   <data name="ProjectWindow.TaskHint" xml:space="preserve">
-    <value>Egy feladatra jobb gombbal kattintva több lehetőséget kapsz (például a szövege másolását).</value>
+    <value>Egy feladatra jobb gombbal kattintva több lehetőséget kapsz (például a szövege másolását). Ctrl+kattintással vagy Shift+kattintással többet is kijelölhetsz.</value>
   </data>
   <data name="ProjectWindow.TaskPlaceholder" xml:space="preserve">
     <value>Új feladat…</value>
@@ -1597,6 +1643,9 @@ Az utolsó módosításod nem lett mentve.</value>
   </data>
   <data name="Reminder.DeleteFailed" xml:space="preserve">
     <value>Nem sikerült törölni az emlékeztetőt: a reminders.json nem olvasható vagy nem írható, vagy a Windows Feladatütemező nem fogadta el a módosítást.</value>
+  </data>
+  <data name="Reminder.DeleteManyFailed" xml:space="preserve">
+    <value>Ezeket az emlékeztetőket nem sikerült törölni: a reminders.json nem olvasható vagy nem írható, vagy a Windows Feladatütemező nem fogadta el a módosítást.</value>
   </data>
   <data name="Reminder.Form.Date" xml:space="preserve">
     <value>Dátum</value>

@@ -73,7 +73,7 @@ namespace TidyMind
                 return;
             }
 
-            selection = new CardSelectionController<Entity>(this, CardScroll, CardArea, MarqueeCanvas,
+            selection = new CardSelectionController<Entity>(CardScroll, CardArea, MarqueeCanvas,
                 CardEffects.CardRadius, DeleteEntities);
             selection.SelectionChanged += UpdateSelectionBar;
             SelectionBar.DeleteClicked += () => selection.DeleteSelected();
@@ -219,11 +219,16 @@ namespace TidyMind
         }
 
         // One confirmation for the lot, then the same removal as a single item's Delete, and the grid read back
-        // from disk.
-        private bool DeleteEntities(IReadOnlyCollection<Entity> doomed)
+        // from disk. One selected: just that item's Delete.
+        private bool DeleteEntities(IReadOnlyList<Entity> doomed)
         {
-            if (Msg.Show(Loc.Plural("Collection.DeleteMany", doomed.Count), Loc.T("Common.ConfirmDelete"),
-                    MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            if (doomed.Count == 1)
+            {
+                Guid id = doomed[0].Id;
+                DeleteEntity(doomed[0]);
+                return !entities.Any(x => x.Id == id);
+            }
+            if (!BulkDelete.Confirm(Window.GetWindow(this), "Bulk.Delete.Items", doomed.Select(x => x.Name).ToList(), Loc.T("Bulk.CantUndo")))
                 return false;
 
             RemoveEntities(doomed);
@@ -319,7 +324,7 @@ namespace TidyMind
             if (subtitle.Text.Length > 0)
                 subtitle.ToolTip = subtitle.Text; // the whole line, when a longer translation is cut short
 
-            selection.AttachCard(card, entity); // first: a Ctrl+click selects, and neither opens nor drags
+            selection.Attach(card, entity); // first: a Ctrl or Shift click selects, and neither opens nor drags
             CardEffects.AttachHoverLift(card, shadow);
             CardEffects.AttachClick(card, () => OpenDetail(entity));
             cardDrag.Attach(card, entity);

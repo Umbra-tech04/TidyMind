@@ -51,7 +51,7 @@
 
         <!-- Cards -->
         <!-- Drag on empty space to select cards (CardSelectionController) -->
-        <ScrollViewer x:Name="CardScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="16,0,16,20">
+        <ScrollViewer x:Name="CardScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" FocusVisualStyle="{x:Null}" Padding="16,0,16,20">
             <Grid x:Name="CardArea">
                 <WrapPanel x:Name="EntityPanel"/>
                 <TextBlock x:Name="EmptyState"

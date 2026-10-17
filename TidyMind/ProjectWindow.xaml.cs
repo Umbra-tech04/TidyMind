@@ -59,6 +59,8 @@ namespace TidyMind
             e.Handled = true;
             if (PageListPopup.IsOpen)
                 PageListPopup.IsOpen = false;
+            else if (TaskList.SelectedItems.Count > 1)
+                TaskList.UnselectAll(); // several tasks selected: Esc drops the selection first
             else
                 Close();
         }
@@ -181,12 +183,74 @@ namespace TidyMind
             TaskInput.Clear();
         }
 
+        // Where the next Shift+click run starts: the task clicked last.
+        private TaskItem taskAnchor;
+
+        // Several tasks at once, as in Explorer: Ctrl+click toggles one, Shift+click selects the run from the last
+        // clicked task (Ctrl+Shift adds it), Ctrl+A (the list's own) all. Taken before the row's checkbox, so neither
+        // ticks it. A plain click still ticks, and drops the selection; so does a click below the rows.
+        private void TaskList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            var item = ItemsControl.ContainerFromElement(TaskList, e.OriginalSource as DependencyObject) as ListBoxItem;
+            bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) != 0;
+            bool shift = (Keyboard.Modifiers & ModifierKeys.Shift) != 0;
+            if (item == null || !(ctrl || shift))
+            {
+                if (item != null)
+                    taskAnchor = (TaskItem)item.DataContext;
+                if (!ItemSelection.OnRowButton(e.OriginalSource as DependencyObject, TaskList))
+                    TaskList.UnselectAll();
+                return;
+            }
+            if (ItemSelection.OnRowButton(e.OriginalSource as DependencyObject, item))
+                return; // the row's own ✎ and ×
+
+            TaskItem task = (TaskItem)item.DataContext;
+            e.Handled = true;
+            item.Focus(); // so Delete, Esc and Ctrl+A reach the list
+            if (!shift)
+            {
+                item.IsSelected = !item.IsSelected;
+                taskAnchor = task;
+                return;
+            }
+
+            int to = TaskList.Items.IndexOf(task);
+            // From the last clicked task (or, with none clicked yet, the selected one).
+            int from = TaskList.Items.IndexOf(taskAnchor ?? TaskList.SelectedItem);
+            if (from < 0)
+            {
+                from = to;
+                taskAnchor = task;
+            }
+            if (!ctrl)
+                TaskList.SelectedItems.Clear();
+            for (int i = Math.Min(from, to); i <= Math.Max(from, to); i++)
+            {
+                if (!TaskList.SelectedItems.Contains(TaskList.Items[i]))
+                    TaskList.SelectedItems.Add(TaskList.Items[i]);
+            }
+        }
+
+        private List<TaskItem> SelectedTasks() => TaskList.Items.Cast<TaskItem>().Where(t => TaskList.SelectedItems.Contains(t)).ToList();
+
         private void TaskList_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
             var item = ItemsControl.ContainerFromElement(TaskList, e.OriginalSource as DependencyObject) as ListBoxItem;
             if (item == null) return;
 
             TaskItem task = (TaskItem)item.DataContext;
+
+            // On one of several selected tasks: the menu for all of them.
+            if (item.IsSelected && TaskList.SelectedItems.Count > 1)
+            {
+                MenuItem deleteAll = new MenuItem { Header = Loc.F("Selection.DeleteSelected", TaskList.SelectedItems.Count) };
+                deleteAll.Click += (s, args) => DeleteTasks(SelectedTasks());
+                MenuItem clear = new MenuItem { Header = Loc.T("Selection.Clear") };
+                clear.Click += (s, args) => TaskList.UnselectAll();
+                new ContextMenu { Items = { deleteAll, clear }, IsOpen = true };
+                return;
+            }
 
             ContextMenu menu = new ContextMenu();
 
@@ -208,7 +272,15 @@ namespace TidyMind
         // A row's hover buttons: the same Rename / Delete as its right-click menu.
         private void TaskRename_Click(object sender, RoutedEventArgs e) => RenameTask((TaskItem)((FrameworkElement)sender).DataContext);
 
-        private void TaskDelete_Click(object sender, RoutedEventArgs e) => DeleteTask((TaskItem)((FrameworkElement)sender).DataContext);
+        // On one of several selected tasks, the × deletes all of them (asking first).
+        private void TaskDelete_Click(object sender, RoutedEventArgs e)
+        {
+            TaskItem task = (TaskItem)((FrameworkElement)sender).DataContext;
+            if (TaskList.SelectedItems.Contains(task) && TaskList.SelectedItems.Count > 1)
+                DeleteTasks(SelectedTasks());
+            else
+                DeleteTask(task);
+        }
 
         private void RenameTask(TaskItem task)
         {
@@ -231,11 +303,36 @@ namespace TidyMind
             TaskList.Items.Remove(task);
         }
 
+        // Several: one question for all of them, then each goes the way one does. The keyboard stays in the list, on
+        // the task now where the first deleted one was.
+        private void DeleteTasks(List<TaskItem> tasks)
+        {
+            if (tasks.Count == 0)
+                return;
+            if (tasks.Count > 1 && !BulkDelete.Confirm(this, "Bulk.Delete.Tasks", tasks.Select(t => t.Title).ToList()))
+                return;
+            int first = tasks.Min(t => TaskList.Items.IndexOf(t));
+            foreach (TaskItem task in tasks)
+                DeleteTask(task);
+            if (TaskList.Items.Count > 0
+                && TaskList.ItemContainerGenerator.ContainerFromIndex(Math.Min(first, TaskList.Items.Count - 1)) is ListBoxItem row)
+            {
+                row.IsSelected = true; // so a second Delete takes it
+                row.Focus();
+            }
+        }
+
+        // Delete: the selected tasks (one goes at once, like its ×; several ask first). Ctrl+C: their text, a line each.
         private void TaskList_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.C && Keyboard.Modifiers == ModifierKeys.Control && TaskList.SelectedItem is TaskItem task)
+            if (e.Key == Key.Delete && Keyboard.Modifiers == ModifierKeys.None && TaskList.SelectedItems.Count > 0)
             {
-                TextCopy.Copy(task.Title);
+                DeleteTasks(SelectedTasks());
+                e.Handled = true;
+            }
+            else if (e.Key == Key.C && Keyboard.Modifiers == ModifierKeys.Control && TaskList.SelectedItems.Count > 0)
+            {
+                TextCopy.Copy(string.Join(Environment.NewLine, SelectedTasks().Select(t => t.Title)));
                 e.Handled = true;
             }
         }

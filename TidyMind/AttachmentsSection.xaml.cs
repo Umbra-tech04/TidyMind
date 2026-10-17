@@ -38,9 +38,13 @@ namespace TidyMind
         private readonly CancellationTokenSource copying = new CancellationTokenSource();
         private bool closed;
 
+        private readonly ItemSelection<Attachment> selection;
+
         public AttachmentsSection()
         {
             InitializeComponent();
+            selection = new ItemSelection<Attachment>(FileRows, RemoveSelected, (row, on) => PaintRow((Border)row, on));
+            selection.ClearOnBlankClick(FileRows);
         }
 
         public List<Attachment> Attachments => attachments.ToList();
@@ -190,8 +194,10 @@ namespace TidyMind
         private void Render()
         {
             FileRows.Children.Clear();
+            selection.BeginRender();
             foreach (Attachment attachment in attachments)
                 FileRows.Children.Add(FileRow(attachment));
+            selection.EndRender();
             foreach (PendingCopy copy in pending)
                 FileRows.Children.Add(PendingRow(copy));
 
@@ -207,7 +213,7 @@ namespace TidyMind
                 Visibility = Visibility.Hidden,
                 VerticalAlignment = VerticalAlignment.Center
             };
-            remove.Click += (s, e) => Remove(attachment);
+            remove.Click += (s, e) => RemoveFromRow(attachment);
             Grid.SetColumn(remove, 2);
 
             FrameworkElement text = RowText(attachment.DisplayName,
@@ -227,18 +233,18 @@ namespace TidyMind
             row.Cursor = Cursors.Hand;
             row.ToolTip = Loc.F("Files.OpenNamed", attachment.DisplayName);
 
-            Brush hover = (Brush)FindResource("BgSubtle");
             row.MouseEnter += (s, e) =>
             {
-                row.Background = hover;
+                PaintRow(row, selection.IsSelected(attachment));
                 remove.Visibility = Visibility.Visible;
             };
             row.MouseLeave += (s, e) =>
             {
-                row.Background = Brushes.Transparent;
+                PaintRow(row, selection.IsSelected(attachment));
                 remove.Visibility = Visibility.Hidden;
             };
 
+            selection.Attach(row, attachment); // first: a Ctrl or Shift click selects, and doesn't open the file
             CardEffects.AttachClick(row, () => Open(attachment)); // the × handles its own press, so it doesn't open
             row.ContextMenu = Menu(attachment);
             return row;
@@ -270,12 +276,18 @@ namespace TidyMind
             });
         }
 
+        // Selected: the accent fill and edge; else the hover tint while the pointer is on it.
+        private void PaintRow(Border row, bool on) =>
+            SelectionLook.PaintRow(row, on, row.IsMouseOver ? (Brush)FindResource("BgSubtle") : Brushes.Transparent, Brushes.Transparent);
+
         private static Border RowFrame(Grid content)
         {
             return new Border
             {
                 Child = content,
                 Background = Brushes.Transparent,
+                BorderBrush = Brushes.Transparent,
+                BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(6),
                 Padding = new Thickness(6, 5, 4, 5),
                 MinHeight = 50
@@ -474,10 +486,40 @@ namespace TidyMind
                 RemoveEntry(attachment);
         }
 
-        private void RemoveEntry(Attachment attachment)
+        // A selected row's × takes the whole selection along; otherwise just that file.
+        private void RemoveFromRow(Attachment attachment)
         {
-            attachments.Remove(attachment);
-            removed.Add(attachment);
+            if (selection.IsSelected(attachment) && selection.Count > 1)
+                selection.DeleteSelected();
+            else
+                Remove(attachment);
+        }
+
+        // Several: one question, then each goes the way one does.
+        private bool RemoveSelected(IReadOnlyList<Attachment> doomed)
+        {
+            if (doomed.Count == 1)
+            {
+                int before = attachments.Count;
+                Remove(doomed[0]);
+                return attachments.Count < before;
+            }
+            if (!BulkDelete.ConfirmRemove(Window.GetWindow(this), "Bulk.Remove.Files", doomed.Select(a => a.DisplayName).ToList()))
+                return false;
+            RemoveEntries(doomed);
+            return true;
+        }
+
+        private void RemoveEntry(Attachment attachment) => RemoveEntries(new[] { attachment });
+
+        // Out of the list now; their stored copies go once the project is saved without them (ProjectView).
+        private void RemoveEntries(IReadOnlyList<Attachment> gone)
+        {
+            foreach (Attachment attachment in gone)
+            {
+                attachments.Remove(attachment);
+                removed.Add(attachment);
+            }
             Render();
         }
     }

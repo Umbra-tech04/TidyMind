@@ -65,8 +65,28 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Nav tree -->
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <!-- While memories are selected (Ctrl or Shift+click): how many, and Delete / Cancel for all of them -->
+                <Border x:Name="NavSelectionBar" DockPanel.Dock="Bottom" Visibility="Collapsed" Margin="14,8,14,0"
+                        Padding="10,8,10,10" CornerRadius="8" Background="#2A2926">
+                    <StackPanel>
+                        <TextBlock x:Name="NavSelectionCount" FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{StaticResource SidebarText}" TextTrimming="CharacterEllipsis"/>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Height="30" Padding="8,0" Margin="0,0,4,0" Background="#3A3935"
+                                    Foreground="#FF9A8C" Content="{local:Tr Common.Delete}" Click="NavDeleteSelected_Click"/>
+                            <Button Grid.Column="1" Height="30" Padding="8,0" Margin="4,0,0,0" Background="#3A3935"
+                                    Foreground="{StaticResource SidebarText}" Content="{local:Tr Common.Cancel}"
+                                    ToolTip="{local:Tr Selection.ClearTip}" Click="NavClearSelection_Click"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Nav tree. Ctrl, Shift+click, Ctrl+A select memories (ItemSelection); Delete deletes them. -->
+                <ScrollViewer x:Name="NavScroll" VerticalScrollBarVisibility="Auto" FocusVisualStyle="{x:Null}">
                     <StackPanel x:Name="NavPanel" Margin="10,4,10,4"/>
                 </ScrollViewer>
             </DockPanel>

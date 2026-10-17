@@ -29,9 +29,14 @@ namespace TidyMind
         // The host refreshes on window activation; this covers the date changing while the app stays in front.
         private readonly DispatcherTimer midnight = new DispatcherTimer();
 
+        private readonly ItemSelection<Guid> selection;
+
         public QuickTodoListControl()
         {
             InitializeComponent();
+            selection = new ItemSelection<Guid>(TodoList, DeleteSelected,
+                (row, on) => SelectionLook.PaintRow((Border)row, on, Brushes.Transparent, Brushes.Transparent));
+            selection.ClearOnBlankClick(TodoList);
             midnight.Tick += (s, e) => { Refresh(); ScheduleMidnight(); };
             Loc.Track(this, () =>
             {
@@ -73,7 +78,7 @@ namespace TidyMind
         {
             Window window = Window.GetWindow(this);
             return window != null && FocusManager.GetFocusedElement(window) is Visual focused
-                && TodoList.IsAncestorOf(focused);
+                && focused != TodoList && TodoList.IsAncestorOf(focused); // the list itself has it after a selecting click
         }
 
         private void ScheduleMidnight()
@@ -132,6 +137,7 @@ namespace TidyMind
         private void Render()
         {
             TodoList.Children.Clear();
+            selection.BeginRender();
             DateTime today = DateTime.Today;
 
             // Within a group: finished ones last (except those ticked just now, which keep their place),
@@ -151,6 +157,7 @@ namespace TidyMind
                 TodoList.Children.Add(CreateRow(shown[i], today));
             }
 
+            selection.EndRender();
             UpdateFooter();
         }
 
@@ -186,6 +193,11 @@ namespace TidyMind
         private FrameworkElement CreateRow(QuickTodo todo, DateTime today)
         {
             Grid row = new Grid { MinHeight = 30, Background = Brushes.Transparent };
+            // The frame shows the row as selected (ItemSelection); taken first, so a Ctrl or Shift click neither
+            // ticks nor edits.
+            Border frame = new Border { Child = row, CornerRadius = new CornerRadius(6), BorderThickness = new Thickness(1) };
+            SelectionLook.PaintRow(frame, false, Brushes.Transparent, Brushes.Transparent);
+            selection.Attach(frame, todo.Id);
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -237,7 +249,7 @@ namespace TidyMind
                 VerticalAlignment = VerticalAlignment.Center,
                 Visibility = Visibility.Hidden
             };
-            delete.Click += (s, e) => DeleteTodo(todo);
+            delete.Click += (s, e) => DeleteFromRow(todo);
             Grid.SetColumn(delete, 3);
 
             // The row's menu (outside the text, which has its own Cut / Copy / Paste). Editing is clicking the text.
@@ -247,7 +259,7 @@ namespace TidyMind
             menu.Items.Add(remove);
             menu.Items.Add(new Separator());
             menu.Items.Add(TextCopy.CopyItem(() => todo.Text));
-            row.ContextMenu = menu;
+            frame.ContextMenu = menu;
             row.Children.Add(delete);
 
             void UpdateDeleteVisibility() =>
@@ -256,7 +268,7 @@ namespace TidyMind
             row.MouseLeave += (s, e) => UpdateDeleteVisibility();
             row.IsKeyboardFocusWithinChanged += (s, e) => UpdateDeleteVisibility();
 
-            return row;
+            return frame;
         }
 
         // Stored by Id (quicktodos.json is re-read, so a change made elsewhere meanwhile isn't lost). If it can't be
@@ -293,16 +305,39 @@ namespace TidyMind
             DoneChanged?.Invoke();
         }
 
-        private void DeleteTodo(QuickTodo todo)
+        private void DeleteTodo(QuickTodo todo) => Remove(new[] { todo.Id });
+
+        // A selected row's × takes the whole selection along (asking first); otherwise just that row goes.
+        private void DeleteFromRow(QuickTodo todo)
         {
-            if (!QuickTodoService.Delete(todo.Id))
+            if (selection.IsSelected(todo.Id) && selection.Count > 1)
+                selection.DeleteSelected();
+            else
+                DeleteTodo(todo);
+        }
+
+        // Several: one question, then the same removal as one.
+        private bool DeleteSelected(IReadOnlyList<Guid> ids)
+        {
+            List<string> names = ids.Select(id => todos.First(t => t.Id == id).Text).ToList();
+            if (ids.Count > 1 && !BulkDelete.Confirm(Window.GetWindow(this), "Bulk.Delete.Todos", names))
+                return false;
+            return Remove(ids);
+        }
+
+        // One write for all of them: if quicktodos.json can't be read or written, none go and the list says so. A
+        // day plan block made from one keeps its time and shows its to-do as gone. False if none went.
+        private bool Remove(IReadOnlyCollection<Guid> ids)
+        {
+            if (!QuickTodoService.Delete(ids))
             {
                 ShowUnreadable();
-                return;
+                return false;
             }
 
-            todos.Remove(todo);
+            todos.RemoveAll(t => ids.Contains(t.Id));
             Render();
+            return true;
         }
 
         private void DoneToggle_Click(object sender, RoutedEventArgs e)

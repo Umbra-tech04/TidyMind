@@ -75,7 +75,10 @@ namespace TidyMind
             });
         }
 
-        public static bool Delete(Guid id) => Update(todos => todos.RemoveAll(t => t.Id == id) > 0);
+        public static bool Delete(Guid id) => Delete(new[] { id });
+
+        // Several at once, in one write: all of them go, or (the file couldn't be read or written) none.
+        public static bool Delete(IReadOnlyCollection<Guid> ids) => Update(todos => todos.RemoveAll(t => ids.Contains(t.Id)) > 0);
 
         // Todos finished before CompletedDate existed have none; their due date stands in for it.
         public static void RemoveOldCompleted(DateTime today)

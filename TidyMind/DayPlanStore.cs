@@ -78,7 +78,12 @@ namespace TidyMind
         }
 
         // True also when it was already gone.
-        public static bool Delete(Guid id) => Update(plan => plan.Blocks.RemoveAll(b => b.Id == id) > 0, nothingToDo: true);
+        public static bool Delete(Guid id) => Delete(new[] { id });
+
+        // Several in one write: all of them go, or none (the file couldn't be read or written). True also when
+        // they were already gone.
+        public static bool Delete(IReadOnlyCollection<Guid> ids) =>
+            Update(plan => plan.Blocks.RemoveAll(b => ids.Contains(b.Id)) > 0, nothingToDo: true);
 
         // A to-do was ticked or unticked: every block that is time for it follows. True if nothing needed changing.
         public static bool SetDoneForTodo(TodoLink link, bool done) => Update(plan =>

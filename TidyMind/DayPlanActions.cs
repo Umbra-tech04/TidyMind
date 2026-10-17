@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 
 namespace TidyMind
@@ -91,11 +92,7 @@ namespace TidyMind
                     MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
                 return false;
 
-            string? problem = DayPlanReminders.Try(() =>
-            {
-                DayPlanReminders.Remove(block);
-                return null;
-            }, out _);
+            string? problem = RemoveReminder(block);
             if (problem != null)
             {
                 Msg.Show(problem + "\n\n" + Loc.T("Plan.Block.NotDeleted"), Loc.T("Common.CouldntDelete"), MessageBoxButton.OK,
@@ -109,6 +106,42 @@ namespace TidyMind
                 Loc.T("Common.CouldntDelete"), MessageBoxButton.OK, MessageBoxImage.Warning);
             return false;
         }
+
+        // Several blocks (a selection), asked once, each the way one goes: its reminder first. A block whose reminder
+        // can't be removed stays, and the ones that stay are named afterwards; the rest go in one write (or, if that
+        // fails, none do). True if any went. One block: the question and messages for one.
+        public static bool ConfirmDelete(IReadOnlyList<DayPlanBlock> blocks)
+        {
+            if (blocks.Count == 1)
+                return ConfirmDelete(blocks[0]);
+            if (!BulkDelete.Confirm(null, "Bulk.Delete.Blocks", blocks.Select(Named).ToList()))
+                return false;
+
+            List<DayPlanBlock> going = new List<DayPlanBlock>(), kept = new List<DayPlanBlock>();
+            foreach (DayPlanBlock block in blocks)
+                (RemoveReminder(block) == null ? going : kept).Add(block);
+
+            bool deleted = going.Count > 0 && DayPlanStore.Delete(going.Select(b => b.Id).ToList());
+            if (going.Count > 0 && !deleted)
+            {
+                Msg.Show(Loc.F("Plan.DeleteMany.Failed", DayPlanStore.FilePath)
+                    + (going.Any(b => b.RemindMinutesBefore != null) ? "\n\n" + Loc.T("Plan.DeleteMany.RemindersRemoved") : ""),
+                    Loc.T("Common.CouldntDelete"), MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            if (kept.Count > 0)
+                BulkDelete.ReportKept(null, kept.Select(Named).ToList(), Loc.T("Plan.DeleteMany.ReminderFailed"));
+            return deleted;
+        }
+
+        private static string Named(DayPlanBlock block) => Loc.F("Plan.BlockName", block.Title, block.TimeRange());
+
+        // Null once the block has no reminder left (or never had one); else why it couldn't be removed.
+        private static string? RemoveReminder(DayPlanBlock block) => DayPlanReminders.Try(() =>
+        {
+            DayPlanReminders.Remove(block);
+            return null;
+        }, out _);
 
         // Where a block goes when no place was pointed at: today the next quarter hour from now, another day 09:00.
         public static int DefaultStart(DateTime date)

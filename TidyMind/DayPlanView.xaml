@@ -34,6 +34,9 @@
                            TextWrapping="Wrap"/>
             </StackPanel>
 
+            <!-- While blocks are selected (Ctrl or Shift+click, Ctrl+A), the selection bar stands in for these buttons -->
+            <local:SelectionBar x:Name="SelectionBar" Grid.Column="1" VerticalAlignment="Bottom" Margin="16,0,0,2"
+                                Visibility="Collapsed"/>
             <StackPanel x:Name="HeaderButtons" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom"
                         Margin="16,0,0,2">
                 <Button Style="{StaticResource HoverIconButtonStyle}" Content="&#xE76B;" ToolTip="{local:Tr Plan.PrevDay}" AutomationProperties.Name="{local:Tr Plan.PrevDay}"
@@ -68,8 +71,8 @@
                 <ColumnDefinition Width="250"/>
             </Grid.ColumnDefinitions>
 
-            <!-- The day: a sheet like Home's to-do list -->
-            <Border Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}" BorderThickness="1"
+            <!-- The day: a sheet like Home's to-do list. Its blocks can be selected several at once (ItemSelection). -->
+            <Border x:Name="Sheet" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}" BorderThickness="1"
                     CornerRadius="12" ClipToBounds="True">
                 <Grid>
                     <ScrollViewer x:Name="TimelineScroll" VerticalScrollBarVisibility="Auto"

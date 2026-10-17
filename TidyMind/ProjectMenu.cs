@@ -96,7 +96,7 @@ namespace TidyMind
             return true;
         }
 
-        private static bool ConfirmDelete(Project project)
+        internal static bool ConfirmDelete(Project project)
         {
             return Msg.Show(Loc.F("Common.DeleteNamed", project.Name), Loc.T("Common.ConfirmDelete"),
                 MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;

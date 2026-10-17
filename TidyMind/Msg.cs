@@ -18,10 +18,23 @@ namespace TidyMind
             MessageBoxButton buttons = MessageBoxButton.OK, MessageBoxImage icon = MessageBoxImage.None,
             MessageBoxResult defaultResult = MessageBoxResult.None)
         {
-            using (new ButtonLabels(buttons))
+            using (new ButtonLabels(buttons, null))
                 return owner != null
                     ? MessageBox.Show(owner, text, caption, buttons, icon, defaultResult)
                     : MessageBox.Show(text, caption, buttons, icon, defaultResult);
+        }
+
+        // A question about deleting, answered with Delete (or `action`, such as Remove) or Cancel; Esc and the X
+        // cancel too. True for Delete. cancelByDefault: Enter cancels, for a delete that takes a lot with it.
+        public static bool ConfirmDelete(Window? owner, string text, string caption, string action, bool cancelByDefault = false)
+        {
+            using (new ButtonLabels(MessageBoxButton.OKCancel, action))
+            {
+                MessageBoxResult defaultResult = cancelByDefault ? MessageBoxResult.Cancel : MessageBoxResult.OK;
+                return (owner != null
+                    ? MessageBox.Show(owner, text, caption, MessageBoxButton.OKCancel, MessageBoxImage.Warning, defaultResult)
+                    : MessageBox.Show(text, caption, MessageBoxButton.OKCancel, MessageBoxImage.Warning, defaultResult)) == MessageBoxResult.OK;
+            }
         }
 
         private sealed class ButtonLabels : IDisposable
@@ -30,12 +43,14 @@ namespace TidyMind
             private const int IDOK = 1, IDCANCEL = 2, IDYES = 6, IDNO = 7;
 
             private readonly MessageBoxButton buttons;
+            private readonly string? okLabel; // in place of OK, for a box whose OK does one thing (Delete)
             private readonly HookProc proc; // held here so it isn't collected while Windows can still call it
             private IntPtr hook;
 
-            public ButtonLabels(MessageBoxButton buttons)
+            public ButtonLabels(MessageBoxButton buttons, string? okLabel)
             {
                 this.buttons = buttons;
+                this.okLabel = okLabel;
                 proc = OnHook;
                 hook = SetWindowsHookEx(WH_CBT, proc, IntPtr.Zero, GetCurrentThreadId());
             }
@@ -52,7 +67,7 @@ namespace TidyMind
                             SetDlgItemText(wParam, IDCANCEL, Loc.T("Common.Ok"));
                             break;
                         case MessageBoxButton.OKCancel:
-                            SetDlgItemText(wParam, IDOK, Loc.T("Common.Ok"));
+                            SetDlgItemText(wParam, IDOK, okLabel ?? Loc.T("Common.Ok"));
                             SetDlgItemText(wParam, IDCANCEL, Loc.T("Common.Cancel"));
                             break;
                         default:

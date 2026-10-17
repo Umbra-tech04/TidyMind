@@ -143,6 +143,105 @@ Datoteka nije promenjena. Popravi je ili je vrati iz rezervne kopije, pa ponovo 
 
 Sada će se zatvoriti, otvori ga ponovo.</value>
   </data>
+  <data name="Bulk.CantUndo" xml:space="preserve">
+    <value>Ovo ne može da se poništi.</value>
+  </data>
+  <data name="Bulk.Delete.Blocks.Few" xml:space="preserve">
+    <value>Obrisati {0} bloka iz plana?</value>
+  </data>
+  <data name="Bulk.Delete.Blocks.One" xml:space="preserve">
+    <value>Obrisati {0} blok iz plana?</value>
+  </data>
+  <data name="Bulk.Delete.Blocks.Other" xml:space="preserve">
+    <value>Obrisati {0} blokova iz plana?</value>
+  </data>
+  <data name="Bulk.Delete.Items.Few" xml:space="preserve">
+    <value>Obrisati {0} stavke?</value>
+  </data>
+  <data name="Bulk.Delete.Items.One" xml:space="preserve">
+    <value>Obrisati {0} stavku?</value>
+  </data>
+  <data name="Bulk.Delete.Items.Other" xml:space="preserve">
+    <value>Obrisati {0} stavki?</value>
+  </data>
+  <data name="Bulk.Delete.Memories.Few" xml:space="preserve">
+    <value>Obrisati {0} memorije?</value>
+  </data>
+  <data name="Bulk.Delete.Memories.One" xml:space="preserve">
+    <value>Obrisati {0} memoriju?</value>
+  </data>
+  <data name="Bulk.Delete.Memories.Other" xml:space="preserve">
+    <value>Obrisati {0} memorija?</value>
+  </data>
+  <data name="Bulk.Delete.Projects.Few" xml:space="preserve">
+    <value>Obrisati {0} projekta?</value>
+  </data>
+  <data name="Bulk.Delete.Projects.One" xml:space="preserve">
+    <value>Obrisati {0} projekat?</value>
+  </data>
+  <data name="Bulk.Delete.Projects.Other" xml:space="preserve">
+    <value>Obrisati {0} projekata?</value>
+  </data>
+  <data name="Bulk.Delete.Reminders.Few" xml:space="preserve">
+    <value>Obrisati {0} podsetnika?</value>
+  </data>
+  <data name="Bulk.Delete.Reminders.One" xml:space="preserve">
+    <value>Obrisati {0} podsetnik?</value>
+  </data>
+  <data name="Bulk.Delete.Reminders.Other" xml:space="preserve">
+    <value>Obrisati {0} podsetnika?</value>
+  </data>
+  <data name="Bulk.Delete.Tasks.Few" xml:space="preserve">
+    <value>Obrisati {0} zadatka?</value>
+  </data>
+  <data name="Bulk.Delete.Tasks.One" xml:space="preserve">
+    <value>Obrisati {0} zadatak?</value>
+  </data>
+  <data name="Bulk.Delete.Tasks.Other" xml:space="preserve">
+    <value>Obrisati {0} zadataka?</value>
+  </data>
+  <data name="Bulk.Delete.Todos.Few" xml:space="preserve">
+    <value>Obrisati {0} obaveze?</value>
+  </data>
+  <data name="Bulk.Delete.Todos.One" xml:space="preserve">
+    <value>Obrisati {0} obavezu?</value>
+  </data>
+  <data name="Bulk.Delete.Todos.Other" xml:space="preserve">
+    <value>Obrisati {0} obaveza?</value>
+  </data>
+  <data name="Bulk.Kept.Few" xml:space="preserve">
+    <value>Brisanje nije uspelo ({0}):</value>
+  </data>
+  <data name="Bulk.Kept.One" xml:space="preserve">
+    <value>Brisanje nije uspelo ({0}):</value>
+  </data>
+  <data name="Bulk.Kept.Other" xml:space="preserve">
+    <value>Brisanje nije uspelo ({0}):</value>
+  </data>
+  <data name="Bulk.MemoriesWarning" xml:space="preserve">
+    <value>Svaka se briše zajedno sa svime što sadrži: projektima ili stavkama, listom obaveza, beleškama, slikama i priloženim datotekama. Ovo ne može da se poništi.</value>
+  </data>
+  <data name="Bulk.More.Few" xml:space="preserve">
+    <value>i još {0}</value>
+  </data>
+  <data name="Bulk.More.One" xml:space="preserve">
+    <value>i još {0}</value>
+  </data>
+  <data name="Bulk.More.Other" xml:space="preserve">
+    <value>i još {0}</value>
+  </data>
+  <data name="Bulk.Remove.Files.Few" xml:space="preserve">
+    <value>Ukloniti {0} datoteke iz ovog projekta?</value>
+  </data>
+  <data name="Bulk.Remove.Files.One" xml:space="preserve">
+    <value>Ukloniti {0} datoteku iz ovog projekta?</value>
+  </data>
+  <data name="Bulk.Remove.Files.Other" xml:space="preserve">
+    <value>Ukloniti {0} datoteka iz ovog projekta?</value>
+  </data>
+  <data name="Bulk.SampleAmong" xml:space="preserve">
+    <value>Jedna od njih je primer memorije.</value>
+  </data>
   <data name="Calendar.CloseTip" xml:space="preserve">
     <value>Zatvori  (Esc)</value>
   </data>
@@ -283,15 +382,6 @@ Sada će se zatvoriti, otvori ga ponovo.</value>
   </data>
   <data name="Collection.AddItem" xml:space="preserve">
     <value>Dodaj stavku</value>
-  </data>
-  <data name="Collection.DeleteMany.Few" xml:space="preserve">
-    <value>Obrisati {0} stavke? Ovo ne može da se poništi.</value>
-  </data>
-  <data name="Collection.DeleteMany.One" xml:space="preserve">
-    <value>Obrisati {0} stavku? Ovo ne može da se poništi.</value>
-  </data>
-  <data name="Collection.DeleteMany.Other" xml:space="preserve">
-    <value>Obrisati {0} stavki? Ovo ne može da se poništi.</value>
   </data>
   <data name="Collection.Empty" xml:space="preserve">
     <value>U ovom odeljku još nema stavki. Klikni na „+ Dodaj stavku“ da počneš.</value>
@@ -847,6 +937,9 @@ TidyMind mora da se zatvori. Detalji su upisani u {1}.</value>
   <data name="Files.RemoveConfirm" xml:space="preserve">
     <value>Ukloniti „{0}“ iz ovog projekta?</value>
   </data>
+  <data name="Files.RemoveManyCaption" xml:space="preserve">
+    <value>Uklanjanje datoteka</value>
+  </data>
   <data name="Files.RenameTitle" xml:space="preserve">
     <value>Preimenovanje datoteke</value>
   </data>
@@ -1346,6 +1439,16 @@ Datoteka je ostala kakva je bila. Zatvori ovaj prozor i otvori ga ponovo kada da
   <data name="Plan.Delete.ReminderRemoved" xml:space="preserve">
     <value>Njegov podsetnik je uklonjen.</value>
   </data>
+  <data name="Plan.DeleteMany.Failed" xml:space="preserve">
+    <value>Blokovi nisu obrisani jer ova datoteka ne može da se pročita ili upiše:
+{0}</value>
+  </data>
+  <data name="Plan.DeleteMany.ReminderFailed" xml:space="preserve">
+    <value>Njihovi podsetnici nisu uklonjeni: reminders.json ne može da se pročita ili upiše, ili Windows Planer zadataka nije prihvatio izmenu. Ovi blokovi su zadržani.</value>
+  </data>
+  <data name="Plan.DeleteMany.RemindersRemoved" xml:space="preserve">
+    <value>Njihovi podsetnici su uklonjeni.</value>
+  </data>
   <data name="Plan.Detail.Overlaps" xml:space="preserve">
     <value>Preklapa se sa drugim blokom</value>
   </data>
@@ -1592,15 +1695,6 @@ Datoteka nije promenjena. Popravi je ili obriši, pa ćeš ponovo moći da plani
   <data name="Project.AddPrompt" xml:space="preserve">
     <value>Kako se zove projekat?</value>
   </data>
-  <data name="Project.DeleteMany.Few" xml:space="preserve">
-    <value>Obrisati {0} projekta? Ovo ne može da se poništi.</value>
-  </data>
-  <data name="Project.DeleteMany.One" xml:space="preserve">
-    <value>Obrisati {0} projekat? Ovo ne može da se poništi.</value>
-  </data>
-  <data name="Project.DeleteMany.Other" xml:space="preserve">
-    <value>Obrisati {0} projekata? Ovo ne može da se poništi.</value>
-  </data>
   <data name="Project.Empty" xml:space="preserve">
     <value>U ovom odeljku još nema projekata. Klikni na „+ Dodaj projekat“ da počneš.</value>
   </data>
@@ -1689,7 +1783,7 @@ Tvoja poslednja izmena nije sačuvana.</value>
     <value>Kopiranje datoteka je u toku</value>
   </data>
   <data name="ProjectWindow.TaskHint" xml:space="preserve">
-    <value>Desni klik na zadatak nudi još opcija (kopiranje teksta).</value>
+    <value>Desni klik na zadatak nudi još opcija (kopiranje teksta). Ctrl+klik ili Shift+klik bira više zadataka.</value>
   </data>
   <data name="ProjectWindow.TaskPlaceholder" xml:space="preserve">
     <value>Dodaj zadatak…</value>
@@ -1705,6 +1799,9 @@ Tvoja poslednja izmena nije sačuvana.</value>
   </data>
   <data name="Reminder.DeleteFailed" xml:space="preserve">
     <value>Podsetnik nije obrisan: reminders.json ne može da se pročita ili upiše, ili Windows Planer zadataka nije prihvatio izmenu.</value>
+  </data>
+  <data name="Reminder.DeleteManyFailed" xml:space="preserve">
+    <value>Ovi podsetnici nisu obrisani: reminders.json ne može da se pročita ili upiše, ili Windows Planer zadataka nije prihvatio izmenu.</value>
   </data>
   <data name="Reminder.Form.Date" xml:space="preserve">
     <value>Datum</value>

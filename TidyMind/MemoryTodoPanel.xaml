@@ -69,8 +69,10 @@
                 <TextBlock x:Name="ErrorText" FontSize="12" Foreground="{StaticResource Danger}" TextWrapping="Wrap"
                            Margin="0,6,0,0" Visibility="Collapsed"/>
 
-                <!-- About four rows, then it scrolls; at either end the wheel moves on to the cards -->
+                <!-- About four rows, then it scrolls; at either end the wheel moves on to the cards. Ctrl or Shift+click,
+                     Ctrl+A select several (ItemSelection); Delete deletes them. -->
                 <ScrollViewer x:Name="ListScroll" MaxHeight="124" VerticalScrollBarVisibility="Auto" Margin="0,6,0,0"
+                              FocusVisualStyle="{x:Null}"
                               PreviewMouseWheel="ListScroll_PreviewMouseWheel">
                     <StackPanel x:Name="ItemList"/>
                 </ScrollViewer>

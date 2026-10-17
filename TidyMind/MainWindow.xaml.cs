@@ -27,6 +27,7 @@ namespace TidyMind
         private List<Profile> profiles;
         private string selectedKey = HomeKey;
         private readonly DragReorder<Profile> memoryDrag;
+        private readonly ItemSelection<Profile> memorySelection;
 
         // profiles: the list of memories, already read by App (which stops before this if it can't be read).
         public MainWindow(List<Profile> profiles)
@@ -37,6 +38,9 @@ namespace TidyMind
             // Only within a group: dropping a collection among projects would look like a type change.
             memoryDrag = new DragReorder<Profile>(NavPanel, Orientation.Vertical, 2,
                 (dragged, target) => dragged.Type == target.Type, MoveMemory);
+            memorySelection = new ItemSelection<Profile>(NavScroll, DeleteMemories, PaintNavItem);
+            memorySelection.ClearOnBlankClick(NavScroll);
+            memorySelection.SelectionChanged += ShowNavSelection;
             ShowLanguage();
             // The sidebar and the switch are drawn here; each page and window follows the switch on its own.
             Loc.Track(this, () =>
@@ -161,6 +165,7 @@ namespace TidyMind
         {
             NavPanel.Children.Clear();
             memoryDrag.Clear();
+            memorySelection.BeginRender();
 
             NavPanel.Children.Add(CreateNavItem("🏠", Loc.T("Nav.Home"), selectedKey == HomeKey,
                 () => NavigateHome(), null, false));
@@ -183,6 +188,47 @@ namespace TidyMind
                 NavPanel.Children.Add(CreateMemoryItem(profile));
             if (projectMemories.Count == 0)
                 NavPanel.Children.Add(CreateEmptyHint(Loc.T("Nav.NoProjects")));
+
+            memorySelection.EndRender();
+            ShowNavSelection();
+        }
+
+        // ---- Several memories at once ---------------------------------------
+
+        // The bar above the sidebar's buttons while any memory is selected.
+        private void ShowNavSelection()
+        {
+            NavSelectionCount.Text = Loc.F("Selection.Count", memorySelection.Count);
+            NavSelectionBar.Visibility = memorySelection.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void NavDeleteSelected_Click(object sender, RoutedEventArgs e) => memorySelection.DeleteSelected();
+
+        private void NavClearSelection_Click(object sender, RoutedEventArgs e) => memorySelection.ClearSelection();
+
+        // A selected memory: the accent fill in place of the open or hovered look (CreateNavItem's hover leaves it).
+        private void PaintNavItem(FrameworkElement element, bool on)
+        {
+            Border item = (Border)element;
+            if (on)
+                item.Background = SelectionLook.SidebarFill;
+            else
+                item.Background = item.Name == "Nav" + selectedKey || item.IsMouseOver ? B("#2A2926") : Brushes.Transparent;
+        }
+
+        // One question for all of them (a stronger one: each takes everything in it along), then the same delete as one.
+        private bool DeleteMemories(IReadOnlyList<Profile> doomed)
+        {
+            if (doomed.Count == 1)
+            {
+                DeleteMemory(doomed[0]); // one selected: the question for one, as from its menu
+                return !profiles.Contains(doomed[0]);
+            }
+            string warning = Loc.T("Bulk.MemoriesWarning")
+                + (doomed.Any(p => p.IsSample == true) ? "\n\n" + Loc.T("Bulk.SampleAmong") : "");
+            if (!BulkDelete.Confirm(this, "Bulk.Delete.Memories", doomed.Select(p => p.Name).ToList(), warning, serious: true))
+                return false;
+            return RemoveMemories(doomed);
         }
 
         private Border CreateMemoryItem(Profile profile)
@@ -208,6 +254,7 @@ namespace TidyMind
             Border item = CreateNavItem("📁", profile.Name, selectedKey == KeyOf(profile),
                 () => NavigateTo(profile), menu, true);
             item.Name = "Nav" + KeyOf(profile); // the guided tour points at it (SampleNavItem)
+            memorySelection.Attach(item, profile); // before the drag: a Ctrl or Shift click selects, and neither opens nor drags
             memoryDrag.Attach(item, profile);
             return item;
         }
@@ -288,8 +335,9 @@ namespace TidyMind
             CardEffects.AttachClick(item, onClick);
             if (!active)
             {
-                item.MouseEnter += (s, e) => item.Background = B("#2A2926");
-                item.MouseLeave += (s, e) => item.Background = Brushes.Transparent;
+                // A selected item keeps its selected fill (PaintNavItem).
+                item.MouseEnter += (s, e) => { if (item.Background != SelectionLook.SidebarFill) item.Background = B("#2A2926"); };
+                item.MouseLeave += (s, e) => { if (item.Background != SelectionLook.SidebarFill) item.Background = Brushes.Transparent; };
             }
 
             return item;
@@ -392,9 +440,6 @@ namespace TidyMind
             NavigateTo(profile);
         }
 
-        // The memory leaves profiles.json first; only once that's saved are its folder and the pictures and attached
-        // files it owns deleted (best effort: one that can't be deleted is left behind, unused). If the save fails,
-        // nothing is deleted.
         private void DeleteMemory(Profile profile)
         {
             MessageBoxResult result = Msg.Show(
@@ -402,27 +447,39 @@ namespace TidyMind
                 + (profile.IsSample == true ? "\n\n" + Loc.T("Tour.DeleteNote") : ""),
                 Loc.T("Common.ConfirmDelete"), MessageBoxButton.YesNo, MessageBoxImage.Warning);
 
-            if (result != MessageBoxResult.Yes) return;
+            if (result == MessageBoxResult.Yes)
+                RemoveMemories(new[] { profile });
+        }
 
-            int index = profiles.IndexOf(profile);
-            profiles.Remove(profile);
+        // One memory (its menu) or several (a selection). They leave profiles.json first, in one save; only once that
+        // worked are their folders and the pictures and attached files they own deleted (best effort: one that can't
+        // be deleted is left behind, unused). If the save fails, nothing is deleted (false). The open one among them: Home.
+        private bool RemoveMemories(IReadOnlyList<Profile> doomed)
+        {
+            List<Profile> before = profiles.ToList();
+            profiles.RemoveAll(doomed.Contains);
             if (!ProfileManager.TrySaveProfiles(profiles))
             {
-                profiles.Insert(index, profile);
+                profiles.Clear();
+                profiles.AddRange(before);
                 WarnProfilesNotSaved(Loc.T("Memory.NotSaved.NothingDeleted"));
-                return;
+                return false;
             }
 
-            DeleteOwnedFiles(profile);
-            MemoryFiles.DeleteFolder(profile);
+            foreach (Profile profile in doomed)
+            {
+                DeleteOwnedFiles(profile);
+                MemoryFiles.DeleteFolder(profile);
+            }
 
-            if (selectedKey == KeyOf(profile))
+            if (doomed.Any(p => selectedKey == KeyOf(p)))
                 NavigateHome();
             else
             {
                 BuildNav();
-                (ContentArea.Content as HomeView)?.Refresh(); // the deleted memory's projects/items were on it
+                (ContentArea.Content as HomeView)?.Refresh(); // the deleted memories' projects/items were on it
             }
+            return true;
         }
 
         private static void WarnProfilesNotSaved(string consequence)

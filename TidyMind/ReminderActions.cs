@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -6,7 +7,7 @@ using System.Windows;
 
 namespace TidyMind
 {
-    // Editing and deleting one reminder, shared by the Reminders window and the Home dashboard so both ask the
+    // Editing and deleting reminders, shared by the Reminders window and the Home dashboard so both ask the
     // same question and do the same thing. Each returns whether something changed, so the caller can redraw.
     public static class ReminderActions
     {
@@ -35,6 +36,26 @@ namespace TidyMind
             return window.ShowDialog() == true;
         }
 
+        // Several (a selection), asked once, each deleted the way one is (its entry and its scheduled task). One that
+        // can't be is kept and named afterwards. `names`: what the list shows for each. True if any went.
+        public static bool ConfirmDelete(Window owner, IReadOnlyList<Guid> ids, IReadOnlyList<string> names)
+        {
+            if (ids.Count == 1)
+                return ConfirmDelete(ids[0]);
+            if (!BulkDelete.Confirm(owner, "Bulk.Delete.Reminders", names))
+                return false;
+
+            List<string> kept = new List<string>();
+            for (int i = 0; i < ids.Count; i++)
+            {
+                if (!TryDelete(ids[i]))
+                    kept.Add(names[i]);
+            }
+            if (kept.Count > 0)
+                BulkDelete.ReportKept(owner, kept, Loc.T("Reminder.DeleteManyFailed"));
+            return kept.Count < ids.Count;
+        }
+
         public static bool ConfirmDelete(Guid id)
         {
             MessageBoxResult result = Msg.Show(Loc.T("Reminder.DeleteConfirm"), Loc.T("Common.ConfirmDelete"),
@@ -42,6 +63,14 @@ namespace TidyMind
             if (result != MessageBoxResult.Yes)
                 return false;
 
+            if (TryDelete(id))
+                return true;
+            Msg.Show(Loc.T("Reminder.DeleteFailed"), Loc.T("Common.CouldntDelete"), MessageBoxButton.OK, MessageBoxImage.Warning);
+            return false;
+        }
+
+        private static bool TryDelete(Guid id)
+        {
             try
             {
                 ReminderManager.DeleteReminder(id);
@@ -50,7 +79,6 @@ namespace TidyMind
             catch (Exception e) when (e is IOException || e is JsonException || e is UnauthorizedAccessException
                                       || e is COMException)
             {
-                Msg.Show(Loc.T("Reminder.DeleteFailed"), Loc.T("Common.CouldntDelete"), MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
         }

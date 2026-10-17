@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
@@ -16,9 +17,18 @@ namespace TidyMind
         private Guid? highlightedId;
         private Border highlightedRow;
 
+        // By Id: every render reads reminders.json again.
+        private readonly ItemSelection<Guid> selection;
+        private readonly Dictionary<Guid, string> shownNames = new Dictionary<Guid, string>();
+
         private RemindersWindow()
         {
             InitializeComponent();
+            selection = new ItemSelection<Guid>(RemindersPanel, DeleteSelected, (row, on) => PaintRow((Border)row, on));
+            selection.ClearOnBlankClick(RemindersPanel);
+            selection.SelectionChanged += UpdateSelectionBar;
+            SelectionBar.DeleteClicked += () => selection.DeleteSelected();
+            SelectionBar.CancelClicked += selection.ClearSelection;
             RenderReminders();
             Activated += (s, e) => RenderReminders();
             Loc.Track(this, RenderReminders);
@@ -64,15 +74,60 @@ namespace TidyMind
             instance = null;
         }
 
+        // Esc closes the window; with reminders selected, it drops the selection first.
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Escape)
+            if (e.Key != Key.Escape)
+                return;
+            if (selection.Count > 0)
+            {
+                selection.ClearSelection();
+                e.Handled = true;
+            }
+            else
                 Close();
+        }
+
+        private void UpdateSelectionBar()
+        {
+            bool any = selection.Count > 0;
+            SelectionBar.Show(selection.Count);
+            SelectionBar.Visibility = any ? Visibility.Visible : Visibility.Collapsed;
+            AddReminderButton.Visibility = any ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        private static readonly Brush RowEdge = new SolidColorBrush(Color.FromRgb(0xE0, 0xE0, 0xDE));
+
+        // Selected: the accent fill and edge. Else white, or for the one the dashboard opened its soft fill alone,
+        // so it can still be told apart from a selected row.
+        private void PaintRow(Border row, bool on)
+        {
+            Brush rest = row == highlightedRow ? (Brush)FindResource("AccentSoft") : Brushes.White;
+            SelectionLook.PaintRow(row, on, rest, RowEdge);
+        }
+
+        // One question for all of them; each goes the way one does (ReminderActions).
+        private bool DeleteSelected(IReadOnlyList<Guid> ids)
+        {
+            bool deleted = ReminderActions.ConfirmDelete(this, ids, ids.Select(id => shownNames[id]).ToList());
+            RenderReminders();
+            return deleted;
+        }
+
+        // A row's Delete on one of several selected reminders deletes all of them.
+        private void DeleteFromRow(Guid id)
+        {
+            if (selection.IsSelected(id) && selection.Count > 1)
+                selection.DeleteSelected();
+            else if (ReminderActions.ConfirmDelete(id))
+                RenderReminders();
         }
 
         private void RenderReminders()
         {
             RemindersPanel.Children.Clear();
+            selection.BeginRender();
+            shownNames.Clear();
             highlightedRow = null;
 
             // Unreadable: said so in place of the list, and adding is off (it would fail on the same file anyway).
@@ -102,6 +157,7 @@ namespace TidyMind
                 empty.HorizontalAlignment = HorizontalAlignment.Center;
                 empty.Margin = new Thickness(0, 20, 0, 0);
                 RemindersPanel.Children.Add(empty);
+                selection.EndRender();
                 return;
             }
 
@@ -110,14 +166,16 @@ namespace TidyMind
             {
                 Border row = CreateReminderRow(reminder, blockIds);
                 RemindersPanel.Children.Add(row);
+                shownNames[reminder.Id] = reminder.Message;
 
                 if (reminder.Id == highlightedId)
                 {
-                    row.Background = (Brush)FindResource("AccentSoft");
-                    row.BorderBrush = (Brush)FindResource("Accent");
                     highlightedRow = row;
+                    PaintRow(row, false);
                 }
+                selection.Attach(row, reminder.Id);
             }
+            selection.EndRender();
         }
 
         private Border CreateReminderRow(Reminder reminder, ISet<Guid>? blockIds)
@@ -167,14 +225,16 @@ namespace TidyMind
             grid.Children.Add(deleteButton);
 
             row.Child = grid;
+
+            // The same Delete as the button (the texts have their own Copy menu); on one of several selected
+            // reminders, ItemSelection puts the menu for all of them in its place.
+            MenuItem delete = new MenuItem { Header = Loc.T("Common.Delete") };
+            delete.Click += (s, e) => DeleteFromRow(reminder.Id);
+            row.ContextMenu = new ContextMenu { Items = { delete, new Separator(), TextCopy.CopyItem(() => reminder.Message) } };
             return row;
         }
 
-        private void DeleteReminder_Click(object sender, RoutedEventArgs e)
-        {
-            if (ReminderActions.ConfirmDelete((Guid)((Button)sender).Tag))
-                RenderReminders();
-        }
+        private void DeleteReminder_Click(object sender, RoutedEventArgs e) => DeleteFromRow((Guid)((Button)sender).Tag);
 
         private void AddReminderButton_Click(object sender, RoutedEventArgs e)
         {

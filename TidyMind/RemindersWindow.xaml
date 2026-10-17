@@ -23,16 +23,21 @@
         </Border>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="{StaticResource BgMain}">
-            <StackPanel x:Name="RemindersPanel" Margin="20"/>
+            <!-- Ctrl or Shift+click, Ctrl+A select several (ItemSelection); Delete deletes them -->
+            <StackPanel x:Name="RemindersPanel" Margin="20" Focusable="True" FocusVisualStyle="{x:Null}" Background="Transparent"/>
         </ScrollViewer>
 
         <Border Grid.Row="2" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
                 BorderThickness="0,1,0,0" Padding="20,10">
-            <Button x:Name="AddReminderButton"
-                    MinWidth="160" Padding="16,0" Height="34" HorizontalAlignment="Right"
-                    Click="AddReminderButton_Click">
-                <TextBlock><Run Text="+ "/><Run Text="{local:Tr Common.AddReminder}"/></TextBlock>
-            </Button>
+            <Grid>
+                <!-- While reminders are selected, the selection bar stands in for Add -->
+                <local:SelectionBar x:Name="SelectionBar" HorizontalAlignment="Right" Visibility="Collapsed"/>
+                <Button x:Name="AddReminderButton"
+                        MinWidth="160" Padding="16,0" Height="34" HorizontalAlignment="Right"
+                        Click="AddReminderButton_Click">
+                    <TextBlock><Run Text="+ "/><Run Text="{local:Tr Common.AddReminder}"/></TextBlock>
+                </Button>
+            </Grid>
         </Border>
     </Grid>
 </Window>
