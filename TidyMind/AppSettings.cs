@@ -33,7 +33,7 @@ namespace TidyMind
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? CheckForUpdates { get; set; }
 
-        // When GitHub last answered a check (UTC), so the automatic one runs at most once a day (Updates).
+        // When GitHub last answered a check (UTC), automatic or "Check now": shown in Settings > Updates, never a limit.
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public DateTime? LastUpdateCheck { get; set; }
 

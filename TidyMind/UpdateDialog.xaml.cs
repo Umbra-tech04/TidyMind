@@ -53,6 +53,7 @@ namespace TidyMind
         internal string Error => ErrorText.Text;
         internal bool IsBusy => stage == Stage.Download || stage == Stage.Verify || stage == Stage.Install;
         internal bool HasInstaller => verified != null;
+        internal Version Version => release.Version;
 
         private void ShowStage(Stage next)
         {

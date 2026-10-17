@@ -78,18 +78,16 @@ static partial class Program
 
         AppSettings s = new AppSettings();
         DateTime now = DateTime.UtcNow;
-        Check(Updates.ShouldCheckAutomatically(s, now), "never checked: check");
-        s.LastUpdateCheck = now.AddHours(-1);
-        Check(!Updates.ShouldCheckAutomatically(s, now), "checked an hour ago: not again");
-        s.LastUpdateCheck = now.AddHours(-23.9);
-        Check(!Updates.ShouldCheckAutomatically(s, now), "checked 23.9 hours ago: not again");
-        s.LastUpdateCheck = now.AddHours(-24.1);
-        Check(Updates.ShouldCheckAutomatically(s, now), "checked 24.1 hours ago: check");
-        s.LastUpdateCheck = now.AddDays(3);
-        Check(Updates.ShouldCheckAutomatically(s, now), "a last check in the future (clock set back): check");
-        s.LastUpdateCheck = null;
+        Check(Updates.ShouldCheckAutomatically(s), "on by default: the start checks");
+        s.LastUpdateCheck = now.AddMinutes(-1);
+        Check(Updates.ShouldCheckAutomatically(s), "a check a minute ago doesn't stop the start's check");
         s.CheckForUpdates = false;
-        Check(!Updates.ShouldCheckAutomatically(s, now), "turned off: never");
+        Check(!Updates.ShouldCheckAutomatically(s), "turned off: never");
+        Check(Updates.IsRecheckDue(null, now), "while running: no automatic check yet, re-check");
+        Check(!Updates.IsRecheckDue(now.AddHours(-1), now), "while running: an hour after the last check, not yet");
+        Check(!Updates.IsRecheckDue(now.AddHours(-5.9), now), "while running: 5.9 hours after, not yet");
+        Check(Updates.IsRecheckDue(now.AddHours(-6.1), now), "while running: 6.1 hours after, re-check");
+        Check(Updates.IsRecheckDue(now.AddDays(3), now), "while running: a last check in the future (clock set back), re-check");
     }
 
     static void ParseChecks()
@@ -342,7 +340,7 @@ static partial class Program
         File.Delete(downloads);
     }
 
-    // ---- Automatic check, switch, once a day, Skip and Later ------------------------
+    // ---- Automatic check: every start, re-check, ETag, switch, pending offer, Skip and Later ----
 
     static async Task AutomaticScenarios(MainWindow main, FakeServer server)
     {
@@ -358,8 +356,7 @@ static partial class Program
         foreach ((string what, bool? on, DateTime? last, int expected) in new (string, bool?, DateTime?, int)[]
         {
             ("turned off", false, null, 0),
-            ("on, checked an hour ago", null, DateTime.UtcNow.AddHours(-1), 0),
-            ("on, checked two days ago", null, DateTime.UtcNow.AddDays(-2), 1),
+            ("on, checked a minute ago", null, DateTime.UtcNow.AddMinutes(-1), 1),
             ("on, never checked", null, null, 1)
         })
         {
@@ -367,10 +364,53 @@ static partial class Program
             server.Clear();
             Updates.Start(main);
             await Wait(2500);
-            Check(server.Requests == expected, what + ": " + server.Requests + " request(s) to the release server");
+            Check(server.Requests == expected, "start, " + what + ": " + server.Requests + " request(s) to the release server");
         }
         DateTime? recorded = AppSettings.Load().LastUpdateCheck;
-        Check(recorded != null && DateTime.UtcNow - recorded.Value < TimeSpan.FromMinutes(1), "an answered check is remembered (LastUpdateCheck)");
+        Check(recorded != null && DateTime.UtcNow - recorded.Value < TimeSpan.FromMinutes(1), "an answered check is remembered (LastUpdateCheck, shown in Settings)");
+
+        // "Check now" a moment ago doesn't stand in for the start's own check.
+        server.Clear();
+        await Updates.CheckNowAsync();
+        Updates.Start(main);
+        await Wait(2500);
+        Check(server.Requests == 2, "Check now, then a start: the start still checks (" + server.Requests + " requests)");
+
+        // While running: again 6 hours after the last automatic check, whatever "Check now" did in between.
+        server.Clear();
+        Updates.RecheckIfDue(main, DateTime.UtcNow.AddHours(1));
+        await Wait(1500);
+        Check(server.Requests == 0, "while running, an hour later: no re-check yet");
+        await Updates.CheckNowAsync();
+        Updates.RecheckIfDue(main, DateTime.UtcNow.AddHours(6.1));
+        await Wait(1500);
+        Check(server.Requests == 2, "while running, 6.1 hours later: re-checked, a Check now in between notwithstanding (" + server.Requests + " requests)");
+        AppSettings.Update(s => s.CheckForUpdates = false);
+        server.Clear();
+        Updates.RecheckIfDue(main, DateTime.UtcNow.AddHours(12.2));
+        await Wait(1500);
+        Check(server.Requests == 0, "turned off: no re-check");
+        AppSettings.Update(s => s.CheckForUpdates = null);
+
+        // A check asks "changed since?" with the ETag of the last answer; a 304 reuses that answer.
+        const string etag = "\"harness-etag-1\"";
+        json = ServerJson(server, "v9.9.9", 10);
+        server.Route = p => p != api ? Reply.Status(404)
+            : server.Log.Last().Contains("If-None-Match: " + etag) ? Reply.Status(304) : Reply.Json(json).WithETag(etag);
+        server.Clear();
+        UpdateCheckResult fresh = await Updates.CheckNowAsync();
+        UpdateCheckResult same = await Updates.CheckNowAsync();
+        List<string> heads = server.Log;
+        Check(heads.Count == 2 && !heads[0].Contains("If-None-Match") && heads[1].Contains("If-None-Match: " + etag),
+            "the second check sends If-None-Match with the first answer's ETag");
+        Check(fresh.Newer?.Version == new Version(9, 9, 9) && same.Answered && same.Problem == UpdateProblem.None
+            && same.Newer?.Version == new Version(9, 9, 9) && same.Reason.Contains("unchanged"), "a 304 reuses the first answer: " + same.Reason);
+        server.Route = p => p == api ? Reply.Json(json) : Reply.Status(404);
+        await Updates.CheckNowAsync(); // an answer without an ETag: nothing kept, the next check asks plainly
+        server.Clear();
+        await Updates.CheckNowAsync();
+        Check(server.Log.Count == 1 && !server.Log[0].Contains("If-None-Match"), "after an answer without an ETag: no If-None-Match");
+        json = ServerJson(server, "v" + Running, 10);
 
         // A failed check isn't counted, so the next start tries again.
         AppSettings.Update(s => s.LastUpdateCheck = null);
@@ -403,6 +443,10 @@ static partial class Program
         await Updates.CheckAutomaticallyAsync(main);
         await Wait(5000);
         Check(Dialog() == null, "after Later: not offered again in this run");
+        server.Clear();
+        Updates.RecheckIfDue(main, DateTime.UtcNow.AddHours(7));
+        await Wait(1500);
+        Check(server.Requests == 0, "after Later: no re-checks in this run either");
 
         // "Next start": offered again. A modal window open: wait for it to close.
         Updates.ResetForTests();
@@ -430,6 +474,27 @@ static partial class Program
         Check(dialog != null && dialog.Title == Loc.T("Update.Title"), "a newer one than the skipped version is");
         Click(dialog, "LaterButton");
         await Wait(500);
+
+        // Found while the window is minimized (the user is elsewhere): kept, and shown once they're back, with the
+        // newest version a re-check found in the meantime, and only once.
+        AppSettings.Update(s => s.SkippedUpdate = null);
+        Updates.ResetForTests();
+        main.WindowState = WindowState.Minimized;
+        await Wait(500);
+        json = ServerJson(server, "v9.9.9", 10);
+        await Updates.CheckAutomaticallyAsync(main);
+        json = ServerJson(server, "v9.9.11", 10);
+        await Updates.CheckAutomaticallyAsync(main);
+        await Wait(4500);
+        Check(Dialog() == null, "not shown while the window is minimized");
+        main.WindowState = WindowState.Normal;
+        await Foreground(main);
+        dialog = await WaitFor(Dialog, 10000);
+        Check(dialog != null && dialog.Version == new Version(9, 9, 11),
+            "shown as soon as the user is back, with the newest version found while it waited" + (dialog == null ? " (" + IdleState(main) + ")" : ": " + dialog.Version));
+        Click(dialog, "LaterButton");
+        await Wait(4500);
+        Check(Dialog() == null, "and offered only once");
 
         AppSettings.Update(s => { s.SkippedUpdate = null; s.CheckForUpdates = null; });
         main.Topmost = false;
@@ -914,8 +979,11 @@ static partial class Program
         public static Reply Text(string text) => new Reply { Body = Encoding.ASCII.GetBytes(text), ContentType = "text/plain" };
         public static Reply Status(int status, string body = "") => new Reply { Code = status, Body = Encoding.UTF8.GetBytes(body) };
         public static Reply Redirect(string location) => new Reply { Code = 302, Location = location };
+        public string ETag;
+
         public static Reply Cut() => new Reply { CutAtOnce = true };
         public Reply Delayed(int ms) { DelayMs = ms; return this; }
+        public Reply WithETag(string etag) { ETag = etag; return this; }
     }
 
     // HTTP/1.1 on 127.0.0.1 (and ::1, so "localhost" works too), one request per connection. Only loopback: no
@@ -990,6 +1058,7 @@ static partial class Program
                     StringBuilder h = new StringBuilder("HTTP/1.1 " + reply.Code + " Harness\r\nConnection: close\r\nContent-Type: " + reply.ContentType + "\r\n");
                     if (!reply.OmitLength) h.Append("Content-Length: " + reply.Body.Length + "\r\n");
                     if (reply.Location != null) h.Append("Location: " + reply.Location + "\r\n");
+                    if (reply.ETag != null) h.Append("ETag: " + reply.ETag + "\r\n");
                     h.Append("\r\n");
                     byte[] headBytes = Encoding.ASCII.GetBytes(h.ToString());
                     stream.Write(headBytes, 0, headBytes.Length);

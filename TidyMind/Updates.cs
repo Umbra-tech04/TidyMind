@@ -13,8 +13,9 @@ using System.Windows.Threading;
 
 namespace TidyMind
 {
-    // In-app updates. At start (at most once a day, unless turned off in Settings) TidyMind asks GitHub for the latest
-    // release in the background; a newer one is offered in UpdateDialog once the main window is idle. "Update now"
+    // In-app updates. At every start, and about every 6 hours while it runs (unless turned off in Settings), TidyMind
+    // asks GitHub for the latest release in the background; a newer one is offered in UpdateDialog once the main window
+    // is idle (it waits for that as long as it takes). "Update now"
     // downloads and checks the installer (UpdateClient), closes every window the normal way (each saves), starts the
     // installer silently and closes TidyMind; the installer waits for it to be gone, installs over it in place (same
     // folder, so reminder tasks keep working) and starts TidyMind again (installer\TidyMind.iss, /RELAUNCH=1). Whatever
@@ -22,7 +23,10 @@ namespace TidyMind
     public static class Updates
     {
         private const long MaxLogBytes = 256 * 1024;
-        private static readonly TimeSpan AutomaticInterval = TimeSpan.FromHours(24);
+        // While TidyMind runs, the automatic check is repeated this long after the last one. Looked at every few minutes
+        // against the clock, so a PC that slept through it checks soon after it wakes.
+        private static readonly TimeSpan RecheckInterval = TimeSpan.FromHours(6);
+        private static readonly TimeSpan RecheckTick = TimeSpan.FromMinutes(5);
         private static readonly TimeSpan IdleFor = TimeSpan.FromSeconds(3);
         // How long the start-up waits for an installer that just restarted TidyMind to finish its log.
         private static readonly TimeSpan InstallerLogWait = TimeSpan.FromSeconds(15);
@@ -37,6 +41,12 @@ namespace TidyMind
 
         // Offered once per run: "Later" (or closing the dialog) means not again until the next start.
         private static bool offeredThisRun;
+        // Found, and waiting for the main window to be idle (one waits; a re-check that finds a newer one replaces it).
+        private static UpdateRelease? waiting;
+        // When the last automatic check was started (UTC), answered or not; null before the first one.
+        private static DateTime? lastAutomaticCheck;
+        private static bool checking;
+        private static DispatcherTimer? recheckTimer;
         private static long lastInputTick;
         // The installer that was started: kept (and so locked) until this process has ended.
         internal static VerifiedInstaller? Started { get; private set; }
@@ -65,33 +75,56 @@ namespace TidyMind
                     WhenIdle(main, () => Msg.Show(main, task.Result, Loc.T("Update.Title"), MessageBoxButton.OK, MessageBoxImage.Warning));
             }, TaskScheduler.FromCurrentSynchronizationContext());
 
-            if (ShouldCheckAutomatically(AppSettings.Load(), DateTime.UtcNow))
+            // Every start, however recently the last check (automatic or "Check now") ran.
+            if (ShouldCheckAutomatically(AppSettings.Load()))
                 _ = CheckAutomaticallyAsync(main);
+
+            if (recheckTimer == null)
+            {
+                recheckTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = RecheckTick };
+                recheckTimer.Tick += (s, e) => RecheckIfDue(main, DateTime.UtcNow);
+                recheckTimer.Start();
+            }
         }
 
-        // On (unless turned off), and not within a day of the last check that got an answer. A last check "in the
+        internal static bool ShouldCheckAutomatically(AppSettings settings) => settings.CheckForUpdates != false;
+
+        // Six hours after the last automatic check, or none yet (the switch was off at start). A last check "in the
         // future" (the clock was set back) doesn't block it.
-        internal static bool ShouldCheckAutomatically(AppSettings settings, DateTime nowUtc)
+        internal static bool IsRecheckDue(DateTime? lastUtc, DateTime nowUtc) =>
+            lastUtc == null || lastUtc > nowUtc || nowUtc - lastUtc >= RecheckInterval;
+
+        // Nothing to ask once the dialog was shown in this run: "Later" lasts until the next start.
+        internal static void RecheckIfDue(MainWindow main, DateTime nowUtc)
         {
-            if (settings.CheckForUpdates == false)
-                return false;
-            DateTime? last = settings.LastUpdateCheck?.ToUniversalTime();
-            return last == null || last > nowUtc || nowUtc - last >= AutomaticInterval;
+            if (!offeredThisRun && !checking && IsRecheckDue(lastAutomaticCheck, nowUtc) && ShouldCheckAutomatically(AppSettings.Load()))
+                _ = CheckAutomaticallyAsync(main);
         }
 
         internal static async Task CheckAutomaticallyAsync(MainWindow main)
         {
-            UpdateClient client = NewClient();
-            UpdateCheckResult result = await Task.Run(() => client.CheckAsync());
-            Record(result, "automatic");
-            if (result.Newer == null)
+            if (checking)
                 return;
-            if (IsSkipped(result.Newer.Version))
+            checking = true;
+            lastAutomaticCheck = DateTime.UtcNow;
+            try
             {
-                Note("version " + result.Newer.Version.ToString(3) + " was skipped by the user; not offered");
-                return;
+                UpdateClient client = NewClient();
+                UpdateCheckResult result = await Task.Run(() => client.CheckAsync());
+                Record(result, "automatic");
+                if (result.Newer == null)
+                    return;
+                if (IsSkipped(result.Newer.Version))
+                {
+                    Note("version " + result.Newer.Version.ToString(3) + " was skipped by the user; not offered");
+                    return;
+                }
+                OfferWhenIdle(main, result.Newer);
             }
-            OfferWhenIdle(main, result.Newer);
+            finally
+            {
+                checking = false;
+            }
         }
 
         // Settings' "Check now": always asks, and a skipped version is offered again (the user asked).
@@ -114,14 +147,23 @@ namespace TidyMind
         internal static bool IsSkipped(Version version) =>
             UpdateRelease.TryParseVersion(AppSettings.Load().SkippedUpdate, out Version skipped) && skipped == version;
 
+        // Kept until the main window is idle (in front, nothing else open, no input for a moment), however long that
+        // takes, so it shows as soon as the user is back in the window.
         internal static void OfferWhenIdle(MainWindow main, UpdateRelease release)
         {
             if (offeredThisRun)
                 return;
+            bool alreadyWaiting = waiting != null;
+            if (waiting == null || release.Version > waiting.Version)
+                waiting = release;
+            if (alreadyWaiting)
+                return;
             WhenIdle(main, () =>
             {
-                if (!offeredThisRun)
-                    Offer(main, release);
+                UpdateRelease? found = waiting;
+                waiting = null;
+                if (found != null && !offeredThisRun)
+                    Offer(main, found);
             });
         }
 
@@ -154,7 +196,11 @@ namespace TidyMind
             }
         }
 
-        internal static void ResetForTests() => offeredThisRun = false;
+        internal static void ResetForTests()
+        {
+            offeredThisRun = false;
+            waiting = null;
+        }
 
         // Runs `action` once the main window is idle: in front, nothing else open (no tour, dialog, overlay or menu)
         // and no input for a few seconds. Checked every second until then.

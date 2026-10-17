@@ -143,8 +143,8 @@ namespace TidyMind
             this.ShutdownMode = ShutdownMode.OnMainWindowClose;
             window.Show();
 
-            // Clears out old downloads, reports how the last update went, and (at most once a day, unless turned off)
-            // asks GitHub for a newer version in the background.
+            // Clears out old downloads, reports how the last update went, and (unless turned off) asks GitHub for a newer
+            // version in the background, now and about every 6 hours while TidyMind runs.
             Updates.Start(window);
         }
 

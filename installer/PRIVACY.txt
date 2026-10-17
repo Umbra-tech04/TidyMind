@@ -8,8 +8,8 @@ Your data stays on this computer.
 - No tracking, no ads, no usage statistics.
 
 Update check
-When TidyMind starts (at most once a day), it asks api.github.com for the
-number of the latest TidyMind version. Only if a newer version exists and
+When TidyMind starts, and about every few hours while it is running, it
+asks api.github.com for the number of the latest TidyMind version. Only if a newer version exists and
 you choose "Update now" does it download the installer from github.com
 (GitHub may hand the download over to its own file servers). Nothing about
 you, this computer or your data is sent: only what any web request

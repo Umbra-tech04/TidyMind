@@ -1946,7 +1946,7 @@ Your current data was left as it was.</value>
     <value>Settings</value>
   </data>
   <data name="Settings.Updates.Auto.Note" xml:space="preserve">
-    <value>Once a day at start, TidyMind asks GitHub for the latest version number. Nothing about you or your data is sent.</value>
+    <value>At every start, and about every 6 hours while it runs, TidyMind asks GitHub for the latest version number. Nothing about you or your data is sent.</value>
   </data>
   <data name="Settings.Updates.Auto.Title" xml:space="preserve">
     <value>Check for updates automatically</value>

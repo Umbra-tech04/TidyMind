@@ -2000,7 +2000,7 @@ Tvoji trenutni podaci su ostali nepromenjeni.</value>
     <value>Podešavanja</value>
   </data>
   <data name="Settings.Updates.Auto.Note" xml:space="preserve">
-    <value>Jednom dnevno, pri pokretanju, TidyMind pita GitHub koji je najnoviji broj verzije. Ništa o tebi ni o tvojim podacima se ne šalje.</value>
+    <value>Pri svakom pokretanju, i otprilike na svakih 6 sati dok radi, TidyMind pita GitHub koji je najnoviji broj verzije. Ništa o tebi ni o tvojim podacima se ne šalje.</value>
   </data>
   <data name="Settings.Updates.Auto.Title" xml:space="preserve">
     <value>Automatski proveravaj ažuriranja</value>

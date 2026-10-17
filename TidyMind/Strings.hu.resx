@@ -1892,7 +1892,7 @@ A jelenlegi adataid változatlanok maradtak.</value>
     <value>Beállítások</value>
   </data>
   <data name="Settings.Updates.Auto.Note" xml:space="preserve">
-    <value>Naponta egyszer, induláskor a TidyMind megkérdezi a GitHubtól a legújabb verziószámot. Rólad és az adataidról semmit nem küld el.</value>
+    <value>Minden induláskor, és futás közben nagyjából 6 óránként a TidyMind megkérdezi a GitHubtól a legújabb verziószámot. Rólad és az adataidról semmit nem küld el.</value>
   </data>
   <data name="Settings.Updates.Auto.Title" xml:space="preserve">
     <value>Frissítések automatikus keresése</value>

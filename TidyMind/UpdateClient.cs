@@ -27,8 +27,8 @@ namespace TidyMind
         // Set only for a version newer than the running one.
         public UpdateRelease? Newer { get; }
 
-        // GitHub answered (with anything, an error included): counts as a check for the once-a-day limit. A
-        // connection that failed doesn't, so the next start tries again.
+        // GitHub answered (with anything, an error included): shown as the last check in Settings. A connection that
+        // failed isn't.
         public bool Answered { get; }
 
         // English, for updates.log.
@@ -77,6 +77,11 @@ namespace TidyMind
         private const int MaxChecksumBytes = 1024;
         private static readonly Regex Sha256Line = new Regex(@"^\s*([0-9a-fA-F]{64})(?:\s+\*?(\S.*?))?\s*$");
 
+        // The last release JSON GitHub sent in this run, with its ETag: the next check asks "changed since?"
+        // (If-None-Match) and a 304 (no body) reuses it. Memory only, so each start asks plainly.
+        private static readonly object answerLock = new object();
+        private static (Uri Url, EntityTagHeaderValue ETag, string Json)? lastAnswer;
+
         private readonly UpdateEndpoints endpoints;
         private readonly Version current;
 
@@ -93,26 +98,43 @@ namespace TidyMind
             timeout.CancelAfter(endpoints.CheckTimeout);
             try
             {
+                Uri url = endpoints.LatestRelease;
+                (EntityTagHeaderValue ETag, string Json)? earlier;
+                lock (answerLock)
+                    earlier = lastAnswer != null && lastAnswer.Value.Url == url ? (lastAnswer.Value.ETag, lastAnswer.Value.Json) : null;
+
                 using HttpClient client = NewClient();
-                using HttpResponseMessage response = await GetAsync(client, endpoints.LatestRelease, "application/vnd.github+json",
-                    endpoints.IsApiRedirectTarget, timeout.Token).ConfigureAwait(false);
+                using HttpResponseMessage response = await GetAsync(client, url, "application/vnd.github+json",
+                    endpoints.IsApiRedirectTarget, timeout.Token, earlier?.ETag).ConfigureAwait(false);
 
                 int status = (int)response.StatusCode;
-                if (response.StatusCode == HttpStatusCode.NotFound)
-                    return Answer(UpdateProblem.NoRelease, "GitHub has no published release (404)");
-                if (response.StatusCode == HttpStatusCode.Forbidden || response.StatusCode == HttpStatusCode.TooManyRequests)
-                    return Answer(UpdateProblem.RateLimited, "GitHub refused the request (" + status + ", rate limit)");
-                if (!response.IsSuccessStatusCode)
-                    return Answer(UpdateProblem.ServerError, "GitHub answered " + status);
+                string json;
+                string unchanged = "";
+                if (response.StatusCode == HttpStatusCode.NotModified && earlier != null)
+                {
+                    json = earlier.Value.Json;
+                    unchanged = " (unchanged since the last check)";
+                }
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.NotFound)
+                        return Answer(UpdateProblem.NoRelease, "GitHub has no published release (404)");
+                    if (response.StatusCode == HttpStatusCode.Forbidden || response.StatusCode == HttpStatusCode.TooManyRequests)
+                        return Answer(UpdateProblem.RateLimited, "GitHub refused the request (" + status + ", rate limit)");
+                    if (!response.IsSuccessStatusCode)
+                        return Answer(UpdateProblem.ServerError, "GitHub answered " + status);
+                    json = await ReadTextAsync(response, MaxReleaseJsonBytes, timeout.Token).ConfigureAwait(false);
+                    lock (answerLock)
+                        lastAnswer = response.Headers.ETag != null ? (url, response.Headers.ETag, json) : null;
+                }
 
-                string json = await ReadTextAsync(response, MaxReleaseJsonBytes, timeout.Token).ConfigureAwait(false);
                 UpdateRelease? release = UpdateRelease.Parse(json, endpoints, out string? problem, out bool ignored);
                 if (release == null)
                     return ignored ? Answer(UpdateProblem.None, problem ?? "nothing to offer") : Answer(UpdateProblem.BadAnswer, problem ?? "unreadable");
                 if (release.Version <= current)
-                    return Answer(UpdateProblem.None, "latest is " + release.Version.ToString(3) + ", running " + current.ToString(3) + ": up to date");
+                    return Answer(UpdateProblem.None, "latest is " + release.Version.ToString(3) + ", running " + current.ToString(3) + ": up to date" + unchanged);
                 return new UpdateCheckResult(UpdateProblem.None, release, true,
-                    "latest is " + release.Version.ToString(3) + ", running " + current.ToString(3) + ": update available");
+                    "latest is " + release.Version.ToString(3) + ", running " + current.ToString(3) + ": update available" + unchanged);
             }
             catch (UpdateFailure e)
             {
@@ -271,12 +293,14 @@ namespace TidyMind
 
         // Follows redirects by hand, each one only if `allowed` says so. The response is the caller's to dispose.
         private static async Task<HttpResponseMessage> GetAsync(HttpClient client, Uri uri, string accept, Func<Uri, bool> allowed,
-            CancellationToken cancel)
+            CancellationToken cancel, EntityTagHeaderValue? ifNoneMatch = null)
         {
             for (int hop = 0; ; hop++)
             {
                 using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(accept));
+                if (ifNoneMatch != null)
+                    request.Headers.IfNoneMatch.Add(ifNoneMatch);
                 HttpResponseMessage response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancel)
                     .ConfigureAwait(false);
                 int status = (int)response.StatusCode;
