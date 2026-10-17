@@ -26,6 +26,7 @@ using TidyMind;
 //   Harness ui <dataFolder> <shotsFolder> drives the guided tour and Home's "What can TidyMind do?" tiles
 //   Harness export <dataFolder> <outFolder> every PDF, Word and Excel export in en/hu/sr (PDF pages rendered to PNG, Office files validated)
 //   Harness update <dataFolder> <shotsFolder> the in-app update against a local fake release server
+//   Harness tasks <dataFolder> <shotsFolder> Project Details as one scrolling page (5, 60, 250, 500 tasks)
 static partial class Program
 {
     static int failures;
@@ -39,7 +40,7 @@ static partial class Program
         if (args.Length == 2 && args[0] == "--test-notification")
             return RunScheduledTest(args[1]);
         // Anything else (e.g. a "--remind" from a task left behind by a crashed run) does nothing.
-        string[] modes = { "toast", "ui", "plan", "loc", "locfirst", "locdata1", "locdata2", "probe", "taskpath", "export", "update" };
+        string[] modes = { "toast", "ui", "plan", "loc", "locfirst", "locdata1", "locdata2", "probe", "taskpath", "export", "update", "tasks" };
         if (args.Length < 2 || !modes.Contains(args[0]))
             return 2;
         string data = Path.GetFullPath(args[1]);
@@ -162,6 +163,7 @@ static partial class Program
                     case "locdata2": await LocData2(main); break;
                     case "export": await ExportScenarios(main); break;
                     case "update": await UpdateScenarios(main); break;
+                    case "tasks": await TaskListScenarios(main); break;
                     default: await Scenarios(main); break;
                 }
             }

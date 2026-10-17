@@ -25,6 +25,7 @@ using TidyMind;
 static partial class Program
 {
     const string ReleasesPath = "/Umbra-tech04/TidyMind-releases";
+    static string Running => Updates.CurrentVersion.ToString(3);
 
     static async Task UpdateScenarios(MainWindow main)
     {
@@ -65,11 +66,11 @@ static partial class Program
     static void VersionChecks()
     {
         Console.WriteLine("Versions");
-        Check(Updates.CurrentVersion == new Version(1, 1, 0) && DataBackup.AppVersion == "1.1.0",
-            "the running version comes from the csproj's <Version> (1.1.0): " + Updates.CurrentVersion);
+        string csproj = System.Text.RegularExpressions.Regex.Match(File.ReadAllText(Path.Combine(Repo, "TidyMind.csproj")), "<Version>([^<]+)</Version>").Groups[1].Value;
+        Check(Running == csproj && DataBackup.AppVersion == csproj, "the running version comes from the csproj's <Version> (" + csproj + "): " + Running);
         Check(UpdateRelease.TryParseVersion("v1.10.0", out Version v110) && UpdateRelease.TryParseVersion("1.9.0", out Version v19)
             && v110 > v19, "1.10.0 > 1.9.0 (compared as numbers, not text)");
-        Check(UpdateRelease.TryParseVersion("v1.1.0", out Version same) && same == Updates.CurrentVersion, "v1.1.0 equals the running 1.1.0");
+        Check(UpdateRelease.TryParseVersion("v" + Running, out Version same) && same == Updates.CurrentVersion, "v" + Running + " equals the running " + Running);
         Check(UpdateRelease.Normalize(new Version(1, 1, 0, 0)) == new Version(1, 1, 0), "1.1.0.0 (assembly form) equals 1.1.0");
         Check(new[] { "1.2", "v1.2.0-beta", "1.2.0.1", "", null, "vv1.2.0", "1.2.x", "latest" }.All(t => !UpdateRelease.TryParseVersion(t, out _)),
             "not versions: 1.2, v1.2.0-beta, 1.2.0.1, empty, missing, vv1.2.0, 1.2.x, latest");
@@ -203,10 +204,10 @@ static partial class Program
         Check(r.Newer?.Version == new Version(9, 9, 9) && r.Answered && r.Problem == UpdateProblem.None, "9.9.9 is offered: " + r.Reason);
         string request = server.Log.FirstOrDefault() ?? "";
         Console.WriteLine("  request as the server saw it: " + request);
-        Check(request.Contains("User-Agent: TidyMind/1.1.0") && !request.Contains("Cookie") && !request.Contains("Authorization"),
-            "only \"TidyMind/1.1.0\" as user agent; no cookies, no sign-in");
+        Check(request.Contains("User-Agent: TidyMind/" + Running) && !request.Contains("Cookie") && !request.Contains("Authorization"),
+            "only \"TidyMind/" + Running + "\" as user agent; no cookies, no sign-in");
 
-        r = await Run(Latest(ServerJson(server, "v1.1.0", 10)));
+        r = await Run(Latest(ServerJson(server, "v" + Running, 10)));
         Check(r.Newer == null && r.Problem == UpdateProblem.None && r.Answered, "the same version: up to date (" + r.Reason + ")");
         r = await Run(Latest(ServerJson(server, "v1.0.5", 10)));
         Check(r.Newer == null && r.Problem == UpdateProblem.None, "an older version: up to date (" + r.Reason + ")");
@@ -353,7 +354,7 @@ static partial class Program
         string json = "";
         server.Route = p => p == api ? Reply.Json(json) : Reply.Status(404);
 
-        json = ServerJson(server, "v1.1.0", 10);
+        json = ServerJson(server, "v" + Running, 10);
         foreach ((string what, bool? on, DateTime? last, int expected) in new (string, bool?, DateTime?, int)[]
         {
             ("turned off", false, null, 0),
@@ -509,7 +510,7 @@ static partial class Program
             ScrollViewer notesScroll = Descendants((TextBox)dialog.FindName("NotesBox")).OfType<ScrollViewer>().FirstOrDefault();
             Check(notesScroll != null && notesScroll.ScrollableHeight > 0 && dialog.ActualHeight < 600, code + ": long notes scroll inside a dialog "
                 + dialog.ActualHeight.ToString("0") + " px tall");
-            Check(((TextBlock)dialog.FindName("VersionsText")).Text == Loc.F("Update.Versions", "1.1.0", "9.9.9"), code + ": current → new version");
+            Check(((TextBlock)dialog.FindName("VersionsText")).Text == Loc.F("Update.Versions", Running, "9.9.9"), code + ": current → new version");
             InspectTexts(dialog, "Update dialog, offer (" + code + ")", keys, englishOnly);
             List<string> cut = Clipped(dialog).ToList();
             RenderWindow(dialog, tag + "-update-1-offer");
@@ -552,7 +553,7 @@ static partial class Program
             await Wait(300);
             server.Route = p => p.EndsWith("/releases/latest") ? Reply.Json(ServerJson(server, "v9.9.9", payload.Length)) : Reply.Status(404);
             TextBlock note = (TextBlock)settings.FindName("UpdateNote");
-            Check(((TextBlock)settings.FindName("UpdateVersionText")).Text == Loc.F("Settings.Updates.Version", "1.1.0")
+            Check(((TextBlock)settings.FindName("UpdateVersionText")).Text == Loc.F("Settings.Updates.Version", Running)
                 && ((CheckBox)settings.FindName("AutoUpdateSwitch")).IsChecked == true, code + ": Settings shows the version and the switch (on)");
             Click(settings, "CheckUpdatesButton");
             await WaitFor(() => note.Text == Loc.F("Settings.Updates.Available", "9.9.9") ? note : null, 5000);
@@ -572,7 +573,7 @@ static partial class Program
             Click(settings, "CheckUpdatesButton");
             await WaitFor(() => note.Text == Loc.T("Settings.Updates.Failed.RateLimited") ? note : null, 5000);
             Check(note.Text == Loc.T("Settings.Updates.Failed.RateLimited"), code + ": rate limited: \"" + note.Text + "\"");
-            server.Route = p => p.EndsWith("/releases/latest") ? Reply.Json(ServerJson(server, "v1.1.0", 10)) : Reply.Status(404);
+            server.Route = p => p.EndsWith("/releases/latest") ? Reply.Json(ServerJson(server, "v" + Running, 10)) : Reply.Status(404);
             Click(settings, "CheckUpdatesButton");
             await WaitFor(() => note.Text == Loc.T("Settings.Updates.UpToDate") ? note : null, 5000);
             Check(note.Text == Loc.T("Settings.Updates.UpToDate"), code + ": up to date: \"" + note.Text + "\"");
@@ -736,15 +737,15 @@ static partial class Program
             File.WriteAllText(Updates.PendingFile, JsonSerializer.Serialize(new { Version = version, From = "1.0.9", Started = started }));
         int LogLines() => File.Exists(Updates.LogPath) ? File.ReadAllLines(Updates.LogPath).Length : 0;
 
-        Pending("1.1.0", DateTime.UtcNow);
+        Pending(Running, DateTime.UtcNow);
         string message = Updates.FinishLastUpdate();
-        Check(message == null && !File.Exists(Updates.PendingFile) && File.ReadAllText(Updates.LogPath).Contains("1.0.9 -> 1.1.0 installed"),
+        Check(message == null && !File.Exists(Updates.PendingFile) && File.ReadAllText(Updates.LogPath).Contains("1.0.9 -> " + Running + " installed"),
             "running the new version: logged as installed, no message");
 
         Pending("9.9.9", DateTime.UtcNow.AddMinutes(-20));
         File.WriteAllText(Updates.InstallerLog, "Setup version: Inno Setup\r\nError: harness says the copy failed\r\nRolling back changes.\r\nLog closed.\r\n");
         message = Updates.FinishLastUpdate();
-        Check(message == Loc.F("Update.Failed.AfterRestart", "9.9.9", "1.1.0", Updates.LogPath) && !File.Exists(Updates.PendingFile)
+        Check(message == Loc.F("Update.Failed.AfterRestart", "9.9.9", Running, Updates.LogPath) && !File.Exists(Updates.PendingFile)
             && !File.Exists(Updates.InstallerLog) && File.ReadAllText(Updates.LogPath).Contains("harness says the copy failed"),
             "still the old version: the user is told, updates.log has the end of the installer's log");
 

@@ -195,7 +195,7 @@ namespace TidyMind
             foreach (PendingCopy copy in pending)
                 FileRows.Children.Add(PendingRow(copy));
 
-            FileScroll.Visibility = FileRows.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            FileRows.Visibility = FileRows.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private FrameworkElement FileRow(Attachment attachment)
@@ -479,15 +479,6 @@ namespace TidyMind
             attachments.Remove(attachment);
             removed.Add(attachment);
             Render();
-        }
-
-        // The list scrolls itself while it has rows to show in that direction; at either end the wheel moves on to
-        // the window (like the task list).
-        private void FileScroll_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
-        {
-            // Raised from this control, outside the list's own scroll area, so it bubbles straight to the window's.
-            if (!WheelScroll.CanScroll(FileScroll, e.Delta))
-                WheelScroll.Forward(e, this);
         }
     }
 }

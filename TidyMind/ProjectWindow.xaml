@@ -137,9 +137,9 @@
 
                 <Border Style="{StaticResource SectionDividerStyle}"/>
 
-                <!-- Description: the tallest field; scrolls inside its frame once the text outgrows it -->
+                <!-- Description: starts as the tallest field and grows with its text; the page scrolls, not the field -->
                 <TextBlock Text="{local:Tr ProjectWindow.Description}" Style="{StaticResource SectionLabelStyle}"/>
-                <Border x:Name="EditorFrame" Height="240" Background="{StaticResource BgInput}"
+                <Border x:Name="EditorFrame" MinHeight="240" Background="{StaticResource BgInput}"
                         BorderBrush="{StaticResource Border}" BorderThickness="1" CornerRadius="8">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -148,10 +148,11 @@
                         </Grid.RowDefinitions>
                         <local:FormatToolbar x:Name="DescriptionToolbar"/>
 
-                        <!-- The field people read most: fills the frame, then scrolls within it. Language is fixed: WPF
-                             writes it into the stored text (xml:lang), which must not change with the app's language. -->
+                        <!-- The field people read most: as tall as its text (ProjectWindow.FollowCaret keeps the caret in
+                             view). Language is fixed: WPF writes it into the stored text (xml:lang), which must not change
+                             with the app's language. -->
                         <RichTextBox x:Name="DescriptionBox" Grid.Row="1" Language="en-US"
-                                     VerticalScrollBarVisibility="Auto"
+                                     VerticalScrollBarVisibility="Disabled"
                                      Background="Transparent" BorderThickness="0" Padding="10,10"
                                      Foreground="{StaticResource TextMain}" CaretBrush="{StaticResource TextMain}"
                                      FontFamily="Segoe UI" FontSize="14"
@@ -168,7 +169,7 @@
 
                 <Border Style="{StaticResource SectionDividerStyle}"/>
 
-                <!-- Tasks: about 4 rows visible; the list scrolls past that, then hands the wheel to the window -->
+                <!-- Tasks: every row shown, the list as long as it gets; the page scrolls, not the list -->
                 <TextBlock Text="{local:Tr ProjectWindow.Tasks}" Style="{StaticResource SectionLabelStyle}"/>
                 <Grid Margin="0,0,0,10">
                     <Grid.ColumnDefinitions>
@@ -182,10 +183,9 @@
                             Click="AddTaskButton_Click"/>
                 </Grid>
 
-                <ListBox x:Name="TaskList" Height="160"
+                <ListBox x:Name="TaskList" MinHeight="60"
                          Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
                          BorderThickness="1" Padding="0"
-                         PreviewMouseWheel="TaskList_PreviewMouseWheel"
                          PreviewMouseRightButtonUp="TaskList_PreviewMouseRightButtonUp"
                          KeyDown="TaskList_KeyDown">
                     <ListBox.Template>
@@ -193,9 +193,7 @@
                             <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
                                     BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8" Padding="4">
                                 <Grid>
-                                    <ScrollViewer x:Name="Rows" Focusable="False" VerticalScrollBarVisibility="Auto">
-                                        <ItemsPresenter/>
-                                    </ScrollViewer>
+                                    <ItemsPresenter/>
                                     <TextBlock x:Name="emptyHint" Text="{local:Tr ProjectWindow.NoTasks}"
                                                FontSize="13" Foreground="{StaticResource TextSub}"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -210,6 +208,12 @@
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </ListBox.Template>
+                    <!-- Not virtualized: nothing scrolls inside the list, so every row is laid out (fast enough at hundreds) -->
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel/>
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
                     <ListBox.ItemContainerStyle>
                         <!-- A clean list row: light tint on hover and when selected -->
                         <Style TargetType="ListBoxItem">
@@ -314,8 +318,8 @@
                     </Popup>
                 </Grid>
 
-                <!-- The current page, formatted like the description; a long page scrolls inside itself.
-                     Ruled lines: see NotebookRules (on the document, so they scroll with the text). -->
+                <!-- The current page, formatted like the description; a long page grows and the window scrolls.
+                     Ruled lines: see NotebookRules (on the document, so they grow with the text). -->
                 <Border x:Name="NotesFrame" Background="#FFFEFA" BorderBrush="#E4E2DD" BorderThickness="1" CornerRadius="8">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -326,7 +330,7 @@
 
                         <!-- PageSheet slides in when a page is turned (ShowPage). Its own adorner layer keeps the
                              caret and selection moving with the text during the slide. -->
-                        <Grid Grid.Row="1" Margin="18" Height="384" ClipToBounds="True">
+                        <Grid Grid.Row="1" Margin="18" MinHeight="384" ClipToBounds="True">
                             <AdornerDecorator x:Name="PageSheet">
                                 <AdornerDecorator.RenderTransform>
                                     <TranslateTransform/>
@@ -337,7 +341,7 @@
                                                LineHeight="24" LineStackingStrategy="BlockLineHeight"
                                                Foreground="{StaticResource TextSub}" IsHitTestVisible="False"/>
                                     <RichTextBox x:Name="NotesBox" Language="en-US"
-                                                 VerticalScrollBarVisibility="Auto"
+                                                 VerticalScrollBarVisibility="Disabled"
                                                  Background="Transparent" BorderThickness="0" Padding="0"
                                                  Foreground="{StaticResource TextMain}" CaretBrush="{StaticResource TextMain}"
                                                  FontFamily="Segoe UI" FontSize="15"

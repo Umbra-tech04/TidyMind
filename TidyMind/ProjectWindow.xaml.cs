@@ -125,7 +125,7 @@ namespace TidyMind
             DescriptionToolbar.Attach(DescriptionBox);
             RichTextHelper.PasteOutsideTextAsPlain(DescriptionBox);
             ShowFocusOn(EditorFrame, DescriptionBox);
-            DescriptionBox.PreviewMouseWheel += Editor_PreviewMouseWheel;
+            FollowCaret(DescriptionBox);
         }
 
         // The frame shows focus like the other inputs do.
@@ -136,19 +136,22 @@ namespace TidyMind
                 frame.BorderBrush = editor.IsKeyboardFocusWithin ? (Brush)FindResource("Accent") : rest;
         }
 
-        // At either end of its own scroll range an editor (description, notes page) passes the wheel on to the
-        // window, so it doesn't swallow scrolling (same as the task list).
-        private void Editor_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        // The editors (description, notes page) are as tall as their text and never scroll themselves; the wheel
+        // passes through them to the page. Typing or moving the cursor past the bottom of the window scrolls the page
+        // along, as a scrolling editor would. After layout, so the caret's place is up to date.
+        private static void FollowCaret(RichTextBox editor)
         {
-            RichTextBox editor = (RichTextBox)sender;
-            bool canScroll = e.Delta < 0
-                ? editor.VerticalOffset + editor.ViewportHeight < editor.ExtentHeight - 0.5
-                : editor.VerticalOffset > 0.5;
-            if (canScroll) return;
-
-            e.Handled = true;
-            MouseWheelEventArgs forward = new MouseWheelEventArgs(e.MouseDevice, e.Timestamp, e.Delta) { RoutedEvent = UIElement.MouseWheelEvent };
-            ((UIElement)VisualTreeHelper.GetParent(editor)).RaiseEvent(forward);
+            editor.SelectionChanged += (s, e) =>
+            {
+                if (!editor.IsKeyboardFocused)
+                    return;
+                editor.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    Rect caret = editor.CaretPosition.GetCharacterRect(LogicalDirection.Forward);
+                    if (!caret.IsEmpty)
+                        editor.BringIntoView(new Rect(caret.X, caret.Y - 8, Math.Max(caret.Width, 1), caret.Height + 16));
+                }), System.Windows.Threading.DispatcherPriority.Loaded);
+            };
         }
 
         // ---- Tasks --------------------------------------------------------
@@ -176,19 +179,6 @@ namespace TidyMind
             currentProject.Tasks.Add(newTask);
             TaskList.Items.Add(newTask);
             TaskInput.Clear();
-        }
-
-        // The list scrolls itself while it has rows to show in that direction; at either end the wheel moves on to
-        // the window (like the description editor).
-        private void TaskList_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
-        {
-            if (TaskList.Template.FindName("Rows", TaskList) is ScrollViewer rows &&
-                (e.Delta < 0 ? rows.VerticalOffset < rows.ScrollableHeight - 0.5 : rows.VerticalOffset > 0.5))
-                return;
-
-            e.Handled = true;
-            var forward = new MouseWheelEventArgs(e.MouseDevice, e.Timestamp, e.Delta) { RoutedEvent = UIElement.MouseWheelEvent };
-            ((UIElement)sender).RaiseEvent(forward);
         }
 
         private void TaskList_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
@@ -226,7 +216,13 @@ namespace TidyMind
                 task.Title, Loc.T("Common.Rename"));
             if (string.IsNullOrWhiteSpace(newTitle) || newTitle == task.Title) return;
             task.Title = newTitle;
-            TaskList.Items.Refresh();
+            // TaskItem has no change notification: that one row is rebuilt (Refresh would rebuild every row).
+            int index = TaskList.Items.IndexOf(task);
+            bool selected = TaskList.SelectedItem == task;
+            TaskList.Items.RemoveAt(index);
+            TaskList.Items.Insert(index, task);
+            if (selected)
+                TaskList.SelectedIndex = index;
         }
 
         private void DeleteTask(TaskItem task)
@@ -258,7 +254,7 @@ namespace TidyMind
             NotesToolbar.Attach(NotesBox);
             RichTextHelper.PasteOutsideTextAsPlain(NotesBox);
             ShowFocusOn(NotesFrame, NotesBox);
-            NotesBox.PreviewMouseWheel += Editor_PreviewMouseWheel;
+            FollowCaret(NotesBox);
 
             NotesBox.TextChanged += (s, e) =>
             {
@@ -282,7 +278,6 @@ namespace TidyMind
             // A fresh undo history per page, so Ctrl+Z can't bring back another page's text.
             NotesBox.IsUndoEnabled = false;
             NotesBox.IsUndoEnabled = true;
-            NotesBox.ScrollToHome();
             lastPageViewed[currentProject.Id] = index;
 
             PageIndicator.Text = (index + 1) + " / " + pages.Count;

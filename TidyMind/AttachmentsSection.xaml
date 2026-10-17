@@ -24,11 +24,7 @@
             </Grid>
         </Border>
 
-        <!-- The attached files. About five rows show; past that the list scrolls, then hands the wheel to the window
-             (like the task list). -->
-        <ScrollViewer x:Name="FileScroll" MaxHeight="262" Margin="0,8,0,0" Visibility="Collapsed"
-                      VerticalScrollBarVisibility="Auto" PreviewMouseWheel="FileScroll_PreviewMouseWheel">
-            <StackPanel x:Name="FileRows"/>
-        </ScrollViewer>
+        <!-- The attached files, all of them: the window scrolls, not the list (like the task list). -->
+        <StackPanel x:Name="FileRows" Margin="0,8,0,0" Visibility="Collapsed"/>
     </StackPanel>
 </UserControl>
