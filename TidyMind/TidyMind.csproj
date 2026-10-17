@@ -13,7 +13,7 @@
 	<ApplicationIcon>fej.ico</ApplicationIcon>
     <!-- The one version number: the About line, the update check, build-installer.ps1 and the installer file name
          (TidyMind-Setup-<version>.exe) all read it. Raise it before every release (installer\publish-release.ps1). -->
-    <Version>1.1.0</Version>
+    <Version>1.1.1</Version>
   </PropertyGroup>
 
   <!-- UseWindowsForms adds a project-wide implicit "using System.Windows.Forms;"
