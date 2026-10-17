@@ -16,10 +16,15 @@ namespace TidyMind
         {
             InitializeComponent();
             this.onExportAll = onExportAll;
-            VersionText.Text = "TidyMind " + DataBackup.AppVersion;
+            VersionText.Text = "TidyMind " + Updates.CurrentVersion.ToString(3);
             DataFolderText.Text = AppPaths.DataFolder;
             DataFolderText.ToolTip = AppPaths.DataFolder;
             BuildLanguageChoices();
+            // Taller than a small screen: it scrolls instead of running off it.
+            MaxHeight = SystemParameters.WorkArea.Height - 24;
+            AutoUpdateSwitch.IsChecked = AppSettings.Load().CheckForUpdates != false;
+            ShowUpdates();
+            Loc.Track(this, ShowUpdates);
         }
 
         // One segment per language; picking one switches the whole app at once (Loc.Switch), this window included.
@@ -187,6 +192,73 @@ namespace TidyMind
             NotificationOutcome.Shown => Loc.T("Settings.Notify.Shown"),
             NotificationOutcome.TurnedOff => Loc.T("Settings.Notify.Off"),
             _ => Loc.F("Settings.Notify.Failed", result.Detail)
+        };
+
+        // ---- Updates ------------------------------------------------------
+
+        // What the last "Check now" found; until then, when the last check was.
+        private Func<string>? updateResult;
+        private UpdateRelease? available;
+
+        private void ShowUpdates()
+        {
+            UpdateVersionText.Text = Loc.F("Settings.Updates.Version", Updates.CurrentVersion.ToString(3));
+            UpdateNote.Text = updateResult?.Invoke() ?? LastChecked();
+            CheckUpdatesButton.Content = Loc.T(available != null ? "Settings.Updates.Install" : "Settings.Updates.Check");
+        }
+
+        private static string LastChecked()
+        {
+            DateTime? last = AppSettings.Load().LastUpdateCheck;
+            if (last == null)
+                return Loc.T("Settings.Updates.NeverChecked");
+            DateTime local = last.Value.ToLocalTime();
+            return Loc.F("Settings.Updates.LastChecked", local.ToString(Loc.T("Format.ShortDate"), Loc.Culture),
+                local.ToString("HH:mm", Loc.Culture));
+        }
+
+        // Not remembered if settings.json can't be written; the switch then shows what's stored.
+        private void AutoUpdateSwitch_Click(object sender, RoutedEventArgs e)
+        {
+            bool on = AutoUpdateSwitch.IsChecked == true;
+            if (!AppSettings.Update(s => s.CheckForUpdates = on ? null : false))
+                AutoUpdateSwitch.IsChecked = AppSettings.Load().CheckForUpdates != false;
+            Updates.Note("automatic check turned " + (AppSettings.Load().CheckForUpdates != false ? "on" : "off"));
+        }
+
+        // A found update opens in the update dialog over the main window, once this one has closed.
+        private async void CheckUpdatesButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (available != null)
+            {
+                UpdateRelease release = available;
+                Window owner = Owner ?? Application.Current.MainWindow;
+                Close();
+                _ = Dispatcher.BeginInvoke(new Action(() => Updates.Offer(owner, release)));
+                return;
+            }
+
+            CheckUpdatesButton.IsEnabled = false;
+            UpdateNote.Text = Loc.T("Settings.Updates.Checking");
+            UpdateCheckResult result = await Updates.CheckNowAsync();
+            available = result.Newer;
+            UpdateProblem problem = result.Problem;
+            updateResult = () => result.Newer != null ? Loc.F("Settings.Updates.Available", result.Newer.Version.ToString(3))
+                : CheckResult(problem);
+            CheckUpdatesButton.IsEnabled = true;
+            ShowUpdates();
+        }
+
+        // Full sentences, one per outcome.
+        private static string CheckResult(UpdateProblem problem) => problem switch
+        {
+            UpdateProblem.None => Loc.T("Settings.Updates.UpToDate"),
+            UpdateProblem.Offline => Loc.T("Settings.Updates.Failed.Offline"),
+            UpdateProblem.Timeout => Loc.T("Settings.Updates.Failed.Timeout"),
+            UpdateProblem.NoRelease => Loc.T("Settings.Updates.Failed.NoRelease"),
+            UpdateProblem.RateLimited => Loc.T("Settings.Updates.Failed.RateLimited"),
+            UpdateProblem.ServerError => Loc.T("Settings.Updates.Failed.Server"),
+            _ => Loc.T("Settings.Updates.Failed.BadAnswer")
         };
 
         // ---- Data folder --------------------------------------------------

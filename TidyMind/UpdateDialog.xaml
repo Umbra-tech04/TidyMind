@@ -1,0 +1,137 @@
+<Window x:Class="TidyMind.UpdateDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:TidyMind"
+        Title="{local:Tr Update.Title}" Width="480"
+        SizeToContent="Height"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource BgMain}">
+    <Window.Resources>
+        <!-- A flat, rounded bar: the fill is the Foreground (the palette's green). -->
+        <Style x:Key="DownloadBarStyle" TargetType="ProgressBar">
+            <Setter Property="Height" Value="8"/>
+            <Setter Property="Minimum" Value="0"/>
+            <Setter Property="Maximum" Value="100"/>
+            <Setter Property="Foreground" Value="{StaticResource Success}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Grid>
+                            <Border x:Name="PART_Track" Background="{StaticResource Border}" CornerRadius="4"/>
+                            <Border x:Name="PART_Indicator" HorizontalAlignment="Left"
+                                    Background="{TemplateBinding Foreground}" CornerRadius="4"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Downloading › Verifying › Installing › Restarting: done steps green, the current one dark, the rest grey -->
+        <Style x:Key="StepStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSub}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="StepArrowStyle" TargetType="TextBlock" BasedOn="{StaticResource StepStyle}">
+            <Setter Property="Text" Value="›"/>
+            <Setter Property="Margin" Value="8,0"/>
+        </Style>
+
+        <Style x:Key="FooterButtonStyle" TargetType="Button" BasedOn="{StaticResource GhostButtonStyle}">
+            <Setter Property="MinWidth" Value="96"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Margin" Value="8,0,0,0"/>
+        </Style>
+        <Style x:Key="FooterPrimaryStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="MinWidth" Value="112"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Margin" Value="8,0,0,0"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1"
+                Padding="24,18,24,16">
+            <StackPanel>
+                <TextBlock Text="{local:Tr Update.Heading}" FontSize="18" FontWeight="Bold"
+                           FontFamily="{StaticResource DisplayFont}" Foreground="{StaticResource TextMain}"/>
+                <TextBlock x:Name="VersionsText" FontSize="13" Margin="0,4,0,0" TextWrapping="Wrap"
+                           Foreground="{StaticResource TextBody}"/>
+            </StackPanel>
+        </Border>
+
+        <StackPanel Grid.Row="1" Margin="24,16,24,4">
+            <!-- The offer: the release notes (plain text, scrolls when long) and what will happen -->
+            <StackPanel x:Name="OfferPanel">
+                <StackPanel x:Name="NotesSection">
+                    <TextBlock Text="{local:Tr Update.WhatsNew}" FontSize="13" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextSub}" Margin="2,0,0,6"/>
+                    <Border Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}" BorderThickness="1"
+                            CornerRadius="6">
+                        <TextBox x:Name="NotesBox" IsReadOnly="True" BorderThickness="0" Background="Transparent"
+                                 TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" MaxHeight="220" Padding="8,8"
+                                 FontSize="12.5" Foreground="{StaticResource TextBody}"
+                                 AutomationProperties.Name="{local:Tr Update.WhatsNew}"/>
+                    </Border>
+                </StackPanel>
+                <TextBlock Text="{local:Tr Update.WhatHappens}" FontSize="12" Margin="2,12,0,0" TextWrapping="Wrap"
+                           Foreground="{StaticResource TextSub}"/>
+            </StackPanel>
+
+            <!-- Under way: the steps, what's happening now, the green bar -->
+            <StackPanel x:Name="ProgressPanel" Visibility="Collapsed">
+                <WrapPanel Margin="0,0,0,12">
+                    <TextBlock x:Name="StepDownload" Text="{local:Tr Update.Step.Download}" Style="{StaticResource StepStyle}"/>
+                    <TextBlock Style="{StaticResource StepArrowStyle}"/>
+                    <TextBlock x:Name="StepVerify" Text="{local:Tr Update.Step.Verify}" Style="{StaticResource StepStyle}"/>
+                    <TextBlock Style="{StaticResource StepArrowStyle}"/>
+                    <TextBlock x:Name="StepInstall" Text="{local:Tr Update.Step.Install}" Style="{StaticResource StepStyle}"/>
+                    <TextBlock Style="{StaticResource StepArrowStyle}"/>
+                    <TextBlock x:Name="StepRestart" Text="{local:Tr Update.Step.Restart}" Style="{StaticResource StepStyle}"/>
+                </WrapPanel>
+                <TextBlock x:Name="StatusText" FontSize="13" TextWrapping="Wrap" Foreground="{StaticResource TextMain}"/>
+                <ProgressBar x:Name="DownloadBar" Style="{StaticResource DownloadBarStyle}" Margin="0,10,0,6"
+                             AutomationProperties.Name="{local:Tr Update.Step.Download}"/>
+                <TextBlock x:Name="ProgressText" FontSize="12" Foreground="{StaticResource TextSub}"/>
+            </StackPanel>
+
+            <!-- Something went wrong: what, in plain words; TidyMind keeps running as it was -->
+            <Border x:Name="ErrorPanel" Visibility="Collapsed" Background="{StaticResource BgPanel}"
+                    BorderBrush="{StaticResource Danger}" BorderThickness="3,0,0,0" CornerRadius="2" Padding="12,10"
+                    Margin="0,12,0,0">
+                <TextBlock x:Name="ErrorText" FontSize="12.5" TextWrapping="Wrap" Foreground="{StaticResource TextMain}"/>
+            </Border>
+        </StackPanel>
+
+        <Grid Grid.Row="2" Margin="24,16,24,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button x:Name="SkipButton" Content="{local:Tr Update.Skip}" Style="{StaticResource LinkButtonStyle}"
+                    Foreground="{StaticResource BtnHover}" HorizontalAlignment="Left" VerticalAlignment="Center"
+                    Click="SkipButton_Click"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button x:Name="LaterButton" Content="{local:Tr Update.Later}" Style="{StaticResource FooterButtonStyle}"
+                        Click="LaterButton_Click"/>
+                <Button x:Name="CancelButton" Content="{local:Tr Common.Cancel}" Style="{StaticResource FooterButtonStyle}"
+                        Visibility="Collapsed" Click="CancelButton_Click"/>
+                <Button x:Name="CloseButton" Content="{local:Tr Common.Close}" Style="{StaticResource FooterButtonStyle}"
+                        Visibility="Collapsed" Click="LaterButton_Click"/>
+                <Button x:Name="UpdateButton" Content="{local:Tr Update.Now}" Style="{StaticResource FooterPrimaryStyle}"
+                        IsDefault="True" Click="UpdateButton_Click"/>
+                <Button x:Name="RetryButton" Content="{local:Tr Update.Retry}" Style="{StaticResource FooterPrimaryStyle}"
+                        Visibility="Collapsed" Click="UpdateButton_Click"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

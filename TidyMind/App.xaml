@@ -20,6 +20,7 @@
         <SolidColorBrush x:Key="BtnHover"     Color="#25639D"/>
         <SolidColorBrush x:Key="Border"       Color="#E0E0DE"/>
         <SolidColorBrush x:Key="Danger"       Color="#C0392B"/>
+        <SolidColorBrush x:Key="Success"      Color="#27AE60"/> <!-- the palette's green (text colors, swatches): the update download bar -->
 
         <!-- Sidebar -->
         <SolidColorBrush x:Key="Sidebar"      Color="#1C1B19"/>

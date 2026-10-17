@@ -1,11 +1,23 @@
 TidyMind - Privacy
 
-Everything stays on this computer.
+Your data stays on this computer.
 
 - No account and no sign-in.
-- No network: TidyMind does not connect to the internet and sends nothing
-  anywhere.
+- Your data is never sent anywhere. The only time TidyMind goes online is
+  the update check described below, and you can turn it off.
 - No tracking, no ads, no usage statistics.
+
+Update check
+When TidyMind starts (at most once a day), it asks api.github.com for the
+number of the latest TidyMind version. Only if a newer version exists and
+you choose "Update now" does it download the installer from github.com
+(GitHub may hand the download over to its own file servers). Nothing about
+you, this computer or your data is sent: only what any web request
+contains, which is your IP address and the program name "TidyMind/<version>"
+as the user agent. No cookies, no account. GitHub's own privacy statement
+applies to these requests.
+Turn it off under Settings > Updates > Check for updates automatically.
+"Check now" there asks once, only when you press it.
 
 Where your data is stored
 Your memories, projects, collections, notes, to-dos, reminders, pictures and

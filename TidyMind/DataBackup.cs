@@ -17,9 +17,9 @@ namespace TidyMind
         public const string ManifestName = "tidymind-backup.json";
         private const int FormatVersion = 1;
 
-        public static string AppVersion => typeof(DataBackup).Assembly.GetName().Version?.ToString(3) ?? "?";
+        public static string AppVersion => Updates.CurrentVersion.ToString(3);
 
-        private static readonly string[] SkippedFiles = { "error.log", "error.old.log", "reminders.log", "reminders.old.log" };
+        private static readonly string[] SkippedFiles = { "error.log", "error.old.log", "reminders.log", "reminders.old.log", "updates.log", "updates.old.log" };
 
         private class Manifest
         {

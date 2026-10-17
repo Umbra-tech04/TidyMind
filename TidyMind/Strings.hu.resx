@@ -1885,8 +1885,59 @@ A jelenlegi adataid változatlanok maradtak.</value>
   <data name="Settings.Section.Notifications" xml:space="preserve">
     <value>Értesítések</value>
   </data>
+  <data name="Settings.Section.Updates" xml:space="preserve">
+    <value>Frissítések</value>
+  </data>
   <data name="Settings.Title" xml:space="preserve">
     <value>Beállítások</value>
+  </data>
+  <data name="Settings.Updates.Auto.Note" xml:space="preserve">
+    <value>Naponta egyszer, induláskor a TidyMind megkérdezi a GitHubtól a legújabb verziószámot. Rólad és az adataidról semmit nem küld el.</value>
+  </data>
+  <data name="Settings.Updates.Auto.Title" xml:space="preserve">
+    <value>Frissítések automatikus keresése</value>
+  </data>
+  <data name="Settings.Updates.Available" xml:space="preserve">
+    <value>Elérhető a TidyMind {0}.</value>
+  </data>
+  <data name="Settings.Updates.Check" xml:space="preserve">
+    <value>Keresés most</value>
+  </data>
+  <data name="Settings.Updates.Checking" xml:space="preserve">
+    <value>Keresés…</value>
+  </data>
+  <data name="Settings.Updates.Failed.BadAnswer" xml:space="preserve">
+    <value>Nem sikerült keresni, mert a GitHub válasza nem értelmezhető.</value>
+  </data>
+  <data name="Settings.Updates.Failed.NoRelease" xml:space="preserve">
+    <value>Nem sikerült keresni, mert a GitHubon még nincs közzétett verzió.</value>
+  </data>
+  <data name="Settings.Updates.Failed.Offline" xml:space="preserve">
+    <value>Nem sikerült keresni, mert nincs internetkapcsolat.</value>
+  </data>
+  <data name="Settings.Updates.Failed.RateLimited" xml:space="preserve">
+    <value>Nem sikerült keresni, mert a GitHub most nem fogad kéréseket. Próbáld újra egy óra múlva.</value>
+  </data>
+  <data name="Settings.Updates.Failed.Server" xml:space="preserve">
+    <value>Nem sikerült keresni, mert a GitHub hibával válaszolt.</value>
+  </data>
+  <data name="Settings.Updates.Failed.Timeout" xml:space="preserve">
+    <value>Nem sikerült keresni, mert a GitHub nem válaszolt időben.</value>
+  </data>
+  <data name="Settings.Updates.Install" xml:space="preserve">
+    <value>Frissítés…</value>
+  </data>
+  <data name="Settings.Updates.LastChecked" xml:space="preserve">
+    <value>Utolsó keresés: {0}, {1}.</value>
+  </data>
+  <data name="Settings.Updates.NeverChecked" xml:space="preserve">
+    <value>Még nem volt keresés.</value>
+  </data>
+  <data name="Settings.Updates.UpToDate" xml:space="preserve">
+    <value>A TidyMind naprakész.</value>
+  </data>
+  <data name="Settings.Updates.Version" xml:space="preserve">
+    <value>Telepített verzió: TidyMind {0}</value>
   </data>
   <data name="Swatch.NoColor" xml:space="preserve">
     <value>Nincs szín</value>
@@ -2131,6 +2182,97 @@ Semmi sem változott.</value>
   </data>
   <data name="Tour.Welcome.Title" xml:space="preserve">
     <value>Üdvözöl a TidyMind</value>
+  </data>
+  <data name="Update.Error.BadAnswer" xml:space="preserve">
+    <value>A GitHub válasza nem értelmezhető, ezért semmi sem lett letöltve.</value>
+  </data>
+  <data name="Update.Error.CantSave" xml:space="preserve">
+    <value>A frissítést nem sikerült ide menteni: {0}. Nézd meg, nincs-e tele a lemez, aztán próbáld újra. Semmi sem változott.</value>
+  </data>
+  <data name="Update.Error.ForeignHost" xml:space="preserve">
+    <value>A letöltés nem a TidyMind GitHubon közzétett kiadásaira mutatott, ezért leállt. Semmi sem lett letöltve vagy elindítva.</value>
+  </data>
+  <data name="Update.Error.HashMismatch" xml:space="preserve">
+    <value>A letöltött fájl nem egyezik a közzétett ellenőrzőösszeggel, ezért törlődött, és nem indult el. Semmi sem változott.</value>
+  </data>
+  <data name="Update.Error.Offline" xml:space="preserve">
+    <value>A letöltés megszakadt, mert nincs internetkapcsolat. Semmi sem változott.</value>
+  </data>
+  <data name="Update.Error.Server" xml:space="preserve">
+    <value>A GitHub most nem engedi a letöltést. Próbáld újra később. Semmi sem változott.</value>
+  </data>
+  <data name="Update.Error.ServerFailed" xml:space="preserve">
+    <value>A GitHub hibával válaszolt a letöltésre. Próbáld újra később. Semmi sem változott.</value>
+  </data>
+  <data name="Update.Error.SizeMismatch" xml:space="preserve">
+    <value>A letöltött fájl mérete eltér a kiadásban megadottól, ezért törlődött, és nem indult el. Semmi sem változott.</value>
+  </data>
+  <data name="Update.Error.StartFailed" xml:space="preserve">
+    <value>A telepítőt nem sikerült elindítani. A részletek az adatmappában lévő updates.log fájlban vannak. Semmi sem változott.</value>
+  </data>
+  <data name="Update.Error.Timeout" xml:space="preserve">
+    <value>A letöltés megszakadt, mert a GitHub nem küldött több adatot. Semmi sem változott.</value>
+  </data>
+  <data name="Update.Error.Unexpected" xml:space="preserve">
+    <value>A frissítés egy váratlan hiba miatt leállt. A részletek az adatmappában lévő updates.log fájlban vannak. Semmi sem változott.</value>
+  </data>
+  <data name="Update.Error.WindowsOpen" xml:space="preserve">
+    <value>Egy ablakot még nem lehetett bezárni (az ablakban látod, miért). Amint bezártad, a frissítés újra megjelenik, már letöltve.</value>
+  </data>
+  <data name="Update.Failed.AfterRestart" xml:space="preserve">
+    <value>A TidyMind {0} frissítést nem sikerült telepíteni, ezért továbbra is a TidyMind {1} fut. Az adataid nem változtak. A részletek itt olvashatók:
+{2}</value>
+  </data>
+  <data name="Update.Heading" xml:space="preserve">
+    <value>Frissítés érhető el</value>
+  </data>
+  <data name="Update.Later" xml:space="preserve">
+    <value>Később</value>
+  </data>
+  <data name="Update.Now" xml:space="preserve">
+    <value>Frissítés most</value>
+  </data>
+  <data name="Update.Progress" xml:space="preserve">
+    <value>{0}% · {1:0.0} / {2:0.0} MB</value>
+  </data>
+  <data name="Update.Retry" xml:space="preserve">
+    <value>Újra</value>
+  </data>
+  <data name="Update.Skip" xml:space="preserve">
+    <value>Ezt a verziót kihagyom</value>
+  </data>
+  <data name="Update.Status.Download" xml:space="preserve">
+    <value>A frissítés letöltése…</value>
+  </data>
+  <data name="Update.Status.Install" xml:space="preserve">
+    <value>A TidyMind most bezárul a frissítés telepítéséhez, aztán magától újraindul.</value>
+  </data>
+  <data name="Update.Status.Verify" xml:space="preserve">
+    <value>Annak ellenőrzése, hogy a letöltés teljes és sértetlen…</value>
+  </data>
+  <data name="Update.Step.Download" xml:space="preserve">
+    <value>Letöltés</value>
+  </data>
+  <data name="Update.Step.Install" xml:space="preserve">
+    <value>Telepítés</value>
+  </data>
+  <data name="Update.Step.Restart" xml:space="preserve">
+    <value>Újraindítás</value>
+  </data>
+  <data name="Update.Step.Verify" xml:space="preserve">
+    <value>Ellenőrzés</value>
+  </data>
+  <data name="Update.Title" xml:space="preserve">
+    <value>TidyMind-frissítés</value>
+  </data>
+  <data name="Update.Versions" xml:space="preserve">
+    <value>Jelenlegi verzió: {0}  →  Új verzió: {1}</value>
+  </data>
+  <data name="Update.WhatHappens" xml:space="preserve">
+    <value>A TidyMind bezárul, telepíti a frissítést, aztán magától újraindul. Az adataid változatlanok maradnak.</value>
+  </data>
+  <data name="Update.WhatsNew" xml:space="preserve">
+    <value>Újdonságok</value>
   </data>
   <data name="Welcome.Bike.Item" xml:space="preserve">
     <value>Városi bicikli</value>

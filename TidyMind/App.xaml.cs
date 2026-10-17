@@ -142,6 +142,10 @@ namespace TidyMind
             this.MainWindow = window;
             this.ShutdownMode = ShutdownMode.OnMainWindowClose;
             window.Show();
+
+            // Clears out old downloads, reports how the last update went, and (at most once a day, unless turned off)
+            // asks GitHub for a newer version in the background.
+            Updates.Start(window);
         }
 
         // Started by a restore ("--after-restore <pid>", DataBackup.Restart): the copy that did the restore is still
@@ -217,6 +221,17 @@ namespace TidyMind
         {
             activateWait?.Unregister(null);
             ReminderPopups.StopListening();
+            // Released now rather than when the process ends: an update's installer waits for it.
+            try
+            {
+                instanceMutex?.ReleaseMutex();
+            }
+            catch (ApplicationException)
+            {
+                // Not held by this thread: nothing to release.
+            }
+            instanceMutex?.Dispose();
+            instanceMutex = null;
             base.OnExit(e);
         }
 

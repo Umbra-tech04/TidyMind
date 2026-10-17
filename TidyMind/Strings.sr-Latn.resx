@@ -1993,8 +1993,59 @@ Tvoji trenutni podaci su ostali nepromenjeni.</value>
   <data name="Settings.Section.Notifications" xml:space="preserve">
     <value>Obaveštenja</value>
   </data>
+  <data name="Settings.Section.Updates" xml:space="preserve">
+    <value>Ažuriranja</value>
+  </data>
   <data name="Settings.Title" xml:space="preserve">
     <value>Podešavanja</value>
+  </data>
+  <data name="Settings.Updates.Auto.Note" xml:space="preserve">
+    <value>Jednom dnevno, pri pokretanju, TidyMind pita GitHub koji je najnoviji broj verzije. Ništa o tebi ni o tvojim podacima se ne šalje.</value>
+  </data>
+  <data name="Settings.Updates.Auto.Title" xml:space="preserve">
+    <value>Automatski proveravaj ažuriranja</value>
+  </data>
+  <data name="Settings.Updates.Available" xml:space="preserve">
+    <value>Dostupan je TidyMind {0}.</value>
+  </data>
+  <data name="Settings.Updates.Check" xml:space="preserve">
+    <value>Proveri sada</value>
+  </data>
+  <data name="Settings.Updates.Checking" xml:space="preserve">
+    <value>Provera…</value>
+  </data>
+  <data name="Settings.Updates.Failed.BadAnswer" xml:space="preserve">
+    <value>Provera nije uspela jer odgovor GitHub-a nije razumljiv.</value>
+  </data>
+  <data name="Settings.Updates.Failed.NoRelease" xml:space="preserve">
+    <value>Provera nije uspela jer na GitHub-u još nema objavljene verzije.</value>
+  </data>
+  <data name="Settings.Updates.Failed.Offline" xml:space="preserve">
+    <value>Provera nije uspela jer nema veze sa internetom.</value>
+  </data>
+  <data name="Settings.Updates.Failed.RateLimited" xml:space="preserve">
+    <value>Provera nije uspela jer GitHub trenutno odbija zahteve. Pokušaj ponovo za sat vremena.</value>
+  </data>
+  <data name="Settings.Updates.Failed.Server" xml:space="preserve">
+    <value>Provera nije uspela jer je GitHub odgovorio greškom.</value>
+  </data>
+  <data name="Settings.Updates.Failed.Timeout" xml:space="preserve">
+    <value>Provera nije uspela jer GitHub nije odgovorio na vreme.</value>
+  </data>
+  <data name="Settings.Updates.Install" xml:space="preserve">
+    <value>Ažuriraj…</value>
+  </data>
+  <data name="Settings.Updates.LastChecked" xml:space="preserve">
+    <value>Poslednja provera: {0} u {1}.</value>
+  </data>
+  <data name="Settings.Updates.NeverChecked" xml:space="preserve">
+    <value>Još nije provereno.</value>
+  </data>
+  <data name="Settings.Updates.UpToDate" xml:space="preserve">
+    <value>TidyMind je ažuran.</value>
+  </data>
+  <data name="Settings.Updates.Version" xml:space="preserve">
+    <value>Instalirana verzija: TidyMind {0}</value>
   </data>
   <data name="Swatch.NoColor" xml:space="preserve">
     <value>Bez boje</value>
@@ -2259,6 +2310,97 @@ Ništa nije promenjeno.</value>
   </data>
   <data name="Tour.Welcome.Title" xml:space="preserve">
     <value>TidyMind ti želi dobrodošlicu</value>
+  </data>
+  <data name="Update.Error.BadAnswer" xml:space="preserve">
+    <value>Odgovor GitHub-a nije razumljiv, pa ništa nije preuzeto.</value>
+  </data>
+  <data name="Update.Error.CantSave" xml:space="preserve">
+    <value>Ažuriranje nije moglo da se sačuva u {0}. Proveri da disk nije pun, pa pokušaj ponovo. Ništa nije promenjeno.</value>
+  </data>
+  <data name="Update.Error.ForeignHost" xml:space="preserve">
+    <value>Preuzimanje je vodilo negde drugde, a ne na TidyMind izdanja na GitHub-u, pa je zaustavljeno. Ništa nije preuzeto niti pokrenuto.</value>
+  </data>
+  <data name="Update.Error.HashMismatch" xml:space="preserve">
+    <value>Preuzeta datoteka se ne poklapa sa objavljenim kontrolnim zbirom, pa je obrisana i nije pokrenuta. Ništa nije promenjeno.</value>
+  </data>
+  <data name="Update.Error.Offline" xml:space="preserve">
+    <value>Preuzimanje je prekinuto jer nema veze sa internetom. Ništa nije promenjeno.</value>
+  </data>
+  <data name="Update.Error.Server" xml:space="preserve">
+    <value>GitHub trenutno ne dozvoljava preuzimanje. Pokušaj ponovo kasnije. Ništa nije promenjeno.</value>
+  </data>
+  <data name="Update.Error.ServerFailed" xml:space="preserve">
+    <value>GitHub je na preuzimanje odgovorio greškom. Pokušaj ponovo kasnije. Ništa nije promenjeno.</value>
+  </data>
+  <data name="Update.Error.SizeMismatch" xml:space="preserve">
+    <value>Preuzeta datoteka nije veličine navedene u izdanju, pa je obrisana i nije pokrenuta. Ništa nije promenjeno.</value>
+  </data>
+  <data name="Update.Error.StartFailed" xml:space="preserve">
+    <value>Instalacioni program nije mogao da se pokrene. Detalji su u datoteci updates.log u fascikli sa podacima. Ništa nije promenjeno.</value>
+  </data>
+  <data name="Update.Error.Timeout" xml:space="preserve">
+    <value>Preuzimanje je prekinuto jer GitHub više ne šalje podatke. Ništa nije promenjeno.</value>
+  </data>
+  <data name="Update.Error.Unexpected" xml:space="preserve">
+    <value>Ažuriranje je zaustavljeno zbog neočekivane greške. Detalji su u datoteci updates.log u fascikli sa podacima. Ništa nije promenjeno.</value>
+  </data>
+  <data name="Update.Error.WindowsOpen" xml:space="preserve">
+    <value>Jedan prozor još ne može da se zatvori (u njemu piše zašto). Kad ga zatvoriš, ažuriranje će se ponovo ponuditi, već preuzeto.</value>
+  </data>
+  <data name="Update.Failed.AfterRestart" xml:space="preserve">
+    <value>Ažuriranje na TidyMind {0} nije moglo da se instalira, pa se i dalje koristi TidyMind {1}. Tvoji podaci nisu promenjeni. Šta se desilo, zapisano je u:
+{2}</value>
+  </data>
+  <data name="Update.Heading" xml:space="preserve">
+    <value>Dostupno je ažuriranje</value>
+  </data>
+  <data name="Update.Later" xml:space="preserve">
+    <value>Kasnije</value>
+  </data>
+  <data name="Update.Now" xml:space="preserve">
+    <value>Ažuriraj sada</value>
+  </data>
+  <data name="Update.Progress" xml:space="preserve">
+    <value>{0}% · {1:0.0} MB od {2:0.0} MB</value>
+  </data>
+  <data name="Update.Retry" xml:space="preserve">
+    <value>Pokušaj ponovo</value>
+  </data>
+  <data name="Update.Skip" xml:space="preserve">
+    <value>Preskoči ovu verziju</value>
+  </data>
+  <data name="Update.Status.Download" xml:space="preserve">
+    <value>Preuzimanje ažuriranja…</value>
+  </data>
+  <data name="Update.Status.Install" xml:space="preserve">
+    <value>TidyMind se sada zatvara da bi se ažuriranje instaliralo, a zatim se sam ponovo pokreće.</value>
+  </data>
+  <data name="Update.Status.Verify" xml:space="preserve">
+    <value>Provera da li je preuzimanje potpuno i neizmenjeno…</value>
+  </data>
+  <data name="Update.Step.Download" xml:space="preserve">
+    <value>Preuzimanje</value>
+  </data>
+  <data name="Update.Step.Install" xml:space="preserve">
+    <value>Instaliranje</value>
+  </data>
+  <data name="Update.Step.Restart" xml:space="preserve">
+    <value>Ponovno pokretanje</value>
+  </data>
+  <data name="Update.Step.Verify" xml:space="preserve">
+    <value>Provera</value>
+  </data>
+  <data name="Update.Title" xml:space="preserve">
+    <value>Ažuriranje TidyMind-a</value>
+  </data>
+  <data name="Update.Versions" xml:space="preserve">
+    <value>Trenutna verzija: {0}  →  Nova verzija: {1}</value>
+  </data>
+  <data name="Update.WhatHappens" xml:space="preserve">
+    <value>TidyMind se zatvara, instalira ažuriranje i sam se ponovo pokreće. Tvoji podaci ostaju netaknuti.</value>
+  </data>
+  <data name="Update.WhatsNew" xml:space="preserve">
+    <value>Šta je novo</value>
   </data>
   <data name="Welcome.Bike.Item" xml:space="preserve">
     <value>Gradski bicikl</value>

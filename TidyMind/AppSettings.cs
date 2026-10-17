@@ -29,6 +29,18 @@ namespace TidyMind
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Language { get; set; }
 
+        // Settings > Updates: false turns the automatic check off; null (the default) means on.
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? CheckForUpdates { get; set; }
+
+        // When GitHub last answered a check (UTC), so the automatic one runs at most once a day (Updates).
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public DateTime? LastUpdateCheck { get; set; }
+
+        // A version the user chose to skip ("1.2.0"): not offered automatically; a newer one is.
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? SkippedUpdate { get; set; }
+
         // Fields this version doesn't know (written by another TidyMind version): kept so saving doesn't drop them.
         [JsonExtensionData]
         public Dictionary<string, JsonElement>? ExtensionData { get; set; }

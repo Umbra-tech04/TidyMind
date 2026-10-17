@@ -532,6 +532,7 @@ static partial class Program
             ("Item type", () => new EntityTypeSelector()),
             ("Export format", () => new ExportFormatWindow()),
             ("Licenses", () => new LicensesWindow()),
+            ("Update", () => new UpdateDialog(UpdateRelease.Parse(GitHubJson("v9.9.9", null, 80000000, "- Faster start\n- Fixes"), UpdateEndpoints.Production, out _, out _))),
             ("Text prompt", () => Make<InputDialog>(Loc.T("Main.NewProject"), Loc.T("Memory.New.ProjectPrompt"), "", Loc.T("Input.Create"), false, false)),
             ("Background", () => new BackgroundDialog(Loc.T("Card.CustomizeTitle"), "Ősz", new BackgroundSetting(BackgroundFill.None, null, null),
                 ImageStore.Cards, c => c, (t, c, i) => new Border { Width = 160, Height = 160 }))

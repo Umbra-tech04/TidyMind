@@ -1939,8 +1939,59 @@ Your current data was left as it was.</value>
   <data name="Settings.Section.Notifications" xml:space="preserve">
     <value>Notifications</value>
   </data>
+  <data name="Settings.Section.Updates" xml:space="preserve">
+    <value>Updates</value>
+  </data>
   <data name="Settings.Title" xml:space="preserve">
     <value>Settings</value>
+  </data>
+  <data name="Settings.Updates.Auto.Note" xml:space="preserve">
+    <value>Once a day at start, TidyMind asks GitHub for the latest version number. Nothing about you or your data is sent.</value>
+  </data>
+  <data name="Settings.Updates.Auto.Title" xml:space="preserve">
+    <value>Check for updates automatically</value>
+  </data>
+  <data name="Settings.Updates.Available" xml:space="preserve">
+    <value>TidyMind {0} is available.</value>
+  </data>
+  <data name="Settings.Updates.Check" xml:space="preserve">
+    <value>Check now</value>
+  </data>
+  <data name="Settings.Updates.Checking" xml:space="preserve">
+    <value>Checking…</value>
+  </data>
+  <data name="Settings.Updates.Failed.BadAnswer" xml:space="preserve">
+    <value>Couldn't check: GitHub's answer couldn't be understood.</value>
+  </data>
+  <data name="Settings.Updates.Failed.NoRelease" xml:space="preserve">
+    <value>Couldn't check: no version has been published on GitHub yet.</value>
+  </data>
+  <data name="Settings.Updates.Failed.Offline" xml:space="preserve">
+    <value>Couldn't check: there's no connection to the internet.</value>
+  </data>
+  <data name="Settings.Updates.Failed.RateLimited" xml:space="preserve">
+    <value>Couldn't check: GitHub is refusing requests for now. Try again in an hour.</value>
+  </data>
+  <data name="Settings.Updates.Failed.Server" xml:space="preserve">
+    <value>Couldn't check: GitHub answered with an error.</value>
+  </data>
+  <data name="Settings.Updates.Failed.Timeout" xml:space="preserve">
+    <value>Couldn't check: GitHub didn't answer in time.</value>
+  </data>
+  <data name="Settings.Updates.Install" xml:space="preserve">
+    <value>Update…</value>
+  </data>
+  <data name="Settings.Updates.LastChecked" xml:space="preserve">
+    <value>Last checked {0} at {1}.</value>
+  </data>
+  <data name="Settings.Updates.NeverChecked" xml:space="preserve">
+    <value>Not checked yet.</value>
+  </data>
+  <data name="Settings.Updates.UpToDate" xml:space="preserve">
+    <value>TidyMind is up to date.</value>
+  </data>
+  <data name="Settings.Updates.Version" xml:space="preserve">
+    <value>Installed version: TidyMind {0}</value>
   </data>
   <data name="Swatch.NoColor" xml:space="preserve">
     <value>No color</value>
@@ -2195,6 +2246,97 @@ Nothing was changed.</value>
   </data>
   <data name="Tour.Welcome.Title" xml:space="preserve">
     <value>Welcome to TidyMind</value>
+  </data>
+  <data name="Update.Error.BadAnswer" xml:space="preserve">
+    <value>GitHub's answer couldn't be understood, so nothing was downloaded.</value>
+  </data>
+  <data name="Update.Error.CantSave" xml:space="preserve">
+    <value>The update couldn't be saved in {0}. Check that the disk isn't full, then try again. Nothing was changed.</value>
+  </data>
+  <data name="Update.Error.ForeignHost" xml:space="preserve">
+    <value>The download pointed somewhere other than TidyMind's releases on GitHub, so it was stopped. Nothing was downloaded or run.</value>
+  </data>
+  <data name="Update.Error.HashMismatch" xml:space="preserve">
+    <value>The downloaded file doesn't match its published checksum, so it was deleted and not run. Nothing was changed.</value>
+  </data>
+  <data name="Update.Error.Offline" xml:space="preserve">
+    <value>The download stopped: there's no connection to the internet. Nothing was changed.</value>
+  </data>
+  <data name="Update.Error.Server" xml:space="preserve">
+    <value>GitHub refused the download for now. Try again later. Nothing was changed.</value>
+  </data>
+  <data name="Update.Error.ServerFailed" xml:space="preserve">
+    <value>GitHub answered the download with an error. Try again later. Nothing was changed.</value>
+  </data>
+  <data name="Update.Error.SizeMismatch" xml:space="preserve">
+    <value>The downloaded file isn't the size the release says, so it was deleted and not run. Nothing was changed.</value>
+  </data>
+  <data name="Update.Error.StartFailed" xml:space="preserve">
+    <value>The installer couldn't be started. The details are in updates.log in the data folder. Nothing was changed.</value>
+  </data>
+  <data name="Update.Error.Timeout" xml:space="preserve">
+    <value>The download stopped: GitHub stopped sending data. Nothing was changed.</value>
+  </data>
+  <data name="Update.Error.Unexpected" xml:space="preserve">
+    <value>The update stopped because of an unexpected error. The details are in updates.log in the data folder. Nothing was changed.</value>
+  </data>
+  <data name="Update.Error.WindowsOpen" xml:space="preserve">
+    <value>A window couldn't be closed yet (it says why). Once it's closed, the update is offered again, already downloaded.</value>
+  </data>
+  <data name="Update.Failed.AfterRestart" xml:space="preserve">
+    <value>The update to TidyMind {0} couldn't be installed, so TidyMind {1} is still in use. Your data wasn't changed. What happened is written in:
+{2}</value>
+  </data>
+  <data name="Update.Heading" xml:space="preserve">
+    <value>Update available</value>
+  </data>
+  <data name="Update.Later" xml:space="preserve">
+    <value>Later</value>
+  </data>
+  <data name="Update.Now" xml:space="preserve">
+    <value>Update now</value>
+  </data>
+  <data name="Update.Progress" xml:space="preserve">
+    <value>{0}% · {1:0.0} MB of {2:0.0} MB</value>
+  </data>
+  <data name="Update.Retry" xml:space="preserve">
+    <value>Try again</value>
+  </data>
+  <data name="Update.Skip" xml:space="preserve">
+    <value>Skip this version</value>
+  </data>
+  <data name="Update.Status.Download" xml:space="preserve">
+    <value>Downloading the update…</value>
+  </data>
+  <data name="Update.Status.Install" xml:space="preserve">
+    <value>TidyMind now closes to install the update, then starts again by itself.</value>
+  </data>
+  <data name="Update.Status.Verify" xml:space="preserve">
+    <value>Checking that the download is complete and unchanged…</value>
+  </data>
+  <data name="Update.Step.Download" xml:space="preserve">
+    <value>Downloading</value>
+  </data>
+  <data name="Update.Step.Install" xml:space="preserve">
+    <value>Installing</value>
+  </data>
+  <data name="Update.Step.Restart" xml:space="preserve">
+    <value>Restarting</value>
+  </data>
+  <data name="Update.Step.Verify" xml:space="preserve">
+    <value>Verifying</value>
+  </data>
+  <data name="Update.Title" xml:space="preserve">
+    <value>TidyMind Update</value>
+  </data>
+  <data name="Update.Versions" xml:space="preserve">
+    <value>Current version: {0}  →  New version: {1}</value>
+  </data>
+  <data name="Update.WhatHappens" xml:space="preserve">
+    <value>TidyMind closes, installs the update and starts again by itself. Your data stays as it is.</value>
+  </data>
+  <data name="Update.WhatsNew" xml:space="preserve">
+    <value>What's new</value>
   </data>
   <data name="Welcome.Bike.Item" xml:space="preserve">
     <value>City bike</value>

@@ -241,7 +241,7 @@ namespace TidyMind
 
                             if (!byId.TryGetValue(id, out Reminder reminder))
                                 orphaned.Add(id);
-                            else if (IsHealthy(task.Definition, reminder, exePath))
+                            else if (IsHealthy(task, reminder, exePath))
                                 healthy.Add(id);
                         }
                     }
@@ -257,7 +257,7 @@ namespace TidyMind
                 foreach (Reminder reminder in byId.Values.Where(r => !healthy.Contains(r.Id)))
                 {
                     DateTime when = reminder.NextFireTime > soon ? reminder.NextFireTime : soon;
-                    Note("repair: " + Describe(reminder) + " had no task or a wrong one; scheduled for "
+                    Note("repair: " + Describe(reminder) + " had no task, a wrong one, or one that failed to start TidyMind; scheduled for "
                         + when.ToString("yyyy-MM-dd HH:mm"));
                     TrySchedule(() => RegisterTask(reminder.Id, when, "TidyMind reminder: " + reminder.Title));
                 }
@@ -265,16 +265,19 @@ namespace TidyMind
         }
 
         // Starts this exe for this reminder at its stored time. One whose time has passed counts as right when the
-        // task otherwise is: it has run or will (StartWhenAvailable), and moving the reminder on is its job.
-        private static bool IsHealthy(TaskDefinition definition, Reminder reminder, string exePath)
+        // task otherwise is: it has run or will (StartWhenAvailable), and moving the reminder on is its job. Unless it
+        // ran at that time and failed to start TidyMind (say, while an update was replacing the program files): the
+        // reminder never moved on, so it's due again.
+        private static bool IsHealthy(Microsoft.Win32.TaskScheduler.Task task, Reminder reminder, string exePath)
         {
+            TaskDefinition definition = task.Definition;
             ExecAction action = definition.Actions.OfType<ExecAction>().FirstOrDefault();
             if (action == null || !SamePath(action.Path, exePath)
                 || action.Arguments == null || !action.Arguments.Contains(reminder.Id.ToString(), StringComparison.OrdinalIgnoreCase))
                 return false;
 
             if (reminder.NextFireTime <= DateTime.Now)
-                return true;
+                return !(task.LastRunTime >= reminder.NextFireTime.AddMinutes(-1) && task.LastTaskResult != 0 && task.State != TaskState.Running);
 
             TimeTrigger trigger = definition.Triggers.OfType<TimeTrigger>().FirstOrDefault();
             return trigger != null && Math.Abs((trigger.StartBoundary - reminder.NextFireTime).TotalSeconds) < 1;

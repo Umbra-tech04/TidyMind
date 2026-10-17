@@ -52,8 +52,36 @@
             <Setter Property="Margin" Value="16,0"/>
             <Setter Property="SnapsToDevicePixels" Value="True"/>
         </Style>
+
+        <!-- On/off switch (a CheckBox): a pill with a knob, accent when on -->
+        <Style x:Key="SwitchStyle" TargetType="CheckBox">
+            <Setter Property="Grid.Column" Value="1"/>
+            <Setter Property="Margin" Value="16,0,0,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Border x:Name="track" Width="40" Height="22" CornerRadius="11" Background="#C9C9C6">
+                            <Ellipse x:Name="knob" Width="16" Height="16" Fill="#FFFFFF" HorizontalAlignment="Left" Margin="3,0"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="track" Property="Background" Value="{StaticResource Accent}"/>
+                                <Setter TargetName="knob" Property="HorizontalAlignment" Value="Right"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="track" Property="Opacity" Value="0.88"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
+    <!-- Scrolls only on a screen too short for all of it (MaxHeight: SettingsWindow) -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
     <StackPanel Margin="24,22,24,20">
         <TextBlock Text="{local:Tr Settings.Title}" FontSize="17" FontWeight="Bold" Foreground="{StaticResource TextMain}"/>
 
@@ -154,6 +182,39 @@
             </StackPanel>
         </Border>
 
+        <TextBlock Text="{local:Tr Settings.Section.Updates}" Style="{StaticResource SectionLabelStyle}"/>
+        <Border Style="{StaticResource CardStyle}">
+            <StackPanel>
+                <Grid Style="{StaticResource RowStyle}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="{local:Tr Settings.Updates.Auto.Title}" Style="{StaticResource RowTitleStyle}"/>
+                        <TextBlock Text="{local:Tr Settings.Updates.Auto.Note}" Style="{StaticResource RowNoteStyle}"/>
+                    </StackPanel>
+                    <CheckBox x:Name="AutoUpdateSwitch" Style="{StaticResource SwitchStyle}"
+                              AutomationProperties.Name="{local:Tr Settings.Updates.Auto.Title}"
+                              Click="AutoUpdateSwitch_Click"/>
+                </Grid>
+                <Border Style="{StaticResource RowDividerStyle}"/>
+                <Grid Style="{StaticResource RowStyle}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock x:Name="UpdateVersionText" Style="{StaticResource RowTitleStyle}"/>
+                        <!-- When it was last checked, or what "Check now" found -->
+                        <TextBlock x:Name="UpdateNote" Style="{StaticResource RowNoteStyle}"/>
+                    </StackPanel>
+                    <Button x:Name="CheckUpdatesButton" Content="{local:Tr Settings.Updates.Check}" Style="{StaticResource RowButtonStyle}"
+                            Click="CheckUpdatesButton_Click"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+
         <!-- About: one quiet line. The link uses the darker accent, which reads at 5.7:1 on this background. -->
         <Grid Margin="2,18,0,0">
             <Grid.ColumnDefinitions>
@@ -165,4 +226,5 @@
                     Foreground="{StaticResource BtnHover}" Click="LicensesLink_Click"/>
         </Grid>
     </StackPanel>
+    </ScrollViewer>
 </Window>

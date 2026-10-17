@@ -12,6 +12,8 @@
 ; installed app.
 #define MyAppUserModelId "TidyMind.App"
 #define MyToastActivatorCLSID "2A3B2680-8A8E-477E-B156-973089BA7F0A"
+; The running app holds this mutex (App.ClaimSingleInstance; its OnExit releases it).
+#define MyAppMutex "Local\TidyMind_SingleInstance"
 
 #ifndef AppVersion
   #error AppVersion is not set: build with installer\build-installer.ps1
@@ -46,8 +48,8 @@ InfoBeforeFile=PRIVACY.txt
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
-; The running app holds this mutex (App.ClaimSingleInstance): setup and uninstall ask to close TidyMind first.
-AppMutex=Local\TidyMind_SingleInstance
+; Setup and uninstall ask to close TidyMind first (an in-app update waits for it to close instead: InitializeSetup).
+AppMutex={#MyAppMutex}
 CloseApplications=yes
 RestartApplications=no
 OutputDir=..\dist
@@ -104,6 +106,12 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; AppUserMo
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#MyAppName}}"; Flags: nowait postinstall skipifsilent
 
 [Code]
+var
+  // /RELAUNCH=1: started by TidyMind's in-app update (Updates.InstallerArguments, with /SILENT): wait for TidyMind to
+  // close, and start it again at the end. A normal install keeps the "Launch TidyMind" checkbox instead.
+  Relaunch: Boolean;
+  Installed: Boolean;
+
 function DataFolder: String;
 begin
   Result := ExpandConstant('{localappdata}\{#MyAppName}');
@@ -119,6 +127,53 @@ begin
     '-NoProfile -NonInteractive -Command "Get-CimInstance Win32_Process | Where-Object { $_.Name -eq ''{#MyAppExeName}'' '
     + '-and $_.CommandLine -like ''*--remind *'' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }"',
     '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+end;
+
+// TidyMind starts the installer and then closes the normal way (everything saved, the mutex released). Setup checks
+// AppMutex right after this; with /SUPPRESSMSGBOXES it would give up at once, so it waits here first (up to a minute).
+function InitializeSetup: Boolean;
+var
+  Waited: Integer;
+begin
+  Relaunch := ExpandConstant('{param:RELAUNCH|0}') = '1';
+  if Relaunch then
+  begin
+    Waited := 0;
+    while CheckForMutexes('{#MyAppMutex}') and (Waited < 600) do
+    begin
+      Sleep(100);
+      Waited := Waited + 1;
+    end;
+    Log(Format('In-app update: waited %d ms for TidyMind to close.', [Waited * 100]));
+  end;
+  Result := True;
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssDone then
+    Installed := True;
+end;
+
+// After an in-app update TidyMind starts again: the new version, or the old one if setup failed (setup puts back what
+// it replaced). If setup stopped before it knew the program folder (TidyMind never closed), there's nothing to start.
+procedure DeinitializeSetup;
+var
+  Exe: String;
+  ResultCode: Integer;
+begin
+  if not Relaunch then
+    exit;
+  try
+    Exe := ExpandConstant('{app}\{#MyAppExeName}');
+  except
+    Log('In-app update: the program folder is unknown; TidyMind is not started again.');
+    exit;
+  end;
+  if not Installed then
+    Log('In-app update: setup did not finish; starting the version that is still installed.');
+  if not FileExists(Exe) or not ExecAsOriginalUser(Exe, '', ExpandConstant('{app}'), SW_SHOWNORMAL, ewNoWait, ResultCode) then
+    Log('In-app update: TidyMind could not be started again (' + Exe + ').');
 end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;
