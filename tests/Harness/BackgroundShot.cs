@@ -49,6 +49,29 @@ static partial class Program
             RenderWindow(main, "bg-2-" + percent);
         }
         PageBackground.ImageVisibility = PageBackground.DefaultImageVisibility;
+
+        // Empty tabs: the small "nothing here yet" card, on the picture and on a plain page.
+        Profile shed = AddMemory(main, "Shed", ProfileType.Collection);
+        shed.BackgroundType = BackgroundFill.Image;
+        shed.BackgroundImagePath = garage.BackgroundImagePath;
+        ProfileManager.TrySaveProfiles(Profiles(main));
+        Invoke(main, "NavigateTo", shed);
+        await Wait(1200);
+        CheckEmptyCard(main, "Collection.Empty", "bg-3-empty-collection-picture");
+        Profile plans = AddMemory(main, "Plans", ProfileType.Project);
+        Invoke(main, "NavigateTo", plans);
+        await Wait(800);
+        CheckEmptyCard(main, "Project.Empty", "bg-4-empty-project-plain");
+    }
+
+    static void CheckEmptyCard(MainWindow main, string key, string shot)
+    {
+        FrameworkElement view = (FrameworkElement)Content(main);
+        System.Windows.Controls.TextBlock text = (System.Windows.Controls.TextBlock)view.FindName("EmptyState");
+        FrameworkElement card = (FrameworkElement)System.Windows.Media.VisualTreeHelper.GetParent(System.Windows.Media.VisualTreeHelper.GetParent(text));
+        Check(text.IsVisible && text.Text == Loc.T(key) && card.ActualHeight < 160 && card.ActualWidth <= 440,
+            key + ": a small card (" + card.ActualWidth.ToString("0") + " × " + card.ActualHeight.ToString("0") + " px)");
+        RenderWindow(main, shot);
     }
 
     // Sky, sun, a dark ground and bright shapes: the hard case for text on top.

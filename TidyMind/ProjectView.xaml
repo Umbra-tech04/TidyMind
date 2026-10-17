@@ -67,11 +67,14 @@
         <ScrollViewer x:Name="CardScroll" Grid.Row="3" VerticalScrollBarVisibility="Auto" FocusVisualStyle="{x:Null}" Padding="16,0,16,24">
             <Grid x:Name="CardArea">
                 <WrapPanel x:Name="ProjectPanel"/>
-                <TextBlock x:Name="EmptyState"
-                           FontSize="13" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="520" Foreground="{StaticResource TextSub}"
-                           Background="{StaticResource BgPlate}" Padding="16,10"
-                           HorizontalAlignment="Center" Margin="0,60,0,0"
-                           Visibility="Collapsed"/>
+                <!-- Nothing in this tab, nothing found, or the file can't be read: a small card, shown with its text -->
+                <Border Style="{StaticResource EmptyCardStyle}" Visibility="{Binding Visibility, ElementName=EmptyState}">
+                    <StackPanel>
+                        <TextBlock Text="&#xE821;" Style="{StaticResource EmptyCardIconStyle}"/>
+                        <TextBlock x:Name="EmptyState" FontSize="13" TextWrapping="Wrap" TextAlignment="Center"
+                                   Foreground="{StaticResource TextBody}" Visibility="Collapsed"/>
+                    </StackPanel>
+                </Border>
                 <Canvas x:Name="MarqueeCanvas" IsHitTestVisible="False"/>
             </Grid>
         </ScrollViewer>
