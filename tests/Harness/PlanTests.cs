@@ -293,7 +293,9 @@ static partial class Program
         using (StreamReader body = new StreamReader(docx.GetEntry("word/document.xml").Open()))
         {
             string xml = body.ReadToEnd();
-            Check(xml.Contains("Day plan") && xml.Contains("Export me (done)") && xml.Contains("08:00–09:00"), "Word: the Day plan group, block line and time");
+            Check(xml.Contains(Loc.F("Export.Exported", "").Trim()), "Word: the date line under the title");
+            Check(xml.Contains("Day plan") && xml.Contains("08:00–09:00") && xml.Contains("Export me (done) — with a note"),
+                "Word: the Day plan group, a row per block (time beside its title and note)");
         }
         using (ClosedXML.Excel.XLWorkbook book = new ClosedXML.Excel.XLWorkbook(System.IO.Path.Combine(folder, "all.xlsx")))
             Check(book.Worksheets.Any(s => s.Name == "Day plan"), "Excel: a Day plan sheet");

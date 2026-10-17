@@ -656,14 +656,47 @@ TidyMind has to close. The details were written to {1}.</value>
   <data name="Export.ChooseFormat" xml:space="preserve">
     <value>Choose export format</value>
   </data>
+  <data name="Export.Column.Added" xml:space="preserve">
+    <value>Added</value>
+  </data>
+  <data name="Export.Column.Block" xml:space="preserve">
+    <value>Block</value>
+  </data>
+  <data name="Export.Column.Date" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="Export.Column.File" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="Export.Column.Memory" xml:space="preserve">
+    <value>Memory</value>
+  </data>
+  <data name="Export.Column.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Export.Column.Notes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="Export.Column.Project" xml:space="preserve">
+    <value>Project</value>
+  </data>
+  <data name="Export.Column.Size" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="Export.Column.Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Export.Column.Task" xml:space="preserve">
+    <value>Task</value>
+  </data>
+  <data name="Export.Column.Time" xml:space="preserve">
+    <value>Time</value>
+  </data>
   <data name="Export.Complete" xml:space="preserve">
     <value>Export complete.</value>
   </data>
   <data name="Export.CutMark" xml:space="preserve">
     <value>(cut)</value>
-  </data>
-  <data name="Export.Done" xml:space="preserve">
-    <value>{0} (done)</value>
   </data>
   <data name="Export.ExcelNote" xml:space="preserve">
     <value>Native Excel spreadsheet</value>
@@ -688,14 +721,20 @@ TidyMind has to close. The details were written to {1}.</value>
   <data name="Export.ImagePath" xml:space="preserve">
     <value>Image Path</value>
   </data>
-  <data name="Export.Items" xml:space="preserve">
-    <value>Items</value>
-  </data>
   <data name="Export.Nothing" xml:space="preserve">
     <value>There are no memories or day plans to export.</value>
   </data>
-  <data name="Export.Open" xml:space="preserve">
-    <value>{0} (undone)</value>
+  <data name="Export.DoneGroup" xml:space="preserve">
+    <value>Done ({0})</value>
+  </data>
+  <data name="Export.Empty" xml:space="preserve">
+    <value>Nothing here yet.</value>
+  </data>
+  <data name="Export.Exported" xml:space="preserve">
+    <value>TidyMind · exported {0}</value>
+  </data>
+  <data name="Export.FileDetails" xml:space="preserve">
+    <value>{0} · added {1}</value>
   </data>
   <data name="Export.PdfNote" xml:space="preserve">
     <value>Printable document with images</value>
@@ -703,17 +742,20 @@ TidyMind has to close. The details were written to {1}.</value>
   <data name="Export.Sheet" xml:space="preserve">
     <value>Sheet</value>
   </data>
+  <data name="Export.Sheet.Text" xml:space="preserve">
+    <value>Description and notes</value>
+  </data>
+  <data name="Export.Status.Done" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="Export.Status.Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
   <data name="Export.SizeRow" xml:space="preserve">
     <value>Size {0} - {1} x{2}</value>
   </data>
   <data name="Export.Title.All" xml:space="preserve">
     <value>TidyMind — Export All</value>
-  </data>
-  <data name="Export.Title.Collection" xml:space="preserve">
-    <value>{0} — Collection Export</value>
-  </data>
-  <data name="Export.Title.Project" xml:space="preserve">
-    <value>{0} — Project Export</value>
   </data>
   <data name="Export.Unnamed" xml:space="preserve">
     <value>(unnamed)</value>

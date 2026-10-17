@@ -35,14 +35,6 @@ namespace TidyMind
             return pages;
         }
 
-        // Every page's text, for exports (an old note exports exactly as before).
-        public string NotesAsPlainText()
-        {
-            return string.Join("\n\n", PagesOrLegacyNote()
-                .Select(p => RichTextHelper.ToPlainText(p.Body ?? ""))
-                .Where(text => text.Trim().Length > 0));
-        }
-
         // Files attached in Project Details (empty for projects from before attachments existed).
         public List<Attachment> Attachments { get; set; } = new List<Attachment>();
         public Guid TabId { get; set; }

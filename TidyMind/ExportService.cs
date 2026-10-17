@@ -2,13 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
-using ClosedXML.Excel;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
+using System.Text;
+using System.Xml;
 using QuestPDF.Infrastructure;
-using Xceed.Document.NET;
-using Xceed.Words.NET;
 
 namespace TidyMind
 {
@@ -19,78 +15,88 @@ namespace TidyMind
         Pdf
     }
 
-    public static class ExportService
+    // Every export (a project, an item, a memory, everything) is a list of items; each format lays them out its own way:
+    // ExportService.Pdf.cs, ExportService.Docx.cs, ExportService.Excel.cs. What they share is here and in
+    // ExportService.RichText.cs.
+    public static partial class ExportService
     {
         static ExportService()
         {
             QuestPDF.Settings.License = LicenseType.Community;
+            QuestPDF.Settings.UseSystemFonts = true; // the fallback fonts after Lato (PdfFonts)
         }
+
+        // The colors of every format. Exports must print well in grayscale: done and open never differ by color alone.
+        private const string Ink = "#1F2328";
+        private const string Muted = "#6B6F76";
+        private const string Faint = "#8A8F96";
+        private const string Rule = "#D5D8DC";
+        private const string SectionRule = "#4A4F55";
 
         // Labels are in the language shown when the export is made; the file's layout is the same in every language.
         private class ExportItem
         {
-            public string Group;
+            public Profile Memory;        // Export all: the memory it comes from (two memories may share a name)
+            public string Group;          // the heading it goes under: the memory's name, or the day plan
             public string Name;
-            public string ImagePath;
-            public bool HasPictureField; // an item: in a PDF without its picture, the picture's path is listed instead
+            public string ImagePath;      // an item's picture
             public List<(string Label, string Value)> Fields;
+            public Project Project;       // a project: each format lays out its tasks, notes and files itself
+            public List<TodoEntry> Todos; // a memory's to-do list, shown as a checklist
+            public Entity Entity;         // an item: Excel puts its values in typed columns
+            public List<DayPlanBlock> Blocks; // a planned day: Excel lists its blocks in a table
         }
 
         public static void ExportMemory(Profile profile, string filePath, ExportFormat format)
         {
-            if (format == ExportFormat.Excel)
-            {
-                using (XLWorkbook workbook = new XLWorkbook())
-                {
-                    AddMemorySheet(workbook, profile);
-                    workbook.SaveAs(filePath);
-                }
-                return;
-            }
-
-            List<ExportItem> items;
-            string title;
-
-            if (profile.Type == ProfileType.Collection)
-            {
-                items = BuildEntityItems(EntityStore.Load(profile));
-                title = Loc.F("Export.Title.Collection", profile.Name);
-            }
-            else
-            {
-                items = BuildProjectItems(profile);
-                title = Loc.F("Export.Title.Project", profile.Name);
-            }
-
-            WriteExport(items, title, filePath, format);
+            List<ExportItem> items = profile.Type == ProfileType.Collection ? BuildEntityItems(profile) : BuildProjectItems(profile);
+            WriteExport(items, NameOrUnnamed(profile.Name), filePath, format);
         }
 
         public static void ExportAll(List<Profile> profiles, string filePath, ExportFormat format)
         {
-            if (format == ExportFormat.Excel)
-            {
-                using (XLWorkbook workbook = new XLWorkbook())
-                {
-                    foreach (Profile profile in profiles)
-                        AddMemorySheet(workbook, profile);
-                    AddDayPlanSheet(workbook, BuildDayPlanItems());
-                    workbook.SaveAs(filePath);
-                }
-                return;
-            }
-
             List<ExportItem> items = new List<ExportItem>();
 
             foreach (Profile profile in profiles)
             {
                 if (profile.Type == ProfileType.Collection)
-                    items.AddRange(BuildEntityItems(EntityStore.Load(profile), profile.Name));
+                    items.AddRange(BuildEntityItems(profile, grouped: true));
                 else
-                    items.AddRange(BuildProjectItems(profile, profile.Name));
+                    items.AddRange(BuildProjectItems(profile, grouped: true));
             }
             items.AddRange(BuildDayPlanItems());
 
             WriteExport(items, Loc.T("Export.Title.All"), filePath, format);
+        }
+
+        // A single card (its right-click menu): the same layout as in a whole-memory export, just that one card.
+        public static void ExportProject(Project project, string filePath, ExportFormat format)
+        {
+            WriteExport(new List<ExportItem> { ProjectItem(project) }, NameOrUnnamed(project.Name), filePath, format, oneItem: true);
+        }
+
+        public static void ExportEntity(Entity entity, string filePath, ExportFormat format)
+        {
+            WriteExport(new List<ExportItem> { EntityItem(entity) }, NameOrUnnamed(entity.Name), filePath, format, oneItem: true);
+        }
+
+        // All three are titled with the name of what is exported, with the same date line under it. `oneItem`: the
+        // export is that single item (a project's or an item's own menu), so its name is the title and isn't repeated.
+        private static void WriteExport(List<ExportItem> items, string title, string filePath, ExportFormat format, bool oneItem = false)
+        {
+            string exported = Loc.F("Export.Exported", DateTime.Now.ToString(Loc.T("Format.LongDate"), Loc.Culture));
+            switch (format)
+            {
+                case ExportFormat.Excel:
+                    WriteXlsx(items, title, exported, oneItem, filePath);
+                    break;
+                case ExportFormat.Docx:
+                    WriteDocx(items, title, exported, oneItem, filePath);
+                    break;
+                case ExportFormat.Pdf:
+                    WritePdf(items, title, exported, oneItem, filePath);
+                    break;
+            }
         }
 
         // ---- Day plan -----------------------------------------------------
@@ -105,11 +111,16 @@ namespace TidyMind
                 return new List<ExportItem>();
 
             return plan.Blocks.Select(b => b.Date.Date).Distinct().OrderBy(d => d)
-                .Select(day => new ExportItem
+                .Select(day =>
                 {
-                    Group = Loc.T("Plan.Name"),
-                    Name = day.ToString(Loc.T("Format.FullDate"), Loc.Culture),
-                    Fields = DayPlanStore.BlocksOn(plan, day).Select(b => (b.TimeRange(), DescribeBlock(b))).ToList()
+                    List<DayPlanBlock> blocks = DayPlanStore.BlocksOn(plan, day).ToList();
+                    return new ExportItem
+                    {
+                        Group = Loc.T("Plan.Name"),
+                        Name = day.ToString(Loc.T("Format.FullDate"), Loc.Culture),
+                        Fields = blocks.Select(b => (b.TimeRange(), DescribeBlock(b))).ToList(),
+                        Blocks = blocks
+                    };
                 })
                 .ToList();
         }
@@ -118,142 +129,69 @@ namespace TidyMind
             (block.Done ? Loc.F("Export.BlockDone", block.Title) : block.Title)
             + (string.IsNullOrWhiteSpace(block.Notes) ? "" : " — " + block.Notes.Trim());
 
-        // A "Day plan" sheet in the same card layout as the memories: a card per day, a row per block.
-        private static void AddDayPlanSheet(XLWorkbook workbook, List<ExportItem> days)
-        {
-            if (days.Count == 0)
-                return;
+        // ---- Memories, projects and items ----------------------------------------
 
-            IXLWorksheet sheet = workbook.Worksheets.Add(SanitizeSheetName(workbook, Loc.T("Plan.Name")));
-            int row = 1;
-            foreach (ExportItem day in days)
-            {
-                WriteCardHeader(sheet, ref row, day.Name);
-                foreach ((string label, string value) in day.Fields)
-                    WriteCardField(sheet, ref row, label, value);
-                row += 2;
-            }
-            FinalizeCardSheet(sheet);
-        }
-
-        // A single card (its right-click menu): the same layout as in a whole-memory export, just that one block.
-        public static void ExportProject(Project project, string filePath, ExportFormat format)
-        {
-            if (format == ExportFormat.Excel)
-            {
-                using (XLWorkbook workbook = new XLWorkbook())
-                {
-                    IXLWorksheet sheet = workbook.Worksheets.Add(SanitizeSheetName(workbook, project.Name));
-                    int row = 1;
-                    WriteProjectCard(sheet, ref row, project);
-                    FinalizeCardSheet(sheet);
-                    workbook.SaveAs(filePath);
-                }
-                return;
-            }
-
-            WriteExport(new List<ExportItem> { ProjectItem(project) }, Loc.F("Export.Title.Project", project.Name), filePath, format);
-        }
-
-        public static void ExportEntity(Entity entity, string filePath, ExportFormat format)
-        {
-            if (format == ExportFormat.Excel)
-            {
-                using (XLWorkbook workbook = new XLWorkbook())
-                {
-                    IXLWorksheet sheet = workbook.Worksheets.Add(SanitizeSheetName(workbook, entity.Name));
-                    int row = 1;
-                    WriteEntityCard(sheet, ref row, entity);
-                    FinalizeCardSheet(sheet);
-                    workbook.SaveAs(filePath);
-                }
-                return;
-            }
-
-            WriteExport(new List<ExportItem> { EntityItem(entity) }, Loc.F("Export.Title.Collection", entity.Name), filePath, format);
-        }
-
-        // The memory's inline to-do list (if it has one) comes first, then its projects.
-        private static List<ExportItem> BuildProjectItems(Profile memory, string group = null)
+        // The memory's inline to-do list (if it has one) comes first, then its projects. `grouped` (export all): under
+        // the memory's heading.
+        private static List<ExportItem> BuildProjectItems(Profile memory, bool grouped = false)
         {
             List<ExportItem> items = new List<ExportItem>();
 
             List<TodoEntry> todos = LoadTodos(memory);
             if (todos.Count > 0)
-                items.Add(new ExportItem
-                {
-                    Group = group,
-                    Name = Loc.T("Home.Todo.Title"),
-                    Fields = new List<(string, string)> { (Loc.T("Export.Items"), FormatTodos(todos)) }
-                });
+                items.Add(new ExportItem { Name = Loc.T("Home.Todo.Title"), Todos = todos });
 
             foreach (Project project in ProjectStore.Load(memory))
-                items.Add(ProjectItem(project, group));
+                items.Add(ProjectItem(project));
 
+            return grouped ? UnderMemory(items, memory) : items;
+        }
+
+        private static ExportItem ProjectItem(Project project)
+        {
+            return new ExportItem { Name = project.Name, Project = project };
+        }
+
+        private static List<ExportItem> BuildEntityItems(Profile memory, bool grouped = false)
+        {
+            List<ExportItem> items = EntityStore.Load(memory).Select(EntityItem).ToList();
+            return grouped ? UnderMemory(items, memory) : items;
+        }
+
+        private static List<ExportItem> UnderMemory(List<ExportItem> items, Profile memory)
+        {
+            foreach (ExportItem item in items)
+            {
+                item.Memory = memory;
+                item.Group = NameOrUnnamed(memory.Name);
+            }
             return items;
         }
 
-        private static ExportItem ProjectItem(Project project, string group = null)
+        private static ExportItem EntityItem(Entity entity)
         {
-            ExportItem item = new ExportItem();
-            item.Group = group;
-            item.Name = project.Name;
-            item.Fields = new List<(string, string)>
+            return new ExportItem
             {
-                (Loc.T("ProjectWindow.Description"), RichTextHelper.ToPlainText(project.Description)),
-                (Loc.T("ProjectWindow.Tasks"), FormatTasks(project.Tasks)),
-                (Loc.T("ProjectWindow.Notes"), project.NotesAsPlainText())
-            };
-            return item;
-        }
-
-        private static List<ExportItem> BuildEntityItems(List<Entity> entities, string group = null)
-        {
-            return entities.Select(entity => EntityItem(entity, group)).ToList();
-        }
-
-        private static ExportItem EntityItem(Entity entity, string group = null)
-        {
-            ExportItem item = new ExportItem();
-            item.Group = group;
-            item.Name = entity.Name;
-            item.ImagePath = EntityImages.FullPath(entity);
-            item.HasPictureField = true;
-            if (EntityTypes.Fields(entity.EntityType).Count > 0)
-            {
+                Name = entity.Name,
+                Entity = entity,
+                ImagePath = EntityImages.FullPath(entity),
                 // A type with a definition (Vehicle): its fields, notes and logs.
-                item.Fields = EntityTypes.Describe(entity);
-                return item;
-            }
-            item.Fields = new List<(string, string)>
-            {
-                (Loc.T("Entity.Field.Brand"), entity.Brand ?? ""),
-                (Loc.T("Entity.Field.Color"), entity.Color ?? ""),
-                (Loc.T("Entity.Field.Material"), Choices.Label(entity.Material)),
-                (Loc.T("Entity.Field.Season"), Choices.Label(entity.Season)),
-                (Loc.T("Entity.Field.PurchasePrice"), entity.PurchasePrice ?? ""),
-                (Loc.T("Entity.Sizes"), FormatSizes(entity.Sizes)),
-                (Loc.T("Entity.Field.Notes"), entity.Notes ?? "")
+                Fields = EntityTypes.Fields(entity.EntityType).Count > 0 ? EntityTypes.Describe(entity) : ClothingFields(entity)
             };
-            return item;
         }
 
-        private static string FormatTasks(List<TaskItem> tasks)
+        // An item without a type definition (clothing), as label and text.
+        private static List<(string Label, string Value)> ClothingFields(Entity entity) => new List<(string, string)>
         {
-            if (tasks == null || tasks.Count == 0)
-                return "";
-
-            List<string> parts = new List<string>();
-            foreach (TaskItem task in tasks)
-                parts.Add(Loc.F(task.IsDone ? "Export.Done" : "Export.Open", task.Title));
-
-            return string.Join("; ", parts);
-        }
-
-        private static string FormatTodos(List<TodoEntry> todos)
-        {
-            return string.Join("; ", todos.Select(t => Loc.F(t.IsDone ? "Export.Done" : "Export.Open", t.Text)));
-        }
+            (Loc.T("Entity.Field.Brand"), entity.Brand ?? ""),
+            (Loc.T("Entity.Field.Color"), entity.Color ?? ""),
+            (Loc.T("Entity.Field.Material"), Choices.Label(entity.Material)),
+            (Loc.T("Entity.Field.Season"), Choices.Label(entity.Season)),
+            (Loc.T("Entity.Field.PurchasePrice"), entity.PurchasePrice ?? ""),
+            (Loc.T("Entity.Sizes"), string.Join("\n", (entity.Sizes ?? new List<SizeQuantity>())
+                .Select(sq => Loc.F("Export.SizeRow", sq.Size, Choices.Label(sq.Condition), sq.Quantity)))),
+            (Loc.T("Entity.Field.Notes"), entity.Notes ?? "")
+        };
 
         // An unreadable file just leaves the to-do list out of the export.
         private static List<TodoEntry> LoadTodos(Profile memory)
@@ -261,202 +199,66 @@ namespace TidyMind
             return MemoryTodoService.TryLoad(memory, out List<TodoEntry> todos) ? todos : new List<TodoEntry>();
         }
 
-        private static string FormatSizes(List<SizeQuantity> sizes)
+        // ---- Shared by the formats ------------------------------------------------
+
+        private static string NameOrUnnamed(string name) => string.IsNullOrWhiteSpace(name) ? Loc.T("Export.Unnamed") : name;
+
+        // Whether `item` starts a new heading (a memory in export all, or the day plan).
+        private static bool StartsGroup(ExportItem previous, ExportItem item) =>
+            previous == null || previous.Memory != item.Memory || previous.Group != item.Group;
+
+        // A project's sections as every format shows them; empty ones are left out.
+        private sealed class ProjectParts
         {
-            if (sizes == null || sizes.Count == 0)
-                return "";
+            public List<RichLine> Description;
+            public List<TaskItem> Tasks;
+            public List<List<RichLine>> NotePages; // notebook pages with something on them
+            public List<Attachment> Files;
 
-            List<string> parts = new List<string>();
-            foreach (SizeQuantity sq in sizes)
-                parts.Add(sq.Size + "/" + Choices.Label(sq.Condition) + " x" + sq.Quantity);
-
-            return string.Join("; ", parts);
+            public bool IsEmpty => Description.Count == 0 && Tasks.Count == 0 && NotePages.Count == 0 && Files.Count == 0;
         }
 
-        private static void WriteExport(List<ExportItem> items, string title, string filePath, ExportFormat format)
+        private static ProjectParts Parts(Project project) => new ProjectParts
         {
-            switch (format)
-            {
-                case ExportFormat.Docx:
-                    WriteDocx(items, title, filePath);
-                    break;
-                case ExportFormat.Pdf:
-                    WritePdf(items, title, filePath);
-                    break;
-            }
+            Description = RichLines(project.Description),
+            Tasks = project.Tasks?.Where(t => t != null).ToList() ?? new List<TaskItem>(),
+            NotePages = project.PagesOrLegacyNote().Select(p => RichLines(p.Body)).Where(p => p.Count > 0).ToList(),
+            Files = project.Attachments?.Where(a => a != null).ToList() ?? new List<Attachment>()
+        };
+
+        // Open entries in their own order, then the done ones (shown under a "Done" label when there are open ones too):
+        // what is left to do reads first.
+        private static (List<string> Open, List<string> Done) SplitChecklist(IEnumerable<(string Text, bool Done)> entries)
+        {
+            List<(string Text, bool Done)> all = entries.ToList();
+            return (all.Where(e => !e.Done).Select(e => e.Text ?? "").ToList(), all.Where(e => e.Done).Select(e => e.Text ?? "").ToList());
         }
 
-        // Excel export: one worksheet per memory, columns matched to that memory's
-        // type (Projects vs Collections), rather than forcing everything through the
-        // shared Fields list the Docx/Pdf writers use — that's what lets a Collection's
-        // variable number of sizes become their own dedicated columns.
-        private static void AddMemorySheet(XLWorkbook workbook, Profile profile)
+        // The label/value lines shown for an item or a planned day: the empty ones left out, and an item's picture path
+        // when the picture itself can't be shown.
+        private static List<(string Label, string Value)> FieldsShown(ExportItem item, byte[]? png)
         {
-            if (profile.Type == ProfileType.Collection)
-                AddEntitySheet(workbook, profile.Name, EntityStore.Load(profile));
-            else
-                AddProjectSheet(workbook, profile);
+            List<(string Label, string Value)> fields = item.Fields.Where(f => !string.IsNullOrWhiteSpace(f.Value)).ToList();
+            if (png == null && item.Entity != null && !string.IsNullOrEmpty(item.ImagePath))
+                fields.Add((Loc.T("Export.ImagePath"), item.ImagePath));
+            return fields;
         }
 
-        // Card layout: each entity/project is its own vertical block — a merged,
-        // dark title row with the name, then one Label/Value row per field — instead
-        // of one wide row per item. Only 2 columns exist on the whole sheet.
-        private static void AddEntitySheet(XLWorkbook workbook, string sheetTitle, List<Entity> entities)
+        // Text without the characters XML can't hold (control characters pasted in from elsewhere, a lone half of an
+        // emoji): writing them would fail a Word or Excel export.
+        private static string XmlSafe(string text)
         {
-            IXLWorksheet sheet = workbook.Worksheets.Add(SanitizeSheetName(workbook, sheetTitle));
-            int row = 1;
-
-            foreach (Entity entity in entities)
-            {
-                WriteEntityCard(sheet, ref row, entity);
-                row += 2;
-            }
-
-            FinalizeCardSheet(sheet);
-        }
-
-        private static void WriteEntityCard(IXLWorksheet sheet, ref int row, Entity entity)
-        {
-            WriteCardHeader(sheet, ref row, entity.Name);
-
-            if (EntityTypes.Fields(entity.EntityType).Count > 0)
-            {
-                foreach ((string label, string value) in EntityTypes.Describe(entity))
-                    WriteCardField(sheet, ref row, label, value);
-                return;
-            }
-
-            WriteCardField(sheet, ref row, Loc.T("Entity.Field.Brand"), entity.Brand);
-            WriteCardField(sheet, ref row, Loc.T("Entity.Field.Color"), entity.Color);
-            WriteCardField(sheet, ref row, Loc.T("Entity.Field.Material"), Choices.Label(entity.Material));
-            WriteCardField(sheet, ref row, Loc.T("Entity.Field.Season"), Choices.Label(entity.Season));
-            WriteCardField(sheet, ref row, Loc.T("Entity.Field.PurchasePrice"), entity.PurchasePrice);
-            WriteCardField(sheet, ref row, Loc.T("Entity.Field.Notes"), entity.Notes);
-            WriteSizeRows(sheet, ref row, entity.Sizes);
-        }
-
-        private static void AddProjectSheet(XLWorkbook workbook, Profile memory)
-        {
-            IXLWorksheet sheet = workbook.Worksheets.Add(SanitizeSheetName(workbook, memory.Name));
-            int row = 1;
-
-            List<TodoEntry> todos = LoadTodos(memory);
-            if (todos.Count > 0)
-            {
-                WriteCardHeader(sheet, ref row, Loc.T("Home.Todo.Title"));
-                WriteCardField(sheet, ref row, Loc.T("Export.Items"), FormatTodos(todos));
-                row += 2;
-            }
-
-            foreach (Project project in ProjectStore.Load(memory))
-            {
-                WriteProjectCard(sheet, ref row, project);
-                row += 2;
-            }
-
-            FinalizeCardSheet(sheet);
-        }
-
-        private static void WriteProjectCard(IXLWorksheet sheet, ref int row, Project project)
-        {
-            WriteCardHeader(sheet, ref row, project.Name);
-
-            WriteCardField(sheet, ref row, Loc.T("ProjectWindow.Description"), RichTextHelper.ToPlainText(project.Description));
-            WriteCardField(sheet, ref row, Loc.T("ProjectWindow.Tasks"), FormatTasks(project.Tasks));
-            WriteCardField(sheet, ref row, Loc.T("ProjectWindow.Notes"), project.NotesAsPlainText());
-        }
-
-        private static void WriteCardHeader(IXLWorksheet sheet, ref int row, string name)
-        {
-            sheet.Range(row, 1, row, 2).Merge();
-
-            IXLCell cell = sheet.Cell(row, 1);
-            cell.Value = string.IsNullOrWhiteSpace(name) ? Loc.T("Export.Unnamed") : FitCell(name);
-            cell.Style.Font.Bold = true;
-            cell.Style.Font.FontSize = 13;
-            cell.Style.Font.FontColor = XLColor.White;
-            cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#252526");
-            cell.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-
-            row++;
-        }
-
-        private static void WriteCardField(IXLWorksheet sheet, ref int row, string label, string value)
-        {
-            StyleCardLabel(sheet, row, label);
-            sheet.Cell(row, 2).Value = string.IsNullOrEmpty(value) ? "-" : FitCell(value);
-            row++;
-        }
-
-        // An Excel cell holds at most 32,767 characters, and past that ClosedXML throws, failing the whole export:
-        // longer text (a long note or task list) is cut, and says so. Never cut between the halves of an emoji.
-        private const int MaxCellText = 32000;
-
-        private static string FitCell(string text)
-        {
-            if (text.Length <= MaxCellText)
+            if (text.All(XmlConvert.IsXmlChar))
                 return text;
-            int keep = char.IsHighSurrogate(text[MaxCellText - 1]) ? MaxCellText - 1 : MaxCellText;
-            return text.Substring(0, keep) + " … " + Loc.T("Export.CutMark");
-        }
-
-        private static void WriteSizeRows(IXLWorksheet sheet, ref int row, List<SizeQuantity> sizes)
-        {
-            if (sizes == null || sizes.Count == 0)
+            StringBuilder clean = new StringBuilder(text.Length);
+            for (int i = 0; i < text.Length; i++)
             {
-                WriteCardField(sheet, ref row, Loc.T("Entity.Sizes"), "-");
-                return;
+                if (XmlConvert.IsXmlChar(text[i]))
+                    clean.Append(text[i]);
+                else if (i + 1 < text.Length && XmlConvert.IsXmlSurrogatePair(text[i + 1], text[i]))
+                    clean.Append(text[i]).Append(text[++i]);
             }
-
-            bool first = true;
-            foreach (SizeQuantity sq in sizes)
-            {
-                StyleCardLabel(sheet, row, first ? Loc.T("Entity.Sizes") : "");
-                sheet.Cell(row, 2).Value = Loc.F("Export.SizeRow", sq.Size, Choices.Label(sq.Condition), sq.Quantity);
-                first = false;
-                row++;
-            }
-        }
-
-        private static void StyleCardLabel(IXLWorksheet sheet, int row, string label)
-        {
-            IXLCell cell = sheet.Cell(row, 1);
-            cell.Value = label;
-            cell.Style.Font.Bold = true;
-            cell.Style.Font.FontColor = XLColor.FromHtml("#666666");
-            cell.Style.Fill.BackgroundColor = row % 2 == 0 ? XLColor.FromHtml("#F2F2F2") : XLColor.White;
-        }
-
-        private static void FinalizeCardSheet(IXLWorksheet sheet)
-        {
-            sheet.Columns(1, 2).AdjustToContents();
-        }
-
-        private static string SanitizeSheetName(XLWorkbook workbook, string name)
-        {
-            // Excel also refuses a name starting or ending with an apostrophe, and compares names ignoring case, so
-            // memories called "Work" and "work" need different sheet names.
-            char[] invalid = { '\\', '/', '*', '?', ':', '[', ']' };
-            string clean = new string((name ?? Loc.T("Export.Sheet")).Select(c => invalid.Contains(c) || char.IsControl(c) ? '_' : c)
-                .ToArray()).Trim('\'');
-
-            if (string.IsNullOrWhiteSpace(clean))
-                clean = Loc.T("Export.Sheet");
-            if (clean.Length > 31)
-                clean = clean.Substring(0, 31);
-
-            string result = clean;
-            int suffix = 1;
-
-            while (workbook.Worksheets.Any(ws => string.Equals(ws.Name, result, StringComparison.OrdinalIgnoreCase)))
-            {
-                string suffixText = " (" + suffix + ")";
-                int baseLength = Math.Min(clean.Length, 31 - suffixText.Length);
-                result = clean.Substring(0, baseLength) + suffixText;
-                suffix++;
-            }
-
-            return result;
+            return clean.ToString();
         }
 
         // The item's picture as PNG, or null if there is none or it can't be read (damaged, or a format the Word and
@@ -488,150 +290,6 @@ namespace TidyMind
                 // whatever it is, it only means "no picture" here.
                 return null;
             }
-        }
-
-        private static void WriteDocx(List<ExportItem> items, string title, string filePath)
-        {
-            using (Xceed.Document.NET.Document document = DocX.Create(filePath))
-            {
-                document.InsertParagraph(title).FontSize(20).Bold();
-                document.InsertParagraph();
-
-                string currentGroup = null;
-
-                foreach (ExportItem item in items)
-                {
-                    if (item.Group != currentGroup)
-                    {
-                        currentGroup = item.Group;
-                        if (!string.IsNullOrEmpty(currentGroup))
-                        {
-                            document.InsertParagraph();
-                            document.InsertParagraph(currentGroup).FontSize(16).Bold();
-                        }
-                    }
-
-                    document.InsertParagraph();
-
-                    byte[]? png = PictureAsPng(item);
-                    if (png != null)
-                    {
-                        // Image on the left, fields on the right, like the item detail view.
-                        Xceed.Document.NET.Image image = document.AddImage(new MemoryStream(png), "image/png");
-                        Picture picture = image.CreatePicture(120, 120);
-
-                        Xceed.Document.NET.Table table = document.AddTable(1, 2);
-                        table.Design = TableDesign.None;
-                        table.AutoFit = AutoFit.Fixed;
-                        table.SetWidths(new float[] { 130f, 380f });
-
-                        table.Rows[0].Cells[0].Paragraphs[0].AppendPicture(picture);
-
-                        Cell infoCell = table.Rows[0].Cells[1];
-                        infoCell.Paragraphs[0].Append(item.Name).FontSize(13).Bold();
-                        AppendFields(infoCell, item.Fields);
-
-                        document.InsertTable(table);
-                    }
-                    else
-                    {
-                        document.InsertParagraph(item.Name).FontSize(13).Bold();
-                        AppendFields(document, item.Fields);
-                    }
-                }
-
-                document.Save();
-            }
-        }
-
-        // Container is Document or Cell — both expose InsertParagraph the same way.
-        private static void AppendFields(Container container, List<(string Label, string Value)> fields)
-        {
-            foreach (var field in fields)
-            {
-                Paragraph p = container.InsertParagraph();
-                p.Append(field.Label + ": ").Bold();
-                p.Append(string.IsNullOrEmpty(field.Value) ? "-" : field.Value);
-            }
-        }
-
-        // QuestPDF lays out the pages: pagination and text wrapping are its job, so items are simply added in order.
-        private static void WritePdf(List<ExportItem> items, string title, string filePath)
-        {
-            QuestPDF.Fluent.Document.Create(container =>
-            {
-                container.Page(page =>
-                {
-                    page.Size(PageSizes.A4);
-                    page.Margin(30);
-                    page.DefaultTextStyle(x => x.FontSize(10));
-
-                    page.Content().Column(column =>
-                    {
-                        column.Spacing(6);
-
-                        column.Item().Text(title).FontSize(18).Bold();
-
-                        string currentGroup = null;
-
-                        foreach (ExportItem item in items)
-                        {
-                            if (item.Group != currentGroup)
-                            {
-                                currentGroup = item.Group;
-                                if (!string.IsNullOrEmpty(currentGroup))
-                                    column.Item().PaddingTop(12).Text(currentGroup).FontSize(14).Bold();
-                            }
-
-                            byte[]? png = PictureAsPng(item);
-                            if (png != null)
-                            {
-                                // Image on the left, fields on the right, like the item detail view.
-                                column.Item().PaddingTop(8).Row(row =>
-                                {
-                                    row.ConstantItem(80).Height(80).Image(png).FitArea();
-                                    row.ConstantItem(12);
-
-                                    row.RelativeItem().Column(info =>
-                                    {
-                                        info.Spacing(4);
-                                        info.Item().Text(item.Name).FontSize(12).Bold();
-
-                                        foreach (var field in item.Fields)
-                                        {
-                                            string value = string.IsNullOrEmpty(field.Value) ? "-" : field.Value;
-
-                                            info.Item().Text(text =>
-                                            {
-                                                text.Span(field.Label + ": ").Bold();
-                                                text.Span(value);
-                                            });
-                                        }
-                                    });
-                                });
-                            }
-                            else
-                            {
-                                column.Item().PaddingTop(8).Text(item.Name).FontSize(12).Bold();
-
-                                IEnumerable<(string Label, string Value)> fields = item.HasPictureField
-                                    ? item.Fields.Append((Loc.T("Export.ImagePath"), item.ImagePath ?? ""))
-                                    : item.Fields;
-                                foreach (var field in fields)
-                                {
-                                    string value = string.IsNullOrEmpty(field.Value) ? "-" : field.Value;
-
-                                    column.Item().Text(text =>
-                                    {
-                                        text.Span(field.Label + ": ").Bold();
-                                        text.Span(value);
-                                    });
-                                }
-                            }
-                        }
-                    });
-                });
-            }).GeneratePdf(filePath);
         }
     }
 }

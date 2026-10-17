@@ -629,14 +629,47 @@ A TidyMindnak be kell zárnia. A részletek ide kerültek: {1}.</value>
   <data name="Export.ChooseFormat" xml:space="preserve">
     <value>Válassz formátumot az exportáláshoz</value>
   </data>
+  <data name="Export.Column.Added" xml:space="preserve">
+    <value>Hozzáadva</value>
+  </data>
+  <data name="Export.Column.Block" xml:space="preserve">
+    <value>Idősáv</value>
+  </data>
+  <data name="Export.Column.Date" xml:space="preserve">
+    <value>Dátum</value>
+  </data>
+  <data name="Export.Column.File" xml:space="preserve">
+    <value>Fájl</value>
+  </data>
+  <data name="Export.Column.Memory" xml:space="preserve">
+    <value>Memória</value>
+  </data>
+  <data name="Export.Column.Name" xml:space="preserve">
+    <value>Név</value>
+  </data>
+  <data name="Export.Column.Notes" xml:space="preserve">
+    <value>Jegyzetek</value>
+  </data>
+  <data name="Export.Column.Project" xml:space="preserve">
+    <value>Projekt</value>
+  </data>
+  <data name="Export.Column.Size" xml:space="preserve">
+    <value>Méret</value>
+  </data>
+  <data name="Export.Column.Status" xml:space="preserve">
+    <value>Állapot</value>
+  </data>
+  <data name="Export.Column.Task" xml:space="preserve">
+    <value>Feladat</value>
+  </data>
+  <data name="Export.Column.Time" xml:space="preserve">
+    <value>Időpont</value>
+  </data>
   <data name="Export.Complete" xml:space="preserve">
     <value>Az exportálás kész.</value>
   </data>
   <data name="Export.CutMark" xml:space="preserve">
     <value>(levágva)</value>
-  </data>
-  <data name="Export.Done" xml:space="preserve">
-    <value>{0} (kész)</value>
   </data>
   <data name="Export.ExcelNote" xml:space="preserve">
     <value>Excel-munkafüzet</value>
@@ -661,14 +694,20 @@ A TidyMindnak be kell zárnia. A részletek ide kerültek: {1}.</value>
   <data name="Export.ImagePath" xml:space="preserve">
     <value>Kép helye</value>
   </data>
-  <data name="Export.Items" xml:space="preserve">
-    <value>Tételek</value>
-  </data>
   <data name="Export.Nothing" xml:space="preserve">
     <value>Nincs exportálható memória vagy napi terv.</value>
   </data>
-  <data name="Export.Open" xml:space="preserve">
-    <value>{0} (nincs kész)</value>
+  <data name="Export.DoneGroup" xml:space="preserve">
+    <value>Kész ({0})</value>
+  </data>
+  <data name="Export.Empty" xml:space="preserve">
+    <value>Itt még nincs semmi.</value>
+  </data>
+  <data name="Export.Exported" xml:space="preserve">
+    <value>TidyMind · exportálva: {0}</value>
+  </data>
+  <data name="Export.FileDetails" xml:space="preserve">
+    <value>{0} · hozzáadva: {1}</value>
   </data>
   <data name="Export.PdfNote" xml:space="preserve">
     <value>Nyomtatható dokumentum képekkel</value>
@@ -676,17 +715,20 @@ A TidyMindnak be kell zárnia. A részletek ide kerültek: {1}.</value>
   <data name="Export.Sheet" xml:space="preserve">
     <value>Munkalap</value>
   </data>
+  <data name="Export.Sheet.Text" xml:space="preserve">
+    <value>Leírás és jegyzetek</value>
+  </data>
+  <data name="Export.Status.Done" xml:space="preserve">
+    <value>Kész</value>
+  </data>
+  <data name="Export.Status.Open" xml:space="preserve">
+    <value>Nyitott</value>
+  </data>
   <data name="Export.SizeRow" xml:space="preserve">
     <value>Méret: {0} - {1} x{2}</value>
   </data>
   <data name="Export.Title.All" xml:space="preserve">
     <value>TidyMind — teljes exportálás</value>
-  </data>
-  <data name="Export.Title.Collection" xml:space="preserve">
-    <value>{0} — gyűjtemény exportálása</value>
-  </data>
-  <data name="Export.Title.Project" xml:space="preserve">
-    <value>{0} — projekt exportálása</value>
   </data>
   <data name="Export.Unnamed" xml:space="preserve">
     <value>(névtelen)</value>

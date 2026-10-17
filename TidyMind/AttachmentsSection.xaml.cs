@@ -142,7 +142,7 @@ namespace TidyMind
             }
 
             return size <= AttachmentStore.LargeFileBytes
-                || Msg.Show(Window.GetWindow(this), Loc.F("Files.Large", Path.GetFileName(path), FormatSize(size)),
+                || Msg.Show(Window.GetWindow(this), Loc.F("Files.Large", Path.GetFileName(path), AttachmentStore.FormatSize(size)),
                        Loc.T("Files.LargeCaption"), MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
         }
 
@@ -211,7 +211,7 @@ namespace TidyMind
             Grid.SetColumn(remove, 2);
 
             FrameworkElement text = RowText(attachment.DisplayName,
-                FormatSize(attachment.SizeBytes) + "  ·  " + attachment.AddedDate.ToString(Loc.T("Format.ShortDate"), Loc.Culture));
+                AttachmentStore.FormatSize(attachment.SizeBytes) + "  ·  " + attachment.AddedDate.ToString(Loc.T("Format.ShortDate"), Loc.Culture));
             Grid.SetColumn(text, 1);
 
             Border row = RowFrame(new Grid
@@ -488,16 +488,6 @@ namespace TidyMind
             // Raised from this control, outside the list's own scroll area, so it bubbles straight to the window's.
             if (!WheelScroll.CanScroll(FileScroll, e.Delta))
                 WheelScroll.Forward(e, this);
-        }
-
-        private static string FormatSize(long bytes)
-        {
-            if (bytes < 1024) return Loc.F("Files.Size.B", bytes);
-            double kb = bytes / 1024.0;
-            if (kb < 1024) return Loc.F("Files.Size.KB", kb);
-            double mb = kb / 1024;
-            if (mb < 1024) return Loc.F(mb < 10 ? "Files.Size.MBSmall" : "Files.Size.MB", mb);
-            return Loc.F("Files.Size.GB", mb / 1024);
         }
     }
 }

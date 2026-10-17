@@ -1,11 +1,9 @@
 TidyMind uses these third-party packages:
 
-DocX (Xceed): Xceed Community License, non-commercial use
-QuestPDF: QuestPDF Community License
-ClosedXML, ClosedXML.Parser, ExcelNumberFormat: MIT
-DocumentFormat.OpenXml: MIT
-SkiaSharp: MIT
+QuestPDF (writes the PDF files): QuestPDF Community License
+ClosedXML, ClosedXML.Parser, ExcelNumberFormat (write the Excel files): MIT
+DocumentFormat.OpenXml, DocumentFormat.OpenXml.Framework (Microsoft Open XML SDK, writes the Word files): MIT
 SixLabors.Fonts: Apache License 2.0
-RBush: MIT
+RBush.Signed: MIT
 TaskScheduler (David Hall): MIT
 Microsoft.Windows.SDK.NET, WinRT.Runtime (Microsoft): Microsoft Windows SDK License

@@ -22,6 +22,17 @@ namespace TidyMind
         public static bool Exists(Attachment attachment) =>
             !string.IsNullOrEmpty(attachment?.StoredFileName) && File.Exists(PathOf(attachment.StoredFileName));
 
+        // "512 B", "240 KB", "3.4 MB"… in the current language (the files list, the large-file question, exports).
+        public static string FormatSize(long bytes)
+        {
+            if (bytes < 1024) return Loc.F("Files.Size.B", bytes);
+            double kb = bytes / 1024.0;
+            if (kb < 1024) return Loc.F("Files.Size.KB", kb);
+            double mb = kb / 1024;
+            if (mb < 1024) return Loc.F(mb < 10 ? "Files.Size.MBSmall" : "Files.Size.MB", mb);
+            return Loc.F("Files.Size.GB", mb / 1024);
+        }
+
         // Copies the file in on a worker thread, reporting 0..1 as it goes, and returns its attachment entry; null if
         // it couldn't be read or written. Copied to a temporary name first, so a failed or stopped copy never leaves
         // a half-written file under a real name. Cancelling throws OperationCanceledException (after cleaning up).

@@ -44,6 +44,11 @@ A Windows desktop app (WPF, .NET 10, `net10.0-windows10.0.19041.0`) for personal
 - Search folds `đ/Đ` to `d` by hand in `TextSearch` (it doesn't decompose); the other hu/sr letters fold through normalization.
 - Check: `dotnet bin\Debug\net10.0-windows10.0.19041.0\Harness.dll loc <tempData> <shotsDir>` (key parity, placeholders, no unused keys, hardcoded-text scan, all windows in 3 languages, live switching). Edit the `.resx` files directly.
 
+## Export
+- `ExportService.cs` builds the items (projects, to-do lists, collection items, day plan days); each format lays them out: `ExportService.Pdf.cs` (QuestPDF), `ExportService.Docx.cs` (Open XML SDK), `ExportService.Excel.cs` (ClosedXML). Change a layout in PDF and Word together; they match (title and date line, section labels over a dark rule, checklists with a Done group, formatted notes, files, empty sections left out).
+- Excel is tables: Tasks, Description and notes, Files, a sheet per collection, Day plan; header row frozen, filterable and repeated when printed, A4 one page wide, dates as date cells. Values typed by the user (prices, amounts) stay text: never parse them into numbers, no formulas.
+- Libraries and licences (list every shipped package in `TidyMind/THIRD-PARTY-NOTICES.txt`, shown under Settings > Licenses): QuestPDF (QuestPDF Community License), DocumentFormat.OpenXml (MIT), ClosedXML with ClosedXML.Parser, ExcelNumberFormat, RBush.Signed (MIT), DocumentFormat.OpenXml.Framework (MIT) and SixLabors.Fonts 1.0 (Apache 2.0), TaskScheduler (MIT). No library may put a notice or watermark into an exported file (the `export` harness checks).
+
 ## Commands
 ```
 dotnet build TidyMind\TidyMind.csproj                       # must be 0 warnings
@@ -51,7 +56,7 @@ dotnet build tests\Harness\Harness.csproj
 cd tests\Harness
 dotnet bin\Debug\net10.0-windows10.0.19041.0\Harness.dll <mode> <tempDataFolder> [shotsFolder|uiCulture]
 ```
-Modes: `taskpath` (real Task Scheduler path + popup handover; run `Harness.exe`, not `dotnet Harness.dll`), `ui` (tour + Home), `plan` (Day Plan), `loc` (localization), `locfirst <data> <hu-HU|sr-Cyrl-RS|de-DE>` (first-launch language), `locdata1` then `locdata2` on the same folder (data byte-identical across switches and a restart), `toast <data> [en|hu|sr-Latn]` (sends one real notification). The harness refuses a data folder inside the real one and stops if real `TidyMind_Reminder_*` tasks exist; reminder tests create and remove tasks.
+Modes: `taskpath` (real Task Scheduler path + popup handover; run `Harness.exe`, not `dotnet Harness.dll`), `ui` (tour + Home), `plan` (Day Plan), `loc` (localization), `locfirst <data> <hu-HU|sr-Cyrl-RS|de-DE>` (first-launch language), `locdata1` then `locdata2` on the same folder (data byte-identical across switches and a restart), `toast <data> [en|hu|sr-Latn]` (sends one real notification), `export <data> <outFolder>` (every PDF, Word and Excel export in en/hu/sr as sample files: PDF pages rendered to PNG, Word and Excel files checked with the Open XML SDK validator; render those through LibreOffice for a look). The harness refuses a data folder inside the real one and stops if real `TidyMind_Reminder_*` tasks exist; reminder tests create and remove tasks.
 
 ## Hard rules
 - **Never start the app against the real data folder.** Tests and manual runs use a temp data folder (the harness redirects `AppPaths.DataFolder`).
