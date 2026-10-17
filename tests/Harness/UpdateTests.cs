@@ -376,6 +376,13 @@ static partial class Program
         await Wait(2500);
         Check(server.Requests == 2, "Check now, then a start: the start still checks (" + server.Requests + " requests)");
 
+        // The start-up request goes out before the window is built (App.OnStartup); Start takes that one up.
+        server.Clear();
+        Updates.BeginStartupCheck();
+        Updates.Start(main);
+        await Wait(2500);
+        Check(server.Requests == 1, "the request sent early is the one the start uses (" + server.Requests + " request)");
+
         // While running: again 6 hours after the last automatic check, whatever "Check now" did in between.
         server.Clear();
         Updates.RecheckIfDue(main, DateTime.UtcNow.AddHours(1));
@@ -431,6 +438,9 @@ static partial class Program
         await Updates.CheckAutomaticallyAsync(main);
         await Wait(5000);
         Check(Dialog() == null, "not shown while the tour is on");
+        Check(Indicator(main).IsVisible && IndicatorText(main) == Loc.F("Update.Indicator", "9.9.9") && Updates.Available?.Version == new Version(9, 9, 9),
+            "but the sidebar's Update available button is there at once: " + IndicatorText(main));
+        Check(!Indicator(main).IsKeyboardFocusWithin, "and it took no focus");
         GuidedTour.Current?.Stop(TourEnd.Skipped);
         await Foreground(main);
         UpdateDialog dialog = await WaitFor(Dialog, 10000);
@@ -443,10 +453,80 @@ static partial class Program
         await Updates.CheckAutomaticallyAsync(main);
         await Wait(5000);
         Check(Dialog() == null, "after Later: not offered again in this run");
+        Check(Indicator(main).IsVisible, "after Later the button stays");
         server.Clear();
         Updates.RecheckIfDue(main, DateTime.UtcNow.AddHours(7));
-        await Wait(1500);
-        Check(server.Requests == 0, "after Later: no re-checks in this run either");
+        await Wait(4500);
+        Check(server.Requests == 1 && Dialog() == null, "after Later a re-check still keeps the button current, and doesn't pop up");
+
+        // The button opens the same dialog, any time.
+        Click(Indicator(main));
+        dialog = await WaitFor(Dialog, 5000);
+        Check(dialog != null && dialog.Version == new Version(9, 9, 9) && ((Button)dialog.FindName("UpdateButton")).IsVisible
+              && ((Button)dialog.FindName("SkipButton")).IsVisible, "the button opens the update dialog: Update now, Later, Skip");
+        if (dialog != null)
+            Click(dialog, "LaterButton");
+        await Wait(500);
+        Check(Indicator(main).IsVisible, "Later from there: the button stays");
+
+        // Clicking about and an open menu don't hold the popup back for good: it comes once the menu is closed, and
+        // while the mouse keeps moving over the window.
+        Updates.ResetForTests();
+        ContextMenu menu = new ContextMenu { Items = { new MenuItem { Header = "Harness menu" } }, PlacementTarget = main };
+        menu.IsOpen = true;
+        await Wait(300);
+        await Updates.CheckAutomaticallyAsync(main);
+        await Wait(3000);
+        Check(Dialog() == null && Indicator(main).IsVisible, "not over an open menu (the button is there)");
+        menu.IsOpen = false;
+        await Foreground(main);
+        using (CancellationTokenSource stop = new CancellationTokenSource())
+        {
+            Point centre = main.PointToScreen(new Point(main.ActualWidth / 2, main.ActualHeight / 2));
+            Task moving = Task.Run(() =>
+            {
+                for (int i = 0; !stop.IsCancellationRequested; i++)
+                {
+                    SetCursorPos((int)centre.X + i % 40, (int)centre.Y + i % 25);
+                    Thread.Sleep(60);
+                }
+            });
+            dialog = await WaitFor(Dialog, 6000);
+            stop.Cancel();
+            await moving;
+        }
+        Check(dialog != null, "once the menu is closed, it shows, with the mouse moving all the while" + (dialog == null ? " (" + IdleState(main) + ")" : ""));
+        if (dialog != null)
+            Click(dialog, "LaterButton");
+        await Wait(500);
+
+        // Typing into a text box holds it back; it comes once the typing stops.
+        Updates.ResetForTests();
+        TextBox box = Descendants(main).OfType<TextBox>().First(t => t.IsVisible && t.IsEnabled && !t.IsReadOnly);
+        box.Focus();
+        await Updates.CheckAutomaticallyAsync(main);
+        using (CancellationTokenSource stop = new CancellationTokenSource())
+        {
+            Task typing = Task.Run(() =>
+            {
+                while (!stop.IsCancellationRequested)
+                {
+                    keybd_event(0x58, 0, 0, UIntPtr.Zero); // X
+                    keybd_event(0x58, 0, 2, UIntPtr.Zero);
+                    Thread.Sleep(400);
+                }
+            });
+            await Wait(5000);
+            Check(Dialog() == null && box.Text.Contains("x"), "not while typing into a text box (" + box.Text.Length + " letters typed)");
+            stop.Cancel();
+            await typing;
+        }
+        dialog = await WaitFor(Dialog, 8000);
+        Check(dialog != null, "shown a moment after the typing stops" + (dialog == null ? " (" + IdleState(main) + ")" : ""));
+        if (dialog != null)
+            Click(dialog, "LaterButton");
+        await Wait(500);
+        box.Clear();
 
         // "Next start": offered again. A modal window open: wait for it to close.
         Updates.ResetForTests();
@@ -462,16 +542,19 @@ static partial class Program
         Click(dialog, "SkipButton");
         await Wait(500);
         Check(AppSettings.Load().SkippedUpdate == "9.9.9", "Skip this version remembers 9.9.9");
+        Check(!Indicator(main).IsVisible && Updates.Available == null, "and the button goes");
 
         Updates.ResetForTests();
         await Updates.CheckAutomaticallyAsync(main);
         await Wait(5000);
         Check(Dialog() == null, "a skipped version isn't offered again");
+        Check(!Indicator(main).IsVisible, "nor shown on the button");
         json = ServerJson(server, "v9.9.10", 10);
         await Foreground(main);
         await Updates.CheckAutomaticallyAsync(main);
         dialog = await WaitFor(Dialog, 10000);
-        Check(dialog != null && dialog.Title == Loc.T("Update.Title"), "a newer one than the skipped version is");
+        Check(dialog != null && dialog.Title == Loc.T("Update.Title") && Indicator(main).IsVisible
+              && IndicatorText(main) == Loc.F("Update.Indicator", "9.9.10"), "a newer one than the skipped version is, button and all");
         Click(dialog, "LaterButton");
         await Wait(500);
 
@@ -539,6 +622,8 @@ static partial class Program
         + ", captured " + (System.Windows.Input.Mouse.Captured != null);
 
     static UpdateDialog Dialog() => Application.Current.Windows.OfType<UpdateDialog>().FirstOrDefault(w => w.IsVisible);
+    static Button Indicator(MainWindow main) => (Button)main.FindName("UpdateIndicator");
+    static string IndicatorText(MainWindow main) => ((TextBlock)main.FindName("UpdateIndicatorText")).Text;
 
     static void Click(Window window, string name)
     {
@@ -567,6 +652,16 @@ static partial class Program
                     && t != p.Value && !resx[code].ContainsValue(p.Value)).Select(p => p.Value));
 
             UpdateRelease release = ServeRelease(server, "9.9.9", payload, bytesPerSecond: 700 * 1024, notes: notes);
+            Updates.ResetForTests(); // no newer version left over from the scenarios before
+            await Updates.CheckNowAsync();
+            await Wait(300);
+            TextBlock indicatorText = (TextBlock)main.FindName("UpdateIndicatorText");
+            double shownWidth = indicatorText.ActualWidth;
+            indicatorText.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            Check(Indicator(main).IsVisible && indicatorText.Text == Loc.F("Update.Indicator", "9.9.9") && !keys.Contains(indicatorText.Text)
+                  && indicatorText.DesiredSize.Width <= shownWidth + 0.5, code + ": the button reads \"" + indicatorText.Text + "\", nothing cut off");
+            indicatorText.InvalidateMeasure();
+            RenderWindow(main, tag + "-update-0-button");
             UpdateDialog dialog = new UpdateDialog(release) { Owner = main };
             dialog.Show();
             await Wait(400);

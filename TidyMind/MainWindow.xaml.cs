@@ -47,7 +47,11 @@ namespace TidyMind
             {
                 ShowLanguage();
                 BuildNav();
+                ShowUpdateIndicator();
             });
+            Updates.AvailableChanged += ShowUpdateIndicator;
+            Closed += (s, e) => Updates.AvailableChanged -= ShowUpdateIndicator;
+            ShowUpdateIndicator();
 
             NavigateHome();
 
@@ -125,6 +129,28 @@ namespace TidyMind
                 menu.Items.Add(item);
             }
             menu.IsOpen = true;
+        }
+
+        // ---- Update available -------------------------------------------
+
+        // The sidebar button for a newer version (Updates.Available). Showing it never moves the focus.
+        private void ShowUpdateIndicator()
+        {
+            UpdateRelease? release = Updates.Available;
+            UpdateIndicator.Visibility = release == null ? Visibility.Collapsed : Visibility.Visible;
+            if (release == null)
+                return;
+            string version = release.Version.ToString(3);
+            UpdateIndicatorText.Text = Loc.F("Update.Indicator", version);
+            UpdateIndicator.ToolTip = Loc.F("Update.Indicator.Tip", version);
+            AutomationProperties.SetName(UpdateIndicator, UpdateIndicatorText.Text);
+        }
+
+        // The same dialog as the automatic one: Update now, Later, Skip this version.
+        private void UpdateIndicator_Click(object sender, RoutedEventArgs e)
+        {
+            if (Updates.Available != null)
+                Updates.Offer(this, Updates.Available);
         }
 
         // ---- Navigation ---------------------------------------------------

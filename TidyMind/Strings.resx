@@ -2363,6 +2363,12 @@ Nothing was changed.</value>
   <data name="Update.Heading" xml:space="preserve">
     <value>Update available</value>
   </data>
+  <data name="Update.Indicator" xml:space="preserve">
+    <value>Update available: {0}</value>
+  </data>
+  <data name="Update.Indicator.Tip" xml:space="preserve">
+    <value>TidyMind {0} is ready. Click to see what&apos;s new and update.</value>
+  </data>
   <data name="Update.Later" xml:space="preserve">
     <value>Later</value>
   </data>

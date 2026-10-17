@@ -8,14 +8,18 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Threading;
 
 namespace TidyMind
 {
     // In-app updates. At every start, and about every 6 hours while it runs (unless turned off in Settings), TidyMind
-    // asks GitHub for the latest release in the background; a newer one is offered in UpdateDialog once the main window
-    // is idle (it waits for that as long as it takes). "Update now"
+    // asks GitHub for the latest release in the background. A newer one shows the sidebar's "Update available" button
+    // (Available) until the user updates or skips it, and pops up in UpdateDialog once the main window is free: in
+    // front, no modal dialog, no tour, not being typed in (it waits for that as long as it takes). "Update now"
     // downloads and checks the installer (UpdateClient), closes every window the normal way (each saves), starts the
     // installer silently and closes TidyMind; the installer waits for it to be gone, installs over it in place (same
     // folder, so reminder tasks keep working) and starts TidyMind again (installer\TidyMind.iss, /RELAUNCH=1). Whatever
@@ -27,7 +31,8 @@ namespace TidyMind
         // against the clock, so a PC that slept through it checks soon after it wakes.
         private static readonly TimeSpan RecheckInterval = TimeSpan.FromHours(6);
         private static readonly TimeSpan RecheckTick = TimeSpan.FromMinutes(5);
-        private static readonly TimeSpan IdleFor = TimeSpan.FromSeconds(3);
+        // Keys typed into a text box this recently: the user is writing, so the dialog waits.
+        private static readonly TimeSpan TypingPause = TimeSpan.FromSeconds(3);
         // How long the start-up waits for an installer that just restarted TidyMind to finish its log.
         private static readonly TimeSpan InstallerLogWait = TimeSpan.FromSeconds(15);
         private static readonly object logLock = new object();
@@ -47,7 +52,9 @@ namespace TidyMind
         private static DateTime? lastAutomaticCheck;
         private static bool checking;
         private static DispatcherTimer? recheckTimer;
-        private static long lastInputTick;
+        private static long lastKeyTick;
+        // The start-up check, sent from App.OnStartup before the data is read and the window built (BeginStartupCheck).
+        private static Task<UpdateCheckResult>? earlyCheck;
         // The installer that was started: kept (and so locked) until this process has ended.
         internal static VerifiedInstaller? Started { get; private set; }
 
@@ -57,10 +64,30 @@ namespace TidyMind
 
         public static UpdateClient NewClient() => new UpdateClient(Endpoints, CurrentVersion);
 
+        // A newer version known in this run and not skipped: the main window shows an "Update available" button for it
+        // until TidyMind is updated, or the user skips that version. Null when there's none.
+        public static UpdateRelease? Available { get; private set; }
+        public static event Action? AvailableChanged;
+
+        // App.OnStartup, as soon as this is the copy that runs: the request goes out in the background now, while the
+        // data is read and the window built, so a slow PC doesn't add its start-up time to the answer. Start takes it up.
+        public static void BeginStartupCheck()
+        {
+            if (!ShouldCheckAutomatically(AppSettings.Load()))
+                return;
+            UpdateClient client = NewClient();
+            earlyCheck = Task.Run(() => client.CheckAsync());
+        }
+
         // App.OnStartup, once the main window is up. Nothing here waits on the network or the disk on the UI thread.
         public static void Start(MainWindow main)
         {
-            InputManager.Current.PreProcessInput += (s, e) => lastInputTick = Environment.TickCount64;
+            // Only keys count: moving and clicking the mouse never hold the dialog back; typing into a text box does.
+            InputManager.Current.PreProcessInput += (s, e) =>
+            {
+                if (e.StagingItem.Input is KeyboardEventArgs || e.StagingItem.Input is TextCompositionEventArgs)
+                    lastKeyTick = Environment.TickCount64;
+            };
 
             Task.Run(() =>
             {
@@ -76,7 +103,11 @@ namespace TidyMind
             }, TaskScheduler.FromCurrentSynchronizationContext());
 
             // Every start, however recently the last check (automatic or "Check now") ran.
-            if (ShouldCheckAutomatically(AppSettings.Load()))
+            Task<UpdateCheckResult>? sent = earlyCheck;
+            earlyCheck = null;
+            if (sent != null)
+                _ = CheckAutomaticallyAsync(main, sent);
+            else if (ShouldCheckAutomatically(AppSettings.Load()))
                 _ = CheckAutomaticallyAsync(main);
 
             if (recheckTimer == null)
@@ -94,14 +125,15 @@ namespace TidyMind
         internal static bool IsRecheckDue(DateTime? lastUtc, DateTime nowUtc) =>
             lastUtc == null || lastUtc > nowUtc || nowUtc - lastUtc >= RecheckInterval;
 
-        // Nothing to ask once the dialog was shown in this run: "Later" lasts until the next start.
+        // Also after "Later": a newer release still updates the button, it just doesn't pop up again in this run.
         internal static void RecheckIfDue(MainWindow main, DateTime nowUtc)
         {
-            if (!offeredThisRun && !checking && IsRecheckDue(lastAutomaticCheck, nowUtc) && ShouldCheckAutomatically(AppSettings.Load()))
+            if (!checking && IsRecheckDue(lastAutomaticCheck, nowUtc) && ShouldCheckAutomatically(AppSettings.Load()))
                 _ = CheckAutomaticallyAsync(main);
         }
 
-        internal static async Task CheckAutomaticallyAsync(MainWindow main)
+        // sent: the start-up request already on its way (BeginStartupCheck); otherwise one goes out now.
+        internal static async Task CheckAutomaticallyAsync(MainWindow main, Task<UpdateCheckResult>? sent = null)
         {
             if (checking)
                 return;
@@ -110,7 +142,7 @@ namespace TidyMind
             try
             {
                 UpdateClient client = NewClient();
-                UpdateCheckResult result = await Task.Run(() => client.CheckAsync());
+                UpdateCheckResult result = await (sent ?? Task.Run(() => client.CheckAsync()));
                 Record(result, "automatic");
                 if (result.Newer == null)
                     return;
@@ -119,6 +151,7 @@ namespace TidyMind
                     Note("version " + result.Newer.Version.ToString(3) + " was skipped by the user; not offered");
                     return;
                 }
+                MakeAvailable(result.Newer);
                 OfferWhenIdle(main, result.Newer);
             }
             finally
@@ -133,7 +166,18 @@ namespace TidyMind
             UpdateClient client = NewClient();
             UpdateCheckResult result = await Task.Run(() => client.CheckAsync());
             Record(result, "manual");
+            if (result.Newer != null)
+                MakeAvailable(result.Newer);
             return result;
+        }
+
+        // The newest one found wins; an older answer (a re-check racing a manual one) never replaces it.
+        private static void MakeAvailable(UpdateRelease release)
+        {
+            if (Available != null && release.Version <= Available.Version)
+                return;
+            Available = release;
+            AvailableChanged?.Invoke();
         }
 
         // On the UI thread, so the settings file is only ever written from there.
@@ -147,8 +191,8 @@ namespace TidyMind
         internal static bool IsSkipped(Version version) =>
             UpdateRelease.TryParseVersion(AppSettings.Load().SkippedUpdate, out Version skipped) && skipped == version;
 
-        // Kept until the main window is idle (in front, nothing else open, no input for a moment), however long that
-        // takes, so it shows as soon as the user is back in the window.
+        // Kept until the main window is free (IsIdle), however long that takes, so it shows as soon as the user is
+        // back in the window or done with a dialog.
         internal static void OfferWhenIdle(MainWindow main, UpdateRelease release)
         {
             if (offeredThisRun)
@@ -182,13 +226,18 @@ namespace TidyMind
                 VerifiedInstaller kept = dialog.WaitingForWindows;
                 MainWindow main = (MainWindow)Application.Current.MainWindow;
                 Msg.Show(main, Loc.T("Update.Error.WindowsOpen"), Loc.T("Update.Title"), MessageBoxButton.OK, MessageBoxImage.Information);
-                WhenIdle(main, () => Offer(main, release, kept));
+                WhenIdle(main, () => Offer(main, release, kept), noOtherWindows: true);
                 return;
             }
             if (dialog.Choice == UpdateChoice.Skip)
             {
                 AppSettings.Update(s => s.SkippedUpdate = release.Version.ToString(3));
                 Note("version " + release.Version.ToString(3) + " skipped");
+                if (Available != null && Available.Version <= release.Version)
+                {
+                    Available = null; // the button goes until a newer one comes
+                    AvailableChanged?.Invoke();
+                }
             }
             else if (dialog.Choice == UpdateChoice.Later)
             {
@@ -200,11 +249,16 @@ namespace TidyMind
         {
             offeredThisRun = false;
             waiting = null;
+            if (Available != null)
+            {
+                Available = null;
+                AvailableChanged?.Invoke();
+            }
         }
 
-        // Runs `action` once the main window is idle: in front, nothing else open (no tour, dialog, overlay or menu)
-        // and no input for a few seconds. Checked every second until then.
-        internal static void WhenIdle(MainWindow main, Action action)
+        // Runs `action` once the main window is free (IsIdle). Checked every second until then. noOtherWindows: also
+        // wait until every other TidyMind window is closed (an update coming back after one wouldn't close).
+        internal static void WhenIdle(MainWindow main, Action action, bool noOtherWindows = false)
         {
             DispatcherTimer timer = new DispatcherTimer(DispatcherPriority.ApplicationIdle) { Interval = TimeSpan.FromSeconds(1) };
             timer.Tick += (s, e) =>
@@ -214,7 +268,7 @@ namespace TidyMind
                     timer.Stop(); // closed
                     return;
                 }
-                if (!IsIdle(main))
+                if (!IsIdle(main) || (noOtherWindows && Application.Current.Windows.OfType<Window>().Any(w => w != main && w.IsVisible)))
                     return;
                 timer.Stop();
                 action();
@@ -222,13 +276,19 @@ namespace TidyMind
             timer.Start();
         }
 
+        // The main window is in front (so the dialog never takes the focus from another app or window), no modal
+        // dialog or message box is open, the tour isn't running, no click, drag or open menu is in progress, and nothing
+        // is being typed into a text box. Clicking and moving around otherwise never hold it back.
         internal static bool IsIdle(MainWindow main) =>
             main.IsVisible && main.IsActive && main.WindowState != WindowState.Minimized
+            && !ComponentDispatcher.IsThreadModal
             && GuidedTour.Current == null
-            && OverlayManager.Current == Overlay.None
-            && Application.Current.Windows.OfType<Window>().All(w => w == main || !w.IsVisible)
             && Mouse.Captured == null && Mouse.LeftButton == MouseButtonState.Released
-            && Environment.TickCount64 - lastInputTick >= IdleFor.TotalMilliseconds;
+            && !IsTyping();
+
+        private static bool IsTyping() =>
+            (Keyboard.FocusedElement is TextBoxBase || Keyboard.FocusedElement is PasswordBox)
+            && Environment.TickCount64 - lastKeyTick < TypingPause.TotalMilliseconds;
 
         // ---- Applying -------------------------------------------------------
 

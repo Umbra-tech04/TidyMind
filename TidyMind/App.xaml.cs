@@ -100,6 +100,9 @@ namespace TidyMind
                 return;
             }
 
+            // The update check goes out now, in the background, while the rest starts up (Updates.Start takes the answer).
+            Updates.BeginStartupCheck();
+
             // Without the list of memories there's nothing to show, and starting empty would let the next save
             // replace it; so the app stops here and leaves the file for the user to fix or restore.
             if (!ProfileManager.TryLoadProfiles(out List<Profile> profiles, out problem))

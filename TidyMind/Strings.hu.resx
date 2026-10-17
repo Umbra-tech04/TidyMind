@@ -2275,6 +2275,12 @@ Semmi sem változott.</value>
   <data name="Update.Heading" xml:space="preserve">
     <value>Frissítés érhető el</value>
   </data>
+  <data name="Update.Indicator" xml:space="preserve">
+    <value>Frissítés érhető el: {0}</value>
+  </data>
+  <data name="Update.Indicator.Tip" xml:space="preserve">
+    <value>Elérhető a TidyMind {0}. Kattints rá, és megnézheted az újdonságokat, majd frissíthetsz.</value>
+  </data>
   <data name="Update.Later" xml:space="preserve">
     <value>Később</value>
   </data>

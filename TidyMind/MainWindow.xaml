@@ -27,6 +27,22 @@
                     </TextBlock>
                 </Border>
 
+                <!-- A newer version is known (Updates.Available): stays until it's installed or skipped; opens the update
+                     dialog. Shown without taking the focus. -->
+                <Button x:Name="UpdateIndicator" DockPanel.Dock="Top" Visibility="Collapsed" Margin="14,0,14,12" Height="32"
+                        Padding="10,0" HorizontalContentAlignment="Left" Click="UpdateIndicator_Click">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center"
+                                   Margin="0,0,8,0"/>
+                        <TextBlock x:Name="UpdateIndicatorText" Grid.Column="1" FontSize="12" FontWeight="SemiBold"
+                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                    </Grid>
+                </Button>
+
                 <!-- Bottom: New Project / New Collection, then Settings with the language switch beside it -->
                 <Border DockPanel.Dock="Bottom" Padding="14,10,14,16">
                     <StackPanel>

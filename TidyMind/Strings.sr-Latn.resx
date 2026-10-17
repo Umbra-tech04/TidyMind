@@ -2451,6 +2451,12 @@ Ništa nije promenjeno.</value>
   <data name="Update.Heading" xml:space="preserve">
     <value>Dostupno je ažuriranje</value>
   </data>
+  <data name="Update.Indicator" xml:space="preserve">
+    <value>Dostupno ažuriranje: {0}</value>
+  </data>
+  <data name="Update.Indicator.Tip" xml:space="preserve">
+    <value>TidyMind {0} je spreman. Klikni da vidiš novosti i ažuriraš.</value>
+  </data>
   <data name="Update.Later" xml:space="preserve">
     <value>Kasnije</value>
   </data>
