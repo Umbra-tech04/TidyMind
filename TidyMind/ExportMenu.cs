@@ -74,7 +74,7 @@ namespace TidyMind
         // Card and memory names can be anything, but the suggested file name must be one Windows accepts: no
         // characters a file name can't hold (e.g. "Q1/Q2"), no trailing dots or spaces (Windows drops them), not a
         // device name like CON, and short enough to leave room for the folder and "_export.xlsx".
-        private static string SafeFileName(string name)
+        internal static string SafeFileName(string name)
         {
             char[] invalid = Path.GetInvalidFileNameChars();
             string clean = new string((name ?? "").Select(c => invalid.Contains(c) ? '_' : c).ToArray()).Trim();

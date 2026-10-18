@@ -1933,6 +1933,15 @@ The file was left as it is. Fix it or restore it from a backup to see and add re
   <data name="Settings.ExportAll.Title" xml:space="preserve">
     <value>Export all memories</value>
   </data>
+  <data name="Settings.Import.Button" xml:space="preserve">
+    <value>Import…</value>
+  </data>
+  <data name="Settings.Import.Note" xml:space="preserve">
+    <value>Adds one from a .tidymind file, exported on this PC or another, as a new copy.</value>
+  </data>
+  <data name="Settings.Import.Title" xml:space="preserve">
+    <value>Import a project or collection</value>
+  </data>
   <data name="Settings.Language.NotSaved" xml:space="preserve">
     <value>The language was changed, but it couldn't be saved in settings.json, so TidyMind will start in the previous language next time.</value>
   </data>
@@ -2337,6 +2346,149 @@ Nothing was changed.</value>
   </data>
   <data name="Tour.Welcome.Title" xml:space="preserve">
     <value>Welcome to TidyMind</value>
+  </data>
+  <data name="Transfer.Count.Files.One" xml:space="preserve">
+    <value>{0} file</value>
+  </data>
+  <data name="Transfer.Count.Files.Other" xml:space="preserve">
+    <value>{0} files</value>
+  </data>
+  <data name="Transfer.Count.Items.One" xml:space="preserve">
+    <value>{0} item</value>
+  </data>
+  <data name="Transfer.Count.Items.Other" xml:space="preserve">
+    <value>{0} items</value>
+  </data>
+  <data name="Transfer.Count.Pages.One" xml:space="preserve">
+    <value>{0} notebook page</value>
+  </data>
+  <data name="Transfer.Count.Pages.Other" xml:space="preserve">
+    <value>{0} notebook pages</value>
+  </data>
+  <data name="Transfer.Count.Pictures.One" xml:space="preserve">
+    <value>{0} picture</value>
+  </data>
+  <data name="Transfer.Count.Pictures.Other" xml:space="preserve">
+    <value>{0} pictures</value>
+  </data>
+  <data name="Transfer.Count.Tasks.One" xml:space="preserve">
+    <value>{0} task</value>
+  </data>
+  <data name="Transfer.Count.Tasks.Other" xml:space="preserve">
+    <value>{0} tasks</value>
+  </data>
+  <data name="Transfer.Error.CantWrite" xml:space="preserve">
+    <value>This file can't be written: {0}</value>
+  </data>
+  <data name="Transfer.Error.Damaged" xml:space="preserve">
+    <value>Part of the package is damaged ('{0}'): {1}</value>
+  </data>
+  <data name="Transfer.Error.Missing" xml:space="preserve">
+    <value>Part of the package is missing: '{0}'.</value>
+  </data>
+  <data name="Transfer.Error.Newer" xml:space="preserve">
+    <value>This package comes from a newer TidyMind ({0}) and is in a form this version can't read yet. Update TidyMind, then import it again. Nothing was added.</value>
+  </data>
+  <data name="Transfer.Error.NoSpace" xml:space="preserve">
+    <value>There isn't enough free disk space for this package (it needs {0}).</value>
+  </data>
+  <data name="Transfer.Error.NotPackage" xml:space="preserve">
+    <value>This file isn't a TidyMind package (.tidymind).</value>
+  </data>
+  <data name="Transfer.Error.PartTooLarge" xml:space="preserve">
+    <value>'{0}' in the package is larger than TidyMind accepts ({1}).</value>
+  </data>
+  <data name="Transfer.Error.SizeWrong" xml:space="preserve">
+    <value>The package is damaged: '{0}' isn't the size the package says.</value>
+  </data>
+  <data name="Transfer.Error.TargetUnreadable" xml:space="preserve">
+    <value>'{0}' couldn't be read, so nothing can be imported into it. {1}</value>
+  </data>
+  <data name="Transfer.Error.TooLarge" xml:space="preserve">
+    <value>The package is larger than TidyMind accepts ({0}).</value>
+  </data>
+  <data name="Transfer.Error.TooManyFiles" xml:space="preserve">
+    <value>The package holds too many files ({0}).</value>
+  </data>
+  <data name="Transfer.Error.Twice" xml:space="preserve">
+    <value>The package is damaged: '{0}' is in it twice.</value>
+  </data>
+  <data name="Transfer.Error.Unreadable" xml:space="preserve">
+    <value>The file couldn't be read: {0}</value>
+  </data>
+  <data name="Transfer.Error.Unsafe" xml:space="preserve">
+    <value>The package holds a file whose name points outside the package ('{0}'), so it wasn't opened.</value>
+  </data>
+  <data name="Transfer.Export.Caption" xml:space="preserve">
+    <value>Export for transfer</value>
+  </data>
+  <data name="Transfer.Export.Done" xml:space="preserve">
+    <value>Saved to {0}
+
+Copy this file to the other PC and import it there from Settings.</value>
+  </data>
+  <data name="Transfer.Export.Failed" xml:space="preserve">
+    <value>The package couldn't be saved: {0}</value>
+  </data>
+  <data name="Transfer.Export.Unreadable" xml:space="preserve">
+    <value>'{0}' couldn't be read, so it can't be exported. {1}</value>
+  </data>
+  <data name="Transfer.ExportMenu" xml:space="preserve">
+    <value>Export for transfer…</value>
+  </data>
+  <data name="Transfer.Filter" xml:space="preserve">
+    <value>TidyMind packages (*.tidymind)|*.tidymind</value>
+  </data>
+  <data name="Transfer.Import.Button" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="Transfer.Import.Caption" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="Transfer.Import.Collection" xml:space="preserve">
+    <value>Collection: {0}</value>
+  </data>
+  <data name="Transfer.Import.CollectionCounts" xml:space="preserve">
+    <value>{0}, {1}</value>
+  </data>
+  <data name="Transfer.Import.Exported" xml:space="preserve">
+    <value>Exported on {0} from TidyMind {1}</value>
+  </data>
+  <data name="Transfer.Import.Failed" xml:space="preserve">
+    <value>It couldn't be imported, and nothing was added. {0}</value>
+  </data>
+  <data name="Transfer.Import.Into" xml:space="preserve">
+    <value>Import into</value>
+  </data>
+  <data name="Transfer.Import.NewCollection" xml:space="preserve">
+    <value>It's added to the sidebar as a new collection.</value>
+  </data>
+  <data name="Transfer.Import.NewCollectionRenamed" xml:space="preserve">
+    <value>There's already a collection with this name, so it's added as '{0}'.</value>
+  </data>
+  <data name="Transfer.Import.Newer" xml:space="preserve">
+    <value>Made with a newer TidyMind ({0}). Anything this version doesn't know is kept as it is.</value>
+  </data>
+  <data name="Transfer.Import.NewProject" xml:space="preserve">
+    <value>It's added there as a new project. Nothing already there changes.</value>
+  </data>
+  <data name="Transfer.Import.NewProjectRenamed" xml:space="preserve">
+    <value>There's already a project with this name there, so it's added as '{0}'. Nothing already there changes.</value>
+  </data>
+  <data name="Transfer.Import.NoProjectMemory" xml:space="preserve">
+    <value>A project goes into a project memory. Add one with New Project first, then import again.</value>
+  </data>
+  <data name="Transfer.Import.Project" xml:space="preserve">
+    <value>Project: {0}</value>
+  </data>
+  <data name="Transfer.Import.ProjectCounts" xml:space="preserve">
+    <value>{0}, {1}, {2}</value>
+  </data>
+  <data name="Transfer.Progress.Export" xml:space="preserve">
+    <value>Packing '{0}'…</value>
+  </data>
+  <data name="Transfer.Progress.Import" xml:space="preserve">
+    <value>Importing '{0}'…</value>
   </data>
   <data name="Update.Error.BadAnswer" xml:space="preserve">
     <value>GitHub's answer couldn't be understood, so nothing was downloaded.</value>

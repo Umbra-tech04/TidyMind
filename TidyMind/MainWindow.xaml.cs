@@ -274,6 +274,8 @@ namespace TidyMind
             menu.Items.Add(delete);
             menu.Items.Add(reminder);
             menu.Items.Add(export);
+            if (profile.Type == ProfileType.Collection)
+                menu.Items.Add(TransferUI.ExportItem(() => TransferUI.ExportCollection(this, profile)));
             menu.Items.Add(new Separator());
             menu.Items.Add(TextCopy.CopyItem(() => profile.Name, Loc.T("Common.CopyName")));
 
@@ -554,8 +556,20 @@ namespace TidyMind
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
-            SettingsWindow settings = new SettingsWindow(ExportAll) { Owner = this };
+            SettingsWindow settings = new SettingsWindow(ExportAll, ImportPackage) { Owner = this };
             settings.ShowDialog();
+        }
+
+        // Settings > Import: a .tidymind package, as a new project in a project memory (the open one by default) or a
+        // new collection. Then that memory shows, read again from disk.
+        private bool ImportPackage(Window owner)
+        {
+            Profile current = profiles.FirstOrDefault(p => KeyOf(p) == selectedKey);
+            Profile shown = TransferUI.Import(owner, profiles, current, NextColor);
+            if (shown == null)
+                return false;
+            NavigateTo(shown);
+            return true;
         }
 
         private void ExportMemory(Profile profile)

@@ -1,0 +1,43 @@
+<Window x:Class="TidyMind.ImportDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:TidyMind"
+        Title="{local:Tr Transfer.Import.Caption}" Width="440"
+        SizeToContent="Height"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource BgMain}">
+    <!-- What a .tidymind package holds, and (for a project) which project memory it goes into (TransferUI.ImportFile) -->
+    <StackPanel Margin="24,22,24,20">
+        <TextBlock Text="{local:Tr Transfer.Import.Caption}" FontSize="17" FontWeight="Bold" Foreground="{StaticResource TextMain}"/>
+
+        <Border Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}" BorderThickness="1"
+                CornerRadius="8" Padding="14,12" Margin="0,14,0,0">
+            <StackPanel>
+                <TextBlock x:Name="KindText" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextMain}"
+                           TextWrapping="Wrap"/>
+                <TextBlock x:Name="CountsText" FontSize="13" Foreground="{StaticResource TextBody}" Margin="0,4,0,0"
+                           TextWrapping="Wrap"/>
+                <TextBlock x:Name="ExportedText" FontSize="12" Foreground="{StaticResource TextSub}" Margin="0,6,0,0"
+                           TextWrapping="Wrap"/>
+                <TextBlock x:Name="NewerText" FontSize="12" Foreground="{StaticResource TextSub}" Margin="0,6,0,0"
+                           TextWrapping="Wrap" Visibility="Collapsed"/>
+            </StackPanel>
+        </Border>
+
+        <StackPanel x:Name="TargetPanel" Margin="0,16,0,0">
+            <TextBlock Text="{local:Tr Transfer.Import.Into}" FontSize="12" FontWeight="SemiBold"
+                       Foreground="{StaticResource TextSub}" Margin="0,0,0,6"/>
+            <ComboBox x:Name="TargetBox" Height="34" SelectionChanged="TargetBox_SelectionChanged"/>
+        </StackPanel>
+        <TextBlock x:Name="WhereText" FontSize="12" Foreground="{StaticResource TextSub}" Margin="0,12,0,0" TextWrapping="Wrap"/>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button Content="{local:Tr Common.Cancel}" IsCancel="True" Style="{StaticResource GhostButtonStyle}"
+                    MinWidth="92" Padding="14,0" Height="36" Margin="0,0,10,0"/>
+            <Button x:Name="ImportButton" Content="{local:Tr Transfer.Import.Button}" IsDefault="True"
+                    MinWidth="104" Padding="16,0" Height="36" FontWeight="SemiBold" Click="ImportButton_Click"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

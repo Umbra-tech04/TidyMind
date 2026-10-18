@@ -42,7 +42,7 @@ static partial class Program
         if (args.Length == 2 && args[0] == "--test-notification")
             return RunScheduledTest(args[1]);
         // Anything else (e.g. a "--remind" from a task left behind by a crashed run) does nothing.
-        string[] modes = { "toast", "ui", "plan", "loc", "locfirst", "locdata1", "locdata2", "probe", "taskpath", "export", "update", "tasks", "select", "bgshot" };
+        string[] modes = { "toast", "ui", "plan", "loc", "locfirst", "locdata1", "locdata2", "probe", "taskpath", "export", "update", "tasks", "select", "bgshot", "transfer" };
         if (args.Length < 2 || !modes.Contains(args[0]))
             return 2;
         string data = Path.GetFullPath(args[1]);
@@ -167,6 +167,7 @@ static partial class Program
                     case "update": await UpdateScenarios(main); break;
                     case "tasks": await TaskListScenarios(main); break;
                     case "select": await SelectScenarios(main); break;
+                    case "transfer": await TransferScenarios(main); break;
                     case "bgshot": await BackgroundShots(main); break;
                     default: await Scenarios(main); break;
                 }

@@ -2014,6 +2014,15 @@ Datoteka je ostala kakva je bila. Popravi je ili je vrati iz rezervne kopije, pa
   <data name="Settings.ExportAll.Title" xml:space="preserve">
     <value>Izvoz svih memorija</value>
   </data>
+  <data name="Settings.Import.Button" xml:space="preserve">
+    <value>Uvezi…</value>
+  </data>
+  <data name="Settings.Import.Note" xml:space="preserve">
+    <value>Dodaje ga kao novu kopiju iz .tidymind datoteke izvezene na ovom ili drugom računaru.</value>
+  </data>
+  <data name="Settings.Import.Title" xml:space="preserve">
+    <value>Uvoz projekta ili kolekcije</value>
+  </data>
   <data name="Settings.Language.NotSaved" xml:space="preserve">
     <value>Jezik je promenjen, ali nije mogao da se sačuva u settings.json, pa će se TidyMind sledeći put pokrenuti na prethodnom jeziku.</value>
   </data>
@@ -2428,6 +2437,164 @@ Ništa nije promenjeno.</value>
   </data>
   <data name="Tour.Welcome.Title" xml:space="preserve">
     <value>TidyMind ti želi dobrodošlicu</value>
+  </data>
+  <data name="Transfer.Count.Files.Few" xml:space="preserve">
+    <value>{0} datoteke</value>
+  </data>
+  <data name="Transfer.Count.Files.One" xml:space="preserve">
+    <value>{0} datoteka</value>
+  </data>
+  <data name="Transfer.Count.Files.Other" xml:space="preserve">
+    <value>{0} datoteka</value>
+  </data>
+  <data name="Transfer.Count.Items.Few" xml:space="preserve">
+    <value>{0} stavke</value>
+  </data>
+  <data name="Transfer.Count.Items.One" xml:space="preserve">
+    <value>{0} stavka</value>
+  </data>
+  <data name="Transfer.Count.Items.Other" xml:space="preserve">
+    <value>{0} stavki</value>
+  </data>
+  <data name="Transfer.Count.Pages.Few" xml:space="preserve">
+    <value>{0} stranice beležnice</value>
+  </data>
+  <data name="Transfer.Count.Pages.One" xml:space="preserve">
+    <value>{0} stranica beležnice</value>
+  </data>
+  <data name="Transfer.Count.Pages.Other" xml:space="preserve">
+    <value>{0} stranica beležnice</value>
+  </data>
+  <data name="Transfer.Count.Pictures.Few" xml:space="preserve">
+    <value>{0} slike</value>
+  </data>
+  <data name="Transfer.Count.Pictures.One" xml:space="preserve">
+    <value>{0} slika</value>
+  </data>
+  <data name="Transfer.Count.Pictures.Other" xml:space="preserve">
+    <value>{0} slika</value>
+  </data>
+  <data name="Transfer.Count.Tasks.Few" xml:space="preserve">
+    <value>{0} zadatka</value>
+  </data>
+  <data name="Transfer.Count.Tasks.One" xml:space="preserve">
+    <value>{0} zadatak</value>
+  </data>
+  <data name="Transfer.Count.Tasks.Other" xml:space="preserve">
+    <value>{0} zadataka</value>
+  </data>
+  <data name="Transfer.Error.CantWrite" xml:space="preserve">
+    <value>Ova datoteka ne može da se upiše: {0}</value>
+  </data>
+  <data name="Transfer.Error.Damaged" xml:space="preserve">
+    <value>Deo paketa je oštećen („{0}“): {1}</value>
+  </data>
+  <data name="Transfer.Error.Missing" xml:space="preserve">
+    <value>U paketu nedostaje deo: „{0}“.</value>
+  </data>
+  <data name="Transfer.Error.Newer" xml:space="preserve">
+    <value>Ovaj paket potiče iz novijeg TidyMind-a ({0}), u obliku koji ova verzija još ne može da pročita. Ažuriraj TidyMind, pa ga uvezi ponovo. Ništa nije dodato.</value>
+  </data>
+  <data name="Transfer.Error.NoSpace" xml:space="preserve">
+    <value>Na disku nema dovoljno slobodnog prostora za ovaj paket (potrebno je {0}).</value>
+  </data>
+  <data name="Transfer.Error.NotPackage" xml:space="preserve">
+    <value>Ova datoteka nije TidyMind paket (.tidymind).</value>
+  </data>
+  <data name="Transfer.Error.PartTooLarge" xml:space="preserve">
+    <value>„{0}“ u paketu je veće nego što TidyMind prihvata ({1}).</value>
+  </data>
+  <data name="Transfer.Error.SizeWrong" xml:space="preserve">
+    <value>Paket je oštećen: „{0}“ nema veličinu koju paket navodi.</value>
+  </data>
+  <data name="Transfer.Error.TargetUnreadable" xml:space="preserve">
+    <value>Memorija „{0}“ nije mogla da se pročita, pa u nju ne može ništa da se uveze. {1}</value>
+  </data>
+  <data name="Transfer.Error.TooLarge" xml:space="preserve">
+    <value>Paket je veći nego što TidyMind prihvata ({0}).</value>
+  </data>
+  <data name="Transfer.Error.TooManyFiles" xml:space="preserve">
+    <value>Paket sadrži previše datoteka ({0}).</value>
+  </data>
+  <data name="Transfer.Error.Twice" xml:space="preserve">
+    <value>Paket je oštećen: „{0}“ se u njemu nalazi dvaput.</value>
+  </data>
+  <data name="Transfer.Error.Unreadable" xml:space="preserve">
+    <value>Datoteka nije mogla da se pročita: {0}</value>
+  </data>
+  <data name="Transfer.Error.Unsafe" xml:space="preserve">
+    <value>Paket sadrži datoteku čije ime vodi van paketa („{0}“), pa nije otvoren.</value>
+  </data>
+  <data name="Transfer.Export.Caption" xml:space="preserve">
+    <value>Izvoz za prenos</value>
+  </data>
+  <data name="Transfer.Export.Done" xml:space="preserve">
+    <value>Sačuvano u {0}
+
+Kopiraj ovu datoteku na drugi računar i tamo je uvezi iz Podešavanja.</value>
+  </data>
+  <data name="Transfer.Export.Failed" xml:space="preserve">
+    <value>Paket nije mogao da se sačuva: {0}</value>
+  </data>
+  <data name="Transfer.Export.Unreadable" xml:space="preserve">
+    <value>Kolekcija „{0}“ nije mogla da se pročita, pa ne može da se izveze. {1}</value>
+  </data>
+  <data name="Transfer.ExportMenu" xml:space="preserve">
+    <value>Izvezi za prenos…</value>
+  </data>
+  <data name="Transfer.Filter" xml:space="preserve">
+    <value>TidyMind paketi (*.tidymind)|*.tidymind</value>
+  </data>
+  <data name="Transfer.Import.Button" xml:space="preserve">
+    <value>Uvezi</value>
+  </data>
+  <data name="Transfer.Import.Caption" xml:space="preserve">
+    <value>Uvoz</value>
+  </data>
+  <data name="Transfer.Import.Collection" xml:space="preserve">
+    <value>Kolekcija: {0}</value>
+  </data>
+  <data name="Transfer.Import.CollectionCounts" xml:space="preserve">
+    <value>{0}, {1}</value>
+  </data>
+  <data name="Transfer.Import.Exported" xml:space="preserve">
+    <value>Izvezeno {0} iz programa TidyMind {1}</value>
+  </data>
+  <data name="Transfer.Import.Failed" xml:space="preserve">
+    <value>Uvoz nije uspeo i ništa nije dodato. {0}</value>
+  </data>
+  <data name="Transfer.Import.Into" xml:space="preserve">
+    <value>Uvezi u</value>
+  </data>
+  <data name="Transfer.Import.NewCollection" xml:space="preserve">
+    <value>Dodaje se u bočnu traku kao nova kolekcija.</value>
+  </data>
+  <data name="Transfer.Import.NewCollectionRenamed" xml:space="preserve">
+    <value>Već postoji kolekcija s tim imenom, pa se dodaje kao „{0}“.</value>
+  </data>
+  <data name="Transfer.Import.Newer" xml:space="preserve">
+    <value>Napravljeno u novijem TidyMind-u ({0}). Ono što ova verzija ne poznaje ostaje kakvo jeste.</value>
+  </data>
+  <data name="Transfer.Import.NewProject" xml:space="preserve">
+    <value>Dodaje se tamo kao novi projekat. Ništa što je već tamo se ne menja.</value>
+  </data>
+  <data name="Transfer.Import.NewProjectRenamed" xml:space="preserve">
+    <value>Tamo već postoji projekat s tim imenom, pa se dodaje kao „{0}“. Ništa što je već tamo se ne menja.</value>
+  </data>
+  <data name="Transfer.Import.NoProjectMemory" xml:space="preserve">
+    <value>Projekat ide u memoriju za projekte. Prvo dodaj jednu dugmetom Novi projekat, pa uvezi ponovo.</value>
+  </data>
+  <data name="Transfer.Import.Project" xml:space="preserve">
+    <value>Projekat: {0}</value>
+  </data>
+  <data name="Transfer.Import.ProjectCounts" xml:space="preserve">
+    <value>{0}, {1}, {2}</value>
+  </data>
+  <data name="Transfer.Progress.Export" xml:space="preserve">
+    <value>Pakovanje: „{0}“…</value>
+  </data>
+  <data name="Transfer.Progress.Import" xml:space="preserve">
+    <value>Uvoz: „{0}“…</value>
   </data>
   <data name="Update.Error.BadAnswer" xml:space="preserve">
     <value>Odgovor GitHub-a nije razumljiv, pa ništa nije preuzeto.</value>

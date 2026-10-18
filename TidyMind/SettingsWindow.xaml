@@ -169,6 +169,18 @@
                     </StackPanel>
                     <Button Content="{local:Tr Settings.Restore.Button}" Style="{StaticResource RowButtonStyle}" Click="RestoreButton_Click"/>
                 </Grid>
+                <Border Style="{StaticResource RowDividerStyle}"/>
+                <Grid Style="{StaticResource RowStyle}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="{local:Tr Settings.Import.Title}" Style="{StaticResource RowTitleStyle}"/>
+                        <TextBlock Text="{local:Tr Settings.Import.Note}" Style="{StaticResource RowNoteStyle}"/>
+                    </StackPanel>
+                    <Button x:Name="ImportButton" Content="{local:Tr Settings.Import.Button}" Style="{StaticResource RowButtonStyle}" Click="ImportButton_Click"/>
+                </Grid>
             </StackPanel>
         </Border>
 

@@ -492,7 +492,7 @@ static partial class Program
         }, main, "07-search");
         main.CloseSearch();
 
-        Window settings = new SettingsWindow(null) { Owner = main };
+        Window settings = new SettingsWindow(null, owner => false) { Owner = main };
         await Page("Settings", async () => { settings.Show(); await Wait(200); }, settings, "08-settings");
         settings.Close();
 
@@ -706,7 +706,7 @@ static partial class Program
         QuickNotesWindow.ShowOrFocus();
         await Wait(400);
         QuickNotesWindow notes = Application.Current.Windows.OfType<QuickNotesWindow>().First();
-        SettingsWindow settings = new SettingsWindow(null) { Owner = main };
+        SettingsWindow settings = new SettingsWindow(null, owner => false) { Owner = main };
         settings.Show();
         await Wait(300);
         main.Activate();
@@ -767,7 +767,7 @@ static partial class Program
             Check(((TextBlock)main.FindName("LanguageCode")).Text == "HU" && AutomationProperties.GetName(button) == "Nyelv: Magyar", "the button now says HU, \"Nyelv: Magyar\"");
         }
 
-        SettingsWindow settings = new SettingsWindow(null) { Owner = main };
+        SettingsWindow settings = new SettingsWindow(null, owner => false) { Owner = main };
         settings.Show();
         await Wait(300);
         List<RadioButton> choices = Descendants(settings).OfType<RadioButton>().ToList();

@@ -379,10 +379,14 @@
         <!-- Sticky footer: Save stays in reach however long the content gets -->
         <Border Grid.Row="2" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
                 BorderThickness="0,1,0,0" Padding="32,12">
-            <Button x:Name="SaveButton" Content="{local:Tr Common.Save}"
-                    MinWidth="128" Padding="16,0" Height="38" HorizontalAlignment="Right"
-                    FontWeight="SemiBold"
-                    Click="SaveButton_Click"/>
+            <DockPanel>
+                <Button x:Name="SaveButton" DockPanel.Dock="Right" Content="{local:Tr Common.Save}"
+                        MinWidth="128" Padding="16,0" Height="38"
+                        FontWeight="SemiBold"
+                        Click="SaveButton_Click"/>
+                <Button x:Name="TransferButton" Content="{local:Tr Transfer.ExportMenu}" Style="{StaticResource GhostButtonStyle}"
+                        Padding="14,0" Height="38" HorizontalAlignment="Left" Click="TransferButton_Click"/>
+            </DockPanel>
         </Border>
     </Grid>
 </Window>

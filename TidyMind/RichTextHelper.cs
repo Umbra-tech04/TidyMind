@@ -77,7 +77,7 @@ namespace TidyMind
             return new TextRange(document.ContentStart, document.ContentEnd).Text.TrimEnd();
         }
 
-        private static bool IsMarkup(string stored)
+        internal static bool IsMarkup(string stored)
         {
             return stored.TrimStart().StartsWith("<Section", StringComparison.Ordinal)
                 && stored.Contains(PresentationNamespace);

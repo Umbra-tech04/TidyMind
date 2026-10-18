@@ -708,7 +708,7 @@ static partial class Program
             await Wait(300);
             Check(Application.Current.Windows.OfType<MainWindow>().Single().IsVisible, code + ": TidyMind still running after the error");
 
-            SettingsWindow settings = new SettingsWindow(null) { Owner = main };
+            SettingsWindow settings = new SettingsWindow(null, owner => false) { Owner = main };
             settings.Show();
             await Wait(300);
             server.Route = p => p.EndsWith("/releases/latest") ? Reply.Json(ServerJson(server, "v9.9.9", payload.Length)) : Reply.Status(404);
@@ -722,7 +722,7 @@ static partial class Program
             InspectTexts(settings, "Settings, updates (" + code + ")", keys, englishOnly);
             RenderWindow(settings, tag + "-update-4-settings");
             settings.Close();
-            settings = new SettingsWindow(null) { Owner = main };
+            settings = new SettingsWindow(null, owner => false) { Owner = main };
             settings.Show();
             note = (TextBlock)settings.FindName("UpdateNote");
             server.Route = p => Reply.Cut();
@@ -743,14 +743,14 @@ static partial class Program
         }
 
         // The switch writes settings.json; a new Settings window reads it back.
-        SettingsWindow again = new SettingsWindow(null) { Owner = main };
+        SettingsWindow again = new SettingsWindow(null, owner => false) { Owner = main };
         again.Show();
         CheckBox toggle = (CheckBox)again.FindName("AutoUpdateSwitch");
         toggle.IsChecked = false;
         toggle.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent, toggle));
         Check(AppSettings.Load().CheckForUpdates == false, "the switch turned off is stored (CheckForUpdates: false)");
         again.Close();
-        again = new SettingsWindow(null) { Owner = main };
+        again = new SettingsWindow(null, owner => false) { Owner = main };
         again.Show();
         toggle = (CheckBox)again.FindName("AutoUpdateSwitch");
         Check(toggle.IsChecked == false, "and shown off next time");
@@ -762,7 +762,7 @@ static partial class Program
 
         // Settings' "Update…" after Check now found one: Settings closes, the update dialog opens over the main window.
         server.Route = p => p.EndsWith("/releases/latest") ? Reply.Json(ServerJson(server, "v9.9.9", 10)) : Reply.Status(404);
-        SettingsWindow fromSettings = new SettingsWindow(null) { Owner = main };
+        SettingsWindow fromSettings = new SettingsWindow(null, owner => false) { Owner = main };
         fromSettings.Show();
         TextBlock found = (TextBlock)fromSettings.FindName("UpdateNote");
         Click(fromSettings, "CheckUpdatesButton");

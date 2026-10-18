@@ -16,10 +16,15 @@ namespace TidyMind
         private readonly System.Windows.Threading.DispatcherTimer backgroundSave =
             new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
 
-        public SettingsWindow(Action onExportAll)
+        // Import a project or collection (MainWindow.ImportPackage); true if something was imported, and Settings then
+        // closes so it shows.
+        private readonly Func<Window, bool> onImport;
+
+        public SettingsWindow(Action onExportAll, Func<Window, bool> onImport)
         {
             InitializeComponent();
             this.onExportAll = onExportAll;
+            this.onImport = onImport;
             VersionText.Text = "TidyMind " + Updates.CurrentVersion.ToString(3);
             DataFolderText.Text = AppPaths.DataFolder;
             DataFolderText.ToolTip = AppPaths.DataFolder;
@@ -110,6 +115,12 @@ namespace TidyMind
 
             Msg.Show(this, Loc.F("Settings.Backup.Saved", dialog.FileName), Loc.T("Settings.Backup.Caption"), MessageBoxButton.OK,
                 MessageBoxImage.Information);
+        }
+
+        private void ImportButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (onImport(this))
+                Close();
         }
 
         // Checked, confirmed, then DataBackup.Restore (which keeps the current data on any failure), then a restart, so

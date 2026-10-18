@@ -1852,6 +1852,15 @@ A fájl változatlan maradt. Javítsd ki, vagy állítsd vissza egy mentésből,
   <data name="Settings.ExportAll.Title" xml:space="preserve">
     <value>Minden memória exportálása</value>
   </data>
+  <data name="Settings.Import.Button" xml:space="preserve">
+    <value>Importálás…</value>
+  </data>
+  <data name="Settings.Import.Note" xml:space="preserve">
+    <value>Egy ezen vagy egy másik gépen exportált .tidymind fájlból új példányként adja hozzá.</value>
+  </data>
+  <data name="Settings.Import.Title" xml:space="preserve">
+    <value>Projekt vagy gyűjtemény importálása</value>
+  </data>
   <data name="Settings.Language.NotSaved" xml:space="preserve">
     <value>A nyelv átváltott, de nem sikerült elmenteni a settings.json fájlba, ezért legközelebb a TidyMind az előző nyelven indul.</value>
   </data>
@@ -2246,6 +2255,134 @@ Semmi sem változott.</value>
   </data>
   <data name="Tour.Welcome.Title" xml:space="preserve">
     <value>Üdvözöl a TidyMind</value>
+  </data>
+  <data name="Transfer.Count.Files.Other" xml:space="preserve">
+    <value>{0} fájl</value>
+  </data>
+  <data name="Transfer.Count.Items.Other" xml:space="preserve">
+    <value>{0} elem</value>
+  </data>
+  <data name="Transfer.Count.Pages.Other" xml:space="preserve">
+    <value>{0} jegyzetfüzet-oldal</value>
+  </data>
+  <data name="Transfer.Count.Pictures.Other" xml:space="preserve">
+    <value>{0} kép</value>
+  </data>
+  <data name="Transfer.Count.Tasks.Other" xml:space="preserve">
+    <value>{0} feladat</value>
+  </data>
+  <data name="Transfer.Error.CantWrite" xml:space="preserve">
+    <value>Ezt a fájlt nem sikerült írni: {0}</value>
+  </data>
+  <data name="Transfer.Error.Damaged" xml:space="preserve">
+    <value>A csomag egy része sérült („{0}”): {1}</value>
+  </data>
+  <data name="Transfer.Error.Missing" xml:space="preserve">
+    <value>A csomagból hiányzik egy rész: „{0}”.</value>
+  </data>
+  <data name="Transfer.Error.Newer" xml:space="preserve">
+    <value>Ez a csomag egy újabb TidyMindból ({0}) származik, olyan formában, amelyet ez a verzió még nem tud olvasni. Frissítsd a TidyMindot, aztán importáld újra. Semmi sem került be.</value>
+  </data>
+  <data name="Transfer.Error.NoSpace" xml:space="preserve">
+    <value>Nincs elég szabad hely a lemezen ehhez a csomaghoz (ennyi kell: {0}).</value>
+  </data>
+  <data name="Transfer.Error.NotPackage" xml:space="preserve">
+    <value>Ez a fájl nem TidyMind-csomag (.tidymind).</value>
+  </data>
+  <data name="Transfer.Error.PartTooLarge" xml:space="preserve">
+    <value>A csomagban „{0}” nagyobb annál, amit a TidyMind elfogad ({1}).</value>
+  </data>
+  <data name="Transfer.Error.SizeWrong" xml:space="preserve">
+    <value>A csomag sérült: „{0}” nem akkora, amekkorának a csomag megadja.</value>
+  </data>
+  <data name="Transfer.Error.TargetUnreadable" xml:space="preserve">
+    <value>„{0}” nem olvasható, ezért nem lehet bele importálni. {1}</value>
+  </data>
+  <data name="Transfer.Error.TooLarge" xml:space="preserve">
+    <value>A csomag nagyobb annál, amit a TidyMind elfogad ({0}).</value>
+  </data>
+  <data name="Transfer.Error.TooManyFiles" xml:space="preserve">
+    <value>A csomagban túl sok fájl van ({0}).</value>
+  </data>
+  <data name="Transfer.Error.Twice" xml:space="preserve">
+    <value>A csomag sérült: „{0}” kétszer szerepel benne.</value>
+  </data>
+  <data name="Transfer.Error.Unreadable" xml:space="preserve">
+    <value>A fájlt nem sikerült beolvasni: {0}</value>
+  </data>
+  <data name="Transfer.Error.Unsafe" xml:space="preserve">
+    <value>A csomagban van egy fájl, amelynek a neve a csomagon kívülre mutat („{0}”), ezért nem nyílt meg.</value>
+  </data>
+  <data name="Transfer.Export.Caption" xml:space="preserve">
+    <value>Exportálás átvitelhez</value>
+  </data>
+  <data name="Transfer.Export.Done" xml:space="preserve">
+    <value>Mentve ide: {0}
+
+Másold át ezt a fájlt a másik gépre, és ott a Beállításokban importáld.</value>
+  </data>
+  <data name="Transfer.Export.Failed" xml:space="preserve">
+    <value>A csomagot nem sikerült menteni: {0}</value>
+  </data>
+  <data name="Transfer.Export.Unreadable" xml:space="preserve">
+    <value>„{0}” nem olvasható, ezért nem exportálható. {1}</value>
+  </data>
+  <data name="Transfer.ExportMenu" xml:space="preserve">
+    <value>Exportálás átvitelhez…</value>
+  </data>
+  <data name="Transfer.Filter" xml:space="preserve">
+    <value>TidyMind-csomagok (*.tidymind)|*.tidymind</value>
+  </data>
+  <data name="Transfer.Import.Button" xml:space="preserve">
+    <value>Importálás</value>
+  </data>
+  <data name="Transfer.Import.Caption" xml:space="preserve">
+    <value>Importálás</value>
+  </data>
+  <data name="Transfer.Import.Collection" xml:space="preserve">
+    <value>Gyűjtemény: {0}</value>
+  </data>
+  <data name="Transfer.Import.CollectionCounts" xml:space="preserve">
+    <value>{0}, {1}</value>
+  </data>
+  <data name="Transfer.Import.Exported" xml:space="preserve">
+    <value>Exportálva: {0}, TidyMind {1}</value>
+  </data>
+  <data name="Transfer.Import.Failed" xml:space="preserve">
+    <value>Nem sikerült importálni, és semmi sem került be. {0}</value>
+  </data>
+  <data name="Transfer.Import.Into" xml:space="preserve">
+    <value>Hová kerüljön</value>
+  </data>
+  <data name="Transfer.Import.NewCollection" xml:space="preserve">
+    <value>Új gyűjteményként kerül az oldalsávba.</value>
+  </data>
+  <data name="Transfer.Import.NewCollectionRenamed" xml:space="preserve">
+    <value>Már van ilyen nevű gyűjtemény, ezért „{0}” néven kerül be.</value>
+  </data>
+  <data name="Transfer.Import.Newer" xml:space="preserve">
+    <value>Egy újabb TidyMind ({0}) készítette. Amit ez a verzió nem ismer, az változatlanul megmarad.</value>
+  </data>
+  <data name="Transfer.Import.NewProject" xml:space="preserve">
+    <value>Új projektként kerül oda. Ami ott már megvan, nem változik.</value>
+  </data>
+  <data name="Transfer.Import.NewProjectRenamed" xml:space="preserve">
+    <value>Ott már van ilyen nevű projekt, ezért „{0}” néven kerül be. Ami ott már megvan, nem változik.</value>
+  </data>
+  <data name="Transfer.Import.NoProjectMemory" xml:space="preserve">
+    <value>A projekt egy projektmemóriába kerül. Előbb hozz létre egyet az Új projekt gombbal, aztán importáld újra.</value>
+  </data>
+  <data name="Transfer.Import.Project" xml:space="preserve">
+    <value>Projekt: {0}</value>
+  </data>
+  <data name="Transfer.Import.ProjectCounts" xml:space="preserve">
+    <value>{0}, {1}, {2}</value>
+  </data>
+  <data name="Transfer.Progress.Export" xml:space="preserve">
+    <value>„{0}” csomagolása…</value>
+  </data>
+  <data name="Transfer.Progress.Import" xml:space="preserve">
+    <value>„{0}” importálása…</value>
   </data>
   <data name="Update.Error.BadAnswer" xml:space="preserve">
     <value>A GitHub válasza nem értelmezhető, ezért semmi sem lett letöltve.</value>

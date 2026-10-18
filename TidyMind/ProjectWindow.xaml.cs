@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -52,6 +53,42 @@ namespace TidyMind
 
         private void SaveButton_Click(object sender, RoutedEventArgs e) => Close();
 
+        private void TransferButton_Click(object sender, RoutedEventArgs e) => TransferUI.ExportProject(this, ProjectAsShown());
+
+        // A copy of the project with what this window shows now (name, description, notebook, files), edits not yet
+        // saved included; the project itself is only changed on closing (OnClosing). Files still being copied in
+        // aren't attached yet, so they aren't in it.
+        internal Project ProjectAsShown()
+        {
+            Project copy = JsonSerializer.Deserialize<Project>(JsonSerializer.Serialize(currentProject));
+            string name = NameBox.Text.Trim();
+            if (name.Length > 0)
+                copy.Name = name;
+            if (EditedDescription() is string description)
+                copy.Description = description;
+            KeepCurrentPage();
+            int kept = PagesToKeep(0);
+            if (PagesEdited(kept))
+                copy.NotePages = pages.Take(kept)
+                    .Select((page, i) => new NotePage { Body = pageBodies[i], ExtensionData = page.ExtensionData }).ToList();
+            copy.Attachments = Files.Attachments;
+            return copy;
+        }
+
+        // The description as stored, if it was edited (null if not). Compared with the editor as loaded, not the
+        // stored string: re-saving an untouched null or plain-text description would change its storage form and
+        // count as an edit (LastModified).
+        private string EditedDescription()
+        {
+            string description = RichTextHelper.ToStorableString(DescriptionBox.Document);
+            return description != loadedDescription ? description : null;
+        }
+
+        // Whether the first `count` pages differ from the notebook as loaded (an empty page added here and left blank
+        // isn't a change).
+        private bool PagesEdited(int count) =>
+            !pages.Take(count).SequenceEqual(loadedPages) || !pageBodies.Take(count).SequenceEqual(loadedBodies);
+
         // Esc closes like Save and the X (every way of closing saves); an open page list closes first.
         protected override void OnKeyDown(KeyEventArgs e)
         {
@@ -94,17 +131,14 @@ namespace TidyMind
 
             currentProject.Name = name;
 
-            // Compared with the editor as loaded, not the stored string: re-saving an untouched null or
-            // plain-text description or note would change its storage form and count as an edit (LastModified).
-            string description = RichTextHelper.ToStorableString(DescriptionBox.Document);
-            if (description != loadedDescription)
+            if (EditedDescription() is string description)
                 currentProject.Description = description;
 
-            // Only a real change stores the pages (an empty page added here and left blank isn't one); the old Notes
-            // field is never touched, so an old note shown as page 1 stays where older versions look for it.
+            // Only a real change stores the pages; the old Notes field is never touched, so an old note shown as
+            // page 1 stays where older versions look for it.
             KeepCurrentPage();
             DropEmptyNewPages(0);
-            if (!pages.SequenceEqual(loadedPages) || !pageBodies.SequenceEqual(loadedBodies))
+            if (PagesEdited(pages.Count))
             {
                 for (int i = 0; i < pages.Count; i++)
                     pages[i].Body = pageBodies[i];
@@ -439,12 +473,19 @@ namespace TidyMind
         // never one up to keepThrough (the page being turned to), never a page that was already stored.
         private void DropEmptyNewPages(int keepThrough)
         {
-            while (pages.Count - 1 > keepThrough && !loadedPages.Contains(pages[^1])
-                && RichTextHelper.ToPlainText(pageBodies[^1]).Trim().Length == 0)
-            {
-                pages.RemoveAt(pages.Count - 1);
-                pageBodies.RemoveAt(pageBodies.Count - 1);
-            }
+            int kept = PagesToKeep(keepThrough);
+            pages.RemoveRange(kept, pages.Count - kept);
+            pageBodies.RemoveRange(kept, pageBodies.Count - kept);
+        }
+
+        // How many pages stay once those are dropped (Export for transfer asks without dropping them).
+        private int PagesToKeep(int keepThrough)
+        {
+            int count = pages.Count;
+            while (count - 1 > keepThrough && !loadedPages.Contains(pages[count - 1])
+                && RichTextHelper.ToPlainText(pageBodies[count - 1]).Trim().Length == 0)
+                count--;
+            return count;
         }
 
         // Compared with the page as the editor showed it, not the stored string: an untouched page re-saved in
