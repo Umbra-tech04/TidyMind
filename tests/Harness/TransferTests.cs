@@ -916,8 +916,9 @@ static partial class Program
 
         SettingsWindow settings = new SettingsWindow(null, owner => false) { Owner = main };
         settings.Show();
+        ((ListBox)settings.FindName("CategoryList")).SelectedIndex = 3;
         await Wait(300);
-        Check(((Button)settings.FindName("ImportButton")).IsVisible, "Settings has Import");
+        Check(((Button)settings.FindName("ImportButton")).IsVisible, "Settings > Backup & transfer has Import");
         settings.Close();
     }
 }

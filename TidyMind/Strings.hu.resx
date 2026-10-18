@@ -1828,6 +1828,18 @@ A fájl változatlan maradt. Javítsd ki, vagy állítsd vissza egy mentésből,
   <data name="Settings.Backup.Title" xml:space="preserve">
     <value>Minden adat mentése</value>
   </data>
+  <data name="Settings.Category.About" xml:space="preserve">
+    <value>Névjegy</value>
+  </data>
+  <data name="Settings.Category.Appearance" xml:space="preserve">
+    <value>Megjelenés</value>
+  </data>
+  <data name="Settings.Category.Backup" xml:space="preserve">
+    <value>Mentés és átvitel</value>
+  </data>
+  <data name="Settings.Category.Reminders" xml:space="preserve">
+    <value>Emlékeztetők</value>
+  </data>
   <data name="Settings.DataFolder.Button" xml:space="preserve">
     <value>Megnyitás</value>
   </data>

@@ -1990,6 +1990,18 @@ Datoteka je ostala kakva je bila. Popravi je ili je vrati iz rezervne kopije, pa
   <data name="Settings.Backup.Title" xml:space="preserve">
     <value>Rezervna kopija svih podataka</value>
   </data>
+  <data name="Settings.Category.About" xml:space="preserve">
+    <value>O programu</value>
+  </data>
+  <data name="Settings.Category.Appearance" xml:space="preserve">
+    <value>Izgled</value>
+  </data>
+  <data name="Settings.Category.Backup" xml:space="preserve">
+    <value>Rezervna kopija i prenos</value>
+  </data>
+  <data name="Settings.Category.Reminders" xml:space="preserve">
+    <value>Podsetnici</value>
+  </data>
   <data name="Settings.DataFolder.Button" xml:space="preserve">
     <value>Otvori</value>
   </data>

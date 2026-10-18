@@ -492,9 +492,34 @@ static partial class Program
         }, main, "07-search");
         main.CloseSearch();
 
-        Window settings = new SettingsWindow(null, owner => false) { Owner = main };
-        await Page("Settings", async () => { settings.Show(); await Wait(200); }, settings, "08-settings");
-        settings.Close();
+        // Every category of Settings, each page in turn (only the chosen one shows).
+        SettingsWindow settings = new SettingsWindow(null, owner => false) { Owner = main };
+        settings.Show();
+        ListBox categories = (ListBox)settings.FindName("CategoryList");
+        for (int i = 0; i < categories.Items.Count; i++)
+        {
+            int index = i;
+            await Page("Settings: " + ((ListBoxItem)categories.Items[i]).Content, async () => { categories.SelectedIndex = index; await Wait(200); },
+                settings, "08-settings-" + (i + 1));
+        }
+        if (code == Loc.English)
+        {
+            Check(settings.ActualHeight <= main.ActualHeight * 0.8 + 1 && settings.ActualWidth <= 901 && settings.ResizeMode == ResizeMode.CanResize,
+                "Settings: resizable, at most 80% of the main window's height (" + (int)settings.ActualWidth + "×" + (int)settings.ActualHeight
+                + " over " + (int)main.ActualWidth + "×" + (int)main.ActualHeight + ")");
+            categories.SelectedIndex = 0;
+            ListBoxItem first = (ListBoxItem)categories.ItemContainerGenerator.ContainerFromIndex(0);
+            first.Focus();
+            PressKey(first, System.Windows.Input.Key.Down);
+            await Wait(200);
+            Check(categories.SelectedIndex == 1 && ((FrameworkElement)settings.FindName("AppearancePage")).IsVisible
+                  && !((FrameworkElement)settings.FindName("GeneralPage")).IsVisible, "Settings: Down in the category list shows the next category");
+            PressKey((UIElement)System.Windows.Input.Keyboard.FocusedElement ?? settings, System.Windows.Input.Key.Escape);
+            await Wait(200);
+            Check(!settings.IsVisible, "Settings: Esc closes it");
+        }
+        if (settings.IsVisible)
+            settings.Close();
 
         OverlayManager.Route(Overlay.QuickNotes);
         await Wait(500);
@@ -707,6 +732,7 @@ static partial class Program
         await Wait(400);
         QuickNotesWindow notes = Application.Current.Windows.OfType<QuickNotesWindow>().First();
         SettingsWindow settings = new SettingsWindow(null, owner => false) { Owner = main };
+        ((ListBox)settings.FindName("CategoryList")).SelectedIndex = 3; // Backup & transfer: the Restore row is checked below
         settings.Show();
         await Wait(300);
         main.Activate();

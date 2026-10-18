@@ -29,8 +29,7 @@ namespace TidyMind
             DataFolderText.Text = AppPaths.DataFolder;
             DataFolderText.ToolTip = AppPaths.DataFolder;
             BuildLanguageChoices();
-            // Taller than a small screen: it scrolls instead of running off it.
-            MaxHeight = SystemParameters.WorkArea.Height - 24;
+            CategoryList.SelectedIndex = 0;
             BackgroundVisibilitySlider.Value = PageBackground.ImageVisibility;
             BackgroundVisibilitySlider.ValueChanged += BackgroundVisibilitySlider_ValueChanged;
             ShowBackgroundVisibility();
@@ -66,6 +65,38 @@ namespace TidyMind
                 };
                 LanguageChoices.Children.Add(choice);
             }
+        }
+
+        // About 900×600, but never taller than 80% of the main window (or of the screen, without one) nor larger than
+        // the screen; centred on the main window. Here, once the owner is known and before the window shows.
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+            Rect screen = SystemParameters.WorkArea;
+            bool owned = Owner != null && Owner.ActualHeight > 0;
+            Height = Math.Max(MinHeight, Math.Min(Height, 0.8 * (owned ? Owner.ActualHeight : screen.Height)));
+            Width = Math.Max(MinWidth, Math.Min(Width, owned ? Math.Max(Owner.ActualWidth, MinWidth) : screen.Width));
+            MaxHeight = screen.Height;
+            MaxWidth = screen.Width;
+            if (owned)
+            {
+                Left = Owner.Left + (Owner.ActualWidth - Width) / 2;
+                Top = Owner.Top + (Owner.ActualHeight - Height) / 2;
+            }
+        }
+
+        // The chosen category's page; the page starts at its top. One is always chosen (Ctrl+click can't clear it).
+        private void CategoryList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (CategoryList.SelectedIndex < 0 && e.RemovedItems.Count > 0)
+            {
+                CategoryList.SelectedItem = e.RemovedItems[0];
+                return;
+            }
+            FrameworkElement[] pages = { GeneralPage, AppearancePage, RemindersPage, BackupPage, UpdatesPage, AboutPage };
+            for (int i = 0; i < pages.Length; i++)
+                pages[i].Visibility = i == CategoryList.SelectedIndex ? Visibility.Visible : Visibility.Collapsed;
+            PageScroll.ScrollToTop();
         }
 
         // Esc closes, as in the other dialogs.

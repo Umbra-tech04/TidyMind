@@ -1909,6 +1909,18 @@ The file was left as it is. Fix it or restore it from a backup to see and add re
   <data name="Settings.Backup.Title" xml:space="preserve">
     <value>Back up all data</value>
   </data>
+  <data name="Settings.Category.About" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="Settings.Category.Appearance" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="Settings.Category.Backup" xml:space="preserve">
+    <value>Backup &amp; transfer</value>
+  </data>
+  <data name="Settings.Category.Reminders" xml:space="preserve">
+    <value>Reminders</value>
+  </data>
   <data name="Settings.DataFolder.Button" xml:space="preserve">
     <value>Open</value>
   </data>

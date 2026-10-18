@@ -2,13 +2,20 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:TidyMind"
-        Title="{local:Tr Settings.Title}" Width="480"
-        SizeToContent="Height"
-        ResizeMode="NoResize"
+        Title="{local:Tr Settings.Title}" Width="900" Height="600" MinWidth="640" MinHeight="420"
+        ResizeMode="CanResize"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner"
         Background="{StaticResource BgMain}">
     <Window.Resources>
+        <!-- A category's heading, at the top of its page -->
+        <Style x:Key="PageTitleStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="17"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{StaticResource TextMain}"/>
+            <Setter Property="Margin" Value="2,0,0,12"/>
+        </Style>
+
         <!-- Section headings, as in Project Details -->
         <Style x:Key="SectionLabelStyle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="13"/>
@@ -78,186 +85,271 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- A category in the list on the left: tinted on hover, accent while it's the one shown. The text wraps rather
+             than being cut, so a long translation stays readable. -->
+        <Style x:Key="CategoryStyle" TargetType="ListBoxItem">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{StaticResource TextMain}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="0,1"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="row" Background="Transparent" CornerRadius="6" Padding="12,8">
+                            <TextBlock Text="{TemplateBinding Content}" TextWrapping="Wrap"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="row" Property="Background" Value="{StaticResource BgSubtle}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="row" Property="Background" Value="{StaticResource AccentSoft}"/>
+                                <Setter Property="Foreground" Value="{StaticResource Accent}"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
-    <!-- Scrolls only on a screen too short for all of it (MaxHeight: SettingsWindow) -->
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
-    <StackPanel Margin="24,22,24,20">
-        <TextBlock Text="{local:Tr Settings.Title}" FontSize="17" FontWeight="Bold" Foreground="{StaticResource TextMain}"/>
+    <!-- The categories on the left (arrow keys move between them), the chosen one's page on the right, which scrolls
+         on its own. Each page holds the sections that were in the one long column before, unchanged. -->
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" MinWidth="200"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
-        <TextBlock Text="{local:Tr Settings.Section.General}" Style="{StaticResource SectionLabelStyle}" Margin="2,16,0,8"/>
-        <Border Style="{StaticResource CardStyle}">
-            <StackPanel>
-                <Grid Style="{StaticResource RowStyle}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="{local:Tr Settings.Language.Title}" Style="{StaticResource RowTitleStyle}"/>
-                        <TextBlock Text="{local:Tr Settings.Language.Note}" Style="{StaticResource RowNoteStyle}"/>
-                    </StackPanel>
-                    <!-- English / Magyar / Srpski, each named in its own language (filled from Loc.Languages) -->
-                    <Border Grid.Column="1" Margin="16,0,0,0" Height="32" Padding="2" VerticalAlignment="Center"
-                            Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
-                            BorderThickness="1" CornerRadius="4">
-                        <StackPanel x:Name="LanguageChoices" Orientation="Horizontal"
-                                    AutomationProperties.Name="{local:Tr Settings.Language.Title}"/>
-                    </Border>
-                </Grid>
-                <Border Style="{StaticResource RowDividerStyle}"/>
-                <!-- How clearly a memory's background picture shows (PageBackground.ImageVisibility); applies as it moves -->
-                <Grid Style="{StaticResource RowStyle}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="{local:Tr Settings.BackgroundImage.Title}" Style="{StaticResource RowTitleStyle}"/>
-                        <TextBlock Text="{local:Tr Settings.BackgroundImage.Note}" Style="{StaticResource RowNoteStyle}"/>
-                    </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
-                        <Slider x:Name="BackgroundVisibilitySlider" Width="150" Minimum="20" Maximum="100" SmallChange="5"
-                                LargeChange="10" TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center"
-                                AutomationProperties.Name="{local:Tr Settings.BackgroundImage.Title}"/>
-                        <TextBlock x:Name="BackgroundVisibilityText" Width="40" Margin="8,0,0,0" TextAlignment="Right"
-                                   VerticalAlignment="Center" Foreground="{StaticResource TextSub}"/>
-                    </StackPanel>
-                </Grid>
-            </StackPanel>
+        <Border Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}" BorderThickness="0,0,1,0">
+            <DockPanel Margin="12,22,12,16">
+                <TextBlock DockPanel.Dock="Top" Text="{local:Tr Settings.Title}" FontSize="17" FontWeight="Bold"
+                           Foreground="{StaticResource TextMain}" Margin="12,0,0,14"/>
+                <ListBox x:Name="CategoryList" MaxWidth="240" Background="Transparent" BorderThickness="0"
+                         ItemContainerStyle="{StaticResource CategoryStyle}"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         AutomationProperties.Name="{local:Tr Settings.Title}"
+                         SelectionChanged="CategoryList_SelectionChanged">
+                    <ListBoxItem Content="{local:Tr Settings.Section.General}"/>
+                    <ListBoxItem Content="{local:Tr Settings.Category.Appearance}"/>
+                    <ListBoxItem Content="{local:Tr Settings.Category.Reminders}"/>
+                    <ListBoxItem Content="{local:Tr Settings.Category.Backup}"/>
+                    <ListBoxItem Content="{local:Tr Settings.Section.Updates}"/>
+                    <ListBoxItem Content="{local:Tr Settings.Category.About}"/>
+                </ListBox>
+            </DockPanel>
         </Border>
 
-        <TextBlock Text="{local:Tr Settings.Section.Notifications}" Style="{StaticResource SectionLabelStyle}"/>
-        <Border Style="{StaticResource CardStyle}">
-            <Grid Style="{StaticResource RowStyle}">
+        <ScrollViewer x:Name="PageScroll" Grid.Column="1" VerticalScrollBarVisibility="Auto" Focusable="False">
+            <!-- Every page as wide as the pane, up to a readable width, so cards line up from page to page -->
+            <Grid Margin="28,22,28,24">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*" MaxWidth="760"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <StackPanel>
-                    <TextBlock Text="{local:Tr Settings.Notify.Title}" Style="{StaticResource RowTitleStyle}"/>
-                    <TextBlock x:Name="NotifyNote" Text="{local:Tr Settings.Notify.Note}" Style="{StaticResource RowNoteStyle}"/>
+
+                <!-- General -->
+                <StackPanel x:Name="GeneralPage">
+                    <TextBlock Text="{local:Tr Settings.Section.General}" Style="{StaticResource PageTitleStyle}"/>
+                    <Border Style="{StaticResource CardStyle}">
+                        <Grid Style="{StaticResource RowStyle}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{local:Tr Settings.Language.Title}" Style="{StaticResource RowTitleStyle}"/>
+                                <TextBlock Text="{local:Tr Settings.Language.Note}" Style="{StaticResource RowNoteStyle}"/>
+                            </StackPanel>
+                            <!-- English / Magyar / Srpski, each named in its own language (filled from Loc.Languages) -->
+                            <Border Grid.Column="1" Margin="16,0,0,0" Height="32" Padding="2" VerticalAlignment="Center"
+                                    Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
+                                    BorderThickness="1" CornerRadius="4">
+                                <StackPanel x:Name="LanguageChoices" Orientation="Horizontal"
+                                            AutomationProperties.Name="{local:Tr Settings.Language.Title}"/>
+                            </Border>
+                        </Grid>
+                    </Border>
                 </StackPanel>
-                <Button x:Name="TestNotifyButton" Content="{local:Tr Settings.Notify.Button}" Style="{StaticResource RowButtonStyle}"
-                        Click="TestNotificationButton_Click"/>
+
+                <!-- Appearance -->
+                <StackPanel x:Name="AppearancePage" Visibility="Collapsed">
+                    <TextBlock Text="{local:Tr Settings.Category.Appearance}" Style="{StaticResource PageTitleStyle}"/>
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <!-- How clearly a memory's background picture shows (PageBackground.ImageVisibility); applies as it moves -->
+                            <Grid Style="{StaticResource RowStyle}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{local:Tr Settings.BackgroundImage.Title}" Style="{StaticResource RowTitleStyle}"/>
+                                    <TextBlock Text="{local:Tr Settings.BackgroundImage.Note}" Style="{StaticResource RowNoteStyle}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                                    <Slider x:Name="BackgroundVisibilitySlider" Width="150" Minimum="20" Maximum="100" SmallChange="5"
+                                            LargeChange="10" TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center"
+                                            AutomationProperties.Name="{local:Tr Settings.BackgroundImage.Title}"/>
+                                    <TextBlock x:Name="BackgroundVisibilityText" Width="40" Margin="8,0,0,0" TextAlignment="Right"
+                                               VerticalAlignment="Center" Foreground="{StaticResource TextSub}"/>
+                                </StackPanel>
+                            </Grid>
+                            <!-- Room for the next look setting ("Adaptive card tint"): a RowDividerStyle border, then a row like
+                                 the Updates switch (title, note, a SwitchStyle CheckBox in column 1). -->
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Reminders -->
+                <StackPanel x:Name="RemindersPage" Visibility="Collapsed">
+                    <TextBlock Text="{local:Tr Settings.Category.Reminders}" Style="{StaticResource PageTitleStyle}"/>
+                    <TextBlock Text="{local:Tr Settings.Section.Notifications}" Style="{StaticResource SectionLabelStyle}" Margin="2,0,0,8"/>
+                    <Border Style="{StaticResource CardStyle}">
+                        <Grid Style="{StaticResource RowStyle}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="{local:Tr Settings.Notify.Title}" Style="{StaticResource RowTitleStyle}"/>
+                                <TextBlock x:Name="NotifyNote" Text="{local:Tr Settings.Notify.Note}" Style="{StaticResource RowNoteStyle}"/>
+                            </StackPanel>
+                            <Button x:Name="TestNotifyButton" Content="{local:Tr Settings.Notify.Button}" Style="{StaticResource RowButtonStyle}"
+                                    Click="TestNotificationButton_Click"/>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+                <!-- Backup & transfer -->
+                <StackPanel x:Name="BackupPage" Visibility="Collapsed">
+                    <TextBlock Text="{local:Tr Settings.Category.Backup}" Style="{StaticResource PageTitleStyle}"/>
+                    <TextBlock Text="{local:Tr Settings.Section.Backup}" Style="{StaticResource SectionLabelStyle}" Margin="2,0,0,8"/>
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <Grid Style="{StaticResource RowStyle}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="{local:Tr Settings.Backup.Title}" Style="{StaticResource RowTitleStyle}"/>
+                                    <TextBlock Text="{local:Tr Settings.Backup.Note}" Style="{StaticResource RowNoteStyle}"/>
+                                </StackPanel>
+                                <Button Content="{local:Tr Settings.Backup.Button}" Style="{StaticResource RowButtonStyle}" Click="BackupButton_Click"/>
+                            </Grid>
+                            <Border Style="{StaticResource RowDividerStyle}"/>
+                            <Grid Style="{StaticResource RowStyle}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="{local:Tr Settings.Restore.Title}" Style="{StaticResource RowTitleStyle}"/>
+                                    <TextBlock Text="{local:Tr Settings.Restore.Note}" Style="{StaticResource RowNoteStyle}"/>
+                                </StackPanel>
+                                <Button Content="{local:Tr Settings.Restore.Button}" Style="{StaticResource RowButtonStyle}" Click="RestoreButton_Click"/>
+                            </Grid>
+                            <Border Style="{StaticResource RowDividerStyle}"/>
+                            <Grid Style="{StaticResource RowStyle}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="{local:Tr Settings.Import.Title}" Style="{StaticResource RowTitleStyle}"/>
+                                    <TextBlock Text="{local:Tr Settings.Import.Note}" Style="{StaticResource RowNoteStyle}"/>
+                                </StackPanel>
+                                <Button x:Name="ImportButton" Content="{local:Tr Settings.Import.Button}" Style="{StaticResource RowButtonStyle}" Click="ImportButton_Click"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="{local:Tr Settings.Section.Data}" Style="{StaticResource SectionLabelStyle}"/>
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <Grid Style="{StaticResource RowStyle}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="{local:Tr Settings.ExportAll.Title}" Style="{StaticResource RowTitleStyle}"/>
+                                    <TextBlock Text="{local:Tr Settings.ExportAll.Note}" Style="{StaticResource RowNoteStyle}"/>
+                                </StackPanel>
+                                <Button Content="{local:Tr Settings.ExportAll.Button}" Style="{StaticResource RowButtonStyle}" Click="ExportAllButton_Click"/>
+                            </Grid>
+                            <Border Style="{StaticResource RowDividerStyle}"/>
+                            <Grid Style="{StaticResource RowStyle}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="{local:Tr Settings.DataFolder.Title}" Style="{StaticResource RowTitleStyle}"/>
+                                    <!-- The folder itself, cut short if it doesn't fit (the tooltip has all of it) -->
+                                    <TextBlock x:Name="DataFolderText" Style="{StaticResource RowNoteStyle}"
+                                               TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                                <Button Content="{local:Tr Settings.DataFolder.Button}" Style="{StaticResource RowButtonStyle}" Click="OpenDataFolderButton_Click"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Updates -->
+                <StackPanel x:Name="UpdatesPage" Visibility="Collapsed">
+                    <TextBlock Text="{local:Tr Settings.Section.Updates}" Style="{StaticResource PageTitleStyle}"/>
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <Grid Style="{StaticResource RowStyle}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="{local:Tr Settings.Updates.Auto.Title}" Style="{StaticResource RowTitleStyle}"/>
+                                    <TextBlock Text="{local:Tr Settings.Updates.Auto.Note}" Style="{StaticResource RowNoteStyle}"/>
+                                </StackPanel>
+                                <CheckBox x:Name="AutoUpdateSwitch" Style="{StaticResource SwitchStyle}"
+                                          AutomationProperties.Name="{local:Tr Settings.Updates.Auto.Title}"
+                                          Click="AutoUpdateSwitch_Click"/>
+                            </Grid>
+                            <Border Style="{StaticResource RowDividerStyle}"/>
+                            <Grid Style="{StaticResource RowStyle}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock x:Name="UpdateVersionText" Style="{StaticResource RowTitleStyle}"/>
+                                    <!-- When it was last checked, or what "Check now" found -->
+                                    <TextBlock x:Name="UpdateNote" Style="{StaticResource RowNoteStyle}"/>
+                                </StackPanel>
+                                <Button x:Name="CheckUpdatesButton" Content="{local:Tr Settings.Updates.Check}" Style="{StaticResource RowButtonStyle}"
+                                        Click="CheckUpdatesButton_Click"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- About: one quiet line. The link uses the darker accent, which reads at 5.7:1 on this background. -->
+                <StackPanel x:Name="AboutPage" Visibility="Collapsed">
+                    <TextBlock Text="{local:Tr Settings.Category.About}" Style="{StaticResource PageTitleStyle}"/>
+                    <Grid Margin="2,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="VersionText" FontSize="12" Foreground="{StaticResource TextSub}" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" Content="{local:Tr Settings.Licenses}" Style="{StaticResource LinkButtonStyle}"
+                                Foreground="{StaticResource BtnHover}" Click="LicensesLink_Click"/>
+                    </Grid>
+                </StackPanel>
             </Grid>
-        </Border>
-
-        <TextBlock Text="{local:Tr Settings.Section.Backup}" Style="{StaticResource SectionLabelStyle}"/>
-        <Border Style="{StaticResource CardStyle}">
-            <StackPanel>
-                <Grid Style="{StaticResource RowStyle}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel>
-                        <TextBlock Text="{local:Tr Settings.Backup.Title}" Style="{StaticResource RowTitleStyle}"/>
-                        <TextBlock Text="{local:Tr Settings.Backup.Note}" Style="{StaticResource RowNoteStyle}"/>
-                    </StackPanel>
-                    <Button Content="{local:Tr Settings.Backup.Button}" Style="{StaticResource RowButtonStyle}" Click="BackupButton_Click"/>
-                </Grid>
-                <Border Style="{StaticResource RowDividerStyle}"/>
-                <Grid Style="{StaticResource RowStyle}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel>
-                        <TextBlock Text="{local:Tr Settings.Restore.Title}" Style="{StaticResource RowTitleStyle}"/>
-                        <TextBlock Text="{local:Tr Settings.Restore.Note}" Style="{StaticResource RowNoteStyle}"/>
-                    </StackPanel>
-                    <Button Content="{local:Tr Settings.Restore.Button}" Style="{StaticResource RowButtonStyle}" Click="RestoreButton_Click"/>
-                </Grid>
-                <Border Style="{StaticResource RowDividerStyle}"/>
-                <Grid Style="{StaticResource RowStyle}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel>
-                        <TextBlock Text="{local:Tr Settings.Import.Title}" Style="{StaticResource RowTitleStyle}"/>
-                        <TextBlock Text="{local:Tr Settings.Import.Note}" Style="{StaticResource RowNoteStyle}"/>
-                    </StackPanel>
-                    <Button x:Name="ImportButton" Content="{local:Tr Settings.Import.Button}" Style="{StaticResource RowButtonStyle}" Click="ImportButton_Click"/>
-                </Grid>
-            </StackPanel>
-        </Border>
-
-        <TextBlock Text="{local:Tr Settings.Section.Data}" Style="{StaticResource SectionLabelStyle}"/>
-        <Border Style="{StaticResource CardStyle}">
-            <StackPanel>
-                <Grid Style="{StaticResource RowStyle}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel>
-                        <TextBlock Text="{local:Tr Settings.ExportAll.Title}" Style="{StaticResource RowTitleStyle}"/>
-                        <TextBlock Text="{local:Tr Settings.ExportAll.Note}" Style="{StaticResource RowNoteStyle}"/>
-                    </StackPanel>
-                    <Button Content="{local:Tr Settings.ExportAll.Button}" Style="{StaticResource RowButtonStyle}" Click="ExportAllButton_Click"/>
-                </Grid>
-                <Border Style="{StaticResource RowDividerStyle}"/>
-                <Grid Style="{StaticResource RowStyle}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel>
-                        <TextBlock Text="{local:Tr Settings.DataFolder.Title}" Style="{StaticResource RowTitleStyle}"/>
-                        <!-- The folder itself, cut short if it doesn't fit (the tooltip has all of it) -->
-                        <TextBlock x:Name="DataFolderText" Style="{StaticResource RowNoteStyle}"
-                                   TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
-                    </StackPanel>
-                    <Button Content="{local:Tr Settings.DataFolder.Button}" Style="{StaticResource RowButtonStyle}" Click="OpenDataFolderButton_Click"/>
-                </Grid>
-            </StackPanel>
-        </Border>
-
-        <TextBlock Text="{local:Tr Settings.Section.Updates}" Style="{StaticResource SectionLabelStyle}"/>
-        <Border Style="{StaticResource CardStyle}">
-            <StackPanel>
-                <Grid Style="{StaticResource RowStyle}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel>
-                        <TextBlock Text="{local:Tr Settings.Updates.Auto.Title}" Style="{StaticResource RowTitleStyle}"/>
-                        <TextBlock Text="{local:Tr Settings.Updates.Auto.Note}" Style="{StaticResource RowNoteStyle}"/>
-                    </StackPanel>
-                    <CheckBox x:Name="AutoUpdateSwitch" Style="{StaticResource SwitchStyle}"
-                              AutomationProperties.Name="{local:Tr Settings.Updates.Auto.Title}"
-                              Click="AutoUpdateSwitch_Click"/>
-                </Grid>
-                <Border Style="{StaticResource RowDividerStyle}"/>
-                <Grid Style="{StaticResource RowStyle}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel>
-                        <TextBlock x:Name="UpdateVersionText" Style="{StaticResource RowTitleStyle}"/>
-                        <!-- When it was last checked, or what "Check now" found -->
-                        <TextBlock x:Name="UpdateNote" Style="{StaticResource RowNoteStyle}"/>
-                    </StackPanel>
-                    <Button x:Name="CheckUpdatesButton" Content="{local:Tr Settings.Updates.Check}" Style="{StaticResource RowButtonStyle}"
-                            Click="CheckUpdatesButton_Click"/>
-                </Grid>
-            </StackPanel>
-        </Border>
-
-        <!-- About: one quiet line. The link uses the darker accent, which reads at 5.7:1 on this background. -->
-        <Grid Margin="2,18,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock x:Name="VersionText" FontSize="12" Foreground="{StaticResource TextSub}" VerticalAlignment="Center"/>
-            <Button Grid.Column="1" Content="{local:Tr Settings.Licenses}" Style="{StaticResource LinkButtonStyle}"
-                    Foreground="{StaticResource BtnHover}" Click="LicensesLink_Click"/>
-        </Grid>
-    </StackPanel>
-    </ScrollViewer>
+        </ScrollViewer>
+    </Grid>
 </Window>
