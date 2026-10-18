@@ -26,7 +26,7 @@ attached files are all kept in one folder:
   %LOCALAPPDATA%\TidyMind
   (usually C:\Users\<your name>\AppData\Local\TidyMind)
 
-Settings > Open data folder shows it.
+Settings > Backup & transfer > Open data folder shows it.
 
 Reminders
 Each reminder adds a task to Windows Task Scheduler named
@@ -35,9 +35,12 @@ When it's due, Windows shows its title and message as a notification and
 keeps it in the notification center until you clear it.
 Uninstalling TidyMind removes these tasks.
 
-Backing up
-Settings > Back up all data saves everything into one ZIP file, wherever you
-choose. Settings > Restore from backup puts it back.
+Backing up and moving data
+Settings > Backup & transfer > Back up all data saves everything into one ZIP
+file, wherever you choose. Restore from backup, on the same page, puts it back.
+"Export for transfer..." (right-click a project, a collection or an item) saves
+just that one into a .tidymind file, wherever you choose, to import on another
+PC. TidyMind never sends these files anywhere.
 
 Deleting your data
 When you uninstall TidyMind, it asks whether to delete this folder too. The
