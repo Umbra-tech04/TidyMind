@@ -173,6 +173,15 @@ Sada će se zatvoriti, otvori ga ponovo.</value>
   <data name="Bulk.Delete.Memories.Other" xml:space="preserve">
     <value>Obrisati {0} memorija?</value>
   </data>
+  <data name="Bulk.Delete.Pages.Few" xml:space="preserve">
+    <value>Obrisati {0} stranice?</value>
+  </data>
+  <data name="Bulk.Delete.Pages.One" xml:space="preserve">
+    <value>Obrisati {0} stranicu?</value>
+  </data>
+  <data name="Bulk.Delete.Pages.Other" xml:space="preserve">
+    <value>Obrisati {0} stranica?</value>
+  </data>
   <data name="Bulk.Delete.Projects.Few" xml:space="preserve">
     <value>Obrisati {0} projekta?</value>
   </data>
@@ -1733,6 +1742,9 @@ Tvoja poslednja izmena nije sačuvana.</value>
   </data>
   <data name="ProjectWindow.ClearPageConfirm" xml:space="preserve">
     <value>Očistiti ovu stranicu i sve što je na njoj napisano?</value>
+  </data>
+  <data name="ProjectWindow.DeleteAllPagesNote" xml:space="preserve">
+    <value>Beležnica uvek zadržava jednu stranicu: stranica 1 ostaje, prazna.</value>
   </data>
   <data name="ProjectWindow.DeletePage" xml:space="preserve">
     <value>Obriši stranicu</value>

@@ -164,6 +164,12 @@ It will close now; please open it again.</value>
   <data name="Bulk.Delete.Memories.Other" xml:space="preserve">
     <value>Delete {0} memories?</value>
   </data>
+  <data name="Bulk.Delete.Pages.One" xml:space="preserve">
+    <value>Delete {0} page?</value>
+  </data>
+  <data name="Bulk.Delete.Pages.Other" xml:space="preserve">
+    <value>Delete {0} pages?</value>
+  </data>
   <data name="Bulk.Delete.Projects.One" xml:space="preserve">
     <value>Delete {0} project?</value>
   </data>
@@ -1655,6 +1661,9 @@ Your last change wasn't saved.</value>
   </data>
   <data name="ProjectWindow.ClearPageConfirm" xml:space="preserve">
     <value>Clear this page and everything written on it?</value>
+  </data>
+  <data name="ProjectWindow.DeleteAllPagesNote" xml:space="preserve">
+    <value>A notebook always keeps one page: page 1 stays, emptied.</value>
   </data>
   <data name="ProjectWindow.DeletePage" xml:space="preserve">
     <value>Delete page</value>

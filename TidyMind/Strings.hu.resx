@@ -155,6 +155,9 @@ Most bezárul, nyisd meg újra.</value>
   <data name="Bulk.Delete.Memories.Other" xml:space="preserve">
     <value>Törölsz {0} memóriát?</value>
   </data>
+  <data name="Bulk.Delete.Pages.Other" xml:space="preserve">
+    <value>Törölsz {0} oldalt?</value>
+  </data>
   <data name="Bulk.Delete.Projects.Other" xml:space="preserve">
     <value>Törölsz {0} projektet?</value>
   </data>
@@ -1577,6 +1580,9 @@ Az utolsó módosításod nem lett mentve.</value>
   </data>
   <data name="ProjectWindow.ClearPageConfirm" xml:space="preserve">
     <value>Kiüríted ezt az oldalt mindazzal együtt, ami rá van írva?</value>
+  </data>
+  <data name="ProjectWindow.DeleteAllPagesNote" xml:space="preserve">
+    <value>A jegyzetfüzetben mindig marad egy oldal: az 1. oldal megmarad, üresen.</value>
   </data>
   <data name="ProjectWindow.DeletePage" xml:space="preserve">
     <value>Oldal törlése</value>

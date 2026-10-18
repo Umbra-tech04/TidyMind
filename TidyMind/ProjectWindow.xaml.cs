@@ -24,6 +24,7 @@ namespace TidyMind
         private string shownBody = "";                            // the current page as the editor showed it on opening
         private List<NotePage> loadedPages = new List<NotePage>(); // to tell on close whether anything really changed
         private List<string> loadedBodies = new List<string>();
+        private ItemSelection<NotePage> pageSelection;
 
         public ProjectWindow(Project project)
         {
@@ -361,6 +362,18 @@ namespace TidyMind
             };
             PreviewKeyDown += FlipPageKeys;
 
+            // Several pages in the ☰ list, as in the other lists; the keys work while the keyboard is in the list, so
+            // Delete and Ctrl+A in the editor stay the editor's.
+            pageSelection = new ItemSelection<NotePage>(PageListPanel, DeletePages, PaintPageRow);
+            pageSelection.ClearOnBlankClick(PageListPanel);
+            pageSelection.SelectionChanged += () =>
+            {
+                PageSelectionBar.Show(pageSelection.Count);
+                PageSelectionBar.Visibility = pageSelection.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            };
+            PageSelectionBar.DeleteClicked += () => pageSelection.DeleteSelected();
+            PageSelectionBar.CancelClicked += pageSelection.ClearSelection;
+
             lastPageViewed.TryGetValue(currentProject.Id, out int last);
             ShowPage(Math.Clamp(last, 0, pages.Count - 1), 0);
         }
@@ -485,44 +498,86 @@ namespace TidyMind
             e.Handled = true;
         }
 
-        // There's always at least one page; only a page with writing on it asks first. Then the next page shows
-        // (the previous one if this was the last). The only page is cleared instead, which is stored like any edit
-        // (OnClosing), and the cursor stays in it.
-        private void DeletePage_Click(object sender, RoutedEventArgs e)
+        private void DeletePage_Click(object sender, RoutedEventArgs e) => DeletePages(new[] { pages[currentPage] });
+
+        // One page (the 🗑 button, or one selected in the list): only a page with writing on it asks first. Several:
+        // one question for all of them. Then the page after the current one shows if the current one went (the one
+        // before if it was the last). There's always at least one page: the only page is cleared instead, which is
+        // stored like any edit (OnClosing), and the cursor stays in it; when every page goes, page 1 stays, emptied.
+        private bool DeletePages(IReadOnlyList<NotePage> doomed)
         {
-            if (pages.Count <= 1)
+            KeepCurrentPage();
+            List<int> indexes = doomed.Select(p => pages.IndexOf(p)).Where(i => i >= 0).OrderBy(i => i).ToList();
+            if (indexes.Count == 0)
+                return false;
+            bool all = indexes.Count == pages.Count;
+
+            if (pages.Count == 1)
             {
                 if (CurrentPageIsBlank() || Msg.Show(this, Loc.T("ProjectWindow.ClearPageConfirm"), Loc.T("ProjectWindow.ClearPageCaption"),
                         MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
-                    return;
+                    return false;
 
+                PageListPopup.IsOpen = false;
                 NotesBox.Document.Blocks.Clear();
                 NotesBox.Focus();
-                return;
+                return true;
             }
 
-            if (!CurrentPageIsBlank() && Msg.Show(this, Loc.F("ProjectWindow.DeletePageConfirm", currentPage + 1), Loc.T("Common.ConfirmDelete"),
-                    MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
-                return;
+            if (indexes.Count == 1)
+            {
+                if (!PageIsBlank(indexes[0]) && Msg.Show(this, Loc.F("ProjectWindow.DeletePageConfirm", indexes[0] + 1), Loc.T("Common.ConfirmDelete"),
+                        MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                    return false;
+            }
+            else if (!BulkDelete.Confirm(this, "Bulk.Delete.Pages", indexes.Select(PageTitle).ToList(),
+                         all ? Loc.T("ProjectWindow.DeleteAllPagesNote") : null))
+                return false;
 
-            pages.RemoveAt(currentPage);
-            pageBodies.RemoveAt(currentPage);
-            ShowPage(Math.Min(currentPage, pages.Count - 1), 0);
+            // Where the current page is now, or the page that followed it.
+            int showNext = Enumerable.Range(0, currentPage).Count(i => !indexes.Contains(i));
+            if (all)
+            {
+                indexes.RemoveAt(0);
+                pageBodies[0] = "";
+            }
+            for (int k = indexes.Count - 1; k >= 0; k--)
+            {
+                pages.RemoveAt(indexes[k]);
+                pageBodies.RemoveAt(indexes[k]);
+            }
+            ShowPage(Math.Min(showNext, pages.Count - 1), 0);
+
+            pageSelection.ClearSelection();
+            if (PageListPopup.IsOpen)
+                ShowPageList();
+            return true;
+        }
+
+        private bool PageIsBlank(int index) => RichTextHelper.ToPlainText(pageBodies[index]).Trim().Length == 0;
+
+        // "N. <its first line>", in the list and in the question before several are deleted.
+        private string PageTitle(int index)
+        {
+            string firstLine = RichTextHelper.ToPlainText(pageBodies[index]).Split('\n')
+                .Select(line => line.Trim()).FirstOrDefault(line => line.Length > 0) ?? Loc.T("ProjectWindow.EmptyPage");
+            return (index + 1) + ". " + firstLine;
         }
 
         // When the list last closed because of a press on ☰ itself (Environment.TickCount64; see PageList_Click).
         private long pageListClosedByButtonAt;
 
-        // The list closes on any press outside it, ☰ included; that same press then arrives at ☰ as a click.
+        // The list closes on any press outside it, ☰ included; that same press then arrives at ☰ as a click. A
+        // selection doesn't outlive the list.
         private void PageListPopup_Closed(object sender, EventArgs e)
         {
             Point at = Mouse.GetPosition(PageListButton);
             if (new Rect(PageListButton.RenderSize).Contains(at))
                 pageListClosedByButtonAt = Environment.TickCount64;
+            pageSelection.ClearSelection();
         }
 
-        // One row per page, "N. <its first line>"; a click jumps there. ☰ toggles: the click that just closed the
-        // list doesn't open it again.
+        // ☰ toggles: the click that just closed the list doesn't open it again.
         private void PageList_Click(object sender, RoutedEventArgs e)
         {
             if (Environment.TickCount64 - pageListClosedByButtonAt < 500)
@@ -532,18 +587,25 @@ namespace TidyMind
             }
 
             KeepCurrentPage();
+            ShowPageList();
+            PageListPopup.IsOpen = true;
+        }
+
+        // One row per page; a click jumps there, Ctrl or Shift+click selects (taken before the click).
+        private void ShowPageList()
+        {
+            pageSelection.BeginRender();
             PageListRows.Children.Clear();
             for (int i = 0; i < pages.Count; i++)
             {
                 int page = i;
-                string firstLine = RichTextHelper.ToPlainText(pageBodies[i]).Split('\n')
-                    .Select(line => line.Trim()).FirstOrDefault(line => line.Length > 0) ?? Loc.T("ProjectWindow.EmptyPage");
                 Button row = new Button
                 {
-                    Content = (i + 1) + ". " + firstLine,
+                    Content = PageTitle(i),
                     Style = (Style)FindResource("PageRowStyle"),
                     FontWeight = i == currentPage ? FontWeights.SemiBold : FontWeights.Normal
                 };
+                pageSelection.Attach(row, pages[i]);
                 row.Click += (s, args) =>
                 {
                     PageListPopup.IsOpen = false;
@@ -551,7 +613,21 @@ namespace TidyMind
                 };
                 PageListRows.Children.Add(row);
             }
-            PageListPopup.IsOpen = true;
+            pageSelection.EndRender();
+        }
+
+        private static void PaintPageRow(FrameworkElement row, bool on)
+        {
+            if (on)
+            {
+                row.SetValue(Control.BackgroundProperty, SelectionLook.RowFill);
+                row.SetValue(Control.BorderBrushProperty, SelectionLook.RowEdge);
+            }
+            else
+            {
+                row.ClearValue(Control.BackgroundProperty);
+                row.ClearValue(Control.BorderBrushProperty);
+            }
         }
 
         // "Start writing..." only on a blank page: one empty line, not just a page of blank lines.

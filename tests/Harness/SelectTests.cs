@@ -41,6 +41,7 @@ static partial class Program
             await ProjectBatches(main);
             await CollectionBatches(main);
             await TaskAndFileBatches(main);
+            await NotebookPageBatches(main);
             await DayPlanBatches(main);
             await TodoBatches(main);
             await ReminderBatches(main);
@@ -386,6 +387,127 @@ static partial class Program
         Check(!File.Exists(stored[0]) && !File.Exists(stored[2]) && File.Exists(stored[1]), "their copies deleted after the save, the others kept");
     }
 
+    // ---- Notebook pages ----------------------------------------------------------
+
+    // The ☰ page list in Project Details: the rules, a plain click still turns the page, the editor keeps its own
+    // Delete, several deleted with the open page among them, the bar, the 🗑 button (the same delete), every page.
+    static async Task NotebookPageBatches(MainWindow main)
+    {
+        Console.WriteLine("Notebook pages (the page list)");
+        Project project = new Project
+        {
+            Id = Guid.NewGuid(), Name = "Diary", Tasks = new List<TaskItem>(),
+            NotePages = Enumerable.Range(1, 8).Select(i => new NotePage { Body = "Page text " + i }).ToList()
+        };
+        List<NotePage> original = project.NotePages.ToList();
+        ProjectWindow.OpenAtPage(project.Id, 2);
+        ProjectWindow window = await OpenProject(main, project);
+        await Foreground(window);
+        ItemSelection<NotePage> selection = Field<ItemSelection<NotePage>>(window, "pageSelection");
+        List<NotePage> Pages() => Field<List<NotePage>>(window, "pages");
+        System.Windows.Controls.Primitives.Popup popup = (System.Windows.Controls.Primitives.Popup)window.FindName("PageListPopup");
+        StackPanel rows = (StackPanel)window.FindName("PageListRows");
+        SelectionBar bar = (SelectionBar)window.FindName("PageSelectionBar");
+        RichTextBox editor = (RichTextBox)window.FindName("NotesBox");
+        TextBlock indicator = (TextBlock)window.FindName("PageIndicator");
+        Button Row(int i) => (Button)rows.Children[i];
+        string Shown() => new System.Windows.Documents.TextRange(editor.Document.ContentStart, editor.Document.ContentEnd).Text.Trim();
+        async Task OpenList()
+        {
+            if (!popup.IsOpen)
+                ((Button)window.FindName("PageListButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await Wait(250);
+        }
+
+        await OpenList();
+        Check(popup.IsOpen && rows.Children.Count == 8 && indicator.Text == "3 / 8", "the list shows 8 pages, page 3 open");
+        await Held(0x11, () => Press(Row(1)));
+        await Held(0x11, () => Press(Row(3)));
+        Check(selection.Selected.SequenceEqual(new[] { original[1], original[3] }) && popup.IsOpen && indicator.Text == "3 / 8",
+            "Ctrl+press on two pages selects them, turns to neither, the list stays open");
+        Check(bar.IsVisible && Keyboard.FocusedElement == Row(3), "the bar shows, the keyboard is in the list");
+        await Held(0x10, () => Press(Row(5)));
+        Check(selection.Selected.SequenceEqual(original.Skip(3).Take(3)), "Shift+press: pages 4-6, from the last Ctrl+pressed");
+        Check(Row(4).Background == SelectionLook.RowFill && Row(0).Background != SelectionLook.RowFill, "selected rows have the selected fill");
+        RenderPopup((FrameworkElement)window.FindName("PageListPanel"), "select-05-pages");
+
+        int boxes = selectBoxes.Count;
+        PressKey(editor, Key.Delete);
+        await Wait(200);
+        Check(Pages().Count == 8 && selectBoxes.Count == boxes, "Delete in the editor stays the editor's: no page deleted, nothing asked");
+        PressKey(Row(3), Key.Escape);
+        Check(selection.Count == 0 && popup.IsOpen && window.IsVisible, "Esc clears the selection; the list and the window stay open");
+        await Held(0x11, () => PressKey(Row(0), Key.A));
+        Check(selection.Count == 8, "Ctrl+A selects every page");
+        PressKey(Row(0), Key.Escape);
+        MouseButton(Row(6), down: true);
+        Check(selection.Count == 0, "a plain press selects nothing");
+        MouseButton(Row(6), down: false);
+        if (popup.IsOpen)
+            Row(6).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        await Wait(250);
+        Check(!popup.IsOpen && indicator.Text == "7 / 8" && Shown() == "Page text 7", "a plain click still turns to that page");
+
+        // Pages 6-8 with the open page 7 among them: one question, then the page before (the last one left) shows.
+        await OpenList();
+        await Held(0x11, () => Press(Row(5)));
+        await Held(0x10, () => Press(Row(7)));
+        boxes = selectBoxes.Count;
+        PressKey(Row(7), Key.Delete);
+        await Wait(400);
+        string box = selectBoxes.Skip(boxes).FirstOrDefault() ?? "";
+        Check(selectBoxes.Count == boxes + 1 && box.Contains(Loc.Plural("Bulk.Delete.Pages", 3)) && box.Contains("6. Page text 6")
+            && box.Contains("8. Page text 8") && !box.Contains(Loc.T("ProjectWindow.DeleteAllPagesNote")), "one question for the three: " + box);
+        Check(Pages().SequenceEqual(original.Take(5)) && indicator.Text == "5 / 5" && Shown() == "Page text 5",
+            "pages 6-8 gone; the open page went, so page 5 shows");
+        Check(selection.Count == 0 && !bar.IsVisible, "the selection is gone with them");
+
+        // The bar: Cancel in the question keeps everything; then pages 1 and 3 go, the open page stays open.
+        await OpenList();
+        await Held(0x11, () => Press(Row(0)));
+        await Held(0x11, () => Press(Row(2)));
+        answerCancel = true;
+        boxes = selectBoxes.Count;
+        Invoke(bar, "Delete_Click", null, null);
+        answerCancel = false;
+        await Wait(300);
+        Check(selectBoxes.Count == boxes + 1 && Pages().Count == 5, "Cancel in the question deletes nothing");
+        await OpenList();
+        if (selection.Count != 2)
+        {
+            await Held(0x11, () => Press(Row(0)));
+            await Held(0x11, () => Press(Row(2)));
+        }
+        Invoke(bar, "Delete_Click", null, null);
+        await Wait(400);
+        Check(Pages().SequenceEqual(new[] { original[1], original[3], original[4] }) && indicator.Text == "3 / 3" && Shown() == "Page text 5",
+            "the bar's Delete: pages 1 and 3 gone, the open page stays open");
+
+        // 🗑 on the open page: the same delete, its own question.
+        popup.IsOpen = false;
+        boxes = selectBoxes.Count;
+        Invoke(window, "DeletePage_Click", null, null);
+        await Wait(300);
+        box = selectBoxes.Skip(boxes).FirstOrDefault() ?? "";
+        Check(box.Contains(Loc.F("ProjectWindow.DeletePageConfirm", 3)) && Pages().Count == 2 && indicator.Text == "2 / 2" && Shown() == "Page text 4",
+            "🗑 deletes the open page as before: " + box);
+
+        // Every page: page 1 stays, emptied (a notebook keeps one page).
+        await OpenList();
+        await Held(0x11, () => PressKey(Row(0), Key.A));
+        boxes = selectBoxes.Count;
+        PressKey(Row(1), Key.Delete);
+        await Wait(400);
+        box = selectBoxes.Skip(boxes).FirstOrDefault() ?? "";
+        Check(box.Contains(Loc.Plural("Bulk.Delete.Pages", 2)) && box.Contains(Loc.T("ProjectWindow.DeleteAllPagesNote")), "all selected: the question says one page stays: " + box);
+        Check(Pages().Count == 1 && Pages()[0] == original[1] && indicator.Text == "1 / 1" && Shown().Length == 0,
+            "all pages deleted: one empty page left, shown");
+        window.Close();
+        await Wait(300);
+        Check(project.NotePages.Count == 1 && RichTextHelper.ToPlainText(project.NotePages[0].Body).Trim().Length == 0,
+            "saved: the notebook has one empty page");
+    }
+
     // ---- Day Plan -----------------------------------------------------------------
 
     static async Task DayPlanBatches(MainWindow main)
@@ -577,6 +699,14 @@ static partial class Program
             {
                 string text = Loc.Plural("Bulk.Delete.Tasks", counts[i]);
                 Check(text == expected[i], tag + ": " + counts[i] + " → " + text);
+            }
+            string[] pagesExpected = code == Loc.English ? new[] { "Delete 1 page?", "Delete 2 pages?", "Delete 5 pages?", "Delete 21 pages?" }
+                : code == Loc.Hungarian ? new[] { "Törölsz 1 oldalt?", "Törölsz 2 oldalt?", "Törölsz 5 oldalt?", "Törölsz 21 oldalt?" }
+                : new[] { "Obrisati 1 stranicu?", "Obrisati 2 stranice?", "Obrisati 5 stranica?", "Obrisati 21 stranicu?" };
+            for (int i = 0; i < counts.Length; i++)
+            {
+                string text = Loc.Plural("Bulk.Delete.Pages", counts[i]);
+                Check(text == pagesExpected[i], tag + ": " + counts[i] + " → " + text);
             }
             ItemSelection<Profile> selection = Field<ItemSelection<Profile>>(main, "memorySelection");
             selection.Click(memories[0], ModifierKeys.Control);

@@ -85,25 +85,29 @@
             </DrawingBrush.Drawing>
         </DrawingBrush>
 
-        <!-- A row in the ☰ page list: "N. first line", tinted on hover -->
+        <!-- A row in the ☰ page list: "N. first line", tinted on hover. A selected row's fill and edge are set on the
+             row itself (PaintPageRow), so they win over the hover tint. -->
         <Style x:Key="PageRowStyle" TargetType="Button">
             <Setter Property="Foreground" Value="{StaticResource TextMain}"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="row" Background="Transparent" CornerRadius="6" Padding="10,6">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="1" CornerRadius="6" Padding="9,5">
                             <TextBlock Text="{TemplateBinding Content}" TextTrimming="CharacterEllipsis"/>
                         </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="row" Property="Background" Value="{StaticResource BgSubtle}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource BgSubtle}"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
     </Window.Resources>
@@ -310,14 +314,18 @@
                     </Button>
                     <Popup x:Name="PageListPopup" PlacementTarget="{Binding ElementName=PageListButton}"
                            Placement="Bottom" StaysOpen="False" AllowsTransparency="True" Closed="PageListPopup_Closed">
-                        <Border Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
+                        <!-- Ctrl/Shift+click and Ctrl+A select several pages (pageSelection); Delete or the bar deletes them -->
+                        <Border x:Name="PageListPanel" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
                                 BorderThickness="1" CornerRadius="8" Padding="4" Margin="0,4,6,6">
                             <Border.Effect>
                                 <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.12"/>
                             </Border.Effect>
-                            <ScrollViewer MaxHeight="320" VerticalScrollBarVisibility="Auto">
-                                <StackPanel x:Name="PageListRows" Width="280"/>
-                            </ScrollViewer>
+                            <StackPanel>
+                                <ScrollViewer MaxHeight="320" VerticalScrollBarVisibility="Auto">
+                                    <StackPanel x:Name="PageListRows" Width="280"/>
+                                </ScrollViewer>
+                                <local:SelectionBar x:Name="PageSelectionBar" Visibility="Collapsed" HorizontalAlignment="Right" Margin="6,6,2,2"/>
+                            </StackPanel>
                         </Border>
                     </Popup>
                 </Grid>
