@@ -1884,7 +1884,7 @@ The file was left as it is. Fix it or restore it from a backup to see and add re
     <value>{0}%</value>
   </data>
   <data name="Settings.CardTint.Note" xml:space="preserve">
-    <value>On a background picture, the header and the empty-tab card become frosted glass, darker where the picture is light, so their text stays easy to read.</value>
+    <value>On a background picture, the header becomes light frosted glass and the empty-tab card dark glass, each adjusted to the picture so their text stays easy to read.</value>
   </data>
   <data name="Settings.CardTint.Title" xml:space="preserve">
     <value>Adaptive card tint</value>

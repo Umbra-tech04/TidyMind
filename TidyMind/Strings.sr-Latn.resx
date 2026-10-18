@@ -1965,7 +1965,7 @@ Datoteka je ostala kakva je bila. Popravi je ili je vrati iz rezervne kopije, pa
     <value>{0}%</value>
   </data>
   <data name="Settings.CardTint.Note" xml:space="preserve">
-    <value>Na pozadinskoj slici zaglavlje i kartica praznog odeljka postaju mat staklo, tamnije tamo gde je slika svetla, pa njihov tekst ostaje lako čitljiv.</value>
+    <value>Na pozadinskoj slici zaglavlje postaje svetlo, a kartica praznog odeljka tamno mat staklo, prilagođeno slici, pa njihov tekst ostaje lako čitljiv.</value>
   </data>
   <data name="Settings.CardTint.Title" xml:space="preserve">
     <value>Prilagodljiva nijansa kartica</value>

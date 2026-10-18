@@ -7,6 +7,9 @@ using System.Windows.Media.Imaging;
 
 namespace TidyMind
 {
+    // Part of a background picture, channel by channel: its brightest and darkest spots and its average.
+    public readonly record struct PictureArea(Color Brightest, Color Darkest, Color Mean);
+
     // A memory page's background picture, measured once: a small blurred copy (the frosted glass under a tinted
     // surface, CardTint) and, on a 16 × 9 grid over it, the colors in each part. Made off the UI thread the first time
     // a picture is shown and kept with that decoded picture (a new picture is a new decode, so a new sample), so a
@@ -24,13 +27,15 @@ namespace TidyMind
         internal static Func<BitmapSource, Color, BackgroundSample> Measurer = Measure;
 
         private readonly Color[] brightest; // per cell, channel by channel, a one-pixel ring around the cell included
+        private readonly Color[] darkest;
         private readonly Color[] mean;
 
-        private BackgroundSample(BitmapSource frosted, double aspect, Color[] brightest, Color[] mean)
+        private BackgroundSample(BitmapSource frosted, double aspect, Color[] brightest, Color[] darkest, Color[] mean)
         {
             Frosted = frosted;
             Aspect = aspect;
             this.brightest = brightest;
+            this.darkest = darkest;
             this.mean = mean;
         }
 
@@ -110,14 +115,14 @@ namespace TidyMind
             BitmapSource copy = BitmapSource.Create(fw, fh, 96, 96, PixelFormats.Bgra32, null, frosted, fw * 4);
             copy.Freeze();
 
-            Color[] brightest = new Color[Columns * Rows], mean = new Color[Columns * Rows];
+            Color[] brightest = new Color[Columns * Rows], darkest = new Color[Columns * Rows], mean = new Color[Columns * Rows];
             for (int cy = 0; cy < Rows; cy++)
             {
                 int y0 = cy * fh / Rows, y1 = Math.Max(y0, (int)Math.Ceiling((cy + 1) * fh / (double)Rows) - 1);
                 for (int cx = 0; cx < Columns; cx++)
                 {
                     int x0 = cx * fw / Columns, x1 = Math.Max(x0, (int)Math.Ceiling((cx + 1) * fw / (double)Columns) - 1);
-                    byte maxR = 0, maxG = 0, maxB = 0;
+                    byte maxR = 0, maxG = 0, maxB = 0, minR = 255, minG = 255, minB = 255;
                     double sumR = 0, sumG = 0, sumB = 0;
                     int n = 0;
                     // The ring: a stretched copy blends each pixel with its neighbours, so they count as "under" too.
@@ -127,6 +132,7 @@ namespace TidyMind
                         {
                             Color c = samples[y * fw + x];
                             maxR = Math.Max(maxR, c.R); maxG = Math.Max(maxG, c.G); maxB = Math.Max(maxB, c.B);
+                            minR = Math.Min(minR, c.R); minG = Math.Min(minG, c.G); minB = Math.Min(minB, c.B);
                             if (y < y0 || y > y1 || x < x0 || x > x1)
                                 continue;
                             sumR += c.R; sumG += c.G; sumB += c.B;
@@ -134,10 +140,11 @@ namespace TidyMind
                         }
                     }
                     brightest[cy * Columns + cx] = Color.FromRgb(maxR, maxG, maxB);
+                    darkest[cy * Columns + cx] = Color.FromRgb(minR, minG, minB);
                     mean[cy * Columns + cx] = Color.FromRgb(ToByte(sumR / n), ToByte(sumG / n), ToByte(sumB / n));
                 }
             }
-            return new BackgroundSample(copy, (double)width / height, brightest, mean);
+            return new BackgroundSample(copy, (double)width / height, brightest, darkest, mean);
         }
 
         // Where the picture lies in a layer of this size: UniformToFill, centred, as PageBackground draws it.
@@ -148,27 +155,29 @@ namespace TidyMind
             return new Rect((layer.Width - w) / 2, (layer.Height - h) / 2, w, h);
         }
 
-        // The picture under `area` (in the layer's coordinates): its brightest color, channel by channel, and the
-        // average of the covered cells.
-        public (Color Brightest, Color Mean) Under(Rect area, Size layer)
+        // The picture under `area` (in the layer's coordinates): its brightest and darkest colors, channel by channel,
+        // and the average of the covered cells.
+        public PictureArea Under(Rect area, Size layer)
         {
             Rect shown = Shown(layer);
             int c0 = Cell((area.Left - shown.X) / shown.Width, Columns, false), c1 = Cell((area.Right - shown.X) / shown.Width, Columns, true);
             int r0 = Cell((area.Top - shown.Y) / shown.Height, Rows, false), r1 = Cell((area.Bottom - shown.Y) / shown.Height, Rows, true);
-            byte maxR = 0, maxG = 0, maxB = 0;
+            byte maxR = 0, maxG = 0, maxB = 0, minR = 255, minG = 255, minB = 255;
             double sumR = 0, sumG = 0, sumB = 0;
             int n = 0;
             for (int cy = r0; cy <= Math.Max(r0, r1); cy++)
             {
                 for (int cx = c0; cx <= Math.Max(c0, c1); cx++)
                 {
-                    Color top = brightest[cy * Columns + cx], avg = mean[cy * Columns + cx];
+                    Color top = brightest[cy * Columns + cx], bottom = darkest[cy * Columns + cx], avg = mean[cy * Columns + cx];
                     maxR = Math.Max(maxR, top.R); maxG = Math.Max(maxG, top.G); maxB = Math.Max(maxB, top.B);
+                    minR = Math.Min(minR, bottom.R); minG = Math.Min(minG, bottom.G); minB = Math.Min(minB, bottom.B);
                     sumR += avg.R; sumG += avg.G; sumB += avg.B;
                     n++;
                 }
             }
-            return (Color.FromRgb(maxR, maxG, maxB), Color.FromRgb(ToByte(sumR / n), ToByte(sumG / n), ToByte(sumB / n)));
+            return new PictureArea(Color.FromRgb(maxR, maxG, maxB), Color.FromRgb(minR, minG, minB),
+                Color.FromRgb(ToByte(sumR / n), ToByte(sumG / n), ToByte(sumB / n)));
         }
 
         // A cell index from a position across the picture (0..1); an end edge belongs to the cell before it.

@@ -1803,7 +1803,7 @@ A fájl változatlan maradt. Javítsd ki, vagy állítsd vissza egy mentésből,
     <value>{0}%</value>
   </data>
   <data name="Settings.CardTint.Note" xml:space="preserve">
-    <value>Háttérképen a fejléc és az üres fül kártyája matt üveggé válik, amely ott sötétebb, ahol a kép világos, így a szövegük jól olvasható marad.</value>
+    <value>Háttérképen a fejléc világos, az üres fül kártyája sötét matt üveggé válik, a képhez igazítva, így a szövegük jól olvasható marad.</value>
   </data>
   <data name="Settings.CardTint.Title" xml:space="preserve">
     <value>Alkalmazkodó kártyaárnyalat</value>

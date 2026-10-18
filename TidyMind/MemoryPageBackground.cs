@@ -12,6 +12,17 @@ namespace TidyMind
     // The background is saved on the memory (profiles.json), so it's the same on every tab of that memory.
     public static class MemoryPageBackground
     {
+        // The header plate's shadow while it's light glass: fainter than its plain one and the cards', so the plate
+        // recedes behind the cards.
+        private static readonly System.Windows.Media.Effects.DropShadowEffect PlateShadow = Frozen(
+            new System.Windows.Media.Effects.DropShadowEffect { BlurRadius = 14, ShadowDepth = 1, Opacity = 0.07, Color = Colors.Black });
+
+        private static T Frozen<T>(T freezable) where T : Freezable
+        {
+            freezable.Freeze();
+            return freezable;
+        }
+
         // page: the view's root grid; layer: a panel spanning it, behind its content.
         // saveProfiles: writes the main window's list of memories (the profile is an item of that list).
         // plate: drawn behind the page's header and tabs while a picture is the background, so their text stays
@@ -22,8 +33,8 @@ namespace TidyMind
             Border emptyCard, params FrameworkElement[] excluded)
         {
             PageTint tint = CardTint.Track(layer);
-            tint.Add(plate, page, CardTint.HeaderColors);
-            tint.Add(emptyCard, emptyCard, CardTint.EmptyCardColors);
+            tint.Add(plate, page, CardTint.HeaderColors, CardTint.PickPlate, PlateShadow);
+            tint.Add(emptyCard, emptyCard, CardTint.EmptyCardColors, CardTint.Pick);
             Show(layer, profile, plate);
 
             MenuItem edit = new MenuItem { Header = Loc.T("Background.Edit") };

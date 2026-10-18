@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 
 namespace TidyMind
@@ -14,35 +15,43 @@ namespace TidyMind
     public readonly record struct TintLook(Color Color, double Opacity);
 
     // Settings > Appearance > Adaptive card tint: on a memory page with a background picture, the surfaces that sit on
-    // the picture (the plate behind the header and tabs, the empty-tab card) become frosted glass: the blurred picture
-    // (BackgroundSample), the same white film as the page (PageBackground), and a dark tint whose strength follows
-    // the picture under that surface: deeper and more opaque where the picture is light, a lighter, fainter slate
-    // where it's dark. The text on them turns light, at 4.5:1 (WCAG AA) or more against the brightest spot under it.
-    // Off, or with no picture, or when the picture can't be measured, the surfaces look exactly as without it.
+    // the picture become frosted glass: the blurred picture (BackgroundSample), the same white film as the page
+    // (PageBackground), and a tint whose strength follows the picture under that surface. The header plate (title,
+    // search, tabs) is light, quiet glass with dark text, never stronger than the white cards below it, which stay the
+    // page's focus: just opaque enough for 4.5:1 (WCAG AA) against the darkest spot under it. The empty-tab card is
+    // dark glass with light text: deeper and more opaque where the picture is light, a lighter, fainter slate where
+    // it's dark, at 4.5:1 against the brightest spot under it. Off, or with no picture, or when the picture can't be
+    // measured, the surfaces look exactly as without it.
     public static class CardTint
     {
-        public const double MinOpacity = 0.4;  // a dark background still gets a visible card
-        public const double MaxOpacity = 0.9;  // the picture always shows through a little
         public const double MinContrast = 4.5;
         private const double RoundingMargin = 0.15; // the drawn glass is blended and scaled in whole bytes
 
+        // The header plate: the cards' white, from barely there over light pictures to at most PlateMaxOpacity over the
+        // darkest (well under the cards' fully opaque white, and under the old plain plate's 88%).
+        public const double PlateMinOpacity = 0.3;
+        public const double PlateMaxOpacity = 0.8;
+        private static readonly Color PlateGlass = Colors.White; // only ever lightens the page, never past a card
+        public static readonly Color PlateText = Color.FromRgb(0x1C, 0x1B, 0x19);    // as plain (App.xaml PlateText)
+        public static readonly Color PlateTextSub = Color.FromRgb(0x4A, 0x4A, 0x47); // darker than plain, for the lighter glass
+
+        // The empty-tab card.
+        public const double MinOpacity = 0.4;  // a dark background still gets a visible card
+        public const double MaxOpacity = 0.9;  // the picture always shows through a little
         private static readonly Color Ink = Color.FromRgb(0x11, 0x15, 0x1C);   // over light pictures
         private static readonly Color Slate = Color.FromRgb(0x34, 0x3B, 0x47); // over dark ones
-
-        // The text on glass (the plain look's dark text colors are App.xaml's Plate* resources).
-        public static readonly Color Text = Color.FromRgb(0xF5, 0xF5, 0xF3);
-        public static readonly Color TextSub = Color.FromRgb(0xC3, 0xC8, 0xD0);
+        public static readonly Color GlassText = Color.FromRgb(0xF5, 0xF5, 0xF3);
+        public static readonly Color GlassTextSub = Color.FromRgb(0xC3, 0xC8, 0xD0);
         private static readonly Color Icon = Color.FromRgb(0x6F, 0xC3, 0xFF);
-        private static readonly Color TabHover = Color.FromArgb(0x33, 0xFF, 0xFF, 0xFF);
 
         // Each surface's resources on glass; the two sets don't share keys, since both live inside the same page.
         public static readonly IReadOnlyDictionary<string, Color> HeaderColors = new Dictionary<string, Color>
         {
-            ["PlateText"] = Text, ["PlateTextSub"] = TextSub, ["PlateTabText"] = TextSub, ["PlateTabHover"] = TabHover
+            ["PlateTextSub"] = PlateTextSub, ["PlateTabText"] = PlateTextSub
         };
         public static readonly IReadOnlyDictionary<string, Color> EmptyCardColors = new Dictionary<string, Color>
         {
-            ["PlateBody"] = Text, ["PlateIcon"] = Icon
+            ["PlateBody"] = GlassText, ["PlateIcon"] = Icon
         };
 
         private static bool? enabled;
@@ -60,30 +69,39 @@ namespace TidyMind
             }
         }
 
-        // The tint for a surface over `brightest` (channel by channel, the brightest of the picture under it) and
-        // `mean` (its average), under the page's white film at `film` opacity: the least opacity, at least MinOpacity,
-        // at which both text colors read at MinContrast. The deep ink if the slate can't get there by MaxOpacity.
-        public static TintLook Pick(Color brightest, Color mean, double film)
+        // The header plate over `area` under the page's white film at `film` opacity: the least opacity, at least
+        // PlateMinOpacity, at which both dark text colors read at MinContrast on the darkest spot. PlateMaxOpacity
+        // gets there over any picture at any slider setting (pure black at 100% needs about 0.77).
+        public static TintLook PickPlate(PictureArea area, double film)
         {
-            Color worst = Over(Colors.White, film, brightest);
-            double light = Math.Clamp((Luminance(Over(Colors.White, film, mean)) - 0.1) / 0.4, 0, 1);
+            Color worst = Over(Colors.White, film, area.Darkest);
+            double opacity = LeastOpacity(PlateGlass, worst, PlateText, PlateTextSub, PlateMinOpacity, PlateMaxOpacity) ?? PlateMaxOpacity;
+            return new TintLook(PlateGlass, opacity);
+        }
+
+        // The empty-tab card over `area`: the least opacity, at least MinOpacity, at which both light text colors read
+        // at MinContrast on the brightest spot. The deep ink if the slate can't get there by MaxOpacity.
+        public static TintLook Pick(PictureArea area, double film)
+        {
+            Color worst = Over(Colors.White, film, area.Brightest);
+            double light = Math.Clamp((Luminance(Over(Colors.White, film, area.Mean)) - 0.1) / 0.4, 0, 1);
             Color tint = Mix(Slate, Ink, light);
-            double? opacity = LeastOpacity(tint, worst);
+            double? opacity = LeastOpacity(tint, worst, GlassText, GlassTextSub, MinOpacity, MaxOpacity);
             if (opacity == null)
             {
                 tint = Ink;
-                opacity = LeastOpacity(Ink, worst) ?? MaxOpacity;
+                opacity = LeastOpacity(Ink, worst, GlassText, GlassTextSub, MinOpacity, MaxOpacity) ?? MaxOpacity;
             }
             return new TintLook(tint, opacity.Value);
         }
 
-        private static double? LeastOpacity(Color tint, Color under)
+        private static double? LeastOpacity(Color tint, Color under, Color text, Color sub, double min, double max)
         {
             for (int step = 0; step <= 50; step++)
             {
-                double opacity = MinOpacity + (MaxOpacity - MinOpacity) * step / 50;
+                double opacity = min + (max - min) * step / 50;
                 Color surface = Over(tint, opacity, under);
-                if (Contrast(Text, surface) >= MinContrast + RoundingMargin && Contrast(TextSub, surface) >= MinContrast + RoundingMargin)
+                if (Contrast(text, surface) >= MinContrast + RoundingMargin && Contrast(sub, surface) >= MinContrast + RoundingMargin)
                     return opacity;
             }
             return null;
@@ -170,7 +188,10 @@ namespace TidyMind
             public Border Border;
             public FrameworkElement Scope; // whose resources carry the text colors
             public IReadOnlyDictionary<string, Color> Colors;
-            public object PlainBackground; // the local value, or UnsetValue for a style's
+            public Func<PictureArea, double, TintLook> Pick;
+            public Effect GlassEffect;     // null: the border keeps its own
+            public object PlainBackground; // the local values, or UnsetValue for a style's
+            public object PlainEffect;
             public bool Glass;
         }
 
@@ -180,10 +201,16 @@ namespace TidyMind
             layer.SizeChanged += (s, e) => Refresh();
         }
 
-        // `scope` gets the surface's text colors on glass (its own Resources); `colors` are CardTint's set for it.
-        public void Add(Border border, FrameworkElement scope, IReadOnlyDictionary<string, Color> colors)
+        // `scope` gets the surface's text colors on glass (its own Resources); `colors` are CardTint's set for it, `pick`
+        // its tint. `glassEffect`, if any, replaces the border's effect (its shadow) while it's glass.
+        public void Add(Border border, FrameworkElement scope, IReadOnlyDictionary<string, Color> colors,
+            Func<PictureArea, double, TintLook> pick, Effect glassEffect = null)
         {
-            Surface surface = new Surface { Border = border, Scope = scope, Colors = colors, PlainBackground = border.ReadLocalValue(Border.BackgroundProperty) };
+            Surface surface = new Surface
+            {
+                Border = border, Scope = scope, Colors = colors, Pick = pick, GlassEffect = glassEffect,
+                PlainBackground = border.ReadLocalValue(Border.BackgroundProperty), PlainEffect = border.ReadLocalValue(UIElement.EffectProperty)
+            };
             surfaces.Add(surface);
             border.SizeChanged += (s, e) => Apply(surface);
             border.IsVisibleChanged += (s, e) => Apply(surface);
@@ -253,8 +280,7 @@ namespace TidyMind
             Size layerSize = new Size(layer.ActualWidth, layer.ActualHeight);
             Point origin = border.TranslatePoint(new Point(0, 0), layer);
             Rect bounds = new Rect(0, 0, border.ActualWidth, border.ActualHeight);
-            var (brightest, mean) = sample.Under(new Rect(origin, bounds.Size), layerSize);
-            TintLook look = CardTint.Pick(brightest, mean, PageBackground.FilmOpacity);
+            TintLook look = surface.Pick(sample.Under(new Rect(origin, bounds.Size), layerSize), PageBackground.FilmOpacity);
 
             // Frosted copy where the picture lies on the page, the page's own film (it follows the slider by itself),
             // then the tint; the border's rounded corners clip it.
@@ -281,6 +307,8 @@ namespace TidyMind
                     brush.Freeze();
                     surface.Scope.Resources[color.Key] = brush;
                 }
+                if (surface.GlassEffect != null)
+                    border.Effect = surface.GlassEffect;
                 surface.Glass = true;
             }
             Looks.AddOrUpdate(border, new StrongBox<TintLook>(look));
@@ -296,6 +324,13 @@ namespace TidyMind
                 surface.Border.ClearValue(Border.BackgroundProperty);
             else
                 surface.Border.SetValue(Border.BackgroundProperty, surface.PlainBackground);
+            if (surface.GlassEffect != null)
+            {
+                if (surface.PlainEffect == DependencyProperty.UnsetValue)
+                    surface.Border.ClearValue(UIElement.EffectProperty);
+                else
+                    surface.Border.SetValue(UIElement.EffectProperty, surface.PlainEffect);
+            }
             foreach (string key in surface.Colors.Keys)
                 surface.Scope.Resources.Remove(key);
             surface.Glass = false;
