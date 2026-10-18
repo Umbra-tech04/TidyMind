@@ -50,7 +50,7 @@ namespace TidyMind
             menu.Items.Add(delete);
             menu.Items.Add(reminder);
             menu.Items.Add(ExportMenu.Submenu(() => project.Name, (path, format) => ExportService.ExportProject(project, path, format)));
-            menu.Items.Add(TransferUI.ExportItem(() => TransferUI.ExportProject(Window.GetWindow(owner), project)));
+            menu.Items.Add(TransferUI.MenuEntry(() => TransferUI.ExportProject(Window.GetWindow(owner), project)));
             menu.Items.Add(new Separator());
             menu.Items.Add(TextCopy.CopyItem(() => project.Name, Loc.T("Common.CopyName")));
             menu.Items.Add(TextCopy.CopyItem(() => AsText(project), Loc.T("Card.CopyWithTasks")));

@@ -13,27 +13,36 @@ using System.Xml;
 
 namespace TidyMind
 {
-    // A .tidymind file: one project, or one collection memory, to take to another PC ("Export for transfer", then
-    // Settings > Import there). Unlike a backup it holds one thing, and unlike the Excel/Word/PDF exports it is read
-    // back in. A ZIP of:
+    // A .tidymind file: one project, one collection memory or one collection item, to take to another PC ("Export for
+    // transfer", then Settings > Import there). Unlike a backup it holds one thing, and unlike the Excel/Word/PDF
+    // exports it is read back in. A ZIP of:
     //   manifest.json                       what it is (TransferManifest)
     //   project.json                        a project, as projects.json stores it
     //   files/attachments/, files/card/     its attached files and card picture
     //   collection.json                     a collection: its entry in profiles.json,
     //   tabs.json, entities.json            its tabs and items, as stored
     //   files/items/, files/background/     its item pictures and page background
+    //   item.json, files/items/             one item, as entities.json stores it, and its picture
     // Files go in under their stored names only, never a path from this PC. Reminders, Day Plan blocks and the
     // memory to-do list belong to no project or collection, so none are in a package.
     //
     // On import a package is untrusted: every entry and the JSON are checked before anything is written (Open), the
     // files are unpacked into a folder of their own in the data folder (Stage), and only then is the new copy added,
-    // with new Ids and new file names for everything (CommitProject / CommitCollection). Any failure adds nothing.
+    // with new Ids and new file names for everything (CommitProject / CommitCollection / CommitItem). Any failure
+    // adds nothing.
     public static class TransferPackage
     {
         public const string Extension = ".tidymind";
-        public const int FormatVersion = 1;
+
+        // The newest format this version reads; a package in a newer one is refused. Each package is written in the
+        // oldest format that holds it, so older versions keep reading projects and collections (format 1), and say
+        // "made with a newer TidyMind" for an item (format 2, which they don't know).
+        public const int FormatVersion = 2;
+        private const int ProjectFormat = 1, CollectionFormat = 1, ItemFormat = 2;
+
         public const string ProjectType = "project";
         public const string CollectionType = "collection";
+        public const string ItemType = "item";
 
         private const string ManifestApp = "TidyMind";
         private const string ManifestEntry = "manifest.json";
@@ -41,6 +50,7 @@ namespace TidyMind
         private const string CollectionEntry = "collection.json";
         private const string TabsEntry = "tabs.json";
         private const string EntitiesEntry = "entities.json";
+        private const string ItemEntry = "item.json";
         private const string FilesDir = "files/";
         internal const string AttachmentsDir = "files/attachments/";
         internal const string CardDir = "files/card/";
@@ -71,7 +81,7 @@ namespace TidyMind
             if (project.CardBackgroundType == BackgroundFill.Image && ImageStore.Cards.Exists(project.CardBackgroundImagePath))
                 files.Add((CardDir + Path.GetFileName(project.CardBackgroundImagePath), ImageStore.Cards.PathOf(project.CardBackgroundImagePath)));
 
-            TransferManifest manifest = NewManifest(ProjectType, project.Name);
+            TransferManifest manifest = NewManifest(ProjectType, ProjectFormat, project.Name);
             manifest.Counts = new TransferCounts
             {
                 Tasks = project.Tasks?.Count ?? 0,
@@ -87,6 +97,36 @@ namespace TidyMind
             IProgress<double>? progress, CancellationToken cancel)
         {
             List<Entity> items = Clone(entities);
+            List<(string Entry, string Source)> files = PicturesOf(items);
+            int pictures = files.Count;
+            if (memory.BackgroundType == BackgroundFill.Image && ImageStore.Backgrounds.Exists(memory.BackgroundImagePath))
+                files.Add((BackgroundDir + Path.GetFileName(memory.BackgroundImagePath), ImageStore.Backgrounds.PathOf(memory.BackgroundImagePath)));
+
+            TransferManifest manifest = NewManifest(CollectionType, CollectionFormat, memory.Name);
+            manifest.Counts = new TransferCounts { Items = items.Count, Pictures = pictures };
+            WriteAtomically(zipPath, manifest, new[]
+            {
+                (CollectionEntry, JsonSerializer.Serialize(memory)),
+                (TabsEntry, JsonSerializer.Serialize(tabs)),
+                (EntitiesEntry, JsonSerializer.Serialize(items))
+            }, files, progress, cancel);
+        }
+
+        // One item of a collection, with its picture; its tab, Id and place are new where it is imported.
+        public static void ExportItem(Entity entity, string zipPath, IProgress<double>? progress, CancellationToken cancel)
+        {
+            Entity item = Clone(new List<Entity> { entity })[0];
+            List<(string Entry, string Source)> files = PicturesOf(new List<Entity> { item });
+            TransferManifest manifest = NewManifest(ItemType, ItemFormat, item.Name);
+            manifest.Counts = new TransferCounts { Pictures = files.Count };
+            WriteAtomically(zipPath, manifest, new[] { (ItemEntry, JsonSerializer.Serialize(item)) }, files, progress, cancel);
+        }
+
+        // The items' pictures to pack (the items are copies, changed here): a missing one is dropped from its item,
+        // and one still at the user's own path (from before pictures were copied in) gets a new name, so no path from
+        // this PC is in the package.
+        private static List<(string Entry, string Source)> PicturesOf(List<Entity> items)
+        {
             List<(string Entry, string Source)> files = new List<(string, string)>();
             foreach (Entity item in items.Where(i => !string.IsNullOrEmpty(i.ImagePath)))
             {
@@ -100,23 +140,13 @@ namespace TidyMind
                     item.ImagePath = Guid.NewGuid().ToString("N") + Path.GetExtension(source).ToLowerInvariant();
                 files.Add((ItemsDir + Path.GetFileName(item.ImagePath), source));
             }
-            if (memory.BackgroundType == BackgroundFill.Image && ImageStore.Backgrounds.Exists(memory.BackgroundImagePath))
-                files.Add((BackgroundDir + Path.GetFileName(memory.BackgroundImagePath), ImageStore.Backgrounds.PathOf(memory.BackgroundImagePath)));
-
-            TransferManifest manifest = NewManifest(CollectionType, memory.Name);
-            manifest.Counts = new TransferCounts { Items = items.Count, Pictures = files.Count(f => f.Entry.StartsWith(ItemsDir)) };
-            WriteAtomically(zipPath, manifest, new[]
-            {
-                (CollectionEntry, JsonSerializer.Serialize(memory)),
-                (TabsEntry, JsonSerializer.Serialize(tabs)),
-                (EntitiesEntry, JsonSerializer.Serialize(items))
-            }, files, progress, cancel);
+            return files;
         }
 
-        private static TransferManifest NewManifest(string type, string name) => new TransferManifest
+        private static TransferManifest NewManifest(string type, int format, string name) => new TransferManifest
         {
             App = ManifestApp,
-            Format = FormatVersion,
+            Format = format,
             AppVersion = Updates.CurrentVersion.ToString(3),
             Type = type,
             Name = name ?? "",
@@ -255,6 +285,14 @@ namespace TidyMind
                 package.Entities.RemoveAll(e => e == null);
                 foreach (Entity item in package.Entities)
                     Clean(item);
+                package.EntitiesJson = JsonSerializer.Serialize(package.Entities);
+            }
+            else if (manifest.Type == ItemType)
+            {
+                // Held as a list of one, so pictures, counts and staging work as for a collection's items.
+                Entity item = ReadJson<Entity>(Required(zip, ItemEntry), out _) ?? throw Damaged(ItemEntry);
+                Clean(item);
+                package.Entities = new List<Entity> { item };
                 package.EntitiesJson = JsonSerializer.Serialize(package.Entities);
             }
             else
@@ -503,13 +541,13 @@ namespace TidyMind
         {
             OpenedPackage package = staged.Package;
             if (!ProjectStore.TryLoad(target, out List<Project> projects, out string problem)
-                || !TabStore.TryLoadOrCreate(target, projects.Select(p => p.TabId), out List<MemoryTab> tabs, out problem))
+                || !TryFirstTab(target, projects.Select(p => p.TabId), out Guid tabId, out problem))
                 throw new TransferException(Loc.F("Transfer.Error.TargetUnreadable", target.Name, problem));
 
             Project project = JsonSerializer.Deserialize<Project>(package.ProjectJson)!;
             project.Id = Guid.NewGuid();
             project.Name = UniqueName(package.Name, projects.Select(p => p.Name));
-            project.TabId = tabs[0].Id;
+            project.TabId = tabId;
             project.Order = projects.Count == 0 ? 0 : projects.Max(p => p.Order) + 1;
 
             List<(string From, string To)> moves = new List<(string, string)>();
@@ -574,10 +612,7 @@ namespace TidyMind
                 if (!newTab.TryGetValue(item.TabId, out Guid tabId))
                     newTab[item.TabId] = tabId = tabs.Count > 0 ? tabs[0].Id : Guid.NewGuid();
                 item.TabId = tabId;
-                string? source = staged.FileFor(ItemsDir, item.ImagePath);
-                item.ImagePath = source == null ? null : Guid.NewGuid().ToString("N") + ExtensionOf(source);
-                if (source != null)
-                    moves.Add((source, EntityImages.Store.PathOf(item.ImagePath)));
+                TakePicture(staged, item, moves);
             }
 
             bool added = false;
@@ -605,6 +640,103 @@ namespace TidyMind
                     MemoryFiles.DeleteFolder(memory);
                 }
             }
+        }
+
+        // One item into a collection memory, on its first tab and after its last item: new Id and picture file name,
+        // " (2)" after a name already used there. With no target (there's no collection yet) it goes into a new
+        // collection called newCollectionName, added to profiles and saved last, as CommitCollection does. Returns
+        // the collection it went into. Throws TransferException with nothing added if that can't be read or written.
+        public static Profile CommitItem(StagedImport staged, Profile? target, List<Profile> profiles, string color,
+            string newCollectionName)
+        {
+            OpenedPackage package = staged.Package;
+            bool created = target == null;
+            Profile memory = target ?? new Profile
+            {
+                Id = Guid.NewGuid(),
+                Name = UniqueName(newCollectionName, profiles.Where(p => p.Type == ProfileType.Collection).Select(p => p.Name)),
+                Type = ProfileType.Collection,
+                Color = color,
+                Order = profiles.Count == 0 ? 0 : profiles.Max(p => p.Order) + 1
+            };
+
+            List<Entity> items = new List<Entity>();
+            Guid tabId = Guid.NewGuid(); // a new collection's view names its first tab, as for an old memory
+            if (!created && (!EntityStore.TryLoad(memory, out items, out string problem)
+                             || !TryFirstTab(memory, items.Select(i => i.TabId), out tabId, out problem)))
+                throw new TransferException(Loc.F("Transfer.Error.TargetUnreadable", memory.Name, problem));
+
+            Entity item = JsonSerializer.Deserialize<List<Entity>>(package.EntitiesJson)![0];
+            item.Id = Guid.NewGuid();
+            item.Name = UniqueName(package.Name, items.Select(i => i.Name));
+            item.TabId = tabId;
+            item.Order = items.Count == 0 ? 0 : items.Max(i => i.Order) + 1;
+            List<(string From, string To)> moves = new List<(string, string)>();
+            TakePicture(staged, item, moves);
+
+            bool added = false;
+            try
+            {
+                MoveInto(moves);
+                items.Add(item);
+                if (!AtomicFile.TryWriteAllText(MemoryFiles.Items(memory), JsonSerializer.Serialize(items)))
+                    throw new TransferException(Loc.F("Transfer.Error.CantWrite", MemoryFiles.Items(memory)));
+                if (created)
+                {
+                    profiles.Add(memory);
+                    if (!ProfileManager.TrySaveProfiles(profiles))
+                    {
+                        profiles.Remove(memory);
+                        throw new TransferException(Loc.F("Transfer.Error.CantWrite", AppPaths.Data("profiles.json")));
+                    }
+                }
+                added = true;
+                return memory;
+            }
+            finally
+            {
+                if (!added)
+                {
+                    Undo(moves);
+                    if (created)
+                        MemoryFiles.DeleteFolder(memory);
+                }
+            }
+        }
+
+        // The memory's first tab, read without writing anything (a failed import must leave the memory as it was).
+        // With no tabs file yet, the tab its first project or item is on, or a new one: the view then makes the tabs
+        // from those, as for an old memory (TabStore.TryLoadOrCreate). False (with the reason) if it can't be read.
+        private static bool TryFirstTab(Profile memory, IEnumerable<Guid> tabsInUse, out Guid tabId, out string problem)
+        {
+            problem = null!;
+            tabId = Guid.Empty;
+            string file = MemoryFiles.Tabs(memory);
+            try
+            {
+                if (File.Exists(file) && JsonSerializer.Deserialize<List<MemoryTab>>(File.ReadAllText(file)) is List<MemoryTab> tabs
+                    && tabs.FirstOrDefault(t => t != null) != null)
+                    tabId = tabs.Where(t => t != null).OrderBy(t => t.Order).First().Id;
+            }
+            catch (Exception e) when (e is JsonException || e is IOException || e is UnauthorizedAccessException)
+            {
+                problem = e.Message;
+                return false;
+            }
+            if (tabId == Guid.Empty)
+                tabId = tabsInUse.FirstOrDefault(id => id != Guid.Empty);
+            if (tabId == Guid.Empty)
+                tabId = Guid.NewGuid();
+            return true;
+        }
+
+        // An item's picture, if the package held it, under a new file name; otherwise the item has none.
+        private static void TakePicture(StagedImport staged, Entity item, List<(string From, string To)> moves)
+        {
+            string? source = staged.FileFor(ItemsDir, item.ImagePath);
+            item.ImagePath = source == null ? null : Guid.NewGuid().ToString("N") + ExtensionOf(source);
+            if (source != null)
+                moves.Add((source, EntityImages.Store.PathOf(item.ImagePath)));
         }
 
         // A picture background whose file came along gets a new file name; one without its file (or with a type or
@@ -760,6 +892,7 @@ namespace TidyMind
         public string ZipPath { get; }
         public TransferManifest Manifest { get; }
         public bool IsCollection => Manifest.Type == TransferPackage.CollectionType;
+        public bool IsItem => Manifest.Type == TransferPackage.ItemType;
 
         public Project? Project { get; internal set; }
         public Profile? Collection { get; internal set; }
@@ -772,7 +905,7 @@ namespace TidyMind
         internal HashSet<string> FileEntries = new HashSet<string>();
 
         // The name it is imported under (before " (2)" if taken): its own, else the manifest's.
-        public string Name => new[] { IsCollection ? Collection?.Name : Project?.Name, Manifest.Name, "TidyMind" }
+        public string Name => new[] { IsCollection ? Collection?.Name : IsItem ? Entities.FirstOrDefault()?.Name : Project?.Name, Manifest.Name, "TidyMind" }
             .Select(n => (n ?? "").Trim()).First(n => n.Length > 0);
         public int Tasks => Project?.Tasks?.Count(t => t != null) ?? 0;
         public int NotePages => Project == null ? 0 : TransferPackage.WrittenPages(Project);

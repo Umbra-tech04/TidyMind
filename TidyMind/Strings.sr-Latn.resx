@@ -2021,7 +2021,7 @@ Datoteka je ostala kakva je bila. Popravi je ili je vrati iz rezervne kopije, pa
     <value>Dodaje ga kao novu kopiju iz .tidymind datoteke izvezene na ovom ili drugom računaru.</value>
   </data>
   <data name="Settings.Import.Title" xml:space="preserve">
-    <value>Uvoz projekta ili kolekcije</value>
+    <value>Uvoz projekta, kolekcije ili stavke</value>
   </data>
   <data name="Settings.Language.NotSaved" xml:space="preserve">
     <value>Jezik je promenjen, ali nije mogao da se sačuva u settings.json, pa će se TidyMind sledeći put pokrenuti na prethodnom jeziku.</value>
@@ -2566,14 +2566,29 @@ Kopiraj ovu datoteku na drugi računar i tamo je uvezi iz Podešavanja.</value>
   <data name="Transfer.Import.Into" xml:space="preserve">
     <value>Uvezi u</value>
   </data>
+  <data name="Transfer.Import.Item" xml:space="preserve">
+    <value>Stavka: {0}</value>
+  </data>
   <data name="Transfer.Import.NewCollection" xml:space="preserve">
     <value>Dodaje se u bočnu traku kao nova kolekcija.</value>
+  </data>
+  <data name="Transfer.Import.NewCollectionName" xml:space="preserve">
+    <value>Uvezeno</value>
   </data>
   <data name="Transfer.Import.NewCollectionRenamed" xml:space="preserve">
     <value>Već postoji kolekcija s tim imenom, pa se dodaje kao „{0}“.</value>
   </data>
   <data name="Transfer.Import.Newer" xml:space="preserve">
     <value>Napravljeno u novijem TidyMind-u ({0}). Ono što ova verzija ne poznaje ostaje kakvo jeste.</value>
+  </data>
+  <data name="Transfer.Import.NewItem" xml:space="preserve">
+    <value>Dodaje se tamo kao nova stavka. Ništa što je već tamo se ne menja.</value>
+  </data>
+  <data name="Transfer.Import.NewItemNewCollection" xml:space="preserve">
+    <value>Još nema nijedne kolekcije, pa se za nju u bočnu traku dodaje nova kolekcija „{0}“.</value>
+  </data>
+  <data name="Transfer.Import.NewItemRenamed" xml:space="preserve">
+    <value>Tamo već postoji stavka s tim imenom, pa se dodaje kao „{0}“. Ništa što je već tamo se ne menja.</value>
   </data>
   <data name="Transfer.Import.NewProject" xml:space="preserve">
     <value>Dodaje se tamo kao novi projekat. Ništa što je već tamo se ne menja.</value>

@@ -6,33 +6,38 @@ using System.Windows.Controls;
 namespace TidyMind
 {
     // The preview before a package is imported: what it is, what's in it, when and with which version it was
-    // exported, and where it goes. A project goes into a project memory (the open one by default); a collection
-    // becomes a new collection. Either way it's a new copy; the name it gets there is said if it changes.
+    // exported, and where it goes. A project goes into a project memory, an item into a collection (the open one by
+    // default, or a new collection when there is none); a collection becomes a new collection. Either way it's a new
+    // copy; the name it gets there is said if it changes.
     public partial class ImportDialog : Window
     {
         private readonly OpenedPackage package;
         private readonly List<Profile> profiles;
+        private readonly bool hasTarget; // a project or an item: it goes into a memory picked here
 
         public ImportDialog(OpenedPackage package, List<Profile> profiles, Profile? current)
         {
             InitializeComponent();
             this.package = package;
             this.profiles = profiles;
+            hasTarget = !package.IsCollection;
 
-            List<Profile> projectMemories = profiles.Where(p => p.Type == ProfileType.Project).OrderBy(p => p.Order).ToList();
+            ProfileType kind = package.IsItem ? ProfileType.Collection : ProfileType.Project;
+            List<Profile> memories = hasTarget ? profiles.Where(p => p.Type == kind).OrderBy(p => p.Order).ToList() : new List<Profile>();
             // Items of their own (the app's ComboBox look shows an item's content, not DisplayMemberPath), by name.
-            foreach (Profile memory in projectMemories)
+            foreach (Profile memory in memories)
                 TargetBox.Items.Add(new ComboBoxItem { Content = memory.Name, Tag = memory });
-            Profile? chosen = current != null && projectMemories.Contains(current) ? current : projectMemories.FirstOrDefault();
-            TargetBox.SelectedIndex = chosen == null ? -1 : projectMemories.IndexOf(chosen);
-            TargetPanel.Visibility = package.IsCollection || projectMemories.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+            Profile? chosen = current != null && memories.Contains(current) ? current : memories.FirstOrDefault();
+            TargetBox.SelectedIndex = chosen == null ? -1 : memories.IndexOf(chosen);
+            TargetPanel.Visibility = memories.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
 
             ShowPackage();
             Loc.Track(this, ShowPackage);
         }
 
-        // The project memory chosen (null for a collection).
-        public Profile? Target => package.IsCollection ? null : (TargetBox.SelectedItem as ComboBoxItem)?.Tag as Profile;
+        // The memory chosen: a project memory for a project, a collection for an item (null when there's none yet: a
+        // new one is made), null for a collection.
+        public Profile? Target => hasTarget ? (TargetBox.SelectedItem as ComboBoxItem)?.Tag as Profile : null;
 
         private void ShowPackage()
         {
@@ -42,6 +47,11 @@ namespace TidyMind
                 KindText.Text = Loc.F("Transfer.Import.Collection", name);
                 CountsText.Text = Loc.F("Transfer.Import.CollectionCounts",
                     Loc.Plural("Transfer.Count.Items", package.Items), Loc.Plural("Transfer.Count.Pictures", package.Pictures));
+            }
+            else if (package.IsItem)
+            {
+                KindText.Text = Loc.F("Transfer.Import.Item", name);
+                CountsText.Text = Loc.Plural("Transfer.Count.Pictures", package.Pictures);
             }
             else
             {
@@ -58,39 +68,58 @@ namespace TidyMind
 
         private void TargetBox_SelectionChanged(object sender, SelectionChangedEventArgs e) => ShowWhere();
 
-        // Where it goes and under which name; with no project memory to put a project in, it can't be imported yet.
+        // Where it goes and under which name. A project needs a project memory to go into; an item with no collection
+        // to go into gets a new one.
         private void ShowWhere()
         {
+            ImportButton.IsEnabled = true;
             if (package.IsCollection)
             {
-                string unique = TransferPackage.UniqueName(package.Name,
-                    profiles.Where(p => p.Type == ProfileType.Collection).Select(p => p.Name));
+                string unique = UniqueCollectionName(package.Name);
                 WhereText.Text = unique == package.Name
                     ? Loc.T("Transfer.Import.NewCollection")
                     : Loc.F("Transfer.Import.NewCollectionRenamed", unique);
-                ImportButton.IsEnabled = true;
                 return;
             }
 
             if (!(Target is Profile target))
             {
-                WhereText.Text = Loc.T("Transfer.Import.NoProjectMemory");
-                ImportButton.IsEnabled = false;
+                if (package.IsItem)
+                    WhereText.Text = Loc.F("Transfer.Import.NewItemNewCollection", UniqueCollectionName(Loc.T("Transfer.Import.NewCollectionName")));
+                else
+                {
+                    WhereText.Text = Loc.T("Transfer.Import.NoProjectMemory");
+                    ImportButton.IsEnabled = false;
+                }
                 return;
             }
-            // A memory whose projects can't be read takes nothing in (it's never saved over): said here, not after unpacking.
-            if (!ProjectStore.TryLoad(target, out List<Project> projects, out string problem))
+
+            // A memory whose file can't be read takes nothing in (it's never saved over): said here, not after unpacking.
+            List<string>? names = null;
+            string problem;
+            if (package.IsItem)
+            {
+                if (EntityStore.TryLoad(target, out List<Entity> items, out problem))
+                    names = items.Select(i => i.Name).ToList();
+            }
+            else if (ProjectStore.TryLoad(target, out List<Project> projects, out problem))
+                names = projects.Select(p => p.Name).ToList();
+            if (names == null)
             {
                 WhereText.Text = Loc.F("Transfer.Error.TargetUnreadable", target.Name, problem);
                 ImportButton.IsEnabled = false;
                 return;
             }
-            string name = TransferPackage.UniqueName(package.Name, projects.Select(p => p.Name));
-            WhereText.Text = name == package.Name
-                ? Loc.T("Transfer.Import.NewProject")
-                : Loc.F("Transfer.Import.NewProjectRenamed", name);
-            ImportButton.IsEnabled = true;
+
+            string name = TransferPackage.UniqueName(package.Name, names);
+            bool renamed = name != package.Name;
+            WhereText.Text = package.IsItem
+                ? (renamed ? Loc.F("Transfer.Import.NewItemRenamed", name) : Loc.T("Transfer.Import.NewItem"))
+                : (renamed ? Loc.F("Transfer.Import.NewProjectRenamed", name) : Loc.T("Transfer.Import.NewProject"));
         }
+
+        private string UniqueCollectionName(string name) =>
+            TransferPackage.UniqueName(name, profiles.Where(p => p.Type == ProfileType.Collection).Select(p => p.Name));
 
         private void ImportButton_Click(object sender, RoutedEventArgs e) => DialogResult = true;
     }

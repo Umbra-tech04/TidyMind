@@ -39,6 +39,7 @@ static partial class Program
 
         await ProjectRoundTrip(main);
         CollectionRoundTrip(main);
+        await ItemTransfer(main);
         LargeAttachment(main);
         BadPackages(main);
         UntrustedContent(main);
@@ -288,6 +289,175 @@ static partial class Program
         Check(coat.Brand == "Đak" && coat.ExtensionData?["Rating"].GetInt32() == 5 && car.Plate == "NS-123-ĆŽ"
               && car.InsuranceExpires == new DateTime(2027, 1, 31) && car.Logs!["Fuel"][0]["Liters"] == "40.5",
             "fields, logs and unknown fields as they were");
+    }
+
+    // ---- One collection item ---------------------------------------------------------------
+
+    static Profile AddCollection(MainWindow main, string name)
+    {
+        List<Profile> profiles = Profiles(main);
+        Profile memory = new Profile { Id = Guid.NewGuid(), Name = name, Type = ProfileType.Collection, Color = "#27AE60", Order = profiles.Count };
+        profiles.Add(memory);
+        ProfileManager.TrySaveProfiles(profiles);
+        Invoke(main, "BuildNav");
+        return memory;
+    }
+
+    static Profile ImportItem(OpenedPackage package, Profile target, MainWindow main)
+    {
+        using (StagedImport staged = TransferPackage.Stage(package, null, CancellationToken.None))
+            return TransferPackage.CommitItem(staged, target, Profiles(main), "#2D7DD2", Loc.T("Transfer.Import.NewCollectionName"));
+    }
+
+    static async Task ItemTransfer(MainWindow main)
+    {
+        Console.WriteLine("One collection item: out and back in, into a collection picked in the preview");
+        Profile garage = AddCollection(main, "Garázs");
+        Profile target = AddCollection(main, "Cél – Odredište");
+        Directory.CreateDirectory(ImageStore.Items.Folder);
+        string shared = Path.Combine(ImageStore.Items.Folder, Guid.NewGuid().ToString("N") + ".png");
+        SavePicture(shared);
+        Entity car = new Entity
+        {
+            Id = Guid.NewGuid(), EntityType = "Vehicle", Name = "Škoda Octavia – „Đurđa”", ImagePath = Path.GetFileName(shared), Plate = "SU-777-ČĆ",
+            Year = 2019, Order = 0, InsuranceExpires = new DateTime(2027, 3, 1),
+            Logs = new Dictionary<string, List<Dictionary<string, string>>> { ["Fuel"] = new List<Dictionary<string, string>> { new Dictionary<string, string> { ["Date"] = "2026-09-01", ["Liters"] = "45.2" } } },
+            ExtensionData = new Dictionary<string, JsonElement> { ["Vin"] = JsonDocument.Parse("\"TMB123\"").RootElement }
+        };
+        Entity bike = new Entity { Id = Guid.NewGuid(), EntityType = "Clothing", Name = "Bicikl", ImagePath = Path.GetFileName(shared), Order = 1 };
+        EntityStore.SaveOrWarn(garage, new List<Entity> { car, bike });
+        TabStore.TryLoadOrCreate(garage, new[] { car.TabId }, out _, out _);
+        TabStore.TryLoadOrCreate(target, Array.Empty<Guid>(), out _, out _);
+
+        string carPackage = Path.Combine(transferWork, "car" + TransferPackage.Extension);
+        string bikePackage = Path.Combine(transferWork, "bike" + TransferPackage.Extension);
+        TransferPackage.ExportItem(car, carPackage, null, CancellationToken.None);
+        TransferPackage.ExportItem(bike, bikePackage, null, CancellationToken.None);
+        using (ZipArchive zip = ZipFile.OpenRead(carPackage))
+        {
+            List<string> names = zip.Entries.Select(e => e.FullName).OrderBy(n => n).ToList();
+            JsonObject manifest = (JsonObject)JsonNode.Parse(new StreamReader(zip.GetEntry("manifest.json")!.Open()).ReadToEnd())!;
+            Check(names.Count == 3 && names.Contains("item.json") && names.Count(n => n.StartsWith("files/items/")) == 1,
+                "an item package: manifest, item.json and its picture only: " + string.Join(", ", names));
+            Check((string)manifest["Type"]! == "item" && (int)manifest["Format"]! == 2 && (int)manifest["Counts"]!["Pictures"]! == 1,
+                "manifest: type item, format 2 (older versions refuse it as newer), 1 picture");
+            string json = new StreamReader(zip.GetEntry("item.json")!.Open()).ReadToEnd();
+            Check(!json.Contains(":\\\\") && !json.Contains(AppPaths.DataFolder.Replace("\\", "\\\\")), "no absolute path in item.json");
+        }
+        Check(EntityStore.Load(garage).Count == 2, "exporting changes nothing in the collection");
+
+        OpenedPackage opened = TransferPackage.Open(carPackage);
+        Check(opened.IsItem && !opened.IsCollection && opened.Name == car.Name && opened.Pictures == 1, "the preview's numbers: the item, 1 picture");
+
+        // The preview: collections only, the open one by default, the first one otherwise.
+        Profile work = Profiles(main).First(p => p.Name == "Munka");
+        ImportDialog preview = new ImportDialog(opened, Profiles(main), target) { Owner = main };
+        preview.Show();
+        await Wait(200);
+        ComboBox box = (ComboBox)preview.FindName("TargetBox");
+        Check(preview.Target == target && box.Items.Cast<ComboBoxItem>().All(i => ((Profile)i.Tag).Type == ProfileType.Collection)
+              && ((TextBlock)preview.FindName("KindText")).Text == Loc.F("Transfer.Import.Item", car.Name)
+              && ((TextBlock)preview.FindName("WhereText")).Text == Loc.T("Transfer.Import.NewItem"),
+            "the preview lists collections only, the open one chosen: " + ((TextBlock)preview.FindName("WhereText")).Text);
+        box.SelectedIndex = box.Items.Cast<ComboBoxItem>().ToList().FindIndex(i => i.Tag == garage);
+        Check(preview.Target == garage && ((TextBlock)preview.FindName("WhereText")).Text == Loc.F("Transfer.Import.NewItemRenamed", car.Name + " (2)"),
+            "another collection picked: the name it gets there is said");
+        RenderWindow(preview, "transfer-05-preview-item-en");
+        preview.Close();
+        ImportDialog fromProject = new ImportDialog(opened, Profiles(main), work) { Owner = main };
+        Check(fromProject.Target == Profiles(main).Where(p => p.Type == ProfileType.Collection).OrderBy(p => p.Order).First(),
+            "opened from a project memory: the first collection");
+        fromProject.Close();
+        ImportDialog noCollection = new ImportDialog(opened, Profiles(main).Where(p => p.Type == ProfileType.Project).ToList(), work) { Owner = main };
+        noCollection.Show();
+        await Wait(200);
+        Check(noCollection.Target == null && ((Button)noCollection.FindName("ImportButton")).IsEnabled
+              && ((TextBlock)noCollection.FindName("WhereText")).Text == Loc.F("Transfer.Import.NewItemNewCollection", Loc.T("Transfer.Import.NewCollectionName")),
+            "no collection yet: a new one is offered, Import on");
+        noCollection.Close();
+
+        // Into the picked collection: a new copy, new Id and picture, on its first tab, unknown fields kept.
+        ImportItem(opened, target, main);
+        Entity copy = EntityStore.Load(target).Single();
+        TabStore.TryLoadOrCreate(target, new[] { copy.TabId }, out List<MemoryTab> tabs, out _);
+        Check(copy.Id != car.Id && copy.Name == car.Name && copy.TabId == tabs[0].Id && copy.Plate == car.Plate && copy.Year == 2019
+              && copy.Logs!["Fuel"][0]["Liters"] == "45.2" && copy.ExtensionData?["Vin"].GetString() == "TMB123",
+            "into the picked collection: a new item, its fields, logs and unknown fields as they were");
+        Check(copy.ImagePath != car.ImagePath && SameBytes(EntityImages.FullPath(copy)!, shared), "its picture: a copy of its own");
+
+        ImportItem(TransferPackage.Open(carPackage), target, main);
+        ImportItem(TransferPackage.Open(bikePackage), target, main);
+        List<Entity> inTarget = EntityStore.Load(target);
+        Check(inTarget.Count == 3 && inTarget[1].Name == car.Name + " (2)" && inTarget.Select(e => e.Id).Distinct().Count() == 3,
+            "imported again: a second copy as '… (2)', never one replaced");
+        Check(inTarget.Select(e => e.ImagePath).Distinct().Count() == 3 && inTarget.All(e => SameBytes(EntityImages.FullPath(e)!, shared)),
+            "two items that shared one picture: every copy has a picture of its own");
+        EntityImages.DeleteCopy(inTarget[0].ImagePath);
+        Check(inTarget.Skip(1).All(e => File.Exists(EntityImages.FullPath(e)!)) && File.Exists(shared),
+            "deleting one copy's picture leaves the others and the original");
+
+        ImportItem(TransferPackage.Open(carPackage), garage, main);
+        Check(EntityStore.Load(garage).Count(e => e.Name.StartsWith("Škoda")) == 2, "back into its own collection: a second copy beside the first");
+
+        // No collection to go into: a new one, saved in profiles.json, its tab made when it opens.
+        int collections = Profiles(main).Count(p => p.Type == ProfileType.Collection);
+        Profile made;
+        using (StagedImport staged = TransferPackage.Stage(TransferPackage.Open(carPackage), null, CancellationToken.None))
+            made = TransferPackage.CommitItem(staged, null, Profiles(main), "#2D7DD2", Loc.T("Transfer.Import.NewCollectionName"));
+        Check(made.Type == ProfileType.Collection && made.Name == Loc.T("Transfer.Import.NewCollectionName")
+              && Profiles(main).Count(p => p.Type == ProfileType.Collection) == collections + 1
+              && ProfileManager.TryLoadProfiles(out List<Profile> saved, out _) && saved.Any(p => p.Id == made.Id)
+              && EntityStore.Load(made).Single().Name == car.Name,
+            "no collection picked: a new collection '" + made.Name + "' with the item, saved");
+
+        // A failure adds nothing: an unreadable target, and one that can't be written.
+        File.WriteAllText(MemoryFiles.Items(made), "{ broken");
+        List<string> before = DataFiles();
+        string message = null;
+        try
+        {
+            ImportItem(TransferPackage.Open(carPackage), made, main);
+        }
+        catch (TransferException e)
+        {
+            message = e.Message;
+        }
+        Check(message != null && message.Contains(made.Name) && DataFiles().SequenceEqual(before),
+            "an unreadable target collection: refused, the data folder exactly as before (" + message + ")");
+        File.WriteAllText(MemoryFiles.Items(made), "[]");
+        before = DataFiles();
+        message = null;
+        using (FileStream locked = new FileStream(MemoryFiles.Items(made), FileMode.Open, FileAccess.Read, FileShare.Read))
+        {
+            try
+            {
+                ImportItem(TransferPackage.Open(carPackage), made, main);
+            }
+            catch (TransferException e)
+            {
+                message = e.Message;
+            }
+        }
+        Check(message != null && DataFiles().SequenceEqual(before),
+            "a target that can't be written: refused, the picture taken out again, the data folder exactly as before (" + message + ")");
+        Check(!Directory.EnumerateDirectories(AppPaths.DataFolder, "Import-*").Any(), "no staging folder left");
+
+        // The item card's right-click menu.
+        Invoke(main, "NavigateTo", garage);
+        await Wait(400);
+        List<FrameworkElement> cards = Descendants(main).OfType<FrameworkElement>()
+            .Where(e => e.ContextMenu != null && e.ContextMenu.Items.OfType<MenuItem>().Any(m => (string)m.Header == Loc.T("Common.Edit"))).ToList();
+        Check(cards.Count >= 2 && cards.All(c => c.ContextMenu.Items.OfType<MenuItem>().Any(m => (string)m.Header == Loc.T("Transfer.ExportMenu"))),
+            "every item card's right-click menu has Export for transfer (" + cards.Count + " cards)");
+        if (cards.Count > 0)
+        {
+            cards[0].ContextMenu.PlacementTarget = cards[0];
+            cards[0].ContextMenu.IsOpen = true;
+            await Wait(300);
+            RenderPopup(cards[0].ContextMenu, "transfer-06-item-menu-en");
+            cards[0].ContextMenu.IsOpen = false;
+        }
+        Invoke(main, "NavigateHome");
     }
 
     // ---- A large attachment ---------------------------------------------------------------
@@ -575,7 +745,7 @@ static partial class Program
             project = new StreamReader(zip.GetEntry("project.json")!.Open()).ReadToEnd();
         }
         JsonObject newerFormat = (JsonObject)JsonNode.Parse(manifest)!;
-        newerFormat["Format"] = 2;
+        newerFormat["Format"] = TransferPackage.FormatVersion + 1;
         newerFormat["AppVersion"] = "3.0.0";
         List<string> before = DataFiles();
         Refused(MakeZip("format2", ("manifest.json", newerFormat.ToJsonString()), ("project.json", project)),

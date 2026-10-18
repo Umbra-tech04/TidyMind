@@ -275,7 +275,7 @@ namespace TidyMind
             menu.Items.Add(reminder);
             menu.Items.Add(export);
             if (profile.Type == ProfileType.Collection)
-                menu.Items.Add(TransferUI.ExportItem(() => TransferUI.ExportCollection(this, profile)));
+                menu.Items.Add(TransferUI.MenuEntry(() => TransferUI.ExportCollection(this, profile)));
             menu.Items.Add(new Separator());
             menu.Items.Add(TextCopy.CopyItem(() => profile.Name, Loc.T("Common.CopyName")));
 

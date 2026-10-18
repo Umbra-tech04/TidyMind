@@ -1940,7 +1940,7 @@ The file was left as it is. Fix it or restore it from a backup to see and add re
     <value>Adds one from a .tidymind file, exported on this PC or another, as a new copy.</value>
   </data>
   <data name="Settings.Import.Title" xml:space="preserve">
-    <value>Import a project or collection</value>
+    <value>Import a project, collection or item</value>
   </data>
   <data name="Settings.Language.NotSaved" xml:space="preserve">
     <value>The language was changed, but it couldn't be saved in settings.json, so TidyMind will start in the previous language next time.</value>
@@ -2460,14 +2460,29 @@ Copy this file to the other PC and import it there from Settings.</value>
   <data name="Transfer.Import.Into" xml:space="preserve">
     <value>Import into</value>
   </data>
+  <data name="Transfer.Import.Item" xml:space="preserve">
+    <value>Item: {0}</value>
+  </data>
   <data name="Transfer.Import.NewCollection" xml:space="preserve">
     <value>It's added to the sidebar as a new collection.</value>
+  </data>
+  <data name="Transfer.Import.NewCollectionName" xml:space="preserve">
+    <value>Imported</value>
   </data>
   <data name="Transfer.Import.NewCollectionRenamed" xml:space="preserve">
     <value>There's already a collection with this name, so it's added as '{0}'.</value>
   </data>
   <data name="Transfer.Import.Newer" xml:space="preserve">
     <value>Made with a newer TidyMind ({0}). Anything this version doesn't know is kept as it is.</value>
+  </data>
+  <data name="Transfer.Import.NewItem" xml:space="preserve">
+    <value>It's added there as a new item. Nothing already there changes.</value>
+  </data>
+  <data name="Transfer.Import.NewItemNewCollection" xml:space="preserve">
+    <value>There's no collection yet, so a new one called '{0}' is added to the sidebar for it.</value>
+  </data>
+  <data name="Transfer.Import.NewItemRenamed" xml:space="preserve">
+    <value>There's already an item with this name there, so it's added as '{0}'. Nothing already there changes.</value>
   </data>
   <data name="Transfer.Import.NewProject" xml:space="preserve">
     <value>It's added there as a new project. Nothing already there changes.</value>

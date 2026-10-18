@@ -340,6 +340,7 @@ namespace TidyMind
             menu.Items.Add(delete);
             menu.Items.Add(reminder);
             menu.Items.Add(ExportMenu.Submenu(() => entity.Name, (path, format) => ExportService.ExportEntity(entity, path, format)));
+            menu.Items.Add(TransferUI.MenuEntry(() => TransferUI.ExportItem(Window.GetWindow(this), entity)));
             menu.Items.Add(new Separator());
             menu.Items.Add(TextCopy.CopyItem(() => entity.Name, Loc.T("Common.CopyName")));
             card.ContextMenu = menu;

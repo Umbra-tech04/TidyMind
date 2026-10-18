@@ -11,12 +11,13 @@ using Microsoft.Win32;
 
 namespace TidyMind
 {
-    // The UI side of TransferPackage: "Export for transfer…" on a project (its card menu, Project Details) and on a
-    // collection (its sidebar menu), and Settings > Import. Picking the file, a progress window while files are
-    // packed or unpacked, the preview, and saying how it went.
+    // The UI side of TransferPackage: "Export for transfer…" on a project (its card menu, Project Details), a
+    // collection (its sidebar menu) and a collection item (its card menu), and Settings > Import. Picking the file,
+    // a progress window while files are packed or unpacked, the preview, and saying how it went.
     public static class TransferUI
     {
-        public static MenuItem ExportItem(Action export)
+        // "Export for transfer…" in a right-click menu (project cards, sidebar collections, collection items).
+        public static MenuItem MenuEntry(Action export)
         {
             MenuItem item = new MenuItem { Header = Loc.T("Transfer.ExportMenu") };
             item.Click += (s, e) => export();
@@ -61,6 +62,14 @@ namespace TidyMind
                 Export(owner, memory.Name, path, (progress, cancel) => TransferPackage.ExportCollection(memory, tabs, entities, path, progress, cancel));
         }
 
+        // One item of a collection, as its card shows it (items are saved as soon as they change).
+        public static void ExportItem(Window? owner, Entity entity)
+        {
+            string? path = AskWhere(owner, entity.Name);
+            if (path != null)
+                Export(owner, entity.Name, path, (progress, cancel) => TransferPackage.ExportItem(entity, path, progress, cancel));
+        }
+
         private static string? AskWhere(Window? owner, string name)
         {
             SaveFileDialog dialog = new SaveFileDialog
@@ -99,8 +108,9 @@ namespace TidyMind
             return dialog.ShowDialog(owner) == true ? ImportFile(owner, dialog.FileName, profiles, current, nextColor) : null;
         }
 
-        // Checks the package, shows what's in it (and, for a project, asks which project memory it goes into: the
-        // open one if it is one), then stages and adds it. Any problem is said in a message and nothing is added.
+        // Checks the package, shows what's in it (and, for a project or an item, asks which memory it goes into: the
+        // open one if it is of that kind), then stages and adds it. Any problem is said in a message and nothing is
+        // added.
         public static Profile? ImportFile(Window owner, string path, List<Profile> profiles, Profile? current, Func<string> nextColor)
         {
             OpenedPackage package;
@@ -133,9 +143,11 @@ namespace TidyMind
                         MessageBoxImage.Warning);
                     return null;
                 }
-                return package.IsCollection
-                    ? TransferPackage.CommitCollection(staged!, profiles, nextColor())
-                    : CommitInto(staged!, target!);
+                if (package.IsCollection)
+                    return TransferPackage.CommitCollection(staged!, profiles, nextColor());
+                if (package.IsItem)
+                    return TransferPackage.CommitItem(staged!, target, profiles, nextColor(), Loc.T("Transfer.Import.NewCollectionName"));
+                return CommitInto(staged!, target!);
             }
             catch (Exception e) when (e is TransferException || e is IOException || e is UnauthorizedAccessException)
             {
