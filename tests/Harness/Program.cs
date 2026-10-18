@@ -29,6 +29,7 @@ using TidyMind;
 //   Harness tasks <dataFolder> <shotsFolder> Project Details as one scrolling page (5, 60, 250, 500 tasks)
 //   Harness select <dataFolder> <shotsFolder> selecting several items (Ctrl, Shift, Ctrl+A) and deleting them at once
 //   Harness bgshot <dataFolder> <shotsFolder> a collection on a busy background picture at three visibility settings
+//   Harness tint <dataFolder> <shotsFolder> Adaptive card tint: sampling, contrast, light and dark photos, the switch
 static partial class Program
 {
     static int failures;
@@ -42,7 +43,7 @@ static partial class Program
         if (args.Length == 2 && args[0] == "--test-notification")
             return RunScheduledTest(args[1]);
         // Anything else (e.g. a "--remind" from a task left behind by a crashed run) does nothing.
-        string[] modes = { "toast", "ui", "plan", "loc", "locfirst", "locdata1", "locdata2", "probe", "taskpath", "export", "update", "tasks", "select", "bgshot", "transfer" };
+        string[] modes = { "toast", "ui", "plan", "loc", "locfirst", "locdata1", "locdata2", "probe", "taskpath", "export", "update", "tasks", "select", "bgshot", "transfer", "tint" };
         if (args.Length < 2 || !modes.Contains(args[0]))
             return 2;
         string data = Path.GetFullPath(args[1]);
@@ -169,6 +170,7 @@ static partial class Program
                     case "select": await SelectScenarios(main); break;
                     case "transfer": await TransferScenarios(main); break;
                     case "bgshot": await BackgroundShots(main); break;
+                    case "tint": await TintScenarios(main); break;
                     default: await Scenarios(main); break;
                 }
             }

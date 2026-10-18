@@ -198,8 +198,21 @@
                                                VerticalAlignment="Center" Foreground="{StaticResource TextSub}"/>
                                 </StackPanel>
                             </Grid>
-                            <!-- Room for the next look setting ("Adaptive card tint"): a RowDividerStyle border, then a row like
-                                 the Updates switch (title, note, a SwitchStyle CheckBox in column 1). -->
+                            <Border Style="{StaticResource RowDividerStyle}"/>
+                            <!-- Frosted glass for the header plate and empty-tab card on a background picture (CardTint); applies at once -->
+                            <Grid Style="{StaticResource RowStyle}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="{local:Tr Settings.CardTint.Title}" Style="{StaticResource RowTitleStyle}"/>
+                                    <TextBlock Text="{local:Tr Settings.CardTint.Note}" Style="{StaticResource RowNoteStyle}"/>
+                                </StackPanel>
+                                <CheckBox x:Name="CardTintSwitch" Style="{StaticResource SwitchStyle}"
+                                          AutomationProperties.Name="{local:Tr Settings.CardTint.Title}"
+                                          Click="CardTintSwitch_Click"/>
+                            </Grid>
                         </StackPanel>
                     </Border>
                 </StackPanel>

@@ -43,7 +43,7 @@ namespace TidyMind
                 RenderProjects();
             };
             memory = profile;
-            MemoryPageBackground.Attach(Page, BackgroundLayer, profile, saveProfiles, HeaderPlate);
+            MemoryPageBackground.Attach(Page, BackgroundLayer, profile, saveProfiles, HeaderPlate, EmptyCard);
             TitleText.Text = profile.Name;
 
             // Counts, cards and the reason a file couldn't be read, in the new language; names are the user's own.

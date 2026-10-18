@@ -40,6 +40,7 @@ namespace TidyMind
                 if (backgroundSave.IsEnabled)
                     SaveBackgroundVisibility(); // closed right after a change
             };
+            CardTintSwitch.IsChecked = CardTint.Enabled;
             AutoUpdateSwitch.IsChecked = AppSettings.Load().CheckForUpdates != false;
             ShowUpdates();
             Loc.Track(this, ShowUpdates);
@@ -295,6 +296,14 @@ namespace TidyMind
             backgroundSave.Stop();
             int percent = PageBackground.ImageVisibility;
             AppSettings.Update(s => s.BackgroundImageVisibility = percent == PageBackground.DefaultImageVisibility ? null : percent);
+        }
+
+        // Every open page follows at once; a setting that couldn't be written still applies until the app closes.
+        private void CardTintSwitch_Click(object sender, RoutedEventArgs e)
+        {
+            bool on = CardTintSwitch.IsChecked == true;
+            CardTint.Enabled = on;
+            AppSettings.Update(s => s.AdaptiveCardTint = on ? null : false);
         }
 
         private void AutoUpdateSwitch_Click(object sender, RoutedEventArgs e)

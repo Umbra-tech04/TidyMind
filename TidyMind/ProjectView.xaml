@@ -32,8 +32,8 @@
             <Grid>
                 <StackPanel VerticalAlignment="Center">
                     <TextBlock x:Name="TitleText" FontSize="24" FontWeight="Bold"
-                               Foreground="{StaticResource TextMain}"/>
-                    <TextBlock x:Name="SubtitleText" FontSize="11" Foreground="{StaticResource TextSub}"
+                               Foreground="{DynamicResource PlateText}"/>
+                    <TextBlock x:Name="SubtitleText" FontSize="11" Foreground="{DynamicResource PlateTextSub}"
                                Margin="0,4,0,0"/>
                 </StackPanel>
 
@@ -68,11 +68,11 @@
             <Grid x:Name="CardArea">
                 <WrapPanel x:Name="ProjectPanel"/>
                 <!-- Nothing in this tab, nothing found, or the file can't be read: a small card, shown with its text -->
-                <Border Style="{StaticResource EmptyCardStyle}" Visibility="{Binding Visibility, ElementName=EmptyState}">
+                <Border x:Name="EmptyCard" Style="{StaticResource EmptyCardStyle}" Visibility="{Binding Visibility, ElementName=EmptyState}">
                     <StackPanel>
                         <TextBlock Text="&#xE821;" Style="{StaticResource EmptyCardIconStyle}"/>
                         <TextBlock x:Name="EmptyState" FontSize="13" TextWrapping="Wrap" TextAlignment="Center"
-                                   Foreground="{StaticResource TextBody}" Visibility="Collapsed"/>
+                                   Foreground="{DynamicResource PlateBody}" Visibility="Collapsed"/>
                     </StackPanel>
                 </Border>
                 <Canvas x:Name="MarqueeCanvas" IsHitTestVisible="False"/>

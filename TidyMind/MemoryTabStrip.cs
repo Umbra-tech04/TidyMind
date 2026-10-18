@@ -93,6 +93,13 @@ namespace TidyMind
         {
             bool active = tab.Id == ActiveTabId;
 
+            TextBlock name = new TextBlock
+            {
+                Text = tab.Name,
+                FontSize = 13,
+                FontWeight = active ? FontWeights.SemiBold : FontWeights.Normal,
+                Foreground = Brushes.White
+            };
             Border pill = new Border
             {
                 CornerRadius = new CornerRadius(15),
@@ -100,18 +107,14 @@ namespace TidyMind
                 Margin = new Thickness(0, 0, 6, 0),
                 Cursor = Cursors.Hand,
                 Background = active ? CardEffects.Accent : Brushes.Transparent,
-                Child = new TextBlock
-                {
-                    Text = tab.Name,
-                    FontSize = 13,
-                    FontWeight = active ? FontWeights.SemiBold : FontWeights.Normal,
-                    Foreground = active ? Brushes.White : B("#5F5F5B")
-                }
+                Child = name
             };
 
+            // Inactive tabs follow the page's header plate (light text while it's frosted glass, CardTint).
             if (!active)
             {
-                pill.MouseEnter += (s, e) => pill.Background = B("#ECECE9");
+                name.SetResourceReference(TextBlock.ForegroundProperty, "PlateTabText");
+                pill.MouseEnter += (s, e) => pill.SetResourceReference(Border.BackgroundProperty, "PlateTabHover");
                 pill.MouseLeave += (s, e) => pill.Background = Brushes.Transparent;
             }
 
@@ -299,11 +302,6 @@ namespace TidyMind
             if (!TabStore.TrySave(memory, tabs))
                 Msg.Show(Loc.F("Tabs.SaveFailed", memory.Name, MemoryFiles.Tabs(memory)), Loc.T("Common.CouldntSave"),
                     MessageBoxButton.OK, MessageBoxImage.Warning);
-        }
-
-        private static SolidColorBrush B(string hex)
-        {
-            return new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
         }
     }
 }

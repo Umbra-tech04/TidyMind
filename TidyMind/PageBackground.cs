@@ -10,7 +10,8 @@ namespace TidyMind
     // A memory's page background (Edit Background, projects and collections), drawn behind everything on the page.
     // A palette color stays a faint tint over the off-white page. A picture shows as clearly as Settings > Background
     // pictures says (ImageVisibility), under a thin white film; the page puts its header and tabs on a light plate
-    // over it (MemoryPageBackground), so dark text stays readable on bright, dark and busy photos.
+    // over it (MemoryPageBackground), so dark text stays readable on bright, dark and busy photos. With Adaptive card
+    // tint on, that plate and the empty-tab card are frosted glass instead (CardTint).
     public static class PageBackground
     {
         public const double ColorOpacity = 0.18; // a tint, not a fill
@@ -28,8 +29,16 @@ namespace TidyMind
         public static int ImageVisibility
         {
             get => (int)System.Math.Round((1 - ImageWash.Opacity) * 100);
-            set => ImageWash.Opacity = 1 - System.Math.Clamp(value, MinImageVisibility, 100) / 100.0;
+            set
+            {
+                ImageWash.Opacity = 1 - System.Math.Clamp(value, MinImageVisibility, 100) / 100.0;
+                CardTint.RefreshAll(); // the tint follows how light the page gets
+            }
         }
+
+        // The white film over every picture, and its opacity: CardTint lays the same film on its frosted copy.
+        internal static Brush Film => ImageWash;
+        internal static double FilmOpacity => ImageWash.Opacity;
 
         // Fills `layer` (a panel spanning the page, behind its content, over the off-white base) for a background.
         // `image` overrides the stored picture (a dialog preview). Nothing is drawn for None or a missing picture.
@@ -40,6 +49,7 @@ namespace TidyMind
             layer.Children.Clear();
             object fill = new object();
             layer.Tag = fill; // which Fill is current: a slower, older decode mustn't paint over a newer choice
+            CardTint.PictureShown(layer, null);
 
             switch (type)
             {
@@ -63,6 +73,7 @@ namespace TidyMind
         {
             layer.Children.Add(new Rectangle { Fill = new ImageBrush(picture) { Stretch = Stretch.UniformToFill } });
             layer.Children.Add(new Rectangle { Fill = ImageWash });
+            CardTint.PictureShown(layer, picture);
         }
 
         // Added on the layer's own UI thread once decoded; skipped if the layer has been refilled since (another

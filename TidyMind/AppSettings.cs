@@ -34,6 +34,10 @@ namespace TidyMind
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public int? BackgroundImageVisibility { get; set; }
 
+        // Settings > Appearance > Adaptive card tint (CardTint): false turns it off; null (the default) means on.
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? AdaptiveCardTint { get; set; }
+
         // Settings > Updates: false turns the automatic check off; null (the default) means on.
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? CheckForUpdates { get; set; }

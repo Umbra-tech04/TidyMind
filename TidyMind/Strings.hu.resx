@@ -1802,6 +1802,12 @@ A fájl változatlan maradt. Javítsd ki, vagy állítsd vissza egy mentésből,
   <data name="Settings.BackgroundImage.Value" xml:space="preserve">
     <value>{0}%</value>
   </data>
+  <data name="Settings.CardTint.Note" xml:space="preserve">
+    <value>Háttérképen a fejléc és az üres fül kártyája matt üveggé válik, amely ott sötétebb, ahol a kép világos, így a szövegük jól olvasható marad.</value>
+  </data>
+  <data name="Settings.CardTint.Title" xml:space="preserve">
+    <value>Alkalmazkodó kártyaárnyalat</value>
+  </data>
   <data name="Settings.Backup.Button" xml:space="preserve">
     <value>Biztonsági mentés…</value>
   </data>

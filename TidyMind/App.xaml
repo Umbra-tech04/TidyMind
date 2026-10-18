@@ -13,6 +13,14 @@
         <SolidColorBrush x:Key="TextMain"     Color="#1C1B19"/>
         <SolidColorBrush x:Key="TextSub"      Color="#6E6E6B"/> <!-- 5.1:1 on white, 4.7:1 on BgMain (readable small text) -->
         <SolidColorBrush x:Key="TextBody"     Color="#3A3936"/> <!-- secondary reading text: softer than TextMain, darker than TextSub -->
+        <!-- Text on a memory page's header plate and empty-tab card (DynamicResource): these plain colors, or light ones
+             set on the page while Adaptive card tint makes those surfaces frosted glass (CardTint) -->
+        <SolidColorBrush x:Key="PlateText"     Color="#1C1B19"/>
+        <SolidColorBrush x:Key="PlateTextSub"  Color="#6E6E6B"/>
+        <SolidColorBrush x:Key="PlateTabText"  Color="#5F5F5B"/>
+        <SolidColorBrush x:Key="PlateTabHover" Color="#ECECE9"/>
+        <SolidColorBrush x:Key="PlateBody"     Color="#3A3936"/>
+        <SolidColorBrush x:Key="PlateIcon"     Color="#2E7BC4"/>
         <FontFamily x:Key="DisplayFont">Segoe UI Variable Display, Segoe UI</FontFamily> <!-- large or title type -->
 
         <SolidColorBrush x:Key="Accent"       Color="#2E7BC4"/>
@@ -80,7 +88,7 @@
         <Style x:Key="EmptyCardIconStyle" TargetType="TextBlock">
             <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
             <Setter Property="FontSize" Value="22"/>
-            <Setter Property="Foreground" Value="{StaticResource Accent}"/>
+            <Setter Property="Foreground" Value="{DynamicResource PlateIcon}"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="0,0,0,10"/>
         </Style>

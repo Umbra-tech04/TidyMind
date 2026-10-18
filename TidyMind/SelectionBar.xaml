@@ -4,7 +4,7 @@
              xmlns:local="clr-namespace:TidyMind">
     <!-- Takes the place of the search box and Add buttons while cards are selected (CardSelectionController). -->
     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-        <TextBlock x:Name="CountText" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextMain}"
+        <TextBlock x:Name="CountText" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PlateText}"
                    VerticalAlignment="Center" Margin="0,0,16,0"/>
         <Button Content="{local:Tr Common.Delete}" Height="36" Padding="18,0" Margin="0,0,10,0"
                 Style="{StaticResource GhostButtonStyle}" Foreground="{StaticResource Danger}"
