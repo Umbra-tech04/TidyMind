@@ -1,9 +1,11 @@
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Threading;
 
 namespace TidyMind
@@ -31,13 +33,27 @@ namespace TidyMind
 
         public static bool IsOpen => instance != null;
 
+        // Where the keyboard was when the note opened (a window of TidyMind and the element in it): given back when
+        // the note is closed from itself (Esc, its X), so the user carries on where they were. Nothing is reloaded.
+        private Window returnWindow;
+        private UIElement returnFocus;
+        private bool closingWhileActive;
+
+        // An ordinary window: owned by the main window, never Topmost. Another application in front puts it behind
+        // that application together with TidyMind; switching back to TidyMind (taskbar, Alt+Tab) brings it back with
+        // the main window. Windows also hides it while the main window is minimized and brings it back on restore
+        // (it has no taskbar button of its own to restore it from).
         public static void ShowOrFocus()
         {
             if (instance == null)
             {
-                // Owned by the main window: Windows hides it while the main window is minimized and brings it
-                // back on restore (it has no taskbar button of its own to restore it from).
-                instance = new QuickNotesWindow { Owner = Application.Current.MainWindow };
+                Window active = Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w.IsActive);
+                instance = new QuickNotesWindow
+                {
+                    Owner = Application.Current.MainWindow,
+                    returnWindow = active,
+                    returnFocus = active != null && Keyboard.FocusedElement is UIElement focused && active.IsAncestorOf(focused) ? focused : null
+                };
                 instance.Show();
             }
             else
@@ -70,6 +86,7 @@ namespace TidyMind
                     MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             base.OnClosing(e);
+            closingWhileActive = !e.Cancel && IsActive;
         }
 
         // A close that can't be refused (TidyMind itself closing) still mustn't lose the text: it goes to a separate
@@ -80,7 +97,29 @@ namespace TidyMind
                 RescueUnsavedText();
             base.OnClosed(e);
             instance = null;
+
+            // Closed from itself: once Windows has activated the owner, back to where the note was opened from.
+            if (closingWhileActive)
+                Dispatcher.BeginInvoke(new Action(ReturnToPrevious), DispatcherPriority.Input);
         }
+
+        // The window and element from before, if they are still there and can take the keyboard (the project they
+        // showed may have been closed or deleted, a dialog may be in the way, the window may be minimized): then
+        // whatever Windows activated stays, and nothing else changes.
+        private void ReturnToPrevious()
+        {
+            Window window = returnWindow;
+            if (window == null || !window.IsVisible || window.WindowState == WindowState.Minimized
+                || !Application.Current.Windows.OfType<Window>().Contains(window)
+                || !IsWindowEnabled(new WindowInteropHelper(window).Handle))
+                return;
+            window.Activate();
+            if (returnFocus != null && returnFocus.IsVisible && returnFocus.IsEnabled && window.IsAncestorOf(returnFocus))
+                Keyboard.Focus(returnFocus);
+        }
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool IsWindowEnabled(IntPtr hWnd);
 
         private void RescueUnsavedText()
         {

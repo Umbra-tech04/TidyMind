@@ -9,7 +9,6 @@
         MinHeight="220" MinWidth="260"
         WindowStartupLocation="CenterScreen"
         ShowInTaskbar="False"
-        Topmost="True"
         PreviewKeyDown="Window_PreviewKeyDown"
         Background="{StaticResource BgMain}">
     <Grid>

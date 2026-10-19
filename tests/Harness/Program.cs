@@ -31,6 +31,7 @@ using TidyMind;
 //   Harness bgshot <dataFolder> <shotsFolder> a collection on a busy background picture at three visibility settings
 //   Harness tint <dataFolder> <shotsFolder> Adaptive card tint: sampling, contrast, light and dark photos, the switch
 //   Harness pictures <dataFolder> <shotsFolder> several pictures per collection item: data, form, delete safety, card, transfer
+//   Harness quicknote <dataFolder> <shotsFolder> the Quick note: not topmost, behind other apps, focus given back on close
 static partial class Program
 {
     static int failures;
@@ -44,7 +45,7 @@ static partial class Program
         if (args.Length == 2 && args[0] == "--test-notification")
             return RunScheduledTest(args[1]);
         // Anything else (e.g. a "--remind" from a task left behind by a crashed run) does nothing.
-        string[] modes = { "toast", "ui", "plan", "loc", "locfirst", "locdata1", "locdata2", "probe", "taskpath", "export", "update", "tasks", "select", "bgshot", "transfer", "tint", "pictures" };
+        string[] modes = { "toast", "ui", "plan", "loc", "locfirst", "locdata1", "locdata2", "probe", "taskpath", "export", "update", "tasks", "select", "bgshot", "transfer", "tint", "pictures", "quicknote" };
         if (args.Length < 2 || !modes.Contains(args[0]))
             return 2;
         string data = Path.GetFullPath(args[1]);
@@ -173,6 +174,7 @@ static partial class Program
                     case "bgshot": await BackgroundShots(main); break;
                     case "tint": await TintScenarios(main); break;
                     case "pictures": await PictureScenarios(main); break;
+                    case "quicknote": await QuickNoteScenarios(main); break;
                     default: await Scenarios(main); break;
                 }
             }
