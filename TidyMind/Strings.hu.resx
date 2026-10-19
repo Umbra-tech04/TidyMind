@@ -318,7 +318,7 @@ Most bezárul, nyisd meg újra.</value>
     <value>Egy elem sem felel meg a keresésnek.</value>
   </data>
   <data name="Collection.PictureFailed" xml:space="preserve">
-    <value>Nem sikerült az új képeket ide másolni: {0}, ezért nem kerültek be. Az elem többi része a szokásos módon mentve lett.</value>
+    <value>Ezeket a képeket nem sikerült ide másolni: {1}, ezért nem kerültek be: {0}. Minden más a szokásos módon mentve lett, a többi képpel együtt.</value>
   </data>
   <data name="Collection.PictureFailed.Caption" xml:space="preserve">
     <value>Nem sikerült hozzáadni a képeket</value>
@@ -602,17 +602,26 @@ Az utolsó módosításod nem lett mentve.</value>
   <data name="Entity.PictureCount.Other" xml:space="preserve">
     <value>{0} kép</value>
   </data>
+  <data name="Entity.Picture.OfCover" xml:space="preserve">
+    <value>{0}. kép, összesen {1}, a borító</value>
+  </data>
   <data name="Entity.Picture.Of" xml:space="preserve">
     <value>{0}. kép, összesen {1}</value>
   </data>
   <data name="Entity.Picture.SetCover" xml:space="preserve">
     <value>Legyen borító</value>
   </data>
+  <data name="Entity.Picture.Previous" xml:space="preserve">
+    <value>Előző kép</value>
+  </data>
+  <data name="Entity.Picture.Next" xml:space="preserve">
+    <value>Következő kép</value>
+  </data>
   <data name="Entity.Picture.Earlier" xml:space="preserve">
-    <value>Korábbra</value>
+    <value>Előrébb</value>
   </data>
   <data name="Entity.Picture.Later" xml:space="preserve">
-    <value>Későbbre</value>
+    <value>Hátrébb</value>
   </data>
   <data name="Entity.Picture.Remove" xml:space="preserve">
     <value>Kép eltávolítása</value>

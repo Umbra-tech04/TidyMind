@@ -360,7 +360,7 @@ It will close now; please open it again.</value>
     <value>No items match your search.</value>
   </data>
   <data name="Collection.PictureFailed" xml:space="preserve">
-    <value>Couldn't copy the new pictures into {0}, so they weren't added. The rest of the item is saved as usual.</value>
+    <value>Couldn't copy these pictures into {1}, so they weren't added: {0}. Everything else is saved as usual, the other pictures included.</value>
   </data>
   <data name="Collection.PictureFailed.Caption" xml:space="preserve">
     <value>Couldn't Add Pictures</value>
@@ -653,11 +653,20 @@ Your last change wasn't saved.</value>
   <data name="Entity.PictureCount.Other" xml:space="preserve">
     <value>{0} pictures</value>
   </data>
+  <data name="Entity.Picture.OfCover" xml:space="preserve">
+    <value>Picture {0} of {1}, the cover</value>
+  </data>
   <data name="Entity.Picture.Of" xml:space="preserve">
     <value>Picture {0} of {1}</value>
   </data>
   <data name="Entity.Picture.SetCover" xml:space="preserve">
     <value>Make cover</value>
+  </data>
+  <data name="Entity.Picture.Previous" xml:space="preserve">
+    <value>Previous picture</value>
+  </data>
+  <data name="Entity.Picture.Next" xml:space="preserve">
+    <value>Next picture</value>
   </data>
   <data name="Entity.Picture.Earlier" xml:space="preserve">
     <value>Move earlier</value>

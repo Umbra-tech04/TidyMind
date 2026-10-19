@@ -38,9 +38,12 @@ static partial class Program
         Directory.CreateDirectory(picWork);
 
         PictureData(main);
+        await PictureArrowsBrowse(main);
+        await PictureBrowsing(main);
         await PictureForm(main);
         await PictureEditAndDelete(main);
         await PictureCardAndDetail(main);
+        await PictureReviewFixes(main);
         PictureTransfer(main);
         PictureExports();
 
@@ -146,7 +149,35 @@ static partial class Program
         button.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
     }
 
-    static void FormSelect(EntityForm form, int index) => ClickNow((Button)Field<WrapPanel>(form, "pictureStrip").Children[index]);
+    static PictureBrowser FormBrowser(EntityForm form) => Field<PictureBrowser>(form, "pictureBrowser");
+    static WrapPanel StripOf(PictureBrowser browser) => Field<WrapPanel>(browser, "strip");
+    static Image PreviewOf(PictureBrowser browser) => Field<Image>(browser, "preview");
+    static ScrollViewer StripScrollOf(PictureBrowser browser) => Field<ScrollViewer>(browser, "stripScroll");
+    static Button ArrowOf(PictureBrowser browser, bool forward) => Field<Button>(browser, forward ? "next" : "previous");
+
+    // The one source of truth and everything drawn from it agree: the browser's selection is `selected`, the large
+    // picture is that one, exactly that thumbnail is framed, the first and only the first says Cover, and the arrows
+    // are off exactly at the ends.
+    static bool InSync(PictureBrowser browser, IReadOnlyList<ImageSource> pictures, int selected)
+    {
+        WrapPanel strip = StripOf(browser);
+        if (browser.Selected != selected || strip.Children.Count != pictures.Count || !ReferenceEquals(PreviewOf(browser).Source, pictures[selected]))
+            return false;
+        for (int i = 0; i < pictures.Count; i++)
+        {
+            Grid thumb = (Grid)((Button)strip.Children[i]).Content;
+            Border frame = (Border)thumb.Children[0];
+            if ((frame.BorderThickness.Left == 2) != (i == selected) || !ReferenceEquals(((Image)frame.Child).Source, pictures[i])
+                || (thumb.Children.Count == 2) != (i == 0))
+                return false;
+        }
+        return ArrowOf(browser, false).IsEnabled == (selected > 0) && ArrowOf(browser, true).IsEnabled == (selected < pictures.Count - 1);
+    }
+
+    static bool FormInSync(EntityForm form) =>
+        FormSelected(form) == FormBrowser(form).Selected && InSync(FormBrowser(form), form.Pictures.Select(p => p.Preview).ToList(), FormSelected(form));
+
+    static void FormSelect(EntityForm form, int index) => ClickNow((Button)StripOf(FormBrowser(form)).Children[index]);
     static void FormTool(EntityForm form, string button) => ClickNow(Field<Button>(form, button));
     static int FormSelected(EntityForm form) => Field<int>(form, "selectedPicture");
     static string[] FormPicked(EntityForm form) => form.Pictures.Select(p => p.Stored ?? p.PickedFile).ToArray();
@@ -204,18 +235,21 @@ static partial class Program
         string[] own = OwnPictures(3);
         Entity target = new Entity { Name = "Cél" };
         HashSet<string> before = ItemFiles();
-        Check(EntityImages.TryApply(target, own.Select(f => new PictureSlot { PickedFile = f }).ToList(), out List<string> imported)
-              && imported.Count == 3 && imported.Distinct().Count() == 3 && EntityImages.Names(target).SequenceEqual(imported)
-              && imported.All(Stored) && imported.All(n => n.EndsWith(".png")), "TryApply: picked files copied in under new names, in order");
+        EntityImages.Apply(target, own.Select(f => new PictureSlot { PickedFile = f }).ToList(), out List<string> imported, out List<string> failed);
+        Check(failed.Count == 0 && imported.Count == 3 && imported.Distinct().Count() == 3 && EntityImages.Names(target).SequenceEqual(imported)
+              && imported.All(Stored) && imported.All(n => n.EndsWith(".png")), "Apply: picked files copied in under new names, in order");
         for (int i = 0; i < 3; i++)
             Check(SameBytes(ImageStore.Items.PathOf(imported[i]), own[i]), "picture " + (i + 1) + " is a byte-for-byte copy");
         Check(ItemFiles().Count == before.Count + 3 && !Directory.GetFiles(ImageStore.Items.Folder, "*.tmp").Any(), "three files added, no temporary file");
 
         before = ItemFiles();
-        Entity untouched = new Entity { Name = "Marad", ImagePath = names[0] };
-        Check(!EntityImages.TryApply(untouched, new[] { new PictureSlot { PickedFile = own[0] }, new PictureSlot { PickedFile = Path.Combine(picWork, "nincs.png") } },
-                  out List<string> none) && none.Count == 0 && untouched.ImagePath == names[0] && ItemFiles().SetEquals(before),
-            "a file that can't be copied: the whole change is refused, the copies made so far removed, the item as it was");
+        string gone = Path.Combine(picWork, "nincs.png");
+        Entity partly = new Entity { Name = "Részben", ImagePath = names[0], MoreImages = new List<string> { names[1] } };
+        EntityImages.Apply(partly, new[] { new PictureSlot { PickedFile = gone }, new PictureSlot { Stored = names[1] }, new PictureSlot { PickedFile = own[0] } },
+            out List<string> made, out List<string> notCopied);
+        Check(notCopied.SequenceEqual(new[] { gone }) && made.Count == 1 && EntityImages.Names(partly).SequenceEqual(new[] { names[1], made[0] })
+              && ItemFiles().Count == before.Count + 1,
+            "a picked file that can't be copied is left out and named; the rest of the list (names[0] removed, the order) still applies");
 
         // Only files no item uses.
         Profile other = AddMemory(main, "Pictures other", ProfileType.Collection);
@@ -241,6 +275,126 @@ static partial class Program
         Check(!Stored(d), "unused: removed");
     }
 
+    // ---- The reported bug: the arrows next to the large picture --------------------------------
+
+    // The user's steps: select a picture, make it the cover, then press the right arrow. The arrows must browse
+    // (the selection moves on, the order stays); they must never carry the selected picture along.
+    static async Task PictureArrowsBrowse(MainWindow main)
+    {
+        Console.WriteLine("The arrows by the large picture browse; they don't reorder");
+        string[] files = OwnPictures(3, 50);
+        EntityForm form = new EntityForm(EntityTypes.Vehicle);
+        Field<TextBox>(form, "nameBox").Text = "Nyilak";
+        DriveEntityForm(main, async f =>
+        {
+            f.AddPictures(files);
+            await Wait(300);
+            FormSelect(f, 1);
+            FormTool(f, "coverBtn");
+            string[] order = FormPicked(f);
+            Check(order.SequenceEqual(new[] { files[1], files[0], files[2] }) && FormSelected(f) == 0, "picture 2 made the cover: first, selected");
+            Button right = Descendants(f).OfType<Button>().First(b => b.Content as string == "▶" || (b.Content as TextBlock)?.Text == "\uE76C");
+            ClickNow(right);
+            Check(FormPicked(f).SequenceEqual(order), "the right arrow leaves the order alone (it was: " + string.Join(", ", FormPicked(f).Select(Path.GetFileName)) + ")");
+            Check(FormSelected(f) == 1, "...and selects the next picture (selected: " + FormSelected(f) + ")");
+        }, save: false);
+        form.ShowDialog();
+    }
+
+    // Browsing and reordering are separate: the arrows and Left / Right move the selection only; Move earlier /
+    // later, a drag in the strip and Make cover change the order and keep the moved picture selected; Remove selects
+    // a neighbour. After every step the selection, the large picture and the framed thumbnail agree.
+    static async Task PictureBrowsing(MainWindow main)
+    {
+        Console.WriteLine("Browsing and reordering in the item form");
+        string[] f = OwnPictures(4, 60);
+        EntityForm form = new EntityForm(EntityTypes.Clothing);
+        Field<TextBox>(form, "nameBox").Text = "Böngészés";
+        DriveEntityForm(main, async e =>
+        {
+            PictureBrowser browser = FormBrowser(e);
+            Check(browser.Visibility == Visibility.Collapsed && Field<WrapPanel>(e, "pictureTools").Visibility == Visibility.Collapsed,
+                "empty: no picture area, no tools");
+            e.AddPictures(f.Take(1));
+            await Wait(200);
+            Check(FormInSync(e) && !ArrowOf(browser, true).IsVisible && !ArrowOf(browser, false).IsVisible && StripScrollOf(browser).IsVisible
+                  && !Field<Button>(e, "coverBtn").IsVisible && !Field<Button>(e, "laterBtn").IsVisible && Field<Button>(e, "removePictureBtn").IsVisible,
+                "one picture: framed with its Cover badge, no arrows, only Remove");
+            Check(!browser.Browse(1) && !browser.Browse(-1), "one picture: nothing to browse");
+            e.AddPictures(f.Skip(1));
+            await Wait(200);
+            Check(FormSelected(e) == 1 && FormInSync(e) && ArrowOf(browser, true).IsVisible, "three more added: the first new one selected, arrows shown");
+            string[] order = FormPicked(e);
+
+            ClickNow(ArrowOf(browser, true));
+            Check(FormSelected(e) == 2 && FormInSync(e) && FormPicked(e).SequenceEqual(order), "next arrow: the next picture, the order unchanged");
+            ClickNow(ArrowOf(browser, true));
+            Check(FormSelected(e) == 3 && FormInSync(e) && !ArrowOf(browser, true).IsEnabled && !browser.Browse(1), "at the last: next is off");
+            ClickNow(ArrowOf(browser, false));
+            ClickNow(ArrowOf(browser, false));
+            ClickNow(ArrowOf(browser, false));
+            Check(FormSelected(e) == 0 && FormInSync(e) && !ArrowOf(browser, false).IsEnabled && FormPicked(e).SequenceEqual(order),
+                "back to the first with the previous arrow: back is off, the order unchanged");
+            Button Thumb(int i) => (Button)StripOf(browser).Children[i]; // drawn anew after every change
+            PressKey(Thumb(0), Key.Right);
+            PressKey(Thumb(1), Key.Right);
+            Check(FormSelected(e) == 2 && FormInSync(e) && FormPicked(e).SequenceEqual(order), "Right key twice: the third, the order unchanged");
+            PressKey(Thumb(2), Key.Left);
+            Check(FormSelected(e) == 1 && FormInSync(e) && FormPicked(e).SequenceEqual(order), "Left key: back one");
+            PressKey(Field<TextBox>(e, "nameBox"), Key.Left);
+            Check(FormSelected(e) == 1, "Left in a text box is the text box's, not the pictures'");
+
+            FormTool(e, "laterBtn");
+            Check(FormPicked(e).SequenceEqual(new[] { order[0], order[2], order[1], order[3] }) && FormSelected(e) == 2 && FormInSync(e),
+                "Move later: the selected picture moves one place, and stays selected (framed) there");
+            FormTool(e, "earlierBtn");
+            Check(FormPicked(e).SequenceEqual(order) && FormSelected(e) == 1 && FormInSync(e), "Move earlier: back, still selected");
+
+            // A drag in the strip: the fourth dropped before the first is the cover now, and selected.
+            WrapPanel strip = StripOf(browser);
+            Field<Action<Button, Button, bool>>(Field<object>(browser, "drag"), "onDrop")((Button)strip.Children[3], (Button)strip.Children[0], false);
+            Check(FormPicked(e).SequenceEqual(new[] { order[3], order[0], order[1], order[2] }) && FormSelected(e) == 0 && FormInSync(e),
+                "dragged before the first: it is the cover now, and selected");
+            strip = StripOf(browser);
+            Field<Action<Button, Button, bool>>(Field<object>(browser, "drag"), "onDrop")((Button)strip.Children[0], (Button)strip.Children[3], true);
+            Check(FormPicked(e).SequenceEqual(order) && FormSelected(e) == 3 && FormInSync(e), "dragged after the last: last, and selected");
+
+            FormSelect(e, 2);
+            FormTool(e, "coverBtn");
+            Check(FormPicked(e).SequenceEqual(new[] { order[2], order[0], order[1], order[3] }) && FormSelected(e) == 0 && FormInSync(e)
+                  && !Field<Button>(e, "coverBtn").IsEnabled, "Make cover: first in the list, selected, with the Cover badge");
+
+            FormSelect(e, 1);
+            FormTool(e, "removePictureBtn");
+            Check(FormPicked(e).SequenceEqual(new[] { order[2], order[1], order[3] }) && FormSelected(e) == 1 && FormInSync(e),
+                "Remove in the middle: the next one is selected");
+            FormSelect(e, 2);
+            FormTool(e, "removePictureBtn");
+            Check(FormPicked(e).SequenceEqual(new[] { order[2], order[1] }) && FormSelected(e) == 1 && FormInSync(e), "Remove the last: the one before it");
+            FormTool(e, "removePictureBtn");
+            Check(FormPicked(e).Length == 1 && FormSelected(e) == 0 && FormInSync(e) && !ArrowOf(browser, true).IsVisible, "down to one: no arrows");
+            FormTool(e, "removePictureBtn");
+            Check(e.Pictures.Count == 0 && FormSelected(e) == -1 && browser.Visibility == Visibility.Collapsed
+                  && Field<WrapPanel>(e, "pictureTools").Visibility == Visibility.Collapsed && Field<TextBlock>(e, "imagePathText").Text == Loc.T("Entity.NoPictures"),
+                "all removed: empty, no dead controls");
+        }, save: false);
+        form.ShowDialog();
+
+        // Reopening an item: its cover selected, everything in sync.
+        string[] stored = { StoredPicture(1), StoredPicture(2), StoredPicture(3) };
+        EntityForm reopen = new EntityForm(PictureItem("Újra", 0, stored));
+        DriveEntityForm(main, async e =>
+        {
+            await Wait(200);
+            Check(FormPicked(e).SequenceEqual(stored) && FormSelected(e) == 0 && FormInSync(e) && ArrowOf(FormBrowser(e), true).IsVisible,
+                "reopened: the cover selected and shown, the arrows there");
+            RenderWindow(e, "pictures-02-editor-reopened-en");
+        }, save: false);
+        reopen.ShowDialog();
+        foreach (string name in stored)
+            EntityImages.DeleteCopy(name);
+    }
+
     // ---- The item form --------------------------------------------------------------
 
     static async Task PictureForm(MainWindow main)
@@ -257,10 +411,10 @@ static partial class Program
         DriveEntityForm(main, async f =>
         {
             Check(f.Pictures.Count == 0 && Field<TextBlock>(f, "imagePathText").Text == Loc.T("Entity.NoPictures")
-                  && Field<StackPanel>(f, "pictureTools").Visibility == Visibility.Collapsed, "a new item: no pictures, no tools");
+                  && Field<WrapPanel>(f, "pictureTools").Visibility == Visibility.Collapsed, "a new item: no pictures, no tools");
             f.AddPictures(files);
             await Wait(300);
-            WrapPanel strip = Field<WrapPanel>(f, "pictureStrip");
+            WrapPanel strip = StripOf(FormBrowser(f));
             Check(f.Pictures.Count == 3 && strip.Children.Count == 3 && FormSelected(f) == 0
                   && Field<TextBlock>(f, "imagePathText").Text == "3 pictures", "three picked at once: three thumbnails, the first selected");
             Check(f.Pictures.All(p => p.Preview != null && p.PickedFile != null && p.Stored == null), "each is previewed and kept as a picked file");
@@ -269,7 +423,7 @@ static partial class Program
             RenderWindow(f, "pictures-01-editor-3-en");
 
             FormSelect(f, 2);
-            Check(FormSelected(f) == 2 && ReferenceEquals(Field<Image>(f, "imagePreview").Source, f.Pictures[2].Preview), "a thumbnail clicked: shown larger");
+            Check(FormSelected(f) == 2 && FormInSync(f), "a thumbnail clicked: shown larger");
             FormTool(f, "coverBtn");
             Check(FormPicked(f).SequenceEqual(new[] { files[2], files[0], files[1] }) && FormSelected(f) == 0, "Make cover: it moves to the front");
             FormTool(f, "laterBtn");
@@ -309,7 +463,8 @@ static partial class Program
 
         Entity result = form.ResultEntity;
         HashSet<string> before = ItemFiles();
-        Check(EntityImages.TryApply(result, form.Pictures, out List<string> imported) && imported.Count == 5 && ItemFiles().Count == before.Count + 5,
+        EntityImages.Apply(result, form.Pictures, out List<string> imported, out List<string> failed);
+        Check(failed.Count == 0 && imported.Count == 5 && ItemFiles().Count == before.Count + 5,
             "the caller copies the five picked files in");
         Check(Enumerable.Range(0, 5).All(i => SameBytes(ImageStore.Items.PathOf(EntityImages.Names(result)[i]), picked[i])), "in the order the form left them");
         foreach (string name in imported)
@@ -429,6 +584,72 @@ static partial class Program
         Invoke(main, "NavigateHome");
     }
 
+    // ---- Found in review -------------------------------------------------------------------------
+
+    static async Task PictureReviewFixes(MainWindow main)
+    {
+        Console.WriteLine("Review findings: a failed copy, legacy paths anywhere, a cover in MoreImages only, the detail card's decoding");
+        Profile memory = AddMemory(main, "Pictures review", ProfileType.Collection);
+        string[] p = Enumerable.Range(0, 5).Select(StoredPicture).ToArray();
+        string ownCover = Path.Combine(picWork, "saját borító.png"), ownMore = Path.Combine(picWork, "saját másik.png");
+        ColorPicture(ownCover, 3);
+        ColorPicture(ownMore, 4);
+        string lost = Path.Combine(picWork, "elveszett.png");
+        Entity legacy = PictureItem("Régi utakkal", 1, ownCover, ownMore, lost);
+        Entity coverless = PictureItem("Borító nélkül", 2);
+        coverless.MoreImages = new List<string> { p[3], p[4] }; // from elsewhere: no ImagePath, two further pictures
+        EntityStore.SaveOrWarn(memory, new List<Entity> { PictureItem("Hármas", 0, p[0], p[1], p[2]), legacy, coverless });
+        CollectionView view = OpenCollectionView(main, memory);
+        await Wait(600);
+
+        // Legacy full paths are copied in wherever they are in the list; one whose file is gone keeps its path.
+        List<string> names = EntityImages.Names(EntityStore.Load(memory).Single(e => e.Name == legacy.Name));
+        Check(names.Count == 3 && !EntityImages.IsLegacyPath(names[0]) && !EntityImages.IsLegacyPath(names[1]) && names[2] == lost
+              && SameBytes(ImageStore.Items.PathOf(names[0]), ownCover) && SameBytes(ImageStore.Items.PathOf(names[1]), ownMore)
+              && File.Exists(ownCover) && File.Exists(ownMore), "user's own files at any place in the list are copied in (originals untouched); a lost one keeps its path");
+
+        // A cover only in MoreImages (ImagePath empty): the card, the badge and exports use the first picture.
+        Check(EntityImages.Cover(coverless) == p[3] && EntityImages.FullPath(coverless) == ImageStore.Items.PathOf(p[3]), "no ImagePath: the first further picture is the cover");
+        Check(Descendants(view).OfType<TextBlock>().Count(t => t.Text == "") == 3, "its card shows the picture and a badge, as do the item with three and the one with own files");
+        string docx = Path.Combine(picWork, "coverless.docx");
+        ExportService.ExportEntity(coverless, docx, ExportFormat.Docx);
+        using (WordprocessingDocument document = WordprocessingDocument.Open(docx, false))
+            Check(document.MainDocumentPart.ImageParts.Count() == 1, "and Word shows that cover");
+
+        // The detail card draws at once and decodes the rest off the UI thread.
+        Entity three = Field<List<Entity>>(view, "entities").First(e => e.Name == "Hármas");
+        view.Reveal(three.Id);
+        PictureBrowser detail = Field<PictureBrowser>(view, "detailPictures");
+        Image second = (Image)((Border)((Grid)((Button)StripOf(detail).Children[1]).Content).Children[0]).Child;
+        Check(second.Source == null && EntityImages.Loaded(p[1]) == null, "opening the card doesn't decode the other pictures on the spot");
+        await Wait(800);
+        Check(InSync(detail, p.Take(3).Select(n => (ImageSource)EntityImages.Loaded(n)).ToList(), 0) && EntityImages.Loaded(p[2]) != null,
+            "a moment later they are all there");
+        ClickNow(ArrowOf(detail, true));
+        PressKey((TextBox)view.FindName("DetailName"), Key.Right);
+        Check(Field<int>(view, "detailPicture") == 1, "Right in the card's name box moves its caret, not the picture");
+
+        // A picked file that can't be copied at Save: left out and named, the rest of the edit kept.
+        string fleeting = OwnPictures(1, 70)[0];
+        int boxes = selectBoxes.Count;
+        DriveEntityForm(main, async f =>
+        {
+            await Wait(200);
+            f.AddPictures(new[] { fleeting });       // [p0, p1, p2, x]
+            FormSelect(f, 2);
+            FormTool(f, "coverBtn");                // [p2, p0, p1, x]
+            FormSelect(f, 2);
+            FormTool(f, "removePictureBtn");        // [p2, p0, x]
+            File.Delete(fleeting);                  // gone before Save
+        });
+        Invoke(view, "EditEntity", Field<List<Entity>>(view, "entities").First(e => e.Name == "Hármas"));
+        await Wait(300);
+        Check(EntityImages.Names(EntityStore.Load(memory).Single(e => e.Name == "Hármas")).SequenceEqual(new[] { p[2], p[0] }) && !Stored(p[1]),
+            "the copy failed: the new cover and the removal are still saved, and the removed picture's file is gone");
+        Check(selectBoxes.Skip(boxes).Any(b => b.Contains(Path.GetFileName(fleeting))), "the message names the file: " + selectBoxes.LastOrDefault());
+        Invoke(main, "NavigateHome");
+    }
+
     // ---- The card and the detail card ----------------------------------------------------
 
     static async Task PictureCardAndDetail(MainWindow main)
@@ -447,20 +668,28 @@ static partial class Program
         Check(count.Text == "3" && ((FrameworkElement)((FrameworkElement)badges[0].Parent).Parent).ToolTip.ToString() == "3 pictures", "it counts three: " + count.Text);
 
         view.Reveal(three.Id);
-        await Wait(500);
-        WrapPanel strip = (WrapPanel)view.FindName("DetailStrip");
-        Image big = (Image)view.FindName("DetailImage");
-        Check(((FrameworkElement)view.FindName("DetailStripScroll")).Visibility == Visibility.Visible && strip.Children.Count == 3
-              && big.Source == EntityImages.Load(p[0]), "the detail card shows the cover and a strip of three");
+        for (int i = 0; i < 30 && p.Take(3).Any(x => EntityImages.Loaded(x) == null); i++) // decoded off the UI thread
+            await Wait(100);
+        await Wait(200);
+        PictureBrowser detail = Field<PictureBrowser>(view, "detailPictures");
+        WrapPanel strip = StripOf(detail);
+        Image big = PreviewOf(detail);
+        List<ImageSource> shown = p.Take(3).Select(n => (ImageSource)EntityImages.Load(n)).ToList();
+        Check(StripScrollOf(detail).Visibility == Visibility.Visible && InSync(detail, shown, 0) && ArrowOf(detail, true).IsVisible
+              && !ArrowOf(detail, false).IsEnabled, "the detail card shows the cover, a strip of three and the arrows (back is off on the first)");
         ClickNow((Button)strip.Children[1]);
-        Check(Field<int>(view, "detailPicture") == 1 && big.Source == EntityImages.Load(p[1]) && strip.Children.Count == 3, "a thumbnail clicked: that picture, larger");
-        ClickNow((Button)strip.Children[2]);
-        Check(big.Source == EntityImages.Load(p[2]), "and the next");
+        Check(Field<int>(view, "detailPicture") == 1 && InSync(detail, shown, 1), "a thumbnail clicked: that picture, larger, framed");
+        ClickNow(ArrowOf(detail, true));
+        Check(Field<int>(view, "detailPicture") == 2 && InSync(detail, shown, 2) && !ArrowOf(detail, true).IsEnabled, "the next arrow: the third, and next is off at the end");
+        PressKey(view, Key.Left);
+        Check(InSync(detail, shown, 1), "the Left key browses back");
+        PressKey(view, Key.Right);
+        Check(InSync(detail, shown, 2) && EntityImages.Names(EntityStore.Load(memory)[0]).SequenceEqual(p.Take(3)), "the Right key browses on; the item's order is untouched");
 
         Loc.Switch(Loc.Hungarian);
         await Wait(400);
-        Check(big.Source == EntityImages.Load(p[2]) && strip.Children.Count == 3 && Field<int>(view, "detailPicture") == 2,
-            "a language switch keeps the picture shown");
+        Check(InSync(detail, shown, 2) && Field<int>(view, "detailPicture") == 2 && (string)ArrowOf(detail, true).ToolTip == "Következő kép",
+            "a language switch keeps the picture shown, the arrows in Hungarian");
         ToolTipText(view, "hu: 3 kép");
         Loc.Switch(Loc.SerbianLatin);
         await Wait(300);
@@ -470,11 +699,11 @@ static partial class Program
 
         view.Reveal(one.Id);
         await Wait(500);
-        Check(((FrameworkElement)view.FindName("DetailStripScroll")).Visibility != Visibility.Visible && big.Source == EntityImages.Load(p[3]),
-            "one picture: no strip");
+        Check(StripScrollOf(detail).Visibility != Visibility.Visible && !ArrowOf(detail, true).IsVisible && !ArrowOf(detail, false).IsVisible
+              && big.Source == EntityImages.Load(p[3]) && !detail.Browse(1), "one picture: no strip, no arrows, nothing to browse");
         view.Reveal(none.Id);
         await Wait(500);
-        Check(big.Source == null && ((FrameworkElement)view.FindName("DetailStripScroll")).Visibility != Visibility.Visible, "no picture: none, no strip");
+        Check(big.Source == null && StripScrollOf(detail).Visibility != Visibility.Visible && !ArrowOf(detail, true).IsVisible, "no picture: none, no strip, no arrows");
         Invoke(main, "NavigateHome");
     }
 

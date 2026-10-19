@@ -21,6 +21,7 @@ namespace TidyMind
         private List<Entity> entities;
         private Entity currentDetailEntity;
         private int detailPicture; // which of its pictures the detail card shows
+        private readonly PictureBrowser detailPictures = new PictureBrowser(double.NaN, 150, canReorder: false, stripForOne: false);
         private readonly MemoryTabStrip tabStrip;
         private readonly DragReorder<Entity> cardDrag;
         private readonly CardSelectionController<Entity> selection;
@@ -37,6 +38,18 @@ namespace TidyMind
         public CollectionView(Profile profile, Func<bool> saveProfiles)
         {
             InitializeComponent();
+            DetailPictures.Content = detailPictures;
+            detailPictures.Picked += index => ShowDetailPicture(currentDetailEntity, index);
+
+            // With the detail card open, Left and Right go through its pictures (unless the keyboard is in its text).
+            PreviewKeyDown += (s, e) =>
+            {
+                if (OverlayGrid.Visibility == Visibility.Visible && (e.Key == Key.Left || e.Key == Key.Right)
+                    && Keyboard.Modifiers == ModifierKeys.None && !(e.OriginalSource is System.Windows.Controls.Primitives.TextBoxBase)
+                    && detailPictures.Browse(e.Key == Key.Left ? -1 : +1))
+                    e.Handled = true;
+            };
+
             searchPause.Tick += (s, e) =>
             {
                 searchPause.Stop();
@@ -104,27 +117,35 @@ namespace TidyMind
         }
 
         // Items from before pictures were copied in point at the user's own file: it's copied into EntityImages/ now,
-        // so moving or deleting the original no longer loses it. One whose original is gone keeps its path (and shows
-        // no picture). If the save fails, the copies are removed again and the items keep their old paths.
+        // so moving or deleting the original no longer loses it. Any of an item's pictures may be such a path (one
+        // the form moved away from the cover, too). One whose original is gone keeps its path (and shows no picture).
+        // If the save fails, the copies are removed again and the items keep their old paths.
         private void CopyInLegacyImages()
         {
-            List<(Entity Entity, string Original)> copied = new List<(Entity, string)>();
-            foreach (Entity entity in entities.Where(e => EntityImages.IsLegacyPath(e.ImagePath) && File.Exists(e.ImagePath)))
+            List<(Entity Entity, List<string> Before, List<string> Made)> copied = new List<(Entity, List<string>, List<string>)>();
+            foreach (Entity entity in entities)
             {
-                string stored = EntityImages.Store.Import(entity.ImagePath);
-                if (stored == null)
+                List<string> before = EntityImages.Names(entity), after = new List<string>(), made = new List<string>();
+                foreach (string name in before)
+                {
+                    string stored = EntityImages.IsLegacyPath(name) && File.Exists(name) ? EntityImages.Store.Import(name) : null;
+                    after.Add(stored ?? name);
+                    if (stored != null)
+                        made.Add(stored);
+                }
+                if (made.Count == 0)
                     continue;
-                copied.Add((entity, entity.ImagePath));
-                entity.ImagePath = stored;
+                EntityImages.SetNames(entity, after);
+                copied.Add((entity, before, made));
             }
 
             if (copied.Count == 0 || SaveEntities())
                 return;
 
-            foreach ((Entity entity, string original) in copied)
+            foreach ((Entity entity, List<string> before, List<string> made) in copied)
             {
-                EntityImages.Store.Delete(entity.ImagePath);
-                entity.ImagePath = original;
+                RemoveCopies(made);
+                EntityImages.SetNames(entity, before);
             }
         }
 
@@ -458,19 +479,26 @@ namespace TidyMind
                 new DoubleAnimation(20, 0, TimeSpan.FromMilliseconds(180)));
         }
 
-        // The detail card's picture: the item's cover, or the one picked in the strip under it (shown with more than
-        // one picture).
-        private void ShowDetailPicture(Entity entity, int index)
+        // The detail card's pictures: the cover first, then whichever is picked with an arrow, a key or the strip
+        // (arrows and strip only with more than one picture). What isn't decoded yet is drawn empty and decoded off
+        // the UI thread, then drawn again if the card still shows that item (once: a missing file stays empty).
+        private void ShowDetailPicture(Entity entity, int index, bool decodeMissing = true)
         {
             List<string> names = EntityImages.Names(entity);
-            index = names.Count == 0 ? 0 : Math.Clamp(index, 0, names.Count - 1);
-            detailPicture = index;
-            DetailImage.Source = names.Count == 0 ? null : EntityImages.Load(names[index]);
+            detailPicture = names.Count == 0 ? 0 : Math.Clamp(index, 0, names.Count - 1);
+            List<ImageSource> shown = names.Select(n => (ImageSource)EntityImages.Loaded(n)).ToList();
+            detailPictures.Show(shown, detailPicture);
 
-            DetailStripScroll.Visibility = names.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
-            if (names.Count > 1)
-                PictureStrip.Fill(DetailStrip, names.Select(n => (ImageSource)EntityImages.Load(n)).ToList(), index,
-                    picked => ShowDetailPicture(entity, picked));
+            List<string> missing = names.Where((n, i) => shown[i] == null).Distinct().ToList();
+            if (decodeMissing && missing.Count > 0)
+                _ = DecodeDetailPictures(entity, missing);
+        }
+
+        private async System.Threading.Tasks.Task DecodeDetailPictures(Entity entity, List<string> names)
+        {
+            await System.Threading.Tasks.Task.WhenAll(names.Select(EntityImages.LoadAsync));
+            if (currentDetailEntity == entity && OverlayGrid.Visibility == Visibility.Visible)
+                ShowDetailPicture(entity, detailPicture, decodeMissing: false);
         }
 
         // The detail card's rows; filled again after a language switch.
@@ -638,17 +666,16 @@ namespace TidyMind
             RenderEntities();
         }
 
-        // Gives the item the form's pictures: picked files are copied in. If one can't be copied (said so), none of the
-        // pictures change and the item keeps the ones it had. Returns the new copies made, for RemoveCopies if the item
-        // can't be saved.
+        // Gives the item the form's pictures: picked files are copied in. One that can't be copied is left out and
+        // named in a message; everything else the form did (removals, order, cover) is kept. Returns the new copies
+        // made, for RemoveCopies if the item can't be saved.
         private static List<string> ApplyPictures(Entity entity, IReadOnlyList<PictureSlot> slots)
         {
-            if (EntityImages.TryApply(entity, slots, out List<string> imported))
-                return imported;
-
-            Msg.Show(Loc.F("Collection.PictureFailed", EntityImages.Store.Folder), Loc.T("Collection.PictureFailed.Caption"),
-                MessageBoxButton.OK, MessageBoxImage.Warning);
-            return new List<string>();
+            EntityImages.Apply(entity, slots, out List<string> imported, out List<string> failed);
+            if (failed.Count > 0)
+                Msg.Show(Loc.F("Collection.PictureFailed", string.Join(", ", failed.Select(Path.GetFileName)), EntityImages.Store.Folder),
+                    Loc.T("Collection.PictureFailed.Caption"), MessageBoxButton.OK, MessageBoxImage.Warning);
+            return imported;
         }
 
         // Copies made for an item that then wasn't saved: nothing else refers to them.

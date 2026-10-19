@@ -95,18 +95,8 @@
                     </Grid.ColumnDefinitions>
 
                     <Border Grid.Column="0" Background="{StaticResource BgSubtle}" CornerRadius="10,0,0,10">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <Image x:Name="DetailImage" Stretch="Uniform" Margin="16"/>
-                            <!-- Only with more than one picture: click one to see it here -->
-                            <ScrollViewer x:Name="DetailStripScroll" Grid.Row="1" MaxHeight="150" Margin="16,0,8,8"
-                                          VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
-                                <WrapPanel x:Name="DetailStrip"/>
-                            </ScrollViewer>
-                        </Grid>
+                        <!-- The item's pictures (PictureBrowser, made in code): arrows and a strip with several -->
+                        <ContentControl x:Name="DetailPictures" Margin="16,16,8,8" Focusable="False"/>
                     </Border>
 
                     <Grid Grid.Column="1" Margin="24,20,24,20">

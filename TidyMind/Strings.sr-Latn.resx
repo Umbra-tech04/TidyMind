@@ -402,7 +402,7 @@ Sada će se zatvoriti, otvori ga ponovo.</value>
     <value>Nijedna stavka ne odgovara pretrazi.</value>
   </data>
   <data name="Collection.PictureFailed" xml:space="preserve">
-    <value>Nove slike nisu mogle da se kopiraju u {0}, pa nisu dodate. Ostatak stavke je sačuvan kao i obično.</value>
+    <value>Ove slike nisu mogle da se kopiraju u {1}, pa nisu dodate: {0}. Sve ostalo je sačuvano kao i obično, uključujući ostale slike.</value>
   </data>
   <data name="Collection.PictureFailed.Caption" xml:space="preserve">
     <value>Dodavanje slika nije uspelo</value>
@@ -704,17 +704,26 @@ Tvoja poslednja izmena nije sačuvana.</value>
   <data name="Entity.PictureCount.Other" xml:space="preserve">
     <value>{0} slika</value>
   </data>
+  <data name="Entity.Picture.OfCover" xml:space="preserve">
+    <value>Slika {0} od {1}, naslovna</value>
+  </data>
   <data name="Entity.Picture.Of" xml:space="preserve">
     <value>Slika {0} od {1}</value>
   </data>
   <data name="Entity.Picture.SetCover" xml:space="preserve">
     <value>Postavi kao naslovnu</value>
   </data>
+  <data name="Entity.Picture.Previous" xml:space="preserve">
+    <value>Prethodna slika</value>
+  </data>
+  <data name="Entity.Picture.Next" xml:space="preserve">
+    <value>Sledeća slika</value>
+  </data>
   <data name="Entity.Picture.Earlier" xml:space="preserve">
-    <value>Pomeri ranije</value>
+    <value>Pomeri napred</value>
   </data>
   <data name="Entity.Picture.Later" xml:space="preserve">
-    <value>Pomeri kasnije</value>
+    <value>Pomeri nazad</value>
   </data>
   <data name="Entity.Picture.Remove" xml:space="preserve">
     <value>Ukloni sliku</value>

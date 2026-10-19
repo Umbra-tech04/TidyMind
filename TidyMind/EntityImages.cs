@@ -46,8 +46,12 @@ namespace TidyMind
 
         // ---- Files -------------------------------------------------------------
 
+        // The cover: the first stored name (ImagePath, or the first further one when a file from elsewhere has none
+        // there), or null for no picture.
+        public static string Cover(Entity entity) => Names(entity).FirstOrDefault();
+
         // The cover's file, or null if the item has none.
-        public static string FullPath(Entity entity) => FullPath(entity.ImagePath);
+        public static string FullPath(Entity entity) => FullPath(Cover(entity));
 
         // A stored name's file (or the user's own, for a legacy path), or null for no name.
         public static string FullPath(string name)
@@ -58,12 +62,26 @@ namespace TidyMind
         }
 
         // The cover, decoded once per session; null if the item has no picture or it's missing or unreadable.
-        public static BitmapImage Load(Entity entity) => Load(entity.ImagePath);
+        public static BitmapImage Load(Entity entity) => Load(Cover(entity));
 
         public static BitmapImage Load(string name)
         {
             string path = FullPath(name);
             return path == null ? null : ImageCache.GetOrLoad(path, Store.DecodeWidth);
+        }
+
+        // Already decoded this session, or null: to draw at once, without waiting for a decode.
+        public static BitmapImage Loaded(string name)
+        {
+            string path = FullPath(name);
+            return path == null ? null : ImageCache.TryGet(path);
+        }
+
+        // Decoded on a worker thread (once per session); null if missing or unreadable.
+        public static System.Threading.Tasks.Task<BitmapImage> LoadAsync(string name)
+        {
+            string path = FullPath(name);
+            return path == null ? System.Threading.Tasks.Task.FromResult<BitmapImage>(null) : ImageCache.LoadAsync(path, Store.DecodeWidth);
         }
 
         // Removes a copy nothing refers to. Never touches a legacy path (the user's own file).
@@ -112,11 +130,13 @@ namespace TidyMind
         // ---- Saving the form's list --------------------------------------------
 
         // Gives the item the pictures of the form's list, in its order: a picked file is copied in under a new name,
-        // the others keep theirs. False if a copy failed; the ones made so far are removed again and the item is
-        // unchanged. `imported` are the new copies, for the caller to remove if it can't save the item after all.
-        public static bool TryApply(Entity entity, IReadOnlyList<PictureSlot> slots, out List<string> imported)
+        // the others keep theirs. A picked file that can't be copied (gone since it was picked, unreadable) is left
+        // out and named in `failed`; the rest of the list (removals, order, cover) still applies. `imported` are the
+        // new copies, for the caller to remove if it can't save the item after all.
+        public static void Apply(Entity entity, IReadOnlyList<PictureSlot> slots, out List<string> imported, out List<string> failed)
         {
             imported = new List<string>();
+            failed = new List<string>();
             List<string> names = new List<string>();
             foreach (PictureSlot slot in slots)
             {
@@ -126,17 +146,14 @@ namespace TidyMind
                     name = Store.Import(slot.PickedFile);
                     if (name == null)
                     {
-                        foreach (string made in imported)
-                            Store.Delete(made);
-                        imported = new List<string>();
-                        return false;
+                        failed.Add(slot.PickedFile);
+                        continue;
                     }
                     imported.Add(name);
                 }
                 names.Add(name);
             }
             SetNames(entity, names);
-            return true;
         }
     }
 

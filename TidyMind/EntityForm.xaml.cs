@@ -17,13 +17,13 @@ namespace TidyMind
         public Entity ResultEntity { get; private set; }
 
         // The item's pictures as the form leaves them, cover first: ones it already had (by stored name) and files
-        // picked in the form (the user's own). The caller copies the picked ones in (EntityImages.TryApply).
+        // picked in the form (the user's own). The caller copies the picked ones in (EntityImages.Apply).
         public IReadOnlyList<PictureSlot> Pictures => pictures;
 
         private readonly List<PictureSlot> pictures = new List<PictureSlot>();
         private int selectedPicture = -1;
-        private WrapPanel pictureStrip;
-        private StackPanel pictureTools;
+        private PictureBrowser pictureBrowser;
+        private WrapPanel pictureTools;
         private Button coverBtn, earlierBtn, laterBtn, removePictureBtn;
 
         private readonly Entity existing;
@@ -33,7 +33,6 @@ namespace TidyMind
         private TextBox nameBox;
         private TextBox notesBox;
         private TextBlock imagePathText;
-        private System.Windows.Controls.Image imagePreview;
 
         // Clothing
         private List<SizeQuantity> sizes = new List<SizeQuantity>();
@@ -296,8 +295,9 @@ namespace TidyMind
             }
         }
 
-        // The item's pictures: a button to add several at once, a strip of thumbnails (the first is the cover), the
-        // selected one larger underneath, and what can be done with it (cover, earlier, later, remove).
+        // The item's pictures: a button to add several at once, the selected picture large with arrows to browse,
+        // the strip of thumbnails under it (the first is the cover), and what can be done with the selected one:
+        // make it the cover, move it earlier or later (or drag it in the strip), remove it.
         private void AddImagePicker()
         {
             AddLabel(Loc.T("Entity.Field.Pictures"));
@@ -321,71 +321,63 @@ namespace TidyMind
             row.Children.Add(imagePathText);
             FormPanel.Children.Add(row);
 
-            pictureStrip = new WrapPanel();
-            FormPanel.Children.Add(pictureStrip);
+            pictureBrowser = new PictureBrowser(200, double.PositiveInfinity, canReorder: true, stripForOne: true)
+            {
+                Margin = new Thickness(0, 4, 0, 0)
+            };
+            pictureBrowser.Picked += index => { selectedPicture = index; ShowPictures(); };
+            pictureBrowser.Moved += (from, to) => { selectedPicture = from; MovePicture(to); };
+            FormPanel.Children.Add(pictureBrowser);
 
-            imagePreview = new System.Windows.Controls.Image();
-            imagePreview.Height = 180;
-            imagePreview.HorizontalAlignment = HorizontalAlignment.Left;
-            imagePreview.Stretch = Stretch.Uniform;
-            imagePreview.Margin = new Thickness(0, 4, 0, 8);
-            FormPanel.Children.Add(imagePreview);
-
-            pictureTools = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 12) };
-            coverBtn = ToolButton(Loc.T("Entity.Picture.SetCover"), Loc.T("Entity.Picture.SetCover"), () => MovePicture(0));
-            earlierBtn = ToolButton("◀", Loc.T("Entity.Picture.Earlier"), () => MovePicture(selectedPicture - 1));
-            laterBtn = ToolButton("▶", Loc.T("Entity.Picture.Later"), () => MovePicture(selectedPicture + 1));
-            removePictureBtn = ToolButton(Loc.T("Entity.Picture.Remove"), Loc.T("Entity.Picture.Remove"), RemovePicture);
+            pictureTools = new WrapPanel { Margin = new Thickness(0, 0, 0, 12) };
+            coverBtn = ToolButton("Entity.Picture.SetCover", () => MovePicture(0));
+            earlierBtn = ToolButton("Entity.Picture.Earlier", () => MovePicture(selectedPicture - 1));
+            laterBtn = ToolButton("Entity.Picture.Later", () => MovePicture(selectedPicture + 1));
+            removePictureBtn = ToolButton("Entity.Picture.Remove", RemovePicture);
             foreach (Button tool in new[] { coverBtn, earlierBtn, laterBtn, removePictureBtn })
                 pictureTools.Children.Add(tool);
             FormPanel.Children.Add(pictureTools);
             ShowPictures();
         }
 
-        private Button ToolButton(string content, string name, Action click)
+        private Button ToolButton(string key, Action click)
         {
             Button button = new Button
             {
-                Content = content,
+                Content = Loc.T(key),
                 Style = (Style)FindResource("GhostButtonStyle"),
-                Margin = new Thickness(0, 0, 8, 0),
-                MinWidth = 36
+                Margin = new Thickness(0, 0, 8, 8)
             };
-            AutomationProperties.SetName(button, name);
-            button.ToolTip = name;
             button.Click += (s, e) => click();
             return button;
         }
 
-        // The strip, the larger picture, the tools and the count line after any change to the list.
+        // Everything about the pictures is drawn from the list and selectedPicture, after any change to either.
         private void ShowPictures()
         {
-            if (pictures.Count == 0)
-                selectedPicture = -1;
-            else
-                selectedPicture = Math.Clamp(selectedPicture, 0, pictures.Count - 1);
+            selectedPicture = pictures.Count == 0 ? -1 : Math.Clamp(selectedPicture, 0, pictures.Count - 1);
 
             foreach (PictureSlot slot in pictures)
                 slot.Preview ??= slot.Stored != null ? EntityImages.Load(slot.Stored) : EntityImages.Store.Decode(slot.PickedFile);
 
-            PictureStrip.Fill(pictureStrip, pictures.Select(p => p.Preview).ToList(), selectedPicture, index =>
-            {
-                selectedPicture = index;
-                ShowPictures();
-            });
-            imagePreview.Source = selectedPicture < 0 ? null : pictures[selectedPicture].Preview;
+            pictureBrowser.Show(pictures.Select(p => p.Preview).ToList(), selectedPicture);
+            pictureBrowser.Visibility = pictures.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
             imagePathText.Text = pictures.Count == 0 ? Loc.T("Entity.NoPictures") : Loc.Plural("Entity.PictureCount", pictures.Count);
-            pictureTools.Visibility = selectedPicture < 0 ? Visibility.Collapsed : Visibility.Visible;
+
+            // One picture: it is the cover and there's nowhere to move it, so only Remove.
+            pictureTools.Visibility = pictures.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+            foreach (Button move in new[] { coverBtn, earlierBtn, laterBtn })
+                move.Visibility = pictures.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
             coverBtn.IsEnabled = earlierBtn.IsEnabled = selectedPicture > 0;
             laterBtn.IsEnabled = selectedPicture >= 0 && selectedPicture < pictures.Count - 1;
-            foreach (Button tool in new[] { coverBtn, earlierBtn, laterBtn })
-                tool.Opacity = tool.IsEnabled ? 1 : 0.45; // the ghost style has no look of its own for "off"
+            foreach (Button move in new[] { coverBtn, earlierBtn, laterBtn })
+                move.Opacity = move.IsEnabled ? 1 : 0.45; // the ghost style has no look of its own for "off"
         }
 
-        // The selected picture to a place in the list (0 = the cover); it stays selected.
+        // The selected picture to a place in the list (0 = the cover); it stays selected there.
         private void MovePicture(int to)
         {
-            if (selectedPicture < 0 || to < 0 || to >= pictures.Count)
+            if (selectedPicture < 0 || to < 0 || to >= pictures.Count || to == selectedPicture)
                 return;
             PictureSlot slot = pictures[selectedPicture];
             pictures.RemoveAt(selectedPicture);
@@ -394,12 +386,13 @@ namespace TidyMind
             ShowPictures();
         }
 
+        // The one after it is selected next, or the one before when it was the last.
         private void RemovePicture()
         {
             if (selectedPicture < 0)
                 return;
             pictures.RemoveAt(selectedPicture);
-            ShowPictures(); // the next one is selected (or the last, if that was the last)
+            ShowPictures();
         }
 
         private void AddLabel(string text)
