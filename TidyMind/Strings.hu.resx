@@ -318,10 +318,10 @@ Most bezárul, nyisd meg újra.</value>
     <value>Egy elem sem felel meg a keresésnek.</value>
   </data>
   <data name="Collection.PictureFailed" xml:space="preserve">
-    <value>Nem sikerült a képet ide másolni: {0}, ezért az új kép nem került be. Az elem többi része a szokásos módon mentve lett.</value>
+    <value>Nem sikerült az új képeket ide másolni: {0}, ezért nem kerültek be. Az elem többi része a szokásos módon mentve lett.</value>
   </data>
   <data name="Collection.PictureFailed.Caption" xml:space="preserve">
-    <value>Nem sikerült hozzáadni a képet</value>
+    <value>Nem sikerült hozzáadni a képeket</value>
   </data>
   <data name="Collection.SaveFailed" xml:space="preserve">
     <value>Nem sikerült menteni ennek a gyűjteménynek az elemeit: „{0}”, mert ez a fájl nem írható:
@@ -488,8 +488,8 @@ Az utolsó módosításod nem lett mentve.</value>
   <data name="Entity.AddSize" xml:space="preserve">
     <value>Méret hozzáadása</value>
   </data>
-  <data name="Entity.ChooseImage" xml:space="preserve">
-    <value>Kép kiválasztása</value>
+  <data name="Entity.ChoosePictures" xml:space="preserve">
+    <value>Képek hozzáadása…</value>
   </data>
   <data name="Entity.Column.Cost" xml:space="preserve">
     <value>Költség</value>
@@ -512,8 +512,8 @@ Az utolsó módosításod nem lett mentve.</value>
   <data name="Entity.Column.Work" xml:space="preserve">
     <value>Elvégzett munka</value>
   </data>
-  <data name="Entity.CurrentImage" xml:space="preserve">
-    <value>Jelenlegi kép</value>
+  <data name="Entity.Picture.Cover" xml:space="preserve">
+    <value>Borító</value>
   </data>
   <data name="Entity.Edit.Clothing" xml:space="preserve">
     <value>Ruhadarab szerkesztése</value>
@@ -539,8 +539,8 @@ Az utolsó módosításod nem lett mentve.</value>
   <data name="Entity.Field.Color" xml:space="preserve">
     <value>Szín</value>
   </data>
-  <data name="Entity.Field.Image" xml:space="preserve">
-    <value>Kép</value>
+  <data name="Entity.Field.Pictures" xml:space="preserve">
+    <value>Képek</value>
   </data>
   <data name="Entity.Field.Inspection" xml:space="preserve">
     <value>Műszaki vizsga lejárata</value>
@@ -596,8 +596,35 @@ Az utolsó módosításod nem lett mentve.</value>
   <data name="Entity.NeedsNumber" xml:space="preserve">
     <value>Ide számot kell írni: {0}.</value>
   </data>
-  <data name="Entity.NoImage" xml:space="preserve">
-    <value>Nincs kép kiválasztva</value>
+  <data name="Entity.NoPictures" xml:space="preserve">
+    <value>Még nincs kép</value>
+  </data>
+  <data name="Entity.PictureCount.Other" xml:space="preserve">
+    <value>{0} kép</value>
+  </data>
+  <data name="Entity.Picture.Of" xml:space="preserve">
+    <value>{0}. kép, összesen {1}</value>
+  </data>
+  <data name="Entity.Picture.SetCover" xml:space="preserve">
+    <value>Legyen borító</value>
+  </data>
+  <data name="Entity.Picture.Earlier" xml:space="preserve">
+    <value>Korábbra</value>
+  </data>
+  <data name="Entity.Picture.Later" xml:space="preserve">
+    <value>Későbbre</value>
+  </data>
+  <data name="Entity.Picture.Remove" xml:space="preserve">
+    <value>Kép eltávolítása</value>
+  </data>
+  <data name="Entity.Pictures.Limit" xml:space="preserve">
+    <value>Egy elemhez legfeljebb {0} kép tartozhat. A fölös képek nem kerültek be.</value>
+  </data>
+  <data name="Entity.Pictures.Unreadable" xml:space="preserve">
+    <value>Ezeket a fájlokat nem lehetett képként beolvasni, ezért nem kerültek be: {0}</value>
+  </data>
+  <data name="Entity.Pictures.NotAdded.Caption" xml:space="preserve">
+    <value>Néhány kép nem került be</value>
   </data>
   <data name="Entity.Required" xml:space="preserve">
     <value>Ezt meg kell adni: {0}.</value>

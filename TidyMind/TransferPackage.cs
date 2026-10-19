@@ -22,7 +22,7 @@ namespace TidyMind
     //   collection.json                     a collection: its entry in profiles.json,
     //   tabs.json, entities.json            its tabs and items, as stored
     //   files/items/, files/background/     its item pictures and page background
-    //   item.json, files/items/             one item, as entities.json stores it, and its picture
+    //   item.json, files/items/             one item, as entities.json stores it, and its pictures (cover first)
     // Files go in under their stored names only, never a path from this PC. Reminders, Day Plan blocks and the
     // memory to-do list belong to no project or collection, so none are in a package.
     //
@@ -36,7 +36,8 @@ namespace TidyMind
 
         // The newest format this version reads; a package in a newer one is refused. Each package is written in the
         // oldest format that holds it, so older versions keep reading projects and collections (format 1), and say
-        // "made with a newer TidyMind" for an item (format 2, which they don't know).
+        // "made with a newer TidyMind" for an item (format 2, which they don't know), and for a collection with an item
+        // of several pictures (they would drop the further ones).
         public const int FormatVersion = 2;
         private const int ProjectFormat = 1, CollectionFormat = 1, ItemFormat = 2;
 
@@ -102,7 +103,10 @@ namespace TidyMind
             if (memory.BackgroundType == BackgroundFill.Image && ImageStore.Backgrounds.Exists(memory.BackgroundImagePath))
                 files.Add((BackgroundDir + Path.GetFileName(memory.BackgroundImagePath), ImageStore.Backgrounds.PathOf(memory.BackgroundImagePath)));
 
-            TransferManifest manifest = NewManifest(CollectionType, CollectionFormat, memory.Name);
+            // An item with more than one picture is something older versions would only half read (they would leave the
+            // further pictures out), so such a collection is written in the newer format, which they refuse as a whole.
+            int format = items.Any(i => EntityImages.Count(i) > 1) ? ItemFormat : CollectionFormat;
+            TransferManifest manifest = NewManifest(CollectionType, format, memory.Name);
             manifest.Counts = new TransferCounts { Items = items.Count, Pictures = pictures };
             WriteAtomically(zipPath, manifest, new[]
             {
@@ -122,23 +126,27 @@ namespace TidyMind
             WriteAtomically(zipPath, manifest, new[] { (ItemEntry, JsonSerializer.Serialize(item)) }, files, progress, cancel);
         }
 
-        // The items' pictures to pack (the items are copies, changed here): a missing one is dropped from its item,
-        // and one still at the user's own path (from before pictures were copied in) gets a new name, so no path from
-        // this PC is in the package.
+        // The items' pictures to pack (the items are copies, changed here): a missing one is dropped from its item
+        // (the next one becomes the cover), and one still at the user's own path (from before pictures were copied
+        // in) gets a new name, so no path from this PC is in the package. A file two items share is packed once.
         private static List<(string Entry, string Source)> PicturesOf(List<Entity> items)
         {
             List<(string Entry, string Source)> files = new List<(string, string)>();
-            foreach (Entity item in items.Where(i => !string.IsNullOrEmpty(i.ImagePath)))
+            foreach (Entity item in items.Where(i => EntityImages.Count(i) > 0))
             {
-                string? source = EntityImages.FullPath(item);
-                if (source == null || !File.Exists(source))
+                List<string> kept = new List<string>();
+                foreach (string name in EntityImages.Names(item))
                 {
-                    item.ImagePath = null;
-                    continue;
+                    string? source = EntityImages.FullPath(name);
+                    if (source == null || !File.Exists(source))
+                        continue;
+                    string packed = EntityImages.IsLegacyPath(name)
+                        ? Guid.NewGuid().ToString("N") + Path.GetExtension(source).ToLowerInvariant()
+                        : name;
+                    files.Add((ItemsDir + Path.GetFileName(packed), source));
+                    kept.Add(packed);
                 }
-                if (EntityImages.IsLegacyPath(item.ImagePath))
-                    item.ImagePath = Guid.NewGuid().ToString("N") + Path.GetExtension(source).ToLowerInvariant();
-                files.Add((ItemsDir + Path.GetFileName(item.ImagePath), source));
+                EntityImages.SetNames(item, kept);
             }
             return files;
         }
@@ -332,6 +340,10 @@ namespace TidyMind
 
         private static void Clean(Entity item)
         {
+            // The further pictures: no nulls or empty names, and no more than an item can hold (the rest are dropped).
+            List<string> more = (item.MoreImages ?? new List<string>()).Where(n => !string.IsNullOrEmpty(n))
+                .Take(EntityImages.MaxPictures - (string.IsNullOrEmpty(item.ImagePath) ? 0 : 1)).ToList();
+            item.MoreImages = more.Count > 0 ? more : null;
             item.Sizes = (item.Sizes ?? new List<SizeQuantity>()).Where(s => s != null).ToList();
             item.Logs = item.Logs?.Where(log => log.Value != null).ToDictionary(log => log.Key,
                 log => log.Value.Where(row => row != null)
@@ -730,13 +742,22 @@ namespace TidyMind
             return true;
         }
 
-        // An item's picture, if the package held it, under a new file name; otherwise the item has none.
+        // An item's pictures that the package held, under new file names (so a file two items share gets a copy for
+        // each), in their order with the first as the cover; one it didn't hold is left out, and an item left with
+        // none has none.
         private static void TakePicture(StagedImport staged, Entity item, List<(string From, string To)> moves)
         {
-            string? source = staged.FileFor(ItemsDir, item.ImagePath);
-            item.ImagePath = source == null ? null : Guid.NewGuid().ToString("N") + ExtensionOf(source);
-            if (source != null)
-                moves.Add((source, EntityImages.Store.PathOf(item.ImagePath)));
+            List<string> names = new List<string>();
+            foreach (string name in EntityImages.Names(item).Take(EntityImages.MaxPictures))
+            {
+                string? source = staged.FileFor(ItemsDir, name);
+                if (source == null)
+                    continue;
+                string stored = Guid.NewGuid().ToString("N") + ExtensionOf(source);
+                names.Add(stored);
+                moves.Add((source, EntityImages.Store.PathOf(stored)));
+            }
+            EntityImages.SetNames(item, names);
         }
 
         // A picture background whose file came along gets a new file name; one without its file (or with a type or
@@ -911,7 +932,7 @@ namespace TidyMind
         public int NotePages => Project == null ? 0 : TransferPackage.WrittenPages(Project);
         public int Files => Project?.Attachments?.Count(a => a != null) ?? 0;
         public int Items => Entities.Count;
-        public int Pictures => Entities.Count(e => FileEntries.Contains(TransferPackage.ItemsDir + Path.GetFileName(e.ImagePath ?? "")));
+        public int Pictures => Entities.Sum(e => EntityImages.Names(e).Count(n => FileEntries.Contains(TransferPackage.ItemsDir + Path.GetFileName(n))));
 
         // Made by a newer TidyMind in the same format: imported, and the fields this version doesn't know are kept.
         public bool FromNewerApp => Version.TryParse(Manifest.AppVersion, out Version? made) && made > Updates.CurrentVersion;
@@ -927,8 +948,8 @@ namespace TidyMind
             }
             if (Collection?.BackgroundImagePath != null)
                 yield return TransferPackage.BackgroundDir + Path.GetFileName(Collection.BackgroundImagePath);
-            foreach (Entity item in Entities.Where(e => !string.IsNullOrEmpty(e.ImagePath)))
-                yield return TransferPackage.ItemsDir + Path.GetFileName(item.ImagePath);
+            foreach (string name in Entities.SelectMany(EntityImages.Names))
+                yield return TransferPackage.ItemsDir + Path.GetFileName(name);
         }
     }
 

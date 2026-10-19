@@ -17,6 +17,13 @@ namespace TidyMind
         // A file name inside EntityImages/ (ImageStore.Items). Items from before that hold the full path of the
         // user's own picture instead, until the collection view copies it in (EntityImages).
         public string ImagePath { get; set; }
+
+        // The item's further pictures, in order after ImagePath (the cover): same kind of file names. Left out of the
+        // file while there are none, so an item with at most one picture is stored exactly as before; a version
+        // that doesn't know this keeps it as an unknown field (ExtensionData). Read and set through EntityImages.
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<string>? MoreImages { get; set; }
+
         public string Notes { get; set; }
         public Guid TabId { get; set; }
         public int Order { get; set; }

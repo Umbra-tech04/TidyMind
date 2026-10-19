@@ -360,10 +360,10 @@ It will close now; please open it again.</value>
     <value>No items match your search.</value>
   </data>
   <data name="Collection.PictureFailed" xml:space="preserve">
-    <value>Couldn't copy that image into {0}, so the new picture wasn't added. The rest of the item is saved as usual.</value>
+    <value>Couldn't copy the new pictures into {0}, so they weren't added. The rest of the item is saved as usual.</value>
   </data>
   <data name="Collection.PictureFailed.Caption" xml:space="preserve">
-    <value>Couldn't Add Picture</value>
+    <value>Couldn't Add Pictures</value>
   </data>
   <data name="Collection.SaveFailed" xml:space="preserve">
     <value>Couldn't save the items of '{0}': this file can't be written:
@@ -536,8 +536,8 @@ Your last change wasn't saved.</value>
   <data name="Entity.AddSize" xml:space="preserve">
     <value>Add Size</value>
   </data>
-  <data name="Entity.ChooseImage" xml:space="preserve">
-    <value>Choose Image</value>
+  <data name="Entity.ChoosePictures" xml:space="preserve">
+    <value>Add Pictures…</value>
   </data>
   <data name="Entity.Column.Cost" xml:space="preserve">
     <value>Cost</value>
@@ -560,8 +560,8 @@ Your last change wasn't saved.</value>
   <data name="Entity.Column.Work" xml:space="preserve">
     <value>What was done</value>
   </data>
-  <data name="Entity.CurrentImage" xml:space="preserve">
-    <value>Current picture</value>
+  <data name="Entity.Picture.Cover" xml:space="preserve">
+    <value>Cover</value>
   </data>
   <data name="Entity.Edit.Clothing" xml:space="preserve">
     <value>Edit clothing</value>
@@ -587,8 +587,8 @@ Your last change wasn't saved.</value>
   <data name="Entity.Field.Color" xml:space="preserve">
     <value>Color</value>
   </data>
-  <data name="Entity.Field.Image" xml:space="preserve">
-    <value>Image</value>
+  <data name="Entity.Field.Pictures" xml:space="preserve">
+    <value>Pictures</value>
   </data>
   <data name="Entity.Field.Inspection" xml:space="preserve">
     <value>Inspection expires</value>
@@ -644,8 +644,38 @@ Your last change wasn't saved.</value>
   <data name="Entity.NeedsNumber" xml:space="preserve">
     <value>{0} needs a number.</value>
   </data>
-  <data name="Entity.NoImage" xml:space="preserve">
-    <value>No image selected</value>
+  <data name="Entity.NoPictures" xml:space="preserve">
+    <value>No pictures yet</value>
+  </data>
+  <data name="Entity.PictureCount.One" xml:space="preserve">
+    <value>{0} picture</value>
+  </data>
+  <data name="Entity.PictureCount.Other" xml:space="preserve">
+    <value>{0} pictures</value>
+  </data>
+  <data name="Entity.Picture.Of" xml:space="preserve">
+    <value>Picture {0} of {1}</value>
+  </data>
+  <data name="Entity.Picture.SetCover" xml:space="preserve">
+    <value>Make cover</value>
+  </data>
+  <data name="Entity.Picture.Earlier" xml:space="preserve">
+    <value>Move earlier</value>
+  </data>
+  <data name="Entity.Picture.Later" xml:space="preserve">
+    <value>Move later</value>
+  </data>
+  <data name="Entity.Picture.Remove" xml:space="preserve">
+    <value>Remove picture</value>
+  </data>
+  <data name="Entity.Pictures.Limit" xml:space="preserve">
+    <value>An item can hold up to {0} pictures. The ones over that weren't added.</value>
+  </data>
+  <data name="Entity.Pictures.Unreadable" xml:space="preserve">
+    <value>These files couldn't be read as pictures, so they weren't added: {0}</value>
+  </data>
+  <data name="Entity.Pictures.NotAdded.Caption" xml:space="preserve">
+    <value>Some Pictures Weren't Added</value>
   </data>
   <data name="Entity.Required" xml:space="preserve">
     <value>{0} is required.</value>

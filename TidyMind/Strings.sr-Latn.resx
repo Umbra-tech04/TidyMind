@@ -402,10 +402,10 @@ Sada će se zatvoriti, otvori ga ponovo.</value>
     <value>Nijedna stavka ne odgovara pretrazi.</value>
   </data>
   <data name="Collection.PictureFailed" xml:space="preserve">
-    <value>Slika nije mogla da se kopira u {0}, pa nova slika nije dodata. Ostatak stavke je sačuvan kao i obično.</value>
+    <value>Nove slike nisu mogle da se kopiraju u {0}, pa nisu dodate. Ostatak stavke je sačuvan kao i obično.</value>
   </data>
   <data name="Collection.PictureFailed.Caption" xml:space="preserve">
-    <value>Dodavanje slike nije uspelo</value>
+    <value>Dodavanje slika nije uspelo</value>
   </data>
   <data name="Collection.SaveFailed" xml:space="preserve">
     <value>Stavke kolekcije „{0}“ nisu sačuvane jer ova datoteka ne može da se upiše:
@@ -584,8 +584,8 @@ Tvoja poslednja izmena nije sačuvana.</value>
   <data name="Entity.AddSize" xml:space="preserve">
     <value>Dodaj veličinu</value>
   </data>
-  <data name="Entity.ChooseImage" xml:space="preserve">
-    <value>Izaberi sliku</value>
+  <data name="Entity.ChoosePictures" xml:space="preserve">
+    <value>Dodaj slike…</value>
   </data>
   <data name="Entity.Column.Cost" xml:space="preserve">
     <value>Trošak</value>
@@ -608,8 +608,8 @@ Tvoja poslednja izmena nije sačuvana.</value>
   <data name="Entity.Column.Work" xml:space="preserve">
     <value>Šta je urađeno</value>
   </data>
-  <data name="Entity.CurrentImage" xml:space="preserve">
-    <value>Trenutna slika</value>
+  <data name="Entity.Picture.Cover" xml:space="preserve">
+    <value>Naslovna</value>
   </data>
   <data name="Entity.Edit.Clothing" xml:space="preserve">
     <value>Izmeni odeću</value>
@@ -635,8 +635,8 @@ Tvoja poslednja izmena nije sačuvana.</value>
   <data name="Entity.Field.Color" xml:space="preserve">
     <value>Boja</value>
   </data>
-  <data name="Entity.Field.Image" xml:space="preserve">
-    <value>Slika</value>
+  <data name="Entity.Field.Pictures" xml:space="preserve">
+    <value>Slike</value>
   </data>
   <data name="Entity.Field.Inspection" xml:space="preserve">
     <value>Tehnički pregled ističe</value>
@@ -692,8 +692,41 @@ Tvoja poslednja izmena nije sačuvana.</value>
   <data name="Entity.NeedsNumber" xml:space="preserve">
     <value>Polje „{0}“ mora da sadrži broj.</value>
   </data>
-  <data name="Entity.NoImage" xml:space="preserve">
-    <value>Nije izabrana slika</value>
+  <data name="Entity.NoPictures" xml:space="preserve">
+    <value>Još nema slika</value>
+  </data>
+  <data name="Entity.PictureCount.Few" xml:space="preserve">
+    <value>{0} slike</value>
+  </data>
+  <data name="Entity.PictureCount.One" xml:space="preserve">
+    <value>{0} slika</value>
+  </data>
+  <data name="Entity.PictureCount.Other" xml:space="preserve">
+    <value>{0} slika</value>
+  </data>
+  <data name="Entity.Picture.Of" xml:space="preserve">
+    <value>Slika {0} od {1}</value>
+  </data>
+  <data name="Entity.Picture.SetCover" xml:space="preserve">
+    <value>Postavi kao naslovnu</value>
+  </data>
+  <data name="Entity.Picture.Earlier" xml:space="preserve">
+    <value>Pomeri ranije</value>
+  </data>
+  <data name="Entity.Picture.Later" xml:space="preserve">
+    <value>Pomeri kasnije</value>
+  </data>
+  <data name="Entity.Picture.Remove" xml:space="preserve">
+    <value>Ukloni sliku</value>
+  </data>
+  <data name="Entity.Pictures.Limit" xml:space="preserve">
+    <value>Stavka može da sadrži najviše {0} slika. Višak nije dodat.</value>
+  </data>
+  <data name="Entity.Pictures.Unreadable" xml:space="preserve">
+    <value>Ove datoteke nisu mogle da se pročitaju kao slike, pa nisu dodate: {0}</value>
+  </data>
+  <data name="Entity.Pictures.NotAdded.Caption" xml:space="preserve">
+    <value>Neke slike nisu dodate</value>
   </data>
   <data name="Entity.Required" xml:space="preserve">
     <value>Polje „{0}“ je obavezno.</value>

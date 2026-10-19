@@ -541,8 +541,8 @@ namespace TidyMind
 
             if (memory.Type == ProfileType.Collection)
             {
-                foreach (Entity entity in EntityStore.LoadOrEmpty(memory))
-                    EntityImages.DeleteCopy(entity.ImagePath);
+                // The memory has already left profiles.json, so only copies another collection's item still uses stay.
+                EntityImages.DeleteUnreferenced(EntityStore.LoadOrEmpty(memory).SelectMany(EntityImages.Names));
                 return;
             }
 

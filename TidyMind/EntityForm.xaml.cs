@@ -16,8 +16,15 @@ namespace TidyMind
         // the form doesn't show stay as they were. When adding: a new item of the chosen type.
         public Entity ResultEntity { get; private set; }
 
-        // A picture picked in this form (the user's own file), or null. The caller copies it in (EntityImages).
-        public string PickedImageFile { get; private set; }
+        // The item's pictures as the form leaves them, cover first: ones it already had (by stored name) and files
+        // picked in the form (the user's own). The caller copies the picked ones in (EntityImages.TryApply).
+        public IReadOnlyList<PictureSlot> Pictures => pictures;
+
+        private readonly List<PictureSlot> pictures = new List<PictureSlot>();
+        private int selectedPicture = -1;
+        private WrapPanel pictureStrip;
+        private StackPanel pictureTools;
+        private Button coverBtn, earlierBtn, laterBtn, removePictureBtn;
 
         private readonly Entity existing;
         private string entityType;
@@ -68,7 +75,8 @@ namespace TidyMind
         private readonly string opened;
 
         private string CurrentInput() => string.Join("\n", nameBox?.Text, notesBox?.Text, brandBox?.Text, colorBox?.Text,
-            priceBox?.Text, GetComboValue(materialBox), GetComboValue(seasonBox), PickedImageFile,
+            priceBox?.Text, GetComboValue(materialBox), GetComboValue(seasonBox),
+            string.Join("|", pictures.Select(p => p.Stored ?? p.PickedFile)),
             JsonSerializer.Serialize(sizes),
             string.Join("\n", fieldControls.Select(f => FieldValue(f.Key, f.Value))),
             JsonSerializer.Serialize(logEditors.Values.Select(editor => editor.Rows)));
@@ -288,21 +296,22 @@ namespace TidyMind
             }
         }
 
+        // The item's pictures: a button to add several at once, a strip of thumbnails (the first is the cover), the
+        // selected one larger underneath, and what can be done with it (cover, earlier, later, remove).
         private void AddImagePicker()
         {
-            AddLabel(Loc.T("Entity.Field.Image"));
+            AddLabel(Loc.T("Entity.Field.Pictures"));
             StackPanel row = new StackPanel();
             row.Orientation = Orientation.Horizontal;
-            row.Margin = new Thickness(0, 0, 0, 4);
+            row.Margin = new Thickness(0, 0, 0, 8);
 
             Button pickBtn = new Button();
-            pickBtn.Content = Loc.T("Entity.ChooseImage");
+            pickBtn.Content = Loc.T("Entity.ChoosePictures");
             pickBtn.Height = 32;
             pickBtn.Padding = new Thickness(12, 0, 12, 0);
             pickBtn.Click += PickImageButton_Click;
 
             imagePathText = new TextBlock();
-            imagePathText.Text = Loc.T("Entity.NoImage");
             imagePathText.Foreground = (Brush)FindResource("TextSub"); // 4.7:1 and up, readable at this size
             imagePathText.FontSize = 11;
             imagePathText.VerticalAlignment = VerticalAlignment.Center;
@@ -312,12 +321,85 @@ namespace TidyMind
             row.Children.Add(imagePathText);
             FormPanel.Children.Add(row);
 
+            pictureStrip = new WrapPanel();
+            FormPanel.Children.Add(pictureStrip);
+
             imagePreview = new System.Windows.Controls.Image();
-            imagePreview.Height = 140;
+            imagePreview.Height = 180;
             imagePreview.HorizontalAlignment = HorizontalAlignment.Left;
             imagePreview.Stretch = Stretch.Uniform;
-            imagePreview.Margin = new Thickness(0, 6, 0, 12);
+            imagePreview.Margin = new Thickness(0, 4, 0, 8);
             FormPanel.Children.Add(imagePreview);
+
+            pictureTools = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 12) };
+            coverBtn = ToolButton(Loc.T("Entity.Picture.SetCover"), Loc.T("Entity.Picture.SetCover"), () => MovePicture(0));
+            earlierBtn = ToolButton("◀", Loc.T("Entity.Picture.Earlier"), () => MovePicture(selectedPicture - 1));
+            laterBtn = ToolButton("▶", Loc.T("Entity.Picture.Later"), () => MovePicture(selectedPicture + 1));
+            removePictureBtn = ToolButton(Loc.T("Entity.Picture.Remove"), Loc.T("Entity.Picture.Remove"), RemovePicture);
+            foreach (Button tool in new[] { coverBtn, earlierBtn, laterBtn, removePictureBtn })
+                pictureTools.Children.Add(tool);
+            FormPanel.Children.Add(pictureTools);
+            ShowPictures();
+        }
+
+        private Button ToolButton(string content, string name, Action click)
+        {
+            Button button = new Button
+            {
+                Content = content,
+                Style = (Style)FindResource("GhostButtonStyle"),
+                Margin = new Thickness(0, 0, 8, 0),
+                MinWidth = 36
+            };
+            AutomationProperties.SetName(button, name);
+            button.ToolTip = name;
+            button.Click += (s, e) => click();
+            return button;
+        }
+
+        // The strip, the larger picture, the tools and the count line after any change to the list.
+        private void ShowPictures()
+        {
+            if (pictures.Count == 0)
+                selectedPicture = -1;
+            else
+                selectedPicture = Math.Clamp(selectedPicture, 0, pictures.Count - 1);
+
+            foreach (PictureSlot slot in pictures)
+                slot.Preview ??= slot.Stored != null ? EntityImages.Load(slot.Stored) : EntityImages.Store.Decode(slot.PickedFile);
+
+            PictureStrip.Fill(pictureStrip, pictures.Select(p => p.Preview).ToList(), selectedPicture, index =>
+            {
+                selectedPicture = index;
+                ShowPictures();
+            });
+            imagePreview.Source = selectedPicture < 0 ? null : pictures[selectedPicture].Preview;
+            imagePathText.Text = pictures.Count == 0 ? Loc.T("Entity.NoPictures") : Loc.Plural("Entity.PictureCount", pictures.Count);
+            pictureTools.Visibility = selectedPicture < 0 ? Visibility.Collapsed : Visibility.Visible;
+            coverBtn.IsEnabled = earlierBtn.IsEnabled = selectedPicture > 0;
+            laterBtn.IsEnabled = selectedPicture >= 0 && selectedPicture < pictures.Count - 1;
+            foreach (Button tool in new[] { coverBtn, earlierBtn, laterBtn })
+                tool.Opacity = tool.IsEnabled ? 1 : 0.45; // the ghost style has no look of its own for "off"
+        }
+
+        // The selected picture to a place in the list (0 = the cover); it stays selected.
+        private void MovePicture(int to)
+        {
+            if (selectedPicture < 0 || to < 0 || to >= pictures.Count)
+                return;
+            PictureSlot slot = pictures[selectedPicture];
+            pictures.RemoveAt(selectedPicture);
+            pictures.Insert(to, slot);
+            selectedPicture = to;
+            ShowPictures();
+        }
+
+        private void RemovePicture()
+        {
+            if (selectedPicture < 0)
+                return;
+            pictures.RemoveAt(selectedPicture);
+            ShowPictures(); // the next one is selected (or the last, if that was the last)
         }
 
         private void AddLabel(string text)
@@ -389,17 +471,49 @@ namespace TidyMind
         private string GetComboValue(ComboBox box)
             => (string)((ComboBoxItem)box?.SelectedItem)?.Tag;
 
-        // Only previewed here; it's copied in when the item is saved (CollectionView).
+        // Several files at once, added after the pictures already there (the first of them selected). Only previewed
+        // here; they're copied in when the item is saved (CollectionView). A file that isn't a readable picture is
+        // left out, and so are the ones over the limit; the message says so.
         private void PickImageButton_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog dialog = new OpenFileDialog();
             dialog.Filter = Loc.T("Entity.ImageFilter");
+            dialog.Multiselect = true;
             if (dialog.ShowDialog() == true)
+                AddPictures(dialog.FileNames);
+        }
+
+        internal void AddPictures(IEnumerable<string> files)
+        {
+            int firstNew = pictures.Count;
+            bool overLimit = false;
+            List<string> unreadable = new List<string>();
+            foreach (string file in files)
             {
-                PickedImageFile = dialog.FileName;
-                imagePathText.Text = dialog.FileName;
-                imagePreview.Source = EntityImages.Store.Decode(dialog.FileName);
+                if (pictures.Count >= EntityImages.MaxPictures)
+                {
+                    overLimit = true;
+                    break;
+                }
+                ImageSource preview = EntityImages.Store.Decode(file);
+                if (preview == null)
+                    unreadable.Add(System.IO.Path.GetFileName(file));
+                else
+                    pictures.Add(new PictureSlot { PickedFile = file, Preview = preview });
             }
+
+            if (pictures.Count > firstNew)
+                selectedPicture = firstNew;
+            ShowPictures();
+
+            List<string> problems = new List<string>();
+            if (unreadable.Count > 0)
+                problems.Add(Loc.F("Entity.Pictures.Unreadable", string.Join(", ", unreadable.Take(5)) + (unreadable.Count > 5 ? ", …" : "")));
+            if (overLimit)
+                problems.Add(Loc.F("Entity.Pictures.Limit", EntityImages.MaxPictures));
+            if (problems.Count > 0)
+                Msg.Show(this, string.Join("\n\n", problems), Loc.T("Entity.Pictures.NotAdded.Caption"), MessageBoxButton.OK,
+                    MessageBoxImage.Information);
         }
 
         private void ScrollViewer_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
@@ -414,12 +528,11 @@ namespace TidyMind
             if (nameBox != null) nameBox.Text = e.Name;
             if (notesBox != null) notesBox.Text = e.Notes;
 
-            // A missing or unreadable picture just shows no preview.
-            if (!string.IsNullOrEmpty(e.ImagePath))
-            {
-                imagePathText.Text = EntityImages.IsLegacyPath(e.ImagePath) ? e.ImagePath : Loc.T("Entity.CurrentImage");
-                imagePreview.Source = EntityImages.Load(e);
-            }
+            // A missing or unreadable picture just shows an empty frame.
+            foreach (string name in EntityImages.Names(e))
+                pictures.Add(new PictureSlot { Stored = name });
+            selectedPicture = 0;
+            ShowPictures();
 
             foreach (KeyValuePair<FieldDefinition, Control> field in fieldControls)
             {

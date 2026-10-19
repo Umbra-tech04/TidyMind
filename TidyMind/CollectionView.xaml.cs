@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -19,6 +20,7 @@ namespace TidyMind
         private readonly Profile memory;
         private List<Entity> entities;
         private Entity currentDetailEntity;
+        private int detailPicture; // which of its pictures the detail card shows
         private readonly MemoryTabStrip tabStrip;
         private readonly DragReorder<Entity> cardDrag;
         private readonly CardSelectionController<Entity> selection;
@@ -58,7 +60,10 @@ namespace TidyMind
                 tabStrip.Render();
                 RenderEntities();
                 if (OverlayGrid.Visibility == Visibility.Visible && currentDetailEntity != null)
+                {
                     FillDetail(currentDetailEntity);
+                    ShowDetailPicture(currentDetailEntity, detailPicture);
+                }
             });
 
             // An unreadable file is left alone: the page says why, and nothing on it can change or save items.
@@ -324,6 +329,9 @@ namespace TidyMind
             if (subtitle.Text.Length > 0)
                 subtitle.ToolTip = subtitle.Text; // the whole line, when a longer translation is cut short
 
+            if (hasImage && EntityImages.Count(entity) > 1)
+                card.Children.Add(PictureCountBadge(EntityImages.Count(entity)));
+
             selection.Attach(card, entity); // first: a Ctrl or Shift click selects, and neither opens nor drags
             CardEffects.AttachHoverLift(card, shadow);
             CardEffects.AttachClick(card, () => OpenDetail(entity));
@@ -346,6 +354,44 @@ namespace TidyMind
             card.ContextMenu = menu;
 
             return card;
+        }
+
+        // Top right of the card's picture when the item has several: a picture symbol and how many.
+        private static FrameworkElement PictureCountBadge(int count)
+        {
+            StackPanel content = new StackPanel { Orientation = Orientation.Horizontal };
+            content.Children.Add(new TextBlock
+            {
+                Text = "", // Segoe MDL2: Photo2
+                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                FontSize = 11,
+                Foreground = B("#1C1B19"),
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 4, 0)
+            });
+            content.Children.Add(new TextBlock
+            {
+                Text = count.ToString(),
+                FontSize = 11,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = B("#1C1B19"),
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            Border badge = new Border
+            {
+                Background = B("#E6FFFFFF"),
+                BorderBrush = B("#ECECE9"),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(9),
+                Padding = new Thickness(7, 2, 7, 2),
+                HorizontalAlignment = HorizontalAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = new Thickness(0, 18, 18, 0),
+                ToolTip = Loc.Plural("Entity.PictureCount", count),
+                Child = content
+            };
+            AutomationProperties.SetName(badge, Loc.Plural("Entity.PictureCount", count));
+            return badge;
         }
 
         // A vehicle's card: the plate under the make and model (one line each), and its nearest expiry date in the
@@ -400,7 +446,7 @@ namespace TidyMind
         private void OpenDetail(Entity entity)
         {
             currentDetailEntity = entity;
-            DetailImage.Source = EntityImages.Load(entity);
+            ShowDetailPicture(entity, 0);
             FillDetail(entity);
 
             OverlayGrid.Visibility = Visibility.Visible;
@@ -410,6 +456,21 @@ namespace TidyMind
             OverlayGrid.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(180)));
             DetailCard.RenderTransform.BeginAnimation(TranslateTransform.YProperty,
                 new DoubleAnimation(20, 0, TimeSpan.FromMilliseconds(180)));
+        }
+
+        // The detail card's picture: the item's cover, or the one picked in the strip under it (shown with more than
+        // one picture).
+        private void ShowDetailPicture(Entity entity, int index)
+        {
+            List<string> names = EntityImages.Names(entity);
+            index = names.Count == 0 ? 0 : Math.Clamp(index, 0, names.Count - 1);
+            detailPicture = index;
+            DetailImage.Source = names.Count == 0 ? null : EntityImages.Load(names[index]);
+
+            DetailStripScroll.Visibility = names.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
+            if (names.Count > 1)
+                PictureStrip.Fill(DetailStrip, names.Select(n => (ImageSource)EntityImages.Load(n)).ToList(), index,
+                    picked => ShowDetailPicture(entity, picked));
         }
 
         // The detail card's rows; filled again after a language switch.
@@ -531,23 +592,22 @@ namespace TidyMind
                     added.TabId = tabStrip.ActiveTabId;
                     added.Order = entities.Count == 0 ? 0 : entities.Max(x => x.Order) + 1;
                     added.CreatedDate = DateTime.Now;
-                    bool imported = CopyInPickedImage(added, form.PickedImageFile);
+                    List<string> imported = ApplyPictures(added, form.Pictures);
 
                     entities.Add(added);
                     if (!SaveEntities())
                     {
                         entities.Remove(added);
-                        if (imported)
-                            EntityImages.DeleteCopy(added.ImagePath);
+                        RemoveCopies(imported);
                     }
                     RenderEntities();
                 }
             }
         }
 
-        // The form edits a copy (Id, tab, place and fields it doesn't show come along). A newly picked picture is
-        // copied in, and the old copy deleted only once the item is saved without it; if the save fails, the item
-        // stays as it was and the new copy goes again.
+        // The form edits a copy (Id, tab, place and fields it doesn't show come along). Newly picked pictures are
+        // copied in, and the pictures the item no longer has are deleted only once it is saved without them (and no
+        // other item uses them); if the save fails, the item stays as it was and the new copies go again.
         private void EditEntity(Entity entity)
         {
             EntityForm form = new EntityForm(entity);
@@ -555,14 +615,13 @@ namespace TidyMind
                 return;
 
             Entity edited = form.ResultEntity;
-            bool imported = CopyInPickedImage(edited, form.PickedImageFile);
+            List<string> imported = ApplyPictures(edited, form.Pictures);
 
             // By Id, since a reload replaces the list's objects. An item deleted meanwhile has nothing to save into.
             int index = entities.FindIndex(x => x.Id == entity.Id);
             if (index < 0)
             {
-                if (imported)
-                    EntityImages.DeleteCopy(edited.ImagePath);
+                RemoveCopies(imported);
                 RenderEntities();
                 return;
             }
@@ -570,36 +629,33 @@ namespace TidyMind
             Entity original = entities[index];
             entities[index] = edited;
             if (SaveEntities())
-            {
-                if (imported)
-                    EntityImages.DeleteCopy(original.ImagePath);
-            }
+                EntityImages.DeleteUnreferenced(EntityImages.Names(original), entities);
             else
             {
                 entities[index] = original;
-                if (imported)
-                    EntityImages.DeleteCopy(edited.ImagePath);
+                RemoveCopies(imported);
             }
             RenderEntities();
         }
 
-        // Points the item at a copy of the picture picked in the form. False if none was picked, or it couldn't be
-        // copied (said so; the item keeps its old picture).
-        private static bool CopyInPickedImage(Entity entity, string pickedFile)
+        // Gives the item the form's pictures: picked files are copied in. If one can't be copied (said so), none of the
+        // pictures change and the item keeps the ones it had. Returns the new copies made, for RemoveCopies if the item
+        // can't be saved.
+        private static List<string> ApplyPictures(Entity entity, IReadOnlyList<PictureSlot> slots)
         {
-            if (pickedFile == null)
-                return false;
+            if (EntityImages.TryApply(entity, slots, out List<string> imported))
+                return imported;
 
-            string stored = EntityImages.Store.Import(pickedFile);
-            if (stored == null)
-            {
-                Msg.Show(Loc.F("Collection.PictureFailed", EntityImages.Store.Folder), Loc.T("Collection.PictureFailed.Caption"),
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
+            Msg.Show(Loc.F("Collection.PictureFailed", EntityImages.Store.Folder), Loc.T("Collection.PictureFailed.Caption"),
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return new List<string>();
+        }
 
-            entity.ImagePath = stored;
-            return true;
+        // Copies made for an item that then wasn't saved: nothing else refers to them.
+        private static void RemoveCopies(IEnumerable<string> names)
+        {
+            foreach (string name in names)
+                EntityImages.DeleteCopy(name);
         }
 
         private void DeleteEntity(Entity entity)
@@ -628,8 +684,7 @@ namespace TidyMind
                 ReloadEntities();
                 return;
             }
-            foreach (Entity entity in removed)
-                EntityImages.DeleteCopy(entity.ImagePath);
+            EntityImages.DeleteUnreferenced(removed.SelectMany(EntityImages.Names), entities);
         }
 
         private static SolidColorBrush B(string hex)
