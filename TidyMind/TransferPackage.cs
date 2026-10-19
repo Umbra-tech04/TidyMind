@@ -154,6 +154,16 @@ namespace TidyMind
                 }
                 EntityImages.SetNames(item, kept);
             }
+
+            // The records' pictures (a part's photos) the same way; they are always stored copies.
+            foreach (EntityRecord record in items.SelectMany(EntityFiles.Records).Where(r => r.Pictures != null))
+            {
+                record.Pictures = record.Pictures!.Where(name => !string.IsNullOrEmpty(name) && !EntityImages.IsLegacyPath(name)
+                    && File.Exists(EntityImages.Store.PathOf(name))).ToList();
+                files.AddRange(record.Pictures.Select(name => (ItemsDir + Path.GetFileName(name), EntityImages.Store.PathOf(name))));
+                if (record.Pictures.Count == 0)
+                    record.Pictures = null;
+            }
             return files;
         }
 
@@ -371,6 +381,10 @@ namespace TidyMind
         private static EntityRecord Clean(EntityRecord record)
         {
             record.Values = (record.Values ?? new Dictionary<string, string>()).Where(v => v.Value != null).ToDictionary(v => v.Key, v => v.Value);
+            List<string>? pictures = record.Pictures?.Where(n => !string.IsNullOrEmpty(n)).Take(EntityImages.MaxPictures).ToList();
+            record.Pictures = pictures?.Count > 0 ? pictures : null;
+            record.Specs = record.Specs?.Where(s => s != null).Select(s => new SpecLine { Name = s.Name ?? "", Value = s.Value ?? "", ExtensionData = s.ExtensionData }).ToList();
+            record.Children = record.Children?.Where(c => c != null).Select(Clean).ToList();
             return record;
         }
 
@@ -788,13 +802,25 @@ namespace TidyMind
             EntityImages.SetNames(item, names);
         }
 
-        // The item's records under new Ids (a document's reminder goes by its Id), and their files under new names: one
-        // the package held is moved in, one it didn't stays listed (as missing, as it was) under a name no file has.
+        // The item's records, at any depth, under new Ids (a document's reminder goes by its Id), and their files under new
+        // names: a picture the package held is moved in (one it didn't is left out, as for the item's own); a file it held is
+        // moved in, one it didn't stays listed (as missing, as it was) under a name no file has.
         private static void TakeRecords(StagedImport staged, Entity item, List<(string From, string To)> moves)
         {
-            foreach (EntityRecord record in (item.Records?.Values ?? Enumerable.Empty<List<EntityRecord>>()).SelectMany(list => list))
+            foreach (EntityRecord record in EntityFiles.Records(item))
             {
                 record.Id = Guid.NewGuid();
+                if (record.Pictures != null)
+                {
+                    List<string> names = new List<string>();
+                    foreach (string picture in record.Pictures.Select(name => staged.FileFor(ItemsDir, name)).OfType<string>())
+                    {
+                        string stored = Guid.NewGuid().ToString("N") + ExtensionOf(picture);
+                        names.Add(stored);
+                        moves.Add((picture, EntityImages.Store.PathOf(stored)));
+                    }
+                    record.Pictures = names.Count > 0 ? names : null;
+                }
                 if (record.File == null)
                     continue;
                 record.File.Id = Guid.NewGuid();
@@ -994,7 +1020,7 @@ namespace TidyMind
             }
             if (Collection?.BackgroundImagePath != null)
                 yield return TransferPackage.BackgroundDir + Path.GetFileName(Collection.BackgroundImagePath);
-            foreach (string name in Entities.SelectMany(EntityImages.Names))
+            foreach (string name in Entities.SelectMany(EntityFiles.Pictures))
                 yield return TransferPackage.ItemsDir + Path.GetFileName(name);
             foreach (string name in Entities.SelectMany(EntityFiles.Attachments))
                 yield return TransferPackage.DocumentsDir + Path.GetFileName(name);

@@ -25,7 +25,8 @@ namespace TidyMind
         public event Action<int> Picked;
         public event Action<int, int> Moved; // from index, to index (in the list after taking it out)
 
-        private static readonly ControlTemplate FlatTemplate = (ControlTemplate)XamlReader.Parse(
+        // A button that is only its content (a thumbnail, an outline row).
+        internal static readonly ControlTemplate FlatTemplate = (ControlTemplate)XamlReader.Parse(
             "<ControlTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' TargetType='Button'>" +
             "<ContentPresenter/></ControlTemplate>");
 

@@ -8,8 +8,9 @@ using System.Windows.Media;
 namespace TidyMind
 {
     // Text; Number (with a unit); Choice (one of fixed values); Date; Flag (yes, or nothing); CheckList (any of fixed
-    // values plus the user's own, one per line); LongText (several lines); File (a record's file, EntityRecord.File).
-    public enum ValueKind { Text, Number, Choice, Date, Flag, CheckList, LongText, File }
+    // values plus the user's own, one per line); LongText (several lines). A record's own lists: File (EntityRecord.File),
+    // Specs (name and value pairs) and Pictures.
+    public enum ValueKind { Text, Number, Choice, Date, Flag, CheckList, LongText, File, Specs, Pictures }
 
     // One field of a type described here: how the item form, the vehicle window, search and export show it. Values go
     // in and out as stored text (Values). Key is the field's stable name; what it's called on screen comes from it.
@@ -48,9 +49,16 @@ namespace TidyMind
             value = string.IsNullOrEmpty(value) ? null : value;
             if (Set != null)
                 Set(entity, value);
-            else if (value != null)
-                (entity.Details ??= new Dictionary<string, string>())[Key] = value;
-            else if (entity.Details != null && entity.Details.Remove(Key) && entity.Details.Count == 0)
+            else
+                WriteDetail(entity, Key, value);
+        }
+
+        // Entity.Details[key] set, or removed for nothing (and Details with its last value).
+        public static void WriteDetail(Entity entity, string key, string? value)
+        {
+            if (!string.IsNullOrEmpty(value))
+                (entity.Details ??= new Dictionary<string, string>())[key] = value;
+            else if (entity.Details != null && entity.Details.Remove(key) && entity.Details.Count == 0)
                 entity.Details = null;
         }
 
@@ -151,7 +159,9 @@ namespace TidyMind
     }
 
     // A list of records an item holds (a vehicle's documents): the fields of each, what a new one starts with, and how
-    // one is called in a line (Title, made from the fields TitleKeys names, which a line then doesn't repeat).
+    // one is called in a line (Title, made from the fields TitleKeys names, which a line then doesn't repeat). Nested:
+    // records hold records (RecordTree). CurrentKey: the Entity.Details field naming the one record in use now (the
+    // mounted wheel set).
     public class RecordDefinition
     {
         public string Key { get; init; } = "";
@@ -161,6 +171,8 @@ namespace TidyMind
         public string[] TitleKeys { get; init; } = Array.Empty<string>();
         public Func<EntityRecord, string> Title { get; init; } = _ => "";
         public Action<EntityRecord>? Start { get; init; }
+        public bool Nested { get; init; }
+        public string? CurrentKey { get; init; }
 
         // How the item's list is read and stored, when it isn't simply Entity.Records[Key] (documents keep the old
         // insurance and inspection dates in step).
@@ -194,16 +206,48 @@ namespace TidyMind
             return record;
         }
 
-        // "Insurance · Allianz | Valid until: Nov 30, 2026 | Reminder: 30 days before": the title, then the other
-        // fields that are filled (a file by its name).
-        public string Line(EntityRecord record, Entity owner)
+        // "Insurance · Allianz | Valid until: Nov 30, 2026 | Reminder: 30 days before": the title, then its cells. A
+        // nested record has the ones above it before its title ("Brakes › Front brakes › Brake disc").
+        public string Line(EntityRecord record, Entity owner, IEnumerable<EntityRecord>? above = null)
         {
-            IEnumerable<string> cells = Fields.Where(f => !TitleKeys.Contains(f.Key))
-                .Select(f => (Field: f, Text: f.Kind == ValueKind.File ? record.File?.DisplayName ?? "" : f.Show(record.Get(f.Key), owner)))
-                .Where(c => c.Text.Length > 0)
-                .Select(c => c.Field.Label + ": " + c.Text);
-            return string.Join(" | ", cells.Prepend(Title(record)).Where(c => c.Length > 0));
+            string title = string.Join(" › ", (above ?? Enumerable.Empty<EntityRecord>()).Select(Title).Append(Title(record)));
+            return string.Join(" | ", Cells(record, owner).Prepend(title).Where(c => c.Length > 0));
         }
+
+        // The fields that are filled, other than the title's ("Valid until: Nov 30, 2026"): a file by its name, specs
+        // one by one ("Size: M10x1.25x40"), pictures by how many there are.
+        public IEnumerable<string> Cells(EntityRecord record, Entity owner)
+        {
+            foreach (FieldDefinition field in Fields.Where(f => !TitleKeys.Contains(f.Key)))
+            {
+                switch (field.Kind)
+                {
+                    case ValueKind.File:
+                        if (!string.IsNullOrEmpty(record.File?.DisplayName))
+                            yield return field.Label + ": " + record.File.DisplayName;
+                        break;
+                    case ValueKind.Specs:
+                        foreach (SpecLine spec in (record.Specs ?? new List<SpecLine>()).Where(s => s != null))
+                            yield return spec.Name + ": " + spec.Value;
+                        break;
+                    case ValueKind.Pictures:
+                        if (record.Pictures?.Count > 0)
+                            yield return Loc.Plural("Entity.PictureCount", record.Pictures.Count);
+                        break;
+                    default:
+                        string shown = field.Show(record.Get(field.Key), owner);
+                        if (shown.Length > 0)
+                            yield return field.Label + ": " + shown;
+                        break;
+                }
+            }
+        }
+
+        // The record in use now (CurrentKey), and making one so.
+        public bool IsCurrent(Entity owner, EntityRecord record) =>
+            CurrentKey != null && owner.Details?.GetValueOrDefault(CurrentKey) == record.Id.ToString();
+
+        public void SetCurrent(Entity owner, Guid? id) => FieldDefinition.WriteDetail(owner, CurrentKey!, id?.ToString());
     }
 
     // One tab of the vehicle window after its Overview: its sections, record lists and logs, in that order.
@@ -287,7 +331,7 @@ namespace TidyMind
             {
                 List<EntityRecord> list = records.Read(entity);
                 if (list.Count > 0)
-                    lines.Add((records.Label, string.Join("\n", list.Select(r => records.Line(r, entity)))));
+                    lines.Add((records.Label, string.Join("\n", RecordTree.Walk(list).Select(x => records.Line(x.Record, entity, x.Above)))));
             }
             foreach (LogDefinition log in Logs(entity.EntityType))
             {

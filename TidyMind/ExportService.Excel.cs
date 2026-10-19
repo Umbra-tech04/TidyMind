@@ -297,15 +297,16 @@ namespace TidyMind
             }
         }
 
-        // Each kind of record list the items have (a vehicle's documents) as a table: a row per record, a column per
-        // field (a file by its name), dates and numbers typed.
+        // Each kind of record list the items have (a vehicle's documents, wheel sets, parts) as a table: a row per record (a
+        // nested one named with the ones above it), a column per field (a file by its name, specs on one line), dates and
+        // numbers typed.
         private static IEnumerable<(string Name, XlTable Table)> RecordTables(List<ExportItem> items, bool byMemory)
         {
             List<ExportItem> entities = items.Where(i => i.Entity != null).ToList();
             foreach (RecordDefinition records in entities.SelectMany(i => EntityTypes.Records(i.Entity.EntityType)).Distinct())
             {
-                List<(ExportItem Item, EntityRecord Record)> entries = entities
-                    .SelectMany(i => records.Read(i.Entity).Select(record => (Item: i, Record: record))).ToList();
+                List<(ExportItem Item, EntityRecord Record, IReadOnlyList<EntityRecord> Above)> entries = entities
+                    .SelectMany(i => RecordTree.Walk(records.Read(i.Entity)).Select(x => (Item: i, x.Record, x.Above))).ToList();
                 if (entries.Count == 0)
                     continue;
 
@@ -313,7 +314,9 @@ namespace TidyMind
                 if (byMemory)
                     table.Column(Loc.T("Export.Column.Memory"), entries.Select(e => e.Item.Group), 30);
                 table.Column(Loc.T("Export.Column.Name"), entries.Select(e => NameOrUnnamed(e.Item.Name)), 30);
-                List<object[]> cells = entries.Select(e => records.Fields.Select(f => RecordCell(f, e.Record, e.Item.Entity)).ToArray()).ToList();
+                List<object[]> cells = entries.Select(e => records.Fields.Select(f => records.TitleKeys.Contains(f.Key) && e.Above.Count > 0
+                    ? string.Join(" › ", e.Above.Select(records.Title).Append(records.Title(e.Record)))
+                    : RecordCell(f, e.Record, e.Item.Entity)).ToArray()).ToList();
                 for (int c = 0; c < records.Fields.Length; c++)
                 {
                     FieldDefinition field = records.Fields[c];
@@ -321,7 +324,7 @@ namespace TidyMind
                     table.Column(field.Label, column.All(v => v is DateTime || "".Equals(v)) ? 13
                         : FitWidth(column.Select(v => v.ToString()), field.Label, 40));
                 }
-                foreach (((ExportItem item, _), object[] values) in entries.Zip(cells))
+                foreach (((ExportItem item, _, _), object[] values) in entries.Zip(cells))
                 {
                     List<object> row = new List<object>();
                     if (byMemory)
@@ -338,6 +341,10 @@ namespace TidyMind
         {
             if (field.Kind == ValueKind.File)
                 return record.File?.DisplayName ?? "";
+            if (field.Kind == ValueKind.Specs)
+                return string.Join("; ", (record.Specs ?? new List<SpecLine>()).Where(s => s != null).Select(s => s.Name + ": " + s.Value));
+            if (field.Kind == ValueKind.Pictures)
+                return record.Pictures?.Count > 0 ? (object)record.Pictures.Count : "";
             string? stored = record.Get(field.Key);
             return string.IsNullOrWhiteSpace(stored) ? "" : XlValue(field, stored, owner);
         }

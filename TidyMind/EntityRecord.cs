@@ -18,6 +18,18 @@ namespace TidyMind
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public Attachment? File { get; set; }
 
+        // Its pictures (a part's photos), file names in EntityImages/ like an item's own; the first is the cover.
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<string>? Pictures { get; set; }
+
+        // Free name and value pairs ("Size": "M10x1.25x40", "Torque": "45 Nm"), in the user's order.
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<SpecLine>? Specs { get; set; }
+
+        // The records under it (RecordDefinition.Nested: a part's parts, RecordTree).
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<EntityRecord>? Children { get; set; }
+
         // Fields this version doesn't know (written by another TidyMind version): kept so saving doesn't drop them.
         [JsonExtensionData]
         public Dictionary<string, JsonElement>? ExtensionData { get; set; }
@@ -33,5 +45,15 @@ namespace TidyMind
             else
                 Values[key] = value;
         }
+    }
+
+    // One of a record's specs: a name and its value, both as typed.
+    public class SpecLine
+    {
+        public string Name { get; set; } = "";
+        public string Value { get; set; } = "";
+
+        [JsonExtensionData]
+        public Dictionary<string, JsonElement>? ExtensionData { get; set; }
     }
 }

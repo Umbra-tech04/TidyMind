@@ -3020,4 +3020,307 @@ Az utolsó oldalon a nyíl új oldalt kezd.</value>
   <data name="Settings.Currency.Note" xml:space="preserve">
     <value>Az árak mellett jelenik meg. Üresen hagyva: {0}, a gép területi beállításából.</value>
   </data>
+  <data name="Entity.Field.TyreBrand" xml:space="preserve">
+    <value>Gumiabroncs márkája</value>
+  </data>
+  <data name="Entity.Field.TyreModel" xml:space="preserve">
+    <value>Gumiabroncs típusa</value>
+  </data>
+  <data name="Entity.Field.TyreSize" xml:space="preserve">
+    <value>Gumiméret</value>
+  </data>
+  <data name="Entity.Field.Dot" xml:space="preserve">
+    <value>DOT-kód</value>
+  </data>
+  <data name="Entity.Field.TreadDepth" xml:space="preserve">
+    <value>Profilmélység</value>
+  </data>
+  <data name="Entity.Field.Pressure" xml:space="preserve">
+    <value>Ajánlott guminyomás</value>
+  </data>
+  <data name="Entity.Field.RimType" xml:space="preserve">
+    <value>Felni típusa</value>
+  </data>
+  <data name="Entity.Field.RimSize" xml:space="preserve">
+    <value>Felniméret</value>
+  </data>
+  <data name="Entity.Field.BoltPattern" xml:space="preserve">
+    <value>Osztókör (PCD)</value>
+  </data>
+  <data name="Entity.Field.Offset" xml:space="preserve">
+    <value>Beültetési mélység (ET)</value>
+  </data>
+  <data name="Entity.Field.CentreBore" xml:space="preserve">
+    <value>Középfurat</value>
+  </data>
+  <data name="Entity.Field.BoltType" xml:space="preserve">
+    <value>Kerékcsavar típusa</value>
+  </data>
+  <data name="Entity.Field.BoltTorque" xml:space="preserve">
+    <value>Meghúzási nyomaték</value>
+  </data>
+  <data name="Entity.Field.Storage" xml:space="preserve">
+    <value>Tárolás helye</value>
+  </data>
+  <data name="Entity.Field.SetDistance" xml:space="preserve">
+    <value>Futott távolság ezzel a szettel</value>
+  </data>
+  <data name="Entity.Field.EngineOil" xml:space="preserve">
+    <value>Motorolaj (szabvány)</value>
+  </data>
+  <data name="Entity.Field.OilViscosity" xml:space="preserve">
+    <value>Olaj viszkozitása</value>
+  </data>
+  <data name="Entity.Field.OilCapacity" xml:space="preserve">
+    <value>Olajmennyiség</value>
+  </data>
+  <data name="Entity.Field.Coolant" xml:space="preserve">
+    <value>Hűtőfolyadék</value>
+  </data>
+  <data name="Entity.Field.CoolantCapacity" xml:space="preserve">
+    <value>Hűtőfolyadék mennyisége</value>
+  </data>
+  <data name="Entity.Field.BrakeFluid" xml:space="preserve">
+    <value>Fékfolyadék</value>
+  </data>
+  <data name="Entity.Field.GearboxOil" xml:space="preserve">
+    <value>Váltóolaj</value>
+  </data>
+  <data name="Entity.Field.GearboxOilCapacity" xml:space="preserve">
+    <value>Váltóolaj mennyisége</value>
+  </data>
+  <data name="Entity.Field.OilFilter" xml:space="preserve">
+    <value>Olajszűrő</value>
+  </data>
+  <data name="Entity.Field.AirFilter" xml:space="preserve">
+    <value>Levegőszűrő</value>
+  </data>
+  <data name="Entity.Field.CabinFilter" xml:space="preserve">
+    <value>Pollenszűrő</value>
+  </data>
+  <data name="Entity.Field.FuelFilter" xml:space="preserve">
+    <value>Üzemanyagszűrő</value>
+  </data>
+  <data name="Entity.Field.WipersFront" xml:space="preserve">
+    <value>Első ablaktörlők</value>
+  </data>
+  <data name="Entity.Field.WiperRear" xml:space="preserve">
+    <value>Hátsó ablaktörlő</value>
+  </data>
+  <data name="Entity.Field.FrontDiscs" xml:space="preserve">
+    <value>Első tárcsák (méret, cikkszám)</value>
+  </data>
+  <data name="Entity.Field.FrontPads" xml:space="preserve">
+    <value>Első fékbetétek</value>
+  </data>
+  <data name="Entity.Field.RearDiscs" xml:space="preserve">
+    <value>Hátsó tárcsák vagy dobok</value>
+  </data>
+  <data name="Entity.Field.RearPads" xml:space="preserve">
+    <value>Hátsó betétek vagy pofák</value>
+  </data>
+  <data name="Entity.Field.Battery" xml:space="preserve">
+    <value>Akkumulátor típusa</value>
+  </data>
+  <data name="Entity.Field.BatteryCapacity" xml:space="preserve">
+    <value>Akkumulátor kapacitása</value>
+  </data>
+  <data name="Entity.Field.BatteryCurrent" xml:space="preserve">
+    <value>Hidegindítási áram</value>
+  </data>
+  <data name="Entity.Field.BulbLowBeam" xml:space="preserve">
+    <value>Tompított fényszóró</value>
+  </data>
+  <data name="Entity.Field.BulbHighBeam" xml:space="preserve">
+    <value>Távolsági fényszóró</value>
+  </data>
+  <data name="Entity.Field.BulbFog" xml:space="preserve">
+    <value>Ködlámpa</value>
+  </data>
+  <data name="Entity.Field.BulbIndicator" xml:space="preserve">
+    <value>Irányjelzők</value>
+  </data>
+  <data name="Entity.Field.BulbBrake" xml:space="preserve">
+    <value>Hátsó és féklámpák</value>
+  </data>
+  <data name="Entity.Field.BulbReverse" xml:space="preserve">
+    <value>Tolatólámpa</value>
+  </data>
+  <data name="Entity.Field.BulbPlate" xml:space="preserve">
+    <value>Rendszámtábla-világítás</value>
+  </data>
+  <data name="Entity.Field.BulbInterior" xml:space="preserve">
+    <value>Belső világítás</value>
+  </data>
+  <data name="Entity.Field.FuseNotes" xml:space="preserve">
+    <value>Biztosítékok</value>
+  </data>
+  <data name="Entity.Field.OemNumber" xml:space="preserve">
+    <value>Gyári cikkszám (OEM)</value>
+  </data>
+  <data name="Entity.Field.PartNumber" xml:space="preserve">
+    <value>Utángyártott cikkszám</value>
+  </data>
+  <data name="Entity.Field.Quantity" xml:space="preserve">
+    <value>Mennyiség</value>
+  </data>
+  <data name="Entity.Field.Price" xml:space="preserve">
+    <value>Ár</value>
+  </data>
+  <data name="Entity.Field.Shop" xml:space="preserve">
+    <value>Vásárlás helye</value>
+  </data>
+  <data name="Entity.Field.Link" xml:space="preserve">
+    <value>Link</value>
+  </data>
+  <data name="Entity.Field.InstalledDate" xml:space="preserve">
+    <value>Beszerelés dátuma</value>
+  </data>
+  <data name="Entity.Field.InstalledOdometer" xml:space="preserve">
+    <value>Km-óra beszereléskor</value>
+  </data>
+  <data name="Entity.Field.Specs" xml:space="preserve">
+    <value>Jellemzők</value>
+  </data>
+  <data name="Entity.Field.Photos" xml:space="preserve">
+    <value>Fotók</value>
+  </data>
+  <data name="Entity.Unit.mm" xml:space="preserve">
+    <value>mm</value>
+  </data>
+  <data name="Entity.Unit.Ah" xml:space="preserve">
+    <value>Ah</value>
+  </data>
+  <data name="Entity.Unit.A" xml:space="preserve">
+    <value>A</value>
+  </data>
+  <data name="Choice.Alloy" xml:space="preserve">
+    <value>Alufelni</value>
+  </data>
+  <data name="Choice.Steel" xml:space="preserve">
+    <value>Acélfelni</value>
+  </data>
+  <data name="Entity.Tab.Wheels" xml:space="preserve">
+    <value>Kerekek és gumik</value>
+  </data>
+  <data name="Entity.Tab.Parts" xml:space="preserve">
+    <value>Folyadékok és alkatrészek</value>
+  </data>
+  <data name="Entity.Section.Fluids" xml:space="preserve">
+    <value>Folyadékok és szűrők</value>
+  </data>
+  <data name="Entity.Section.Brakes" xml:space="preserve">
+    <value>Fékek</value>
+  </data>
+  <data name="Entity.Section.Electrical" xml:space="preserve">
+    <value>Akkumulátor és izzók</value>
+  </data>
+  <data name="Entity.Records.WheelSets" xml:space="preserve">
+    <value>Kerékszettek</value>
+  </data>
+  <data name="Entity.Records.WheelSets.Add" xml:space="preserve">
+    <value>Kerékszett hozzáadása</value>
+  </data>
+  <data name="Entity.Records.WheelSets.Empty" xml:space="preserve">
+    <value>Még nincs kerékszett. Add hozzá a nyári és a téli szettet a gumimérettel, a felni adataival és a tárolás helyével.</value>
+  </data>
+  <data name="Entity.Records.WheelSets.Untitled" xml:space="preserve">
+    <value>Kerékszett</value>
+  </data>
+  <data name="Entity.Records.WheelSets.Current" xml:space="preserve">
+    <value>Most ez van fent</value>
+  </data>
+  <data name="Entity.Records.WheelSets.MakeCurrent" xml:space="preserve">
+    <value>Megjelölés felszereltként</value>
+  </data>
+  <data name="Entity.Records.Parts" xml:space="preserve">
+    <value>Alkatrészek</value>
+  </data>
+  <data name="Entity.Records.Parts.Add" xml:space="preserve">
+    <value>Rendszer hozzáadása</value>
+  </data>
+  <data name="Entity.Records.Parts.Empty" xml:space="preserve">
+    <value>Még nincs alkatrész. Kezdd a szokásos rendszerekkel (motor, fékek, futómű…), és vedd fel alájuk az alkatrészeket: márka, cikkszámok, méretek, nyomaték, beszerelés ideje.</value>
+  </data>
+  <data name="Entity.Records.Parts.Untitled" xml:space="preserve">
+    <value>Névtelen alkatrész</value>
+  </data>
+  <data name="Entity.Records.Parts.Template" xml:space="preserve">
+    <value>Szokásos rendszerek felvétele</value>
+  </data>
+  <data name="Entity.Records.Parts.AddUnder" xml:space="preserve">
+    <value>Alkatrész hozzáadása alá</value>
+  </data>
+  <data name="Entity.Records.Parts.NewUnder" xml:space="preserve">
+    <value>Új alkatrész ez alá: {0}</value>
+  </data>
+  <data name="Entity.Records.Parts.DeleteWithChildren.Other" xml:space="preserve">
+    <value>Törlöd ezt: {1}, és az alatta lévő {0} alkatrészt?</value>
+  </data>
+  <data name="Entity.Records.Parts.Up" xml:space="preserve">
+    <value>Feljebb</value>
+  </data>
+  <data name="Entity.Records.Parts.Down" xml:space="preserve">
+    <value>Lejjebb</value>
+  </data>
+  <data name="Entity.Records.Parts.In" xml:space="preserve">
+    <value>Az előző alá</value>
+  </data>
+  <data name="Entity.Records.Parts.Out" xml:space="preserve">
+    <value>Egy szinttel feljebb</value>
+  </data>
+  <data name="Entity.Outline.Open" xml:space="preserve">
+    <value>Az alatta lévők mutatása</value>
+  </data>
+  <data name="Entity.Outline.Close" xml:space="preserve">
+    <value>Az alatta lévők elrejtése</value>
+  </data>
+  <data name="Entity.Parts.Template.Engine" xml:space="preserve">
+    <value>Motor</value>
+  </data>
+  <data name="Entity.Parts.Template.Transmission" xml:space="preserve">
+    <value>Erőátvitel</value>
+  </data>
+  <data name="Entity.Parts.Template.Brakes" xml:space="preserve">
+    <value>Fékek</value>
+  </data>
+  <data name="Entity.Parts.Template.Suspension" xml:space="preserve">
+    <value>Futómű</value>
+  </data>
+  <data name="Entity.Parts.Template.Wheels" xml:space="preserve">
+    <value>Kerekek</value>
+  </data>
+  <data name="Entity.Parts.Template.Electrical" xml:space="preserve">
+    <value>Elektromos rendszer</value>
+  </data>
+  <data name="Entity.Parts.Template.Body" xml:space="preserve">
+    <value>Karosszéria</value>
+  </data>
+  <data name="Entity.Parts.Template.Interior" xml:space="preserve">
+    <value>Utastér</value>
+  </data>
+  <data name="Entity.Parts.Template.Fluids" xml:space="preserve">
+    <value>Folyadékok</value>
+  </data>
+  <data name="Entity.Specs.Add" xml:space="preserve">
+    <value>Jellemző hozzáadása</value>
+  </data>
+  <data name="Entity.Specs.Name" xml:space="preserve">
+    <value>Megnevezés (pl. méret)</value>
+  </data>
+  <data name="Entity.Specs.Value" xml:space="preserve">
+    <value>Érték</value>
+  </data>
+  <data name="Entity.Specs.Remove" xml:space="preserve">
+    <value>Jellemző törlése</value>
+  </data>
+  <data name="Vehicle.Search.Placeholder" xml:space="preserve">
+    <value>Keresés a járműben</value>
+  </data>
+  <data name="Vehicle.Search.Found.Other" xml:space="preserve">
+    <value>{0} találat</value>
+  </data>
+  <data name="Vehicle.Search.None" xml:space="preserve">
+    <value>Ebben a járműben semmi sem egyezik ezzel: „{0}”.</value>
+  </data>
 </root>

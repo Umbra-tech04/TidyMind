@@ -410,35 +410,10 @@ namespace TidyMind
 
         internal void AddPictures(IEnumerable<string> files)
         {
-            int firstNew = pictures.Count;
-            bool overLimit = false;
-            List<string> unreadable = new List<string>();
-            foreach (string file in files)
-            {
-                if (pictures.Count >= EntityImages.MaxPictures)
-                {
-                    overLimit = true;
-                    break;
-                }
-                ImageSource preview = EntityImages.Store.Decode(file);
-                if (preview == null)
-                    unreadable.Add(System.IO.Path.GetFileName(file));
-                else
-                    pictures.Add(new PictureSlot { PickedFile = file, Preview = preview });
-            }
-
-            if (pictures.Count > firstNew)
+            int firstNew = PictureSlot.AddPicked(pictures, files, this);
+            if (firstNew >= 0)
                 selectedPicture = firstNew;
             ShowPictures();
-
-            List<string> problems = new List<string>();
-            if (unreadable.Count > 0)
-                problems.Add(Loc.F("Entity.Pictures.Unreadable", string.Join(", ", unreadable.Take(5)) + (unreadable.Count > 5 ? ", …" : "")));
-            if (overLimit)
-                problems.Add(Loc.F("Entity.Pictures.Limit", EntityImages.MaxPictures));
-            if (problems.Count > 0)
-                Msg.Show(this, string.Join("\n\n", problems), Loc.T("Entity.Pictures.NotAdded.Caption"), MessageBoxButton.OK,
-                    MessageBoxImage.Information);
         }
 
         private void ScrollViewer_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)

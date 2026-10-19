@@ -3244,4 +3244,319 @@ Na poslednjoj stranici strelica započinje novu.</value>
   <data name="Settings.Currency.Note" xml:space="preserve">
     <value>Prikazuje se uz cene. Ako je prazno: {0}, iz regionalnih podešavanja računara.</value>
   </data>
+  <data name="Entity.Field.TyreBrand" xml:space="preserve">
+    <value>Marka gume</value>
+  </data>
+  <data name="Entity.Field.TyreModel" xml:space="preserve">
+    <value>Model gume</value>
+  </data>
+  <data name="Entity.Field.TyreSize" xml:space="preserve">
+    <value>Dimenzija gume</value>
+  </data>
+  <data name="Entity.Field.Dot" xml:space="preserve">
+    <value>DOT oznaka</value>
+  </data>
+  <data name="Entity.Field.TreadDepth" xml:space="preserve">
+    <value>Dubina šare</value>
+  </data>
+  <data name="Entity.Field.Pressure" xml:space="preserve">
+    <value>Preporučeni pritisak</value>
+  </data>
+  <data name="Entity.Field.RimType" xml:space="preserve">
+    <value>Tip felne</value>
+  </data>
+  <data name="Entity.Field.RimSize" xml:space="preserve">
+    <value>Dimenzija felne</value>
+  </data>
+  <data name="Entity.Field.BoltPattern" xml:space="preserve">
+    <value>Raspored rupa (PCD)</value>
+  </data>
+  <data name="Entity.Field.Offset" xml:space="preserve">
+    <value>Offset (ET)</value>
+  </data>
+  <data name="Entity.Field.CentreBore" xml:space="preserve">
+    <value>Centralni otvor</value>
+  </data>
+  <data name="Entity.Field.BoltType" xml:space="preserve">
+    <value>Tip zavrtnja točka</value>
+  </data>
+  <data name="Entity.Field.BoltTorque" xml:space="preserve">
+    <value>Moment pritezanja</value>
+  </data>
+  <data name="Entity.Field.Storage" xml:space="preserve">
+    <value>Mesto čuvanja</value>
+  </data>
+  <data name="Entity.Field.SetDistance" xml:space="preserve">
+    <value>Pređeno na ovom kompletu</value>
+  </data>
+  <data name="Entity.Field.EngineOil" xml:space="preserve">
+    <value>Motorno ulje (norma)</value>
+  </data>
+  <data name="Entity.Field.OilViscosity" xml:space="preserve">
+    <value>Viskozitet ulja</value>
+  </data>
+  <data name="Entity.Field.OilCapacity" xml:space="preserve">
+    <value>Količina ulja</value>
+  </data>
+  <data name="Entity.Field.Coolant" xml:space="preserve">
+    <value>Rashladna tečnost</value>
+  </data>
+  <data name="Entity.Field.CoolantCapacity" xml:space="preserve">
+    <value>Količina rashladne tečnosti</value>
+  </data>
+  <data name="Entity.Field.BrakeFluid" xml:space="preserve">
+    <value>Kočiona tečnost</value>
+  </data>
+  <data name="Entity.Field.GearboxOil" xml:space="preserve">
+    <value>Ulje menjača</value>
+  </data>
+  <data name="Entity.Field.GearboxOilCapacity" xml:space="preserve">
+    <value>Količina ulja menjača</value>
+  </data>
+  <data name="Entity.Field.OilFilter" xml:space="preserve">
+    <value>Filter ulja</value>
+  </data>
+  <data name="Entity.Field.AirFilter" xml:space="preserve">
+    <value>Filter vazduha</value>
+  </data>
+  <data name="Entity.Field.CabinFilter" xml:space="preserve">
+    <value>Kabinski filter</value>
+  </data>
+  <data name="Entity.Field.FuelFilter" xml:space="preserve">
+    <value>Filter goriva</value>
+  </data>
+  <data name="Entity.Field.WipersFront" xml:space="preserve">
+    <value>Prednji brisači</value>
+  </data>
+  <data name="Entity.Field.WiperRear" xml:space="preserve">
+    <value>Zadnji brisač</value>
+  </data>
+  <data name="Entity.Field.FrontDiscs" xml:space="preserve">
+    <value>Prednji diskovi (dimenzija, kataloški broj)</value>
+  </data>
+  <data name="Entity.Field.FrontPads" xml:space="preserve">
+    <value>Prednje pločice</value>
+  </data>
+  <data name="Entity.Field.RearDiscs" xml:space="preserve">
+    <value>Zadnji diskovi ili doboši</value>
+  </data>
+  <data name="Entity.Field.RearPads" xml:space="preserve">
+    <value>Zadnje pločice ili papuče</value>
+  </data>
+  <data name="Entity.Field.Battery" xml:space="preserve">
+    <value>Tip akumulatora</value>
+  </data>
+  <data name="Entity.Field.BatteryCapacity" xml:space="preserve">
+    <value>Kapacitet akumulatora</value>
+  </data>
+  <data name="Entity.Field.BatteryCurrent" xml:space="preserve">
+    <value>Struja hladnog starta</value>
+  </data>
+  <data name="Entity.Field.BulbLowBeam" xml:space="preserve">
+    <value>Kratka svetla</value>
+  </data>
+  <data name="Entity.Field.BulbHighBeam" xml:space="preserve">
+    <value>Duga svetla</value>
+  </data>
+  <data name="Entity.Field.BulbFog" xml:space="preserve">
+    <value>Svetla za maglu</value>
+  </data>
+  <data name="Entity.Field.BulbIndicator" xml:space="preserve">
+    <value>Migavci</value>
+  </data>
+  <data name="Entity.Field.BulbBrake" xml:space="preserve">
+    <value>Zadnja i stop svetla</value>
+  </data>
+  <data name="Entity.Field.BulbReverse" xml:space="preserve">
+    <value>Svetlo za vožnju unazad</value>
+  </data>
+  <data name="Entity.Field.BulbPlate" xml:space="preserve">
+    <value>Svetlo registarske tablice</value>
+  </data>
+  <data name="Entity.Field.BulbInterior" xml:space="preserve">
+    <value>Unutrašnje svetlo</value>
+  </data>
+  <data name="Entity.Field.FuseNotes" xml:space="preserve">
+    <value>Osigurači</value>
+  </data>
+  <data name="Entity.Field.OemNumber" xml:space="preserve">
+    <value>Originalni broj (OEM)</value>
+  </data>
+  <data name="Entity.Field.PartNumber" xml:space="preserve">
+    <value>Zamenski broj</value>
+  </data>
+  <data name="Entity.Field.Quantity" xml:space="preserve">
+    <value>Količina</value>
+  </data>
+  <data name="Entity.Field.Price" xml:space="preserve">
+    <value>Cena</value>
+  </data>
+  <data name="Entity.Field.Shop" xml:space="preserve">
+    <value>Kupljeno u</value>
+  </data>
+  <data name="Entity.Field.Link" xml:space="preserve">
+    <value>Link</value>
+  </data>
+  <data name="Entity.Field.InstalledDate" xml:space="preserve">
+    <value>Datum ugradnje</value>
+  </data>
+  <data name="Entity.Field.InstalledOdometer" xml:space="preserve">
+    <value>Kilometraža pri ugradnji</value>
+  </data>
+  <data name="Entity.Field.Specs" xml:space="preserve">
+    <value>Specifikacije</value>
+  </data>
+  <data name="Entity.Field.Photos" xml:space="preserve">
+    <value>Fotografije</value>
+  </data>
+  <data name="Entity.Unit.mm" xml:space="preserve">
+    <value>mm</value>
+  </data>
+  <data name="Entity.Unit.Ah" xml:space="preserve">
+    <value>Ah</value>
+  </data>
+  <data name="Entity.Unit.A" xml:space="preserve">
+    <value>A</value>
+  </data>
+  <data name="Choice.Alloy" xml:space="preserve">
+    <value>Aluminijumske</value>
+  </data>
+  <data name="Choice.Steel" xml:space="preserve">
+    <value>Čelične</value>
+  </data>
+  <data name="Entity.Tab.Wheels" xml:space="preserve">
+    <value>Točkovi i gume</value>
+  </data>
+  <data name="Entity.Tab.Parts" xml:space="preserve">
+    <value>Tečnosti i delovi</value>
+  </data>
+  <data name="Entity.Section.Fluids" xml:space="preserve">
+    <value>Tečnosti i filteri</value>
+  </data>
+  <data name="Entity.Section.Brakes" xml:space="preserve">
+    <value>Kočnice</value>
+  </data>
+  <data name="Entity.Section.Electrical" xml:space="preserve">
+    <value>Akumulator i sijalice</value>
+  </data>
+  <data name="Entity.Records.WheelSets" xml:space="preserve">
+    <value>Kompleti točkova</value>
+  </data>
+  <data name="Entity.Records.WheelSets.Add" xml:space="preserve">
+    <value>Dodaj komplet točkova</value>
+  </data>
+  <data name="Entity.Records.WheelSets.Empty" xml:space="preserve">
+    <value>Još nema kompleta točkova. Dodaj letnji i zimski komplet sa dimenzijom gume, podacima o felnama i mestom čuvanja.</value>
+  </data>
+  <data name="Entity.Records.WheelSets.Untitled" xml:space="preserve">
+    <value>Komplet točkova</value>
+  </data>
+  <data name="Entity.Records.WheelSets.Current" xml:space="preserve">
+    <value>Trenutno montiran</value>
+  </data>
+  <data name="Entity.Records.WheelSets.MakeCurrent" xml:space="preserve">
+    <value>Označi kao montiran</value>
+  </data>
+  <data name="Entity.Records.Parts" xml:space="preserve">
+    <value>Delovi</value>
+  </data>
+  <data name="Entity.Records.Parts.Add" xml:space="preserve">
+    <value>Dodaj sistem</value>
+  </data>
+  <data name="Entity.Records.Parts.Empty" xml:space="preserve">
+    <value>Još nema delova. Počni od uobičajenih sistema (motor, kočnice, vešanje…) i dodaj delove ispod njih: marka, kataloški brojevi, dimenzije, moment, kada su ugrađeni.</value>
+  </data>
+  <data name="Entity.Records.Parts.Untitled" xml:space="preserve">
+    <value>Deo bez naziva</value>
+  </data>
+  <data name="Entity.Records.Parts.Template" xml:space="preserve">
+    <value>Počni od uobičajenih sistema</value>
+  </data>
+  <data name="Entity.Records.Parts.AddUnder" xml:space="preserve">
+    <value>Dodaj deo ispod</value>
+  </data>
+  <data name="Entity.Records.Parts.NewUnder" xml:space="preserve">
+    <value>Novi deo ispod: {0}</value>
+  </data>
+  <data name="Entity.Records.Parts.DeleteWithChildren.One" xml:space="preserve">
+    <value>Obrisati {1} i {0} deo ispod njega?</value>
+  </data>
+  <data name="Entity.Records.Parts.DeleteWithChildren.Few" xml:space="preserve">
+    <value>Obrisati {1} i {0} dela ispod njega?</value>
+  </data>
+  <data name="Entity.Records.Parts.DeleteWithChildren.Other" xml:space="preserve">
+    <value>Obrisati {1} i {0} delova ispod njega?</value>
+  </data>
+  <data name="Entity.Records.Parts.Up" xml:space="preserve">
+    <value>Pomeri gore</value>
+  </data>
+  <data name="Entity.Records.Parts.Down" xml:space="preserve">
+    <value>Pomeri dole</value>
+  </data>
+  <data name="Entity.Records.Parts.In" xml:space="preserve">
+    <value>Pomeri ispod prethodnog</value>
+  </data>
+  <data name="Entity.Records.Parts.Out" xml:space="preserve">
+    <value>Pomeri jedan nivo više</value>
+  </data>
+  <data name="Entity.Outline.Open" xml:space="preserve">
+    <value>Prikaži delove ispod</value>
+  </data>
+  <data name="Entity.Outline.Close" xml:space="preserve">
+    <value>Sakrij delove ispod</value>
+  </data>
+  <data name="Entity.Parts.Template.Engine" xml:space="preserve">
+    <value>Motor</value>
+  </data>
+  <data name="Entity.Parts.Template.Transmission" xml:space="preserve">
+    <value>Transmisija</value>
+  </data>
+  <data name="Entity.Parts.Template.Brakes" xml:space="preserve">
+    <value>Kočnice</value>
+  </data>
+  <data name="Entity.Parts.Template.Suspension" xml:space="preserve">
+    <value>Vešanje</value>
+  </data>
+  <data name="Entity.Parts.Template.Wheels" xml:space="preserve">
+    <value>Točkovi</value>
+  </data>
+  <data name="Entity.Parts.Template.Electrical" xml:space="preserve">
+    <value>Elektrika</value>
+  </data>
+  <data name="Entity.Parts.Template.Body" xml:space="preserve">
+    <value>Karoserija</value>
+  </data>
+  <data name="Entity.Parts.Template.Interior" xml:space="preserve">
+    <value>Enterijer</value>
+  </data>
+  <data name="Entity.Parts.Template.Fluids" xml:space="preserve">
+    <value>Tečnosti</value>
+  </data>
+  <data name="Entity.Specs.Add" xml:space="preserve">
+    <value>Dodaj specifikaciju</value>
+  </data>
+  <data name="Entity.Specs.Name" xml:space="preserve">
+    <value>Naziv (npr. dimenzija)</value>
+  </data>
+  <data name="Entity.Specs.Value" xml:space="preserve">
+    <value>Vrednost</value>
+  </data>
+  <data name="Entity.Specs.Remove" xml:space="preserve">
+    <value>Ukloni specifikaciju</value>
+  </data>
+  <data name="Vehicle.Search.Placeholder" xml:space="preserve">
+    <value>Pretraga vozila</value>
+  </data>
+  <data name="Vehicle.Search.Found.One" xml:space="preserve">
+    <value>{0} rezultat</value>
+  </data>
+  <data name="Vehicle.Search.Found.Few" xml:space="preserve">
+    <value>{0} rezultata</value>
+  </data>
+  <data name="Vehicle.Search.Found.Other" xml:space="preserve">
+    <value>{0} rezultata</value>
+  </data>
+  <data name="Vehicle.Search.None" xml:space="preserve">
+    <value>Ništa u ovom vozilu ne odgovara upitu „{0}”.</value>
+  </data>
 </root>

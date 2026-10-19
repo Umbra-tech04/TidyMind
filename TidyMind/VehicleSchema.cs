@@ -144,6 +144,97 @@ namespace TidyMind
             Store = VehicleDocuments.Store
         };
 
+        // ---- Wheels and tyres -----------------------------------------------------------------
+
+        public const string MountedWheelSetKey = "MountedWheelSet";
+
+        public static readonly RecordDefinition WheelSets = new RecordDefinition
+        {
+            Key = "WheelSets",
+            Fields = new[]
+            {
+                Text("Name"),
+                Choice("Season", "Summer", "Winter", "All-season"),
+                Text("TyreBrand"),
+                Text("TyreModel"),
+                Text("TyreSize"),
+                Text("Dot"),
+                Number("TreadDepth", "mm"),
+                Text("Pressure"),
+                Choice("RimType", "Alloy", "Steel"),
+                Text("RimSize"),
+                Text("BoltPattern"),
+                Number("Offset", "mm"),
+                Number("CentreBore", "mm"),
+                Text("BoltType"),
+                Number("BoltTorque", "Nm"),
+                Text("Storage"),
+                Number("SetDistance", Units.Distance),
+                new FieldDefinition { Key = "Notes", Kind = ValueKind.LongText }
+            },
+            TitleKeys = new[] { "Name" },
+            Title = set => FirstOf(set.Get("Name"), Choices.Label(set.Get("Season") ?? ""), Loc.T("Entity.Records.WheelSets.Untitled")),
+            CurrentKey = MountedWheelSetKey
+        };
+
+        // ---- Fluids, brakes, electrical ---------------------------------------------------------
+
+        public static readonly SectionDefinition Fluids = new SectionDefinition
+        {
+            Key = "Fluids",
+            Fields = new[]
+            {
+                Text("EngineOil"), Text("OilViscosity"), Number("OilCapacity", "l"),
+                Text("Coolant"), Number("CoolantCapacity", "l"), Text("BrakeFluid"),
+                Text("GearboxOil"), Number("GearboxOilCapacity", "l"),
+                Text("OilFilter"), Text("AirFilter"), Text("CabinFilter"), Text("FuelFilter"),
+                Text("WipersFront"), Text("WiperRear")
+            }
+        };
+
+        public static readonly SectionDefinition Brakes = new SectionDefinition
+        {
+            Key = "Brakes",
+            Fields = new[] { Text("FrontDiscs"), Text("FrontPads"), Text("RearDiscs"), Text("RearPads") }
+        };
+
+        public static readonly SectionDefinition Electrical = new SectionDefinition
+        {
+            Key = "Electrical",
+            Fields = new[]
+            {
+                Text("Battery"), Number("BatteryCapacity", "Ah"), Number("BatteryCurrent", "A"),
+                Text("BulbLowBeam"), Text("BulbHighBeam"), Text("BulbFog"), Text("BulbIndicator"), Text("BulbBrake"),
+                Text("BulbReverse"), Text("BulbPlate"), Text("BulbInterior"),
+                new FieldDefinition { Key = "FuseNotes", Kind = ValueKind.LongText }
+            }
+        };
+
+        // ---- Parts --------------------------------------------------------------------------------
+
+        // What "Start with the usual systems" creates, as top-level parts named in the current language (the user's own
+        // from then on).
+        public static readonly string[] PartsTemplate = { "Engine", "Transmission", "Brakes", "Suspension", "Wheels", "Electrical", "Body", "Interior", "Fluids" };
+
+        public static readonly RecordDefinition Parts = new RecordDefinition
+        {
+            Key = "Parts",
+            Nested = true,
+            Fields = new[]
+            {
+                Text("Name"), Text("Brand"), Text("OemNumber"), Text("PartNumber"), Number("Quantity"),
+                Date("PurchaseDate"), Number("Price", Units.Money), Text("Shop"), Text("Link"),
+                Date("InstalledDate"), Number("InstalledOdometer", Units.Distance),
+                new FieldDefinition { Key = "Specs", Kind = ValueKind.Specs },
+                new FieldDefinition { Key = "Photos", Kind = ValueKind.Pictures },
+                new FieldDefinition { Key = "Notes", Kind = ValueKind.LongText }
+            },
+            TitleKeys = new[] { "Name" },
+            Title = part => FirstOf(part.Get("Name"), Loc.T("Entity.Records.Parts.Untitled"))
+        };
+
+        private static string FirstOf(params string?[] texts) => texts.First(t => !string.IsNullOrWhiteSpace(t))!.Trim();
+
         // ---- Logs ----------------------------------------------------------------------
 
         public static readonly LogDefinition[] Logs =
@@ -190,6 +281,8 @@ namespace TidyMind
         public static readonly TabDefinition[] Tabs =
         {
             new TabDefinition { Key = "Specs", Sections = new[] { Identity, Engine, Body, Ownership, OdometerSection } },
+            new TabDefinition { Key = "Wheels", Records = new[] { WheelSets } },
+            new TabDefinition { Key = "Parts", Sections = new[] { Fluids, Brakes, Electrical }, Records = new[] { Parts } },
             new TabDefinition { Key = "Documents", Records = new[] { Documents } },
             new TabDefinition { Key = "Service", Logs = Logs }
         };

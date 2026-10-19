@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
@@ -22,7 +23,8 @@ namespace TidyMind
         public bool HasOwnLabel => Field.Kind == ValueKind.Flag;
 
         // Long ones take a whole row of a card.
-        public bool IsWide => Field.Kind == ValueKind.LongText || Field.Kind == ValueKind.CheckList || Field.Kind == ValueKind.File;
+        public bool IsWide => Field.Kind == ValueKind.LongText || Field.Kind == ValueKind.CheckList || Field.Kind == ValueKind.File
+            || Field.Kind == ValueKind.Specs || Field.Kind == ValueKind.Pictures;
 
         private readonly string initial; // the stored value it started from (a check list's in its shown order)
         private readonly TextBox? box, alternateBox;
@@ -38,10 +40,20 @@ namespace TidyMind
         private TextBlock? fileName;
         private Button? removeFile;
 
-        public FieldEditor(FieldDefinition field, Entity owner, string? stored, Attachment? file = null)
+        // Specs: a row per pair. Pictures: the record's as the editor leaves them (stored names or picked files), cover
+        // first; the window copies the picked ones in (EntityImages.Import).
+        private StackPanel? specRows;
+        public List<PictureSlot> PictureSlots { get; } = new List<PictureSlot>();
+        private PictureBrowser? pictureBrowser;
+        private Button? removePicture;
+        private int selectedPicture;
+        private readonly string listsInitial = "";
+
+        // record: the one being edited, for the kinds kept on it (File, Specs, Pictures).
+        public FieldEditor(FieldDefinition field, Entity owner, string? stored, EntityRecord? record = null)
         {
             Field = field;
-            File = file;
+            File = record?.File;
             initial = stored ?? "";
             switch (field.Kind)
             {
@@ -76,6 +88,13 @@ namespace TidyMind
                 case ValueKind.File:
                     Element = FilePicker();
                     break;
+                case ValueKind.Specs:
+                    Element = SpecsEditor(record?.Specs?.Where(s => s != null) ?? Enumerable.Empty<SpecLine>());
+                    break;
+                case ValueKind.Pictures:
+                    PictureSlots.AddRange((record?.Pictures ?? new List<string>()).Select(name => new PictureSlot { Stored = name }));
+                    Element = PicturesEditor();
+                    break;
                 case ValueKind.Number:
                     box = new TextBox { Height = 32, VerticalContentAlignment = VerticalAlignment.Center, Text = Typed(initial) };
                     alternateBox = field.Alternate == null ? null : new TextBox { Height = 32, VerticalContentAlignment = VerticalAlignment.Center };
@@ -89,6 +108,7 @@ namespace TidyMind
             AutomationProperties.SetName(Element, field.Label);
             if (checks != null)
                 initial = Value!;
+            listsInitial = Lists();
         }
 
         // The value to store: "" for nothing, null when a number can't be read as one.
@@ -105,7 +125,15 @@ namespace TidyMind
             }
         }
 
-        public bool Changed => Value != initial || PickedFile != null || FileRemoved;
+        public bool Changed => Value != initial || PickedFile != null || FileRemoved || Lists() != listsInitial;
+
+        // The pairs typed, without empty rows.
+        public List<SpecLine> Specs => specRows == null ? new List<SpecLine>()
+            : specRows.Children.OfType<Grid>().Select(row => row.Children.OfType<TextBox>().Select(b => b.Text.Trim()).ToArray())
+                .Where(t => t[0].Length > 0 || t[1].Length > 0).Select(t => new SpecLine { Name = t[0], Value = t[1] }).ToList();
+
+        private string Lists() => JsonSerializer.Serialize(Specs.Select(s => new[] { s.Name, s.Value }))
+            + string.Join("|", PictureSlots.Select(p => p.Stored ?? p.PickedFile));
 
         public void Focus() => (box ?? combo ?? picker ?? (Control?)flag ?? Element as Control)?.Focus();
 
@@ -248,6 +276,123 @@ namespace TidyMind
             fileName!.Text = shown ?? Loc.T("Entity.File.None");
             fileName.Foreground = (Brush)Application.Current.FindResource(shown == null ? "TextSub" : "TextMain");
             removeFile!.Visibility = shown == null ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        // ---- Specs: name and value pairs --------------------------------------------------------
+
+        // Rows of a name box and a value box, Remove on each, and Add a spec under them.
+        private FrameworkElement SpecsEditor(IEnumerable<SpecLine> specs)
+        {
+            specRows = new StackPanel();
+            foreach (SpecLine spec in specs)
+                AddSpecRow(spec.Name, spec.Value);
+            Button add = new Button
+            {
+                Content = Loc.T("Entity.Specs.Add"),
+                Style = (Style)Application.Current.FindResource("LinkButtonStyle"),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = new Thickness(0, 4, 0, 0)
+            };
+            add.Click += (s, e) => AddSpecRow("", "").Children.OfType<TextBox>().First().Focus();
+            StackPanel panel = new StackPanel();
+            panel.Children.Add(specRows);
+            panel.Children.Add(add);
+            return panel;
+        }
+
+        private Grid AddSpecRow(string name, string value)
+        {
+            Grid row = new Grid { Margin = new Thickness(0, 0, 0, 6) };
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(3, GridUnitType.Star) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            TextBox nameBox = new TextBox { Text = name, Height = 30, VerticalContentAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 8, 0) };
+            TextBox valueBox = new TextBox { Text = value, Height = 30, VerticalContentAlignment = VerticalAlignment.Center };
+            AutomationProperties.SetName(nameBox, Loc.T("Entity.Specs.Name"));
+            AutomationProperties.SetName(valueBox, Loc.T("Entity.Specs.Value"));
+            Button remove = new Button
+            {
+                Content = "✕",
+                Style = (Style)Application.Current.FindResource("IconButtonStyle"),
+                Width = 28,
+                Height = 28,
+                Margin = new Thickness(6, 0, 0, 0),
+                ToolTip = Loc.T("Entity.Specs.Remove")
+            };
+            AutomationProperties.SetName(remove, Loc.T("Entity.Specs.Remove"));
+            remove.Click += (s, e) => specRows!.Children.Remove(row);
+            Grid.SetColumn(valueBox, 1);
+            Grid.SetColumn(remove, 2);
+            row.Children.Add(nameBox);
+            row.Children.Add(valueBox);
+            row.Children.Add(remove);
+            specRows!.Children.Add(row);
+            return row;
+        }
+
+        // ---- Pictures --------------------------------------------------------------------------
+
+        // The pictures as a browser with a strip (drag to reorder, the first is the cover), Add pictures… and Remove for
+        // the selected one. Picked files are only previewed here; the window copies them in on Save.
+        private FrameworkElement PicturesEditor()
+        {
+            pictureBrowser = new PictureBrowser(150, double.PositiveInfinity, canReorder: true, stripForOne: true);
+            pictureBrowser.Picked += index => { selectedPicture = index; ShowPictures(); };
+            pictureBrowser.Moved += (from, to) =>
+            {
+                PictureSlot slot = PictureSlots[from];
+                PictureSlots.RemoveAt(from);
+                PictureSlots.Insert(to, slot);
+                selectedPicture = to;
+                ShowPictures();
+            };
+            Button add = new Button { Content = Loc.T("Entity.ChoosePictures"), Style = (Style)Application.Current.FindResource("GhostButtonStyle") };
+            removePicture = new Button
+            {
+                Content = Loc.T("Entity.Picture.Remove"),
+                Style = (Style)Application.Current.FindResource("LinkButtonStyle"),
+                Margin = new Thickness(12, 0, 0, 0),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            add.Click += (s, e) =>
+            {
+                OpenFileDialog dialog = new OpenFileDialog { Filter = Loc.T("Entity.ImageFilter"), Multiselect = true };
+                if (dialog.ShowDialog(Window.GetWindow(add)) == true)
+                    AddPictures(dialog.FileNames);
+            };
+            removePicture.Click += (s, e) =>
+            {
+                if (selectedPicture < 0) return;
+                PictureSlots.RemoveAt(selectedPicture);
+                ShowPictures();
+            };
+            StackPanel buttons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 8) };
+            buttons.Children.Add(add);
+            buttons.Children.Add(removePicture);
+            StackPanel panel = new StackPanel();
+            panel.Children.Add(buttons);
+            panel.Children.Add(pictureBrowser);
+            ShowPictures();
+            return panel;
+        }
+
+        // Picked files go in after the others (PictureSlot.AddPicked says what is left out); the first new one is selected.
+        internal void AddPictures(IEnumerable<string> files)
+        {
+            int firstNew = PictureSlot.AddPicked(PictureSlots, files, Window.GetWindow(Element));
+            if (firstNew >= 0)
+                selectedPicture = firstNew;
+            ShowPictures();
+        }
+
+        private void ShowPictures()
+        {
+            selectedPicture = PictureSlots.Count == 0 ? -1 : Math.Clamp(selectedPicture, 0, PictureSlots.Count - 1);
+            foreach (PictureSlot slot in PictureSlots)
+                slot.Preview ??= slot.Stored != null ? EntityImages.Load(slot.Stored) : EntityImages.Store.Decode(slot.PickedFile);
+            pictureBrowser!.Show(PictureSlots.Select(p => p.Preview).ToList(), selectedPicture);
+            pictureBrowser.Visibility = PictureSlots.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+            removePicture!.Visibility = PictureSlots.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
         }
     }
 }

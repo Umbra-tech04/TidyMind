@@ -5,17 +5,21 @@ using System.Linq;
 
 namespace TidyMind
 {
-    // The files a collection item keeps in the app's folders: its pictures in EntityImages/ (EntityImages) and its
-    // records' files in Attachments/ (a vehicle document's scan). Each is deleted only once no item of any collection
-    // refers to it any more, since imported data can have two items on one file.
+    // The files a collection item keeps in the app's folders: its pictures in EntityImages/ (its own, EntityImages, and
+    // its records', a part's photos) and its records' files in Attachments/ (a vehicle document's scan). Each is deleted
+    // only once no item of any collection refers to it any more, since imported data can have two items on one file.
     public static class EntityFiles
     {
-        public static IEnumerable<string> Pictures(Entity entity) => EntityImages.Names(entity);
+        public static IEnumerable<string> Pictures(Entity entity) =>
+            EntityImages.Names(entity).Concat(Records(entity).SelectMany(r => r.Pictures ?? new List<string>()).Where(n => !string.IsNullOrEmpty(n)));
 
         public static IEnumerable<string> Attachments(Entity entity) =>
-            (entity.Records?.Values ?? Enumerable.Empty<List<EntityRecord>>())
-            .Where(list => list != null).SelectMany(list => list)
-            .Select(record => record?.File?.StoredFileName).Where(name => !string.IsNullOrEmpty(name))!;
+            Records(entity).Select(record => record.File?.StoredFileName).Where(name => !string.IsNullOrEmpty(name))!;
+
+        // Every record of the item, at any depth.
+        public static IEnumerable<EntityRecord> Records(Entity entity) =>
+            RecordTree.Walk((entity.Records?.Values ?? Enumerable.Empty<List<EntityRecord>>()).Where(list => list != null).SelectMany(list => list))
+                .Select(x => x.Record);
 
         // After the items were saved without `gone` (deleted, or an edited item as it was before): the files of theirs
         // that no item uses any more (`inUse`: the asking view's own, in case its memory isn't in profiles.json).

@@ -3132,4 +3132,313 @@ On the last page, the arrow starts a new page.</value>
   <data name="Settings.Currency.Note" xml:space="preserve">
     <value>Shown with prices. Left empty: {0}, from this PC's region settings.</value>
   </data>
+  <data name="Entity.Field.TyreBrand" xml:space="preserve">
+    <value>Tyre brand</value>
+  </data>
+  <data name="Entity.Field.TyreModel" xml:space="preserve">
+    <value>Tyre model</value>
+  </data>
+  <data name="Entity.Field.TyreSize" xml:space="preserve">
+    <value>Tyre size</value>
+  </data>
+  <data name="Entity.Field.Dot" xml:space="preserve">
+    <value>DOT code</value>
+  </data>
+  <data name="Entity.Field.TreadDepth" xml:space="preserve">
+    <value>Tread depth</value>
+  </data>
+  <data name="Entity.Field.Pressure" xml:space="preserve">
+    <value>Recommended pressure</value>
+  </data>
+  <data name="Entity.Field.RimType" xml:space="preserve">
+    <value>Rim type</value>
+  </data>
+  <data name="Entity.Field.RimSize" xml:space="preserve">
+    <value>Rim size</value>
+  </data>
+  <data name="Entity.Field.BoltPattern" xml:space="preserve">
+    <value>Bolt pattern (PCD)</value>
+  </data>
+  <data name="Entity.Field.Offset" xml:space="preserve">
+    <value>Offset (ET)</value>
+  </data>
+  <data name="Entity.Field.CentreBore" xml:space="preserve">
+    <value>Centre bore</value>
+  </data>
+  <data name="Entity.Field.BoltType" xml:space="preserve">
+    <value>Wheel bolt type</value>
+  </data>
+  <data name="Entity.Field.BoltTorque" xml:space="preserve">
+    <value>Bolt torque</value>
+  </data>
+  <data name="Entity.Field.Storage" xml:space="preserve">
+    <value>Stored at</value>
+  </data>
+  <data name="Entity.Field.SetDistance" xml:space="preserve">
+    <value>Distance on this set</value>
+  </data>
+  <data name="Entity.Field.EngineOil" xml:space="preserve">
+    <value>Engine oil (spec)</value>
+  </data>
+  <data name="Entity.Field.OilViscosity" xml:space="preserve">
+    <value>Oil viscosity</value>
+  </data>
+  <data name="Entity.Field.OilCapacity" xml:space="preserve">
+    <value>Oil capacity</value>
+  </data>
+  <data name="Entity.Field.Coolant" xml:space="preserve">
+    <value>Coolant</value>
+  </data>
+  <data name="Entity.Field.CoolantCapacity" xml:space="preserve">
+    <value>Coolant capacity</value>
+  </data>
+  <data name="Entity.Field.BrakeFluid" xml:space="preserve">
+    <value>Brake fluid</value>
+  </data>
+  <data name="Entity.Field.GearboxOil" xml:space="preserve">
+    <value>Gearbox oil</value>
+  </data>
+  <data name="Entity.Field.GearboxOilCapacity" xml:space="preserve">
+    <value>Gearbox oil capacity</value>
+  </data>
+  <data name="Entity.Field.OilFilter" xml:space="preserve">
+    <value>Oil filter</value>
+  </data>
+  <data name="Entity.Field.AirFilter" xml:space="preserve">
+    <value>Air filter</value>
+  </data>
+  <data name="Entity.Field.CabinFilter" xml:space="preserve">
+    <value>Cabin filter</value>
+  </data>
+  <data name="Entity.Field.FuelFilter" xml:space="preserve">
+    <value>Fuel filter</value>
+  </data>
+  <data name="Entity.Field.WipersFront" xml:space="preserve">
+    <value>Front wipers</value>
+  </data>
+  <data name="Entity.Field.WiperRear" xml:space="preserve">
+    <value>Rear wiper</value>
+  </data>
+  <data name="Entity.Field.FrontDiscs" xml:space="preserve">
+    <value>Front discs (size, part no.)</value>
+  </data>
+  <data name="Entity.Field.FrontPads" xml:space="preserve">
+    <value>Front pads</value>
+  </data>
+  <data name="Entity.Field.RearDiscs" xml:space="preserve">
+    <value>Rear discs or drums</value>
+  </data>
+  <data name="Entity.Field.RearPads" xml:space="preserve">
+    <value>Rear pads or shoes</value>
+  </data>
+  <data name="Entity.Field.Battery" xml:space="preserve">
+    <value>Battery type</value>
+  </data>
+  <data name="Entity.Field.BatteryCapacity" xml:space="preserve">
+    <value>Battery capacity</value>
+  </data>
+  <data name="Entity.Field.BatteryCurrent" xml:space="preserve">
+    <value>Cold cranking current</value>
+  </data>
+  <data name="Entity.Field.BulbLowBeam" xml:space="preserve">
+    <value>Low beam</value>
+  </data>
+  <data name="Entity.Field.BulbHighBeam" xml:space="preserve">
+    <value>High beam</value>
+  </data>
+  <data name="Entity.Field.BulbFog" xml:space="preserve">
+    <value>Fog lights</value>
+  </data>
+  <data name="Entity.Field.BulbIndicator" xml:space="preserve">
+    <value>Indicators</value>
+  </data>
+  <data name="Entity.Field.BulbBrake" xml:space="preserve">
+    <value>Tail and brake lights</value>
+  </data>
+  <data name="Entity.Field.BulbReverse" xml:space="preserve">
+    <value>Reversing light</value>
+  </data>
+  <data name="Entity.Field.BulbPlate" xml:space="preserve">
+    <value>Number plate light</value>
+  </data>
+  <data name="Entity.Field.BulbInterior" xml:space="preserve">
+    <value>Interior light</value>
+  </data>
+  <data name="Entity.Field.FuseNotes" xml:space="preserve">
+    <value>Fuses</value>
+  </data>
+  <data name="Entity.Field.OemNumber" xml:space="preserve">
+    <value>OEM number</value>
+  </data>
+  <data name="Entity.Field.PartNumber" xml:space="preserve">
+    <value>Aftermarket number</value>
+  </data>
+  <data name="Entity.Field.Quantity" xml:space="preserve">
+    <value>Quantity</value>
+  </data>
+  <data name="Entity.Field.Price" xml:space="preserve">
+    <value>Price</value>
+  </data>
+  <data name="Entity.Field.Shop" xml:space="preserve">
+    <value>Bought at</value>
+  </data>
+  <data name="Entity.Field.Link" xml:space="preserve">
+    <value>Link</value>
+  </data>
+  <data name="Entity.Field.InstalledDate" xml:space="preserve">
+    <value>Installed on</value>
+  </data>
+  <data name="Entity.Field.InstalledOdometer" xml:space="preserve">
+    <value>Installed at</value>
+  </data>
+  <data name="Entity.Field.Specs" xml:space="preserve">
+    <value>Specs</value>
+  </data>
+  <data name="Entity.Field.Photos" xml:space="preserve">
+    <value>Photos</value>
+  </data>
+  <data name="Entity.Unit.mm" xml:space="preserve">
+    <value>mm</value>
+  </data>
+  <data name="Entity.Unit.Ah" xml:space="preserve">
+    <value>Ah</value>
+  </data>
+  <data name="Entity.Unit.A" xml:space="preserve">
+    <value>A</value>
+  </data>
+  <data name="Choice.Alloy" xml:space="preserve">
+    <value>Alloy</value>
+  </data>
+  <data name="Choice.Steel" xml:space="preserve">
+    <value>Steel</value>
+  </data>
+  <data name="Entity.Tab.Wheels" xml:space="preserve">
+    <value>Wheels &amp; tyres</value>
+  </data>
+  <data name="Entity.Tab.Parts" xml:space="preserve">
+    <value>Fluids &amp; parts</value>
+  </data>
+  <data name="Entity.Section.Fluids" xml:space="preserve">
+    <value>Fluids and filters</value>
+  </data>
+  <data name="Entity.Section.Brakes" xml:space="preserve">
+    <value>Brakes</value>
+  </data>
+  <data name="Entity.Section.Electrical" xml:space="preserve">
+    <value>Battery and bulbs</value>
+  </data>
+  <data name="Entity.Records.WheelSets" xml:space="preserve">
+    <value>Wheel sets</value>
+  </data>
+  <data name="Entity.Records.WheelSets.Add" xml:space="preserve">
+    <value>Add wheel set</value>
+  </data>
+  <data name="Entity.Records.WheelSets.Empty" xml:space="preserve">
+    <value>No wheel sets yet. Add the summer and the winter set with the tyre size, the rim details and where they are stored.</value>
+  </data>
+  <data name="Entity.Records.WheelSets.Untitled" xml:space="preserve">
+    <value>Wheel set</value>
+  </data>
+  <data name="Entity.Records.WheelSets.Current" xml:space="preserve">
+    <value>Mounted now</value>
+  </data>
+  <data name="Entity.Records.WheelSets.MakeCurrent" xml:space="preserve">
+    <value>Mark as mounted</value>
+  </data>
+  <data name="Entity.Records.Parts" xml:space="preserve">
+    <value>Parts</value>
+  </data>
+  <data name="Entity.Records.Parts.Add" xml:space="preserve">
+    <value>Add system</value>
+  </data>
+  <data name="Entity.Records.Parts.Empty" xml:space="preserve">
+    <value>No parts yet. Start with the usual systems (engine, brakes, suspension…) and add the parts under them: brand, part numbers, sizes, torque, when they were fitted.</value>
+  </data>
+  <data name="Entity.Records.Parts.Untitled" xml:space="preserve">
+    <value>Unnamed part</value>
+  </data>
+  <data name="Entity.Records.Parts.Template" xml:space="preserve">
+    <value>Start with the usual systems</value>
+  </data>
+  <data name="Entity.Records.Parts.AddUnder" xml:space="preserve">
+    <value>Add a part under it</value>
+  </data>
+  <data name="Entity.Records.Parts.NewUnder" xml:space="preserve">
+    <value>New part under {0}</value>
+  </data>
+  <data name="Entity.Records.Parts.DeleteWithChildren.One" xml:space="preserve">
+    <value>Delete {1} and the {0} part under it?</value>
+  </data>
+  <data name="Entity.Records.Parts.DeleteWithChildren.Other" xml:space="preserve">
+    <value>Delete {1} and the {0} parts under it?</value>
+  </data>
+  <data name="Entity.Records.Parts.Up" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="Entity.Records.Parts.Down" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="Entity.Records.Parts.In" xml:space="preserve">
+    <value>Move under the one above</value>
+  </data>
+  <data name="Entity.Records.Parts.Out" xml:space="preserve">
+    <value>Move out one level</value>
+  </data>
+  <data name="Entity.Outline.Open" xml:space="preserve">
+    <value>Show the parts under it</value>
+  </data>
+  <data name="Entity.Outline.Close" xml:space="preserve">
+    <value>Hide the parts under it</value>
+  </data>
+  <data name="Entity.Parts.Template.Engine" xml:space="preserve">
+    <value>Engine</value>
+  </data>
+  <data name="Entity.Parts.Template.Transmission" xml:space="preserve">
+    <value>Transmission</value>
+  </data>
+  <data name="Entity.Parts.Template.Brakes" xml:space="preserve">
+    <value>Brakes</value>
+  </data>
+  <data name="Entity.Parts.Template.Suspension" xml:space="preserve">
+    <value>Suspension</value>
+  </data>
+  <data name="Entity.Parts.Template.Wheels" xml:space="preserve">
+    <value>Wheels</value>
+  </data>
+  <data name="Entity.Parts.Template.Electrical" xml:space="preserve">
+    <value>Electrical</value>
+  </data>
+  <data name="Entity.Parts.Template.Body" xml:space="preserve">
+    <value>Body</value>
+  </data>
+  <data name="Entity.Parts.Template.Interior" xml:space="preserve">
+    <value>Interior</value>
+  </data>
+  <data name="Entity.Parts.Template.Fluids" xml:space="preserve">
+    <value>Fluids</value>
+  </data>
+  <data name="Entity.Specs.Add" xml:space="preserve">
+    <value>Add a spec</value>
+  </data>
+  <data name="Entity.Specs.Name" xml:space="preserve">
+    <value>Name (e.g. size)</value>
+  </data>
+  <data name="Entity.Specs.Value" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="Entity.Specs.Remove" xml:space="preserve">
+    <value>Remove this spec</value>
+  </data>
+  <data name="Vehicle.Search.Placeholder" xml:space="preserve">
+    <value>Search this vehicle</value>
+  </data>
+  <data name="Vehicle.Search.Found.One" xml:space="preserve">
+    <value>{0} match</value>
+  </data>
+  <data name="Vehicle.Search.Found.Other" xml:space="preserve">
+    <value>{0} matches</value>
+  </data>
+  <data name="Vehicle.Search.None" xml:space="preserve">
+    <value>Nothing in this vehicle matches “{0}”.</value>
+  </data>
 </root>

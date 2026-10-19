@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
@@ -29,7 +30,7 @@ namespace TidyMind
             public Func<Entity, bool> Delete { get; init; } = _ => false;
         }
 
-        private const string OverviewKey = "Overview";
+        private const string OverviewKey = VehicleSearch.OverviewTab;
         private const double WideHeader = 860;
 
         // The key facts the Overview lists (from the Specs sections).
@@ -40,7 +41,11 @@ namespace TidyMind
         private readonly PictureBrowser gallery = new PictureBrowser(double.NaN, 80, canReorder: false, stripForOne: false);
         private string tab = OverviewKey;
         private VehicleCard? editing;
-        private (RecordDefinition Records, EntityRecord Record)? adding;
+        private (RecordDefinition Records, EntityRecord Record, Guid? Parent)? adding;
+
+        // The nested list's (parts') outline: which record is shown and which are open, kept across redraws.
+        private Guid? selectedPart;
+        private readonly HashSet<Guid> openParts = new HashSet<Guid>();
 
         public VehicleWindow(Entity vehicle, Host host)
         {
@@ -184,7 +189,9 @@ namespace TidyMind
             editing = null;
             Cards.Children.Clear();
             IEnumerable<UIElement> cards;
-            if (tab == OverviewKey)
+            if (SearchBox.Text.Trim().Length > 0)
+                cards = new[] { SearchResults(SearchBox.Text.Trim()) };
+            else if (tab == OverviewKey)
                 cards = OverviewCards();
             else
             {
@@ -195,6 +202,68 @@ namespace TidyMind
             }
             foreach (UIElement card in cards)
                 Cards.Children.Add(card);
+        }
+
+        // ---- Search -------------------------------------------------------------------------------
+
+        // While the box has text the page lists what matches, in place of the tab. An edit going on is stopped first
+        // (asking if something was typed); kept, the search is emptied again.
+        private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (!LeaveEdit())
+            {
+                SearchBox.Clear();
+                return;
+            }
+            adding = null;
+            ShowTab();
+        }
+
+        private VehicleCard SearchResults(string query)
+        {
+            List<VehicleMatch> matches = VehicleSearch.Find(vehicle, query);
+            VehicleCard card = new VehicleCard(matches.Count == 0 ? Loc.F("Vehicle.Search.None", query) : Loc.Plural("Vehicle.Search.Found", matches.Count));
+            CellPanel.SetWide(card, true);
+            foreach (VehicleMatch match in matches)
+            {
+                StackPanel lines = new StackPanel();
+                lines.Children.Add(VehicleCard.Muted(match.Where, 11));
+                lines.Children.Add(new TextBlock { Text = match.Text, FontSize = 13, Foreground = VehicleCard.Res("TextMain"), TextWrapping = TextWrapping.Wrap });
+                Button row = new Button
+                {
+                    Template = PictureBrowser.FlatTemplate,
+                    Cursor = Cursors.Hand,
+                    HorizontalContentAlignment = HorizontalAlignment.Stretch,
+                    Margin = new Thickness(0, 0, 0, 10),
+                    Content = lines
+                };
+                AutomationProperties.SetName(row, match.Where + ": " + match.Text);
+                row.Click += (s, e) => GoTo(match);
+                card.Body.Children.Add(row);
+            }
+            return card;
+        }
+
+        // The match's tab, with its record shown (a part selected in the outline, the ones above it opened) and in view.
+        private void GoTo(VehicleMatch match)
+        {
+            if (match.Record is Guid id)
+            {
+                RecordDefinition? nested = EntityTypes.Records(vehicle.EntityType).FirstOrDefault(r => r.Nested && RecordTree.Find(r.Read(vehicle), id) != null);
+                if (nested != null)
+                {
+                    selectedPart = id;
+                    foreach (EntityRecord above in RecordTree.Walk(nested.Read(vehicle)).First(x => x.Record.Id == id).Above)
+                        openParts.Add(above.Id);
+                }
+            }
+            tab = match.Tab;
+            SearchBox.Clear(); // draws the tab
+            SelectTab(match.Tab);
+            if (match.Record is Guid shown)
+                Dispatcher.BeginInvoke(new Action(() =>
+                    Cards.Children.OfType<FrameworkElement>().FirstOrDefault(c => shown.Equals(c.Tag))?.BringIntoView()),
+                    System.Windows.Threading.DispatcherPriority.Loaded);
         }
 
         // ---- Overview ----------------------------------------------------------------------------
@@ -215,7 +284,7 @@ namespace TidyMind
             List<Deadline> deadlines = EntityTypes.Expiries(vehicle);
             if (deadlines.Count == 0)
             {
-                card.ShowEmpty(Loc.T("Vehicle.Overview.NoDeadlines"), VehicleSchema.Documents.AddLabel, () => { SelectTab("Documents"); StartAdd(VehicleSchema.Documents); });
+                card.ShowEmpty(Loc.T("Vehicle.Overview.NoDeadlines"), VehicleSchema.Documents.AddLabel, () => { SelectTab("Documents"); StartAdd(VehicleSchema.Documents, null); });
                 return card;
             }
             card.Actions.Children.Add(VehicleCard.Link(Loc.T("Vehicle.Overview.AllDocuments"), () => SelectTab("Documents")));
@@ -333,11 +402,18 @@ namespace TidyMind
             return card;
         }
 
-        // The list's heading with its Add button, a new record being added, then a card per record (or, with none,
-        // what the list is for).
+        // A flat list: its heading with the Add button, then a card per record (or what the list is for). A nested one: its
+        // outline card (Add in its corner) beside the selected record's card.
         private IEnumerable<UIElement> RecordCards(RecordDefinition records)
         {
             List<EntityRecord> list = records.Read(vehicle);
+            if (records.Nested)
+            {
+                foreach (UIElement card in OutlineCards(records, list))
+                    yield return card;
+                yield break;
+            }
+
             Grid heading = new Grid { Margin = new Thickness(2, 0, 0, 0) };
             heading.Children.Add(new TextBlock
             {
@@ -348,54 +424,167 @@ namespace TidyMind
                 VerticalAlignment = VerticalAlignment.Center
             });
             Button add = new Button { Content = "+  " + records.AddLabel, Height = 34, Padding = new Thickness(14, 0, 14, 0), HorizontalAlignment = HorizontalAlignment.Right };
-            add.Click += (s, e) => StartAdd(records);
+            add.Click += (s, e) => StartAdd(records, null);
             heading.Children.Add(add);
             CellPanel.SetWide(heading, true);
             yield return heading;
 
-            if (adding is (RecordDefinition addingTo, EntityRecord fresh) && addingTo == records)
-            {
-                SectionCard card = RecordCard(records, fresh, isNew: true);
-                card.BeginEdit();
-                yield return card;
-            }
-            if (list.Count == 0)
+            if (list.Count == 0 && adding?.Records != records)
             {
                 VehicleCard empty = new VehicleCard(records.Label);
-                empty.Body.Children.Add(VehicleCard.Muted(Loc.T("Entity.Records." + records.Key + ".Empty")));
                 CellPanel.SetWide(empty, true);
+                empty.Body.Children.Add(VehicleCard.Muted(Loc.T("Entity.Records." + records.Key + ".Empty")));
                 yield return empty;
             }
+            if (adding is { } fresh && fresh.Records == records)
+                yield return NewRecordCard(fresh.Records, fresh.Record, null, records.AddLabel);
             foreach (EntityRecord record in list)
-                yield return RecordCard(records, record, isNew: false);
+                yield return RecordCard(records, record, records.Title(record));
         }
 
-        private SectionCard RecordCard(RecordDefinition records, EntityRecord record, bool isNew)
+        // A nested list: the outline beside the selected record's card (the first one until another is picked). Empty, what
+        // it is for and the usual records to start with (VehicleSchema.PartsTemplate).
+        private IEnumerable<UIElement> OutlineCards(RecordDefinition records, List<EntityRecord> list)
+        {
+            VehicleCard outline = new VehicleCard(records.Label);
+            outline.Actions.Children.Add(VehicleCard.Link("+ " + records.AddLabel, () => StartAdd(records, null)));
+            CellPanel.SetStartsRow(outline, true);
+            if (list.Count == 0 && adding?.Records != records)
+            {
+                CellPanel.SetWide(outline, true);
+                outline.ShowEmpty(Loc.T("Entity.Records." + records.Key + ".Empty"), Loc.T("Entity.Records." + records.Key + ".Template"),
+                    () => AddTemplate(records));
+                yield return outline;
+                yield break;
+            }
+            Guid? shown = adding?.Records == records ? null : RecordTree.Find(list, selectedPart ?? Guid.Empty)?.Id ?? list.FirstOrDefault()?.Id;
+            outline.Body.Children.Add(new RecordOutline(records, list, shown, openParts, id =>
+            {
+                if (!LeaveEdit())
+                    return;
+                adding = null;
+                selectedPart = id;
+                ShowTab();
+            }, id =>
+            {
+                if (!LeaveEdit())
+                    return;
+                if (!openParts.Remove(id))
+                    openParts.Add(id);
+                ShowTab();
+            }));
+            yield return outline;
+
+            if (adding is { } fresh && fresh.Records == records)
+            {
+                EntityRecord? parent = fresh.Parent == null ? null : RecordTree.Find(list, fresh.Parent.Value);
+                yield return NewRecordCard(records, fresh.Record, fresh.Parent,
+                    parent == null ? records.AddLabel : Loc.F("Entity.Records." + records.Key + ".NewUnder", records.Title(parent)));
+            }
+            else if (shown != null)
+            {
+                (EntityRecord record, IReadOnlyList<EntityRecord> above) = RecordTree.Walk(list).First(x => x.Record.Id == shown);
+                yield return RecordCard(records, record, string.Join(" › ", above.Append(record).Select(records.Title)), Moves(records, list, record, above.Count));
+            }
+        }
+
+        private SectionCard RecordCard(RecordDefinition records, EntityRecord record, string title, UIElement? footer = null) =>
+            new SectionCard(title, records.Fields, vehicle, f => record.Get(f.Key), record, Gate,
+                editors => SaveRecord(records, record, null, isNew: false, editors))
+            {
+                Delete = () => DeleteRecord(records, record),
+                Status = records.CurrentKey == null ? null
+                    : records.IsCurrent(vehicle, record) ? (Loc.T("Entity.Records." + records.Key + ".Current"), null)
+                    : (Loc.T("Entity.Records." + records.Key + ".MakeCurrent"), () => Commit(v => records.SetCurrent(v, record.Id))),
+                Footer = footer,
+                InHeading = records.TitleKeys,
+                Tag = record.Id
+            };
+
+        // A record being added, in edit at once; Cancel takes it away again.
+        private SectionCard NewRecordCard(RecordDefinition records, EntityRecord record, Guid? parent, string title)
         {
             SectionCard card = null!;
-            card = new SectionCard(isNew ? records.AddLabel : records.Title(record), records.Fields, vehicle, f => record.Get(f.Key), record.File, Gate,
-                editors => SaveRecord(records, record, isNew, editors))
+            card = new SectionCard(title, records.Fields, vehicle, f => record.Get(f.Key), record, Gate,
+                editors => SaveRecord(records, record, parent, isNew: true, editors))
             {
-                Delete = isNew ? null : () => DeleteRecord(records, record),
-                Cancelled = isNew ? () => { adding = null; editing = null; Cards.Children.Remove(card); } : null
+                Cancelled = () => { adding = null; editing = null; Cards.Children.Remove(card); }
             };
+            card.BeginEdit();
             return card;
         }
 
-        private void StartAdd(RecordDefinition records)
+        // Under a nested record's fields: a record under it, and moving it up, down, into the one above or out a level.
+        private UIElement Moves(RecordDefinition records, List<EntityRecord> list, EntityRecord record, int depth)
+        {
+            List<EntityRecord> holder = RecordTree.Holder(list, record.Id)!;
+            int at = holder.IndexOf(record);
+            WrapPanel moves = new WrapPanel { Margin = new Thickness(0, 14, 0, 0) };
+            void Add(string key, bool can, Action act)
+            {
+                Button button = new Button
+                {
+                    Content = Loc.T("Entity.Records." + records.Key + "." + key),
+                    Style = (Style)FindResource("GhostButtonStyle"),
+                    Margin = new Thickness(0, 0, 8, 6),
+                    IsEnabled = can,
+                    Opacity = can ? 1 : 0.45 // the ghost style has no look of its own for "off"
+                };
+                button.Click += (s, e) => act();
+                moves.Children.Add(button);
+            }
+            Add("AddUnder", depth + 1 < RecordTree.MaxDepth, () => StartAdd(records, record.Id));
+            Add("Up", at > 0, () => Move(records, list => RecordTree.Move(list, record.Id, -1)));
+            Add("Down", at < holder.Count - 1, () => Move(records, list => RecordTree.Move(list, record.Id, +1)));
+            Add("In", RecordTree.CanIndent(list, record.Id), () => Move(records, list => RecordTree.Indent(list, record.Id)));
+            Add("Out", holder != list, () => Move(records, list => RecordTree.Outdent(list, record.Id)));
+            return moves;
+        }
+
+        private void Move(RecordDefinition records, Func<List<EntityRecord>, bool> move)
         {
             if (!LeaveEdit())
                 return;
-            adding = (records, records.New());
+            Commit(v =>
+            {
+                List<EntityRecord> list = records.Read(v);
+                if (move(list))
+                    records.Write(v, list);
+            });
+        }
+
+        // The usual systems as top-level records, named in the current language (the user's own from then on).
+        private void AddTemplate(RecordDefinition records)
+        {
+            if (!LeaveEdit())
+                return;
+            Commit(v => records.Write(v, VehicleSchema.PartsTemplate.Select(key =>
+            {
+                EntityRecord system = records.New();
+                system.Set("Name", Loc.T("Entity.Parts.Template." + key));
+                return system;
+            }).ToList()));
+        }
+
+        private void StartAdd(RecordDefinition records, Guid? parent)
+        {
+            if (!LeaveEdit())
+                return;
+            adding = (records, records.New(), parent);
+            if (parent != null)
+                openParts.Add(parent.Value);
             ShowTab();
             ScrollToTabs();
         }
 
-        // The record's fields from the card; a picked file is copied in first (and removed again if the save fails).
-        // The file it replaces or loses is deleted once the vehicle is saved without it (the collection view).
-        private async Task<bool> SaveRecord(RecordDefinition records, EntityRecord record, bool isNew, IReadOnlyList<FieldEditor> editors)
+        // The record's fields from the card. A picked file and picked pictures are copied in first (and removed again if
+        // the save fails); what it replaces or loses is deleted once the vehicle is saved without it (the collection
+        // view). A new record goes at the end of its list, or under `parent`, and is the one shown after.
+        private async Task<bool> SaveRecord(RecordDefinition records, EntityRecord record, Guid? parent, bool isNew, IReadOnlyList<FieldEditor> editors)
         {
             FieldEditor? fileEditor = editors.FirstOrDefault(e => e.Field.Kind == ValueKind.File);
+            FieldEditor? picturesEditor = editors.FirstOrDefault(e => e.Field.Kind == ValueKind.Pictures);
+            FieldEditor? specsEditor = editors.FirstOrDefault(e => e.Field.Kind == ValueKind.Specs);
             Attachment? copied = null;
             if (fileEditor?.PickedFile != null)
             {
@@ -407,43 +596,71 @@ namespace TidyMind
                     return false;
                 }
             }
+            List<string> imported = new List<string>();
+            List<string>? pictures = null;
+            if (picturesEditor != null)
+            {
+                pictures = EntityImages.Import(picturesEditor.PictureSlots, out imported, out List<string> failed);
+                if (failed.Count > 0)
+                    Msg.Show(this, Loc.F("Collection.PictureFailed", string.Join(", ", failed.Select(System.IO.Path.GetFileName)), EntityImages.Store.Folder),
+                        Loc.T("Collection.PictureFailed.Caption"), MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
 
-            // A new one stops being "being added" before the window is drawn again from the saved vehicle.
+            // A new one stops being "being added", and becomes the one shown, before the window is drawn again.
             var wasAdding = adding;
+            Guid? wasSelected = selectedPart;
             if (isNew)
+            {
                 adding = null;
+                if (records.Nested)
+                    selectedPart = record.Id;
+            }
             bool saved = Commit(v =>
             {
                 List<EntityRecord> list = records.Read(v);
-                EntityRecord target = isNew ? record : list.First(r => r.Id == record.Id);
-                foreach (FieldEditor editor in editors.Where(e => e != fileEditor))
+                EntityRecord target = isNew ? record : RecordTree.Find(list, record.Id)!;
+                foreach (FieldEditor editor in editors.Where(e => e != fileEditor && e != picturesEditor && e != specsEditor))
                     target.Set(editor.Field.Key, editor.Value);
                 if (copied != null)
                     target.File = copied;
                 else if (fileEditor?.FileRemoved == true)
                     target.File = null;
+                if (pictures != null)
+                    target.Pictures = pictures.Count > 0 ? pictures : null;
+                if (specsEditor != null)
+                    target.Specs = specsEditor.Specs.Count > 0 ? specsEditor.Specs : null;
                 if (isNew)
-                    list.Add(target);
+                    (parent == null ? list : RecordTree.ChildrenOf(RecordTree.Find(list, parent.Value)!)).Add(target);
                 records.Write(v, list);
             });
             if (!saved)
             {
                 adding = wasAdding;
+                selectedPart = wasSelected;
                 if (copied != null)
                     AttachmentStore.Delete(new[] { copied });
+                foreach (string name in imported)
+                    EntityImages.DeleteCopy(name);
             }
             return saved;
         }
 
+        // Asked first; a record holding others says how many go with it. The one in use (CurrentKey) is no longer.
         private void DeleteRecord(RecordDefinition records, EntityRecord record)
         {
-            if (!LeaveEdit() || Msg.Show(this, Loc.F("Common.DeleteNamed", records.Title(record)), Loc.T("Common.ConfirmDelete"),
-                    MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            int under = RecordTree.CountUnder(record);
+            string question = under == 0 ? Loc.F("Common.DeleteNamed", records.Title(record))
+                : Loc.Plural("Entity.Records." + records.Key + ".DeleteWithChildren", under, records.Title(record));
+            if (!LeaveEdit() || Msg.Show(this, question, Loc.T("Common.ConfirmDelete"), MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
                 return;
             Commit(v =>
             {
                 List<EntityRecord> list = records.Read(v);
-                list.RemoveAll(r => r.Id == record.Id);
+                RecordTree.Holder(list, record.Id)?.RemoveAll(r => r?.Id == record.Id);
+                foreach (EntityRecord emptied in RecordTree.Walk(list).Select(x => x.Record).Where(r => r.Children?.Count == 0))
+                    emptied.Children = null;
+                if (records.IsCurrent(v, record))
+                    records.SetCurrent(v, null);
                 records.Write(v, list);
             });
         }
@@ -562,14 +779,23 @@ namespace TidyMind
             return false;
         }
 
-        // Esc stops an edit (asking first if something was typed), else closes. An open dropdown takes its own Esc first.
+        // Ctrl+F goes to the search box. Esc empties the search (back to the tab), or stops an edit (asking first if something was typed),
+        // or closes. An open dropdown takes its own Esc first.
         protected override void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);
+            if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                SearchBox.Focus();
+                SearchBox.SelectAll();
+                e.Handled = true;
+            }
             if (e.Key != Key.Escape || e.Handled)
                 return;
             e.Handled = true;
-            if (editing != null && editing.IsEditing)
+            if (SearchBox.Text.Length > 0)
+                SearchBox.Clear();
+            else if (editing != null && editing.IsEditing)
                 LeaveEdit();
             else
                 Close();

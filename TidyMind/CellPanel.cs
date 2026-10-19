@@ -6,7 +6,7 @@ using System.Windows.Controls;
 namespace TidyMind
 {
     // Lays its children out row by row in equal columns, as many as fit at MinColumn wide or more (at least one); a
-    // child marked Wide takes a whole row. Each row is as tall as its tallest child. The vehicle window uses it for the
+    // child marked Wide takes a whole row, one marked StartsRow begins a new one. Each row is as tall as its tallest child. The vehicle window uses it for the
     // fields of a card and for the cards of a tab, so both reflow with the window's width.
     public sealed class CellPanel : Panel
     {
@@ -15,6 +15,12 @@ namespace TidyMind
 
         public static void SetWide(UIElement element, bool wide) => element.SetValue(WideProperty, wide);
         public static bool GetWide(UIElement element) => (bool)element.GetValue(WideProperty);
+
+        public static readonly DependencyProperty StartsRowProperty = DependencyProperty.RegisterAttached(
+            "StartsRow", typeof(bool), typeof(CellPanel), new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsParentMeasure));
+
+        public static void SetStartsRow(UIElement element, bool starts) => element.SetValue(StartsRowProperty, starts);
+        public static bool GetStartsRow(UIElement element) => (bool)element.GetValue(StartsRowProperty);
 
         public double MinColumn { get; set; } = 200;
         public double ColumnGap { get; set; } = 16;
@@ -83,7 +89,7 @@ namespace TidyMind
             {
                 if (child == null || child.Visibility == Visibility.Collapsed)
                     continue;
-                if (GetWide(child))
+                if (GetWide(child) || GetStartsRow(child))
                     Close();
                 pending.Add((child, heightOf(child)));
                 if (GetWide(child) || pending.Count == columns)

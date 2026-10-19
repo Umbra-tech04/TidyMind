@@ -127,9 +127,9 @@ namespace TidyMind
         }
     }
 
-    // A card of fields: a section of the vehicle, or one record (a document). Read, it lists the filled fields (a
-    // document's date with how close it is, its file as a link) and offers Edit; editing, an input per field
-    // (FieldEditor) with Save and Cancel. What Save does with the values is the window's (save); the card checks them.
+    // A card of fields: a section of the vehicle, or one record (a document, a wheel set, a part). Read, it lists the
+    // filled fields (a document's date with how close it is, its file as a link, a part's specs and photos) and offers
+    // Edit; editing, an input per field (FieldEditor) with Save and Cancel. What Save does with the values is the window's (save); the card checks them.
     public sealed class SectionCard : VehicleCard
     {
         public delegate Task<bool> SaveHandler(IReadOnlyList<FieldEditor> editors);
@@ -137,7 +137,7 @@ namespace TidyMind
         private readonly IReadOnlyList<FieldDefinition> fields;
         private readonly Entity owner;
         private readonly Func<FieldDefinition, string?> read;
-        private readonly Attachment? file;
+        private readonly EntityRecord? record;
         private readonly EditGate gate;
         private readonly SaveHandler save;
         private List<FieldEditor>? editors;
@@ -146,13 +146,21 @@ namespace TidyMind
         public Action? Delete { get; init; }
         public Action? Cancelled { get; init; }
 
+        // Read only: a word on its state beside Edit (a wheel set "Mounted now"), or a link that makes it so; and what
+        // goes under its fields (a part's moves).
+        public (string Text, Action? Act)? Status { get; init; }
+        public UIElement? Footer { get; init; }
+
+        // Fields its heading already shows (a record's title): only in the edit.
+        public string[] InHeading { get; init; } = Array.Empty<string>();
+
         public SectionCard(string title, IReadOnlyList<FieldDefinition> fields, Entity owner, Func<FieldDefinition, string?> read,
-            Attachment? file, EditGate gate, SaveHandler save) : base(title)
+            EntityRecord? record, EditGate gate, SaveHandler save) : base(title)
         {
             this.fields = fields;
             this.owner = owner;
             this.read = read;
-            this.file = file;
+            this.record = record;
             this.gate = gate;
             this.save = save;
             Loaded += (s, e) => { if (editors == null) ShowRead(); };
@@ -174,7 +182,7 @@ namespace TidyMind
         {
             if (editors != null || !gate(this))
                 return;
-            editors = fields.Select(f => new FieldEditor(f, owner, f.Kind == ValueKind.File ? null : read(f), file)).ToList();
+            editors = fields.Select(f => new FieldEditor(f, owner, read(f), record)).ToList();
             Actions.Children.Clear();
             Body.Children.Clear();
 
@@ -212,29 +220,46 @@ namespace TidyMind
         {
             Actions.Children.Clear();
             Body.Children.Clear();
-            List<UIElement> shown = fields.Select(ReadCell).Where(c => c != null).ToList()!;
+            if (Status is { } status)
+                Actions.Children.Add(status.Act == null ? StatusBadge(status.Text) : Link(status.Text, status.Act));
+            List<UIElement> shown = fields.Where(f => !InHeading.Contains(f.Key)).Select(ReadCell).Where(c => c != null).ToList()!;
             if (shown.Count == 0)
-            {
                 ShowEmpty(Loc.T("Entity.Card.Empty"), Loc.T("Entity.Card.Fill"), BeginEdit);
-                if (Delete != null)
-                    Actions.Children.Add(Link(Loc.T("Common.Delete"), Delete, danger: true));
-                return;
+            else
+            {
+                Actions.Children.Add(Link(Loc.T("Common.Edit"), BeginEdit));
+                CellPanel cells = new CellPanel { MinColumn = 170, RowGap = 12 };
+                foreach (UIElement cell in shown)
+                    cells.Children.Add(cell);
+                Body.Children.Add(cells);
             }
-
-            Actions.Children.Add(Link(Loc.T("Common.Edit"), BeginEdit));
             if (Delete != null)
                 Actions.Children.Add(Link(Loc.T("Common.Delete"), Delete, danger: true));
-            CellPanel cells = new CellPanel { MinColumn = 170, RowGap = 12 };
-            foreach (UIElement cell in shown)
-                cells.Children.Add(cell);
-            Body.Children.Add(cells);
+            if (Footer != null)
+                Body.Children.Add(Footer);
         }
+
+        private static Border StatusBadge(string text) => new Border
+        {
+            Background = Res("AccentSoft"),
+            CornerRadius = new CornerRadius(10),
+            Padding = new Thickness(8, 1, 8, 2),
+            VerticalAlignment = VerticalAlignment.Center,
+            Child = new TextBlock { Text = text, FontSize = 12, FontWeight = FontWeights.SemiBold, Foreground = Res("Accent") }
+        };
 
         // The field's cell, or null when it's empty.
         private UIElement? ReadCell(FieldDefinition field)
         {
-            if (field.Kind == ValueKind.File)
-                return file == null ? null : Cell(field.Label, FileLink(file));
+            switch (field.Kind)
+            {
+                case ValueKind.File:
+                    return record?.File == null ? null : Cell(field.Label, FileLink(record.File));
+                case ValueKind.Specs:
+                    return SpecsCell(field);
+                case ValueKind.Pictures:
+                    return PicturesCell(field);
+            }
 
             string? stored = read(field);
             string shown = field.Show(stored, owner);
@@ -251,6 +276,46 @@ namespace TidyMind
                 value = TextCopy.Selectable(shown, 13, Res("TextMain"));
             StackPanel cell = Cell(field.Label, value);
             CellPanel.SetWide(cell, field.Kind == ValueKind.LongText || field.Kind == ValueKind.CheckList);
+            return cell;
+        }
+
+        // "Size  M10x1.25x40" a line each, names in the label color.
+        private UIElement? SpecsCell(FieldDefinition field)
+        {
+            List<SpecLine> specs = (record?.Specs ?? new List<SpecLine>()).Where(s => s != null).ToList();
+            if (specs.Count == 0)
+                return null;
+            Grid table = new Grid();
+            table.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            table.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            for (int i = 0; i < specs.Count; i++)
+            {
+                table.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+                TextBox name = TextCopy.Selectable(specs[i].Name, 13, Res("TextSub"));
+                name.Margin = new Thickness(0, 0, 16, 4);
+                TextBox value = TextCopy.Selectable(specs[i].Value, 13, Res("TextMain"));
+                Grid.SetRow(name, i);
+                Grid.SetRow(value, i);
+                Grid.SetColumn(value, 1);
+                table.Children.Add(name);
+                table.Children.Add(value);
+            }
+            StackPanel cell = Cell(field.Label, table);
+            CellPanel.SetWide(cell, true);
+            return cell;
+        }
+
+        // The record's pictures to browse (decoded off the UI thread).
+        private UIElement? PicturesCell(FieldDefinition field)
+        {
+            List<string> names = (record?.Pictures ?? new List<string>()).Where(n => !string.IsNullOrEmpty(n)).ToList();
+            if (names.Count == 0)
+                return null;
+            PictureBrowser browser = new PictureBrowser(160, PictureBrowser.ThumbSize + 10, canReorder: false, stripForOne: false);
+            browser.Picked += index => browser.ShowStored(names, index, () => browser.IsVisible);
+            browser.ShowStored(names, 0, () => true);
+            StackPanel cell = Cell(field.Label, browser);
+            CellPanel.SetWide(cell, true);
             return cell;
         }
 

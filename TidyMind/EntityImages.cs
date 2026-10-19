@@ -103,7 +103,11 @@ namespace TidyMind
         // the others keep theirs. A picked file that can't be copied (gone since it was picked, unreadable) is left
         // out and named in `failed`; the rest of the list (removals, order, cover) still applies. `imported` are the
         // new copies, for the caller to remove if it can't save the item after all.
-        public static void Apply(Entity entity, IReadOnlyList<PictureSlot> slots, out List<string> imported, out List<string> failed)
+        public static void Apply(Entity entity, IReadOnlyList<PictureSlot> slots, out List<string> imported, out List<string> failed) =>
+            SetNames(entity, Import(slots, out imported, out failed));
+
+        // The stored names of the slots, in their order, picked files copied in (as Apply; a record's pictures too).
+        public static List<string> Import(IReadOnlyList<PictureSlot> slots, out List<string> imported, out List<string> failed)
         {
             imported = new List<string>();
             failed = new List<string>();
@@ -123,7 +127,7 @@ namespace TidyMind
                 }
                 names.Add(name);
             }
-            SetNames(entity, names);
+            return names;
         }
     }
 
@@ -136,5 +140,38 @@ namespace TidyMind
 
         // What the form shows for it, decoded once.
         public ImageSource Preview;
+
+        // Files picked to go after `slots`: each readable picture joins them (previewed), up to EntityImages.MaxPictures.
+        // What is left out (unreadable, over the limit) is said in one message over `owner`. Returns the index of the first
+        // one added, or -1 for none.
+        public static int AddPicked(List<PictureSlot> slots, IEnumerable<string> files, System.Windows.Window owner)
+        {
+            int firstNew = slots.Count;
+            bool overLimit = false;
+            List<string> unreadable = new List<string>();
+            foreach (string file in files)
+            {
+                if (slots.Count >= EntityImages.MaxPictures)
+                {
+                    overLimit = true;
+                    break;
+                }
+                ImageSource preview = EntityImages.Store.Decode(file);
+                if (preview == null)
+                    unreadable.Add(Path.GetFileName(file));
+                else
+                    slots.Add(new PictureSlot { PickedFile = file, Preview = preview });
+            }
+
+            List<string> problems = new List<string>();
+            if (unreadable.Count > 0)
+                problems.Add(Loc.F("Entity.Pictures.Unreadable", string.Join(", ", unreadable.Take(5)) + (unreadable.Count > 5 ? ", …" : "")));
+            if (overLimit)
+                problems.Add(Loc.F("Entity.Pictures.Limit", EntityImages.MaxPictures));
+            if (problems.Count > 0)
+                Msg.Show(owner, string.Join("\n\n", problems), Loc.T("Entity.Pictures.NotAdded.Caption"), System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
+            return slots.Count > firstNew ? firstNew : -1;
+        }
     }
 }
