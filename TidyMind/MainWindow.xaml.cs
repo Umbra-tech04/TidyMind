@@ -532,8 +532,8 @@ namespace TidyMind
         private static string NameTakenText(ProfileType type) =>
             Loc.T(type == ProfileType.Collection ? "Memory.CollectionNameTaken" : "Memory.ProjectNameTaken");
 
-        // The page background, card pictures, attached files and item pictures of a memory being deleted, kept in
-        // the app-wide folders, so they aren't left behind there. An unreadable file just means nothing to clean up.
+        // The page background, card pictures, attached files, item pictures and document files of a memory being deleted,
+        // kept in the app-wide folders, so they aren't left behind there. An unreadable file just means nothing to clean up.
         private static void DeleteOwnedFiles(Profile memory)
         {
             if (memory.BackgroundType == BackgroundFill.Image)
@@ -541,8 +541,12 @@ namespace TidyMind
 
             if (memory.Type == ProfileType.Collection)
             {
-                // The memory has already left profiles.json, so only copies another collection's item still uses stay.
-                EntityImages.DeleteUnreferenced(EntityStore.LoadOrEmpty(memory).SelectMany(EntityImages.Names));
+                // The memory has already left profiles.json, so only files another collection's item still uses stay. Its
+                // vehicles' document reminders go too (best effort, like the files).
+                List<Entity> items = EntityStore.LoadOrEmpty(memory);
+                EntityFiles.DeleteUnreferenced(items);
+                foreach (Entity item in items)
+                    VehicleReminders.Follow(item, null);
                 return;
             }
 

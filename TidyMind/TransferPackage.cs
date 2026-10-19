@@ -37,9 +37,11 @@ namespace TidyMind
         // The newest format this version reads; a package in a newer one is refused. Each package is written in the
         // oldest format that holds it, so older versions keep reading projects and collections (format 1), and say
         // "made with a newer TidyMind" for an item (format 2, which they don't know), and for a collection with an item
-        // of several pictures (they would drop the further ones).
-        public const int FormatVersion = 2;
-        private const int ProjectFormat = 1, CollectionFormat = 1, ItemFormat = 2;
+        // of several pictures (they would drop the further ones). An item with records (a vehicle's documents: Ids of
+        // their own, a reminder each, files in files/documents/) is format 3, alone or in a collection: older versions
+        // would import it half (the files left behind, the same document Ids in every copy).
+        public const int FormatVersion = 3;
+        private const int ProjectFormat = 1, CollectionFormat = 1, ItemFormat = 2, RecordsFormat = 3;
 
         public const string ProjectType = "project";
         public const string CollectionType = "collection";
@@ -57,6 +59,7 @@ namespace TidyMind
         internal const string CardDir = "files/card/";
         internal const string ItemsDir = "files/items/";
         internal const string BackgroundDir = "files/background/";
+        internal const string DocumentsDir = "files/documents/";
 
         // Limits for a package from elsewhere: far above anything real, low enough that a crafted ZIP can't fill the
         // disk or the memory. Attachments can be large, so the total is generous; the JSON is never that big.
@@ -100,12 +103,14 @@ namespace TidyMind
             List<Entity> items = Clone(entities);
             List<(string Entry, string Source)> files = PicturesOf(items);
             int pictures = files.Count;
+            files.AddRange(DocumentsOf(items));
             if (memory.BackgroundType == BackgroundFill.Image && ImageStore.Backgrounds.Exists(memory.BackgroundImagePath))
                 files.Add((BackgroundDir + Path.GetFileName(memory.BackgroundImagePath), ImageStore.Backgrounds.PathOf(memory.BackgroundImagePath)));
 
-            // An item with more than one picture is something older versions would only half read (they would leave the
-            // further pictures out), so such a collection is written in the newer format, which they refuse as a whole.
-            int format = items.Any(i => EntityImages.Count(i) > 1) ? ItemFormat : CollectionFormat;
+            // An item with more than one picture or with records is something older versions would only half read (they
+            // would leave the further pictures or the documents' files out), so such a collection is written in a newer
+            // format, which they refuse as a whole.
+            int format = items.Any(HasRecords) ? RecordsFormat : items.Any(i => EntityImages.Count(i) > 1) ? ItemFormat : CollectionFormat;
             TransferManifest manifest = NewManifest(CollectionType, format, memory.Name);
             manifest.Counts = new TransferCounts { Items = items.Count, Pictures = pictures };
             WriteAtomically(zipPath, manifest, new[]
@@ -121,8 +126,9 @@ namespace TidyMind
         {
             Entity item = Clone(new List<Entity> { entity })[0];
             List<(string Entry, string Source)> files = PicturesOf(new List<Entity> { item });
-            TransferManifest manifest = NewManifest(ItemType, ItemFormat, item.Name);
+            TransferManifest manifest = NewManifest(ItemType, HasRecords(item) ? RecordsFormat : ItemFormat, item.Name);
             manifest.Counts = new TransferCounts { Pictures = files.Count };
+            files.AddRange(DocumentsOf(new List<Entity> { item }));
             WriteAtomically(zipPath, manifest, new[] { (ItemEntry, JsonSerializer.Serialize(item)) }, files, progress, cancel);
         }
 
@@ -150,6 +156,15 @@ namespace TidyMind
             }
             return files;
         }
+
+        private static bool HasRecords(Entity item) => item.Records?.Values.Any(list => list?.Count > 0) == true;
+
+        // The files of the items' records (a document's scan) that are there, under their stored names; a missing one
+        // stays listed, as it is on this PC.
+        private static List<(string Entry, string Source)> DocumentsOf(List<Entity> items) =>
+            items.SelectMany(EntityFiles.Attachments).Distinct(StringComparer.OrdinalIgnoreCase)
+                .Where(name => File.Exists(AttachmentStore.PathOf(name)))
+                .Select(name => (DocumentsDir + Path.GetFileName(name), AttachmentStore.PathOf(name))).ToList();
 
         private static TransferManifest NewManifest(string type, int format, string name) => new TransferManifest
         {
@@ -348,6 +363,15 @@ namespace TidyMind
             item.Logs = item.Logs?.Where(log => log.Value != null).ToDictionary(log => log.Key,
                 log => log.Value.Where(row => row != null)
                     .Select(row => row.Where(cell => cell.Value != null).ToDictionary(cell => cell.Key, cell => cell.Value)).ToList());
+            item.Details = item.Details?.Where(d => d.Value != null).ToDictionary(d => d.Key, d => d.Value);
+            item.Records = item.Records?.Where(list => list.Value != null).ToDictionary(list => list.Key,
+                list => list.Value.Where(record => record != null).Select(Clean).ToList());
+        }
+
+        private static EntityRecord Clean(EntityRecord record)
+        {
+            record.Values = (record.Values ?? new Dictionary<string, string>()).Where(v => v.Value != null).ToDictionary(v => v.Key, v => v.Value);
+            return record;
         }
 
         // The text elements the editors write (TextRange.Save, the format toolbar). Loading XAML can make any object
@@ -625,6 +649,7 @@ namespace TidyMind
                     newTab[item.TabId] = tabId = tabs.Count > 0 ? tabs[0].Id : Guid.NewGuid();
                 item.TabId = tabId;
                 TakePicture(staged, item, moves);
+                TakeRecords(staged, item, moves);
             }
 
             bool added = false;
@@ -642,6 +667,7 @@ namespace TidyMind
                     throw new TransferException(Loc.F("Transfer.Error.CantWrite", AppPaths.Data("profiles.json")));
                 }
                 added = true;
+                staged.Added.AddRange(items);
                 return memory;
             }
             finally
@@ -685,6 +711,7 @@ namespace TidyMind
             item.Order = items.Count == 0 ? 0 : items.Max(i => i.Order) + 1;
             List<(string From, string To)> moves = new List<(string, string)>();
             TakePicture(staged, item, moves);
+            TakeRecords(staged, item, moves);
 
             bool added = false;
             try
@@ -703,6 +730,7 @@ namespace TidyMind
                     }
                 }
                 added = true;
+                staged.Added.Add(item);
                 return memory;
             }
             finally
@@ -758,6 +786,24 @@ namespace TidyMind
                 moves.Add((source, EntityImages.Store.PathOf(stored)));
             }
             EntityImages.SetNames(item, names);
+        }
+
+        // The item's records under new Ids (a document's reminder goes by its Id), and their files under new names: one
+        // the package held is moved in, one it didn't stays listed (as missing, as it was) under a name no file has.
+        private static void TakeRecords(StagedImport staged, Entity item, List<(string From, string To)> moves)
+        {
+            foreach (EntityRecord record in (item.Records?.Values ?? Enumerable.Empty<List<EntityRecord>>()).SelectMany(list => list))
+            {
+                record.Id = Guid.NewGuid();
+                if (record.File == null)
+                    continue;
+                record.File.Id = Guid.NewGuid();
+                record.File.DisplayName ??= "";
+                string? source = staged.FileFor(DocumentsDir, record.File.StoredFileName);
+                record.File.StoredFileName = Guid.NewGuid().ToString("N") + ExtensionOf(source ?? record.File.StoredFileName ?? "");
+                if (source != null)
+                    moves.Add((source, AttachmentStore.PathOf(record.File.StoredFileName)));
+            }
         }
 
         // A picture background whose file came along gets a new file name; one without its file (or with a type or
@@ -950,6 +996,8 @@ namespace TidyMind
                 yield return TransferPackage.BackgroundDir + Path.GetFileName(Collection.BackgroundImagePath);
             foreach (string name in Entities.SelectMany(EntityImages.Names))
                 yield return TransferPackage.ItemsDir + Path.GetFileName(name);
+            foreach (string name in Entities.SelectMany(EntityFiles.Attachments))
+                yield return TransferPackage.DocumentsDir + Path.GetFileName(name);
         }
     }
 
@@ -966,6 +1014,9 @@ namespace TidyMind
         public OpenedPackage Package { get; }
         internal string Folder { get; }
         internal Dictionary<string, string> Files { get; } = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        // The items a commit added (for their reminders, VehicleReminders).
+        internal List<Entity> Added { get; } = new List<Entity>();
 
         // The unpacked file for a stored name in one of the package's folders, if the package held it.
         internal string? FileFor(string dir, string? storedName)

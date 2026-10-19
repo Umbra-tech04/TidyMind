@@ -143,11 +143,13 @@ namespace TidyMind
                         MessageBoxImage.Warning);
                     return null;
                 }
-                if (package.IsCollection)
-                    return TransferPackage.CommitCollection(staged!, profiles, nextColor());
-                if (package.IsItem)
-                    return TransferPackage.CommitItem(staged!, target, profiles, nextColor(), Loc.T("Transfer.Import.NewCollectionName"));
-                return CommitInto(staged!, target!);
+                Profile into = package.IsCollection ? TransferPackage.CommitCollection(staged!, profiles, nextColor())
+                    : package.IsItem ? TransferPackage.CommitItem(staged!, target, profiles, nextColor(), Loc.T("Transfer.Import.NewCollectionName"))
+                    : CommitInto(staged!, target!);
+                // Imported documents get their reminders as if they had just been entered here.
+                if (staged!.Added.Select(item => VehicleReminders.Follow(null, item)).ToList().FirstOrDefault(p => p != null) is string problem)
+                    Msg.Show(owner, problem, Loc.T("Transfer.Import.Caption"), MessageBoxButton.OK, MessageBoxImage.Warning);
+                return into;
             }
             catch (Exception e) when (e is TransferException || e is IOException || e is UnauthorizedAccessException)
             {

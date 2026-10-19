@@ -39,14 +39,26 @@ namespace TidyMind
         public string PurchasePrice { get; set; }
         public List<SizeQuantity> Sizes { get; set; } = new List<SizeQuantity>();
 
-        // Vehicle (EntityTypes.Vehicle); the make and model is Name. Left out of the file while empty, so other items
-        // are stored exactly as before.
+        // Vehicle (EntityTypes.Vehicle); its name (a nickname, or the make and model) is Name, its other fields are in
+        // Details and Records. Left out of the file while empty, so other items are stored exactly as before. The two
+        // dates are the newest insurance and inspection document's (VehicleDocuments keeps them in step), so a version
+        // from before documents still shows them.
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? VehicleKind { get; set; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? Plate { get; set; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public int? Year { get; set; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public int? OdometerKm { get; set; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public DateTime? InsuranceExpires { get; set; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public DateTime? InspectionExpires { get; set; }
+
+        // The type's other single-value fields (EntityTypes, FieldDefinition) by field key, as stored text (Values),
+        // e.g. "Make" or "Displacement". Left out of the file while empty; a version that doesn't know it keeps it as an
+        // unknown field.
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public Dictionary<string, string>? Details { get; set; }
+
+        // The type's lists of records (EntityTypes, RecordDefinition) by key, e.g. "Documents". Left out while empty.
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public Dictionary<string, List<EntityRecord>>? Records { get; set; }
 
         // Log fields (EntityTypes, LogDefinition) by log key, e.g. "Fuel": each row maps column keys to stored text
         // (Values: dates as yyyy-MM-dd, numbers with a '.' decimal point). Left out until a log has rows.

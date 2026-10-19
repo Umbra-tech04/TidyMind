@@ -162,11 +162,13 @@ namespace TidyMind
             }
 
             HashSet<Guid>? blockIds = DayPlanReminders.BlockIds();
+            Dictionary<Guid, EntityRecord>? documents = VehicleReminders.DocumentIndex();
             foreach (Reminder reminder in reminders)
             {
-                Border row = CreateReminderRow(reminder, blockIds);
+                string message = VehicleReminders.ShownMessage(reminder, documents);
+                Border row = CreateReminderRow(reminder, message, blockIds);
                 RemindersPanel.Children.Add(row);
-                shownNames[reminder.Id] = reminder.Message;
+                shownNames[reminder.Id] = message;
 
                 if (reminder.Id == highlightedId)
                 {
@@ -178,7 +180,7 @@ namespace TidyMind
             selection.EndRender();
         }
 
-        private Border CreateReminderRow(Reminder reminder, ISet<Guid>? blockIds)
+        private Border CreateReminderRow(Reminder reminder, string message, ISet<Guid>? blockIds)
         {
             Border row = new Border();
             row.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
@@ -194,7 +196,7 @@ namespace TidyMind
 
             StackPanel info = new StackPanel();
 
-            info.Children.Add(TextCopy.Selectable(reminder.Message, 14, (Brush)FindResource("TextMain"), FontWeights.Bold));
+            info.Children.Add(TextCopy.Selectable(message, 14, (Brush)FindResource("TextMain"), FontWeights.Bold));
 
             if (!string.IsNullOrWhiteSpace(reminder.Title))
             {

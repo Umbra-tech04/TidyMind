@@ -524,12 +524,6 @@ Az utolsó módosításod nem lett mentve.</value>
   <data name="Entity.Edit.Vehicle" xml:space="preserve">
     <value>Jármű szerkesztése</value>
   </data>
-  <data name="Entity.Expiry.Inspection" xml:space="preserve">
-    <value>Műszaki vizsga</value>
-  </data>
-  <data name="Entity.Expiry.Insurance" xml:space="preserve">
-    <value>Biztosítás</value>
-  </data>
   <data name="Entity.ExpiryLine" xml:space="preserve">
     <value>{0} {1}</value>
   </data>
@@ -542,17 +536,8 @@ Az utolsó módosításod nem lett mentve.</value>
   <data name="Entity.Field.Pictures" xml:space="preserve">
     <value>Képek</value>
   </data>
-  <data name="Entity.Field.Inspection" xml:space="preserve">
-    <value>Műszaki vizsga lejárata</value>
-  </data>
-  <data name="Entity.Field.Insurance" xml:space="preserve">
-    <value>Biztosítás lejárata</value>
-  </data>
   <data name="Entity.Field.Kind" xml:space="preserve">
     <value>Fajta</value>
-  </data>
-  <data name="Entity.Field.MakeModel" xml:space="preserve">
-    <value>Márka és típus</value>
   </data>
   <data name="Entity.Field.Material" xml:space="preserve">
     <value>Anyag</value>
@@ -564,7 +549,7 @@ Az utolsó módosításod nem lett mentve.</value>
     <value>Jegyzetek</value>
   </data>
   <data name="Entity.Field.Odometer" xml:space="preserve">
-    <value>Kilométeróra (km)</value>
+    <value>Kilométeróra</value>
   </data>
   <data name="Entity.Field.Plate" xml:space="preserve">
     <value>Rendszám</value>
@@ -2641,5 +2626,398 @@ Az utolsó oldalon a nyíl új oldalt kezd.</value>
   </data>
   <data name="Welcome.Trip.Task4" xml:space="preserve">
     <value>Nézd meg az időjárást</value>
+  </data>
+  <data name="Entity.Field.Make" xml:space="preserve">
+    <value>Gyártmány</value>
+  </data>
+  <data name="Entity.Field.Model" xml:space="preserve">
+    <value>Modell</value>
+  </data>
+  <data name="Entity.Field.Edition" xml:space="preserve">
+    <value>Kivitel (generáció, felszereltség)</value>
+  </data>
+  <data name="Entity.Field.BodyType" xml:space="preserve">
+    <value>Karosszéria</value>
+  </data>
+  <data name="Entity.Field.FirstRegistration" xml:space="preserve">
+    <value>Első forgalomba helyezés</value>
+  </data>
+  <data name="Entity.Field.Vin" xml:space="preserve">
+    <value>Alvázszám (VIN)</value>
+  </data>
+  <data name="Entity.Field.RegistrationNumber" xml:space="preserve">
+    <value>Forgalmi engedély száma</value>
+  </data>
+  <data name="Entity.Field.EngineCode" xml:space="preserve">
+    <value>Motorkód</value>
+  </data>
+  <data name="Entity.Field.Displacement" xml:space="preserve">
+    <value>Hengerűrtartalom</value>
+  </data>
+  <data name="Entity.Field.Power" xml:space="preserve">
+    <value>Teljesítmény</value>
+  </data>
+  <data name="Entity.Field.Torque" xml:space="preserve">
+    <value>Nyomaték</value>
+  </data>
+  <data name="Entity.Field.Fuel" xml:space="preserve">
+    <value>Üzemanyag</value>
+  </data>
+  <data name="Entity.Field.Gearbox" xml:space="preserve">
+    <value>Váltó</value>
+  </data>
+  <data name="Entity.Field.Gears" xml:space="preserve">
+    <value>Fokozatok száma</value>
+  </data>
+  <data name="Entity.Field.Drive" xml:space="preserve">
+    <value>Hajtás</value>
+  </data>
+  <data name="Entity.Field.EmissionClass" xml:space="preserve">
+    <value>Környezetvédelmi osztály</value>
+  </data>
+  <data name="Entity.Field.Consumption" xml:space="preserve">
+    <value>Gyári fogyasztás</value>
+  </data>
+  <data name="Entity.Field.Co2" xml:space="preserve">
+    <value>CO2-kibocsátás</value>
+  </data>
+  <data name="Entity.Field.Doors" xml:space="preserve">
+    <value>Ajtók száma</value>
+  </data>
+  <data name="Entity.Field.Seats" xml:space="preserve">
+    <value>Ülések száma</value>
+  </data>
+  <data name="Entity.Field.KerbWeight" xml:space="preserve">
+    <value>Saját tömeg</value>
+  </data>
+  <data name="Entity.Field.GrossWeight" xml:space="preserve">
+    <value>Megengedett össztömeg</value>
+  </data>
+  <data name="Entity.Field.BootCapacity" xml:space="preserve">
+    <value>Csomagtartó</value>
+  </data>
+  <data name="Entity.Field.PurchaseDate" xml:space="preserve">
+    <value>Vásárlás dátuma</value>
+  </data>
+  <data name="Entity.Field.PurchaseOdometer" xml:space="preserve">
+    <value>Km-óra állása vásárláskor</value>
+  </data>
+  <data name="Entity.Field.PreviousOwners" xml:space="preserve">
+    <value>Előző tulajdonosok</value>
+  </data>
+  <data name="Entity.Field.ServiceBook" xml:space="preserve">
+    <value>Van szervizkönyv</value>
+  </data>
+  <data name="Entity.Field.AccidentHistory" xml:space="preserve">
+    <value>Baleseti előzmények</value>
+  </data>
+  <data name="Entity.Field.Equipment" xml:space="preserve">
+    <value>Felszereltség, extrák</value>
+  </data>
+  <data name="Entity.Field.OdometerUnit" xml:space="preserve">
+    <value>Távolság mértékegysége</value>
+  </data>
+  <data name="Entity.Field.Type" xml:space="preserve">
+    <value>Típus</value>
+  </data>
+  <data name="Entity.Field.Number" xml:space="preserve">
+    <value>Szám</value>
+  </data>
+  <data name="Entity.Field.ValidUntil" xml:space="preserve">
+    <value>Érvényes eddig</value>
+  </data>
+  <data name="Entity.Field.RemindDays" xml:space="preserve">
+    <value>Emlékeztető</value>
+  </data>
+  <data name="Entity.Field.File" xml:space="preserve">
+    <value>Fájl</value>
+  </data>
+  <data name="Entity.Section.Identity" xml:space="preserve">
+    <value>Azonosító adatok</value>
+  </data>
+  <data name="Entity.Section.Engine" xml:space="preserve">
+    <value>Motor és hajtáslánc</value>
+  </data>
+  <data name="Entity.Section.Body" xml:space="preserve">
+    <value>Karosszéria és méretek</value>
+  </data>
+  <data name="Entity.Section.Ownership" xml:space="preserve">
+    <value>Tulajdon és előélet</value>
+  </data>
+  <data name="Entity.Section.Odometer" xml:space="preserve">
+    <value>Kilométeróra</value>
+  </data>
+  <data name="Entity.Section.Notes" xml:space="preserve">
+    <value>Jegyzetek</value>
+  </data>
+  <data name="Entity.Records.Documents" xml:space="preserve">
+    <value>Dokumentumok</value>
+  </data>
+  <data name="Entity.Records.Documents.Add" xml:space="preserve">
+    <value>Dokumentum hozzáadása</value>
+  </data>
+  <data name="Entity.Records.Documents.Empty" xml:space="preserve">
+    <value>Még nincs dokumentum. Add hozzá a biztosítást, a forgalmit, a műszaki vizsgát, a gépjárműadót vagy a matricát a lejárat dátumával: megjelenik a kártyán és a Kezdőlapon, és időben emlékeztetőt is kaphatsz.</value>
+  </data>
+  <data name="Entity.Tab.Overview" xml:space="preserve">
+    <value>Áttekintés</value>
+  </data>
+  <data name="Entity.Tab.Specs" xml:space="preserve">
+    <value>Adatok</value>
+  </data>
+  <data name="Entity.Tab.Documents" xml:space="preserve">
+    <value>Dokumentumok</value>
+  </data>
+  <data name="Entity.Tab.Service" xml:space="preserve">
+    <value>Szerviz és költségek</value>
+  </data>
+  <data name="Entity.Unit.km" xml:space="preserve">
+    <value>km</value>
+  </data>
+  <data name="Entity.Unit.mi" xml:space="preserve">
+    <value>mérföld</value>
+  </data>
+  <data name="Entity.Unit.kW" xml:space="preserve">
+    <value>kW</value>
+  </data>
+  <data name="Entity.Unit.hp" xml:space="preserve">
+    <value>LE</value>
+  </data>
+  <data name="Entity.Unit.Nm" xml:space="preserve">
+    <value>Nm</value>
+  </data>
+  <data name="Entity.Unit.cm3" xml:space="preserve">
+    <value>cm³</value>
+  </data>
+  <data name="Entity.Unit.kg" xml:space="preserve">
+    <value>kg</value>
+  </data>
+  <data name="Entity.Unit.l" xml:space="preserve">
+    <value>l</value>
+  </data>
+  <data name="Entity.Unit.l100km" xml:space="preserve">
+    <value>l/100 km</value>
+  </data>
+  <data name="Entity.Unit.gkm" xml:space="preserve">
+    <value>g/km</value>
+  </data>
+  <data name="Choice.Sedan" xml:space="preserve">
+    <value>Szedán</value>
+  </data>
+  <data name="Choice.Hatchback" xml:space="preserve">
+    <value>Ferdehátú</value>
+  </data>
+  <data name="Choice.Estate" xml:space="preserve">
+    <value>Kombi</value>
+  </data>
+  <data name="Choice.Coupe" xml:space="preserve">
+    <value>Kupé</value>
+  </data>
+  <data name="Choice.Convertible" xml:space="preserve">
+    <value>Kabrió</value>
+  </data>
+  <data name="Choice.SUV" xml:space="preserve">
+    <value>SUV</value>
+  </data>
+  <data name="Choice.MPV" xml:space="preserve">
+    <value>Egyterű</value>
+  </data>
+  <data name="Choice.Pickup" xml:space="preserve">
+    <value>Pickup</value>
+  </data>
+  <data name="Choice.Van" xml:space="preserve">
+    <value>Furgon</value>
+  </data>
+  <data name="Choice.Petrol" xml:space="preserve">
+    <value>Benzin</value>
+  </data>
+  <data name="Choice.Diesel" xml:space="preserve">
+    <value>Dízel</value>
+  </data>
+  <data name="Choice.Hybrid" xml:space="preserve">
+    <value>Hibrid</value>
+  </data>
+  <data name="Choice.Pluginhybrid" xml:space="preserve">
+    <value>Konnektoros hibrid</value>
+  </data>
+  <data name="Choice.Electric" xml:space="preserve">
+    <value>Elektromos</value>
+  </data>
+  <data name="Choice.LPG" xml:space="preserve">
+    <value>LPG (autógáz)</value>
+  </data>
+  <data name="Choice.CNG" xml:space="preserve">
+    <value>CNG (földgáz)</value>
+  </data>
+  <data name="Choice.Manual" xml:space="preserve">
+    <value>Manuális</value>
+  </data>
+  <data name="Choice.Automatic" xml:space="preserve">
+    <value>Automata</value>
+  </data>
+  <data name="Choice.Frontwheel" xml:space="preserve">
+    <value>Elsőkerék</value>
+  </data>
+  <data name="Choice.Rearwheel" xml:space="preserve">
+    <value>Hátsókerék</value>
+  </data>
+  <data name="Choice.Allwheel" xml:space="preserve">
+    <value>Összkerék</value>
+  </data>
+  <data name="Choice.Airconditioning" xml:space="preserve">
+    <value>Klíma</value>
+  </data>
+  <data name="Choice.Navigation" xml:space="preserve">
+    <value>Navigáció</value>
+  </data>
+  <data name="Choice.Leatherseats" xml:space="preserve">
+    <value>Bőrülések</value>
+  </data>
+  <data name="Choice.Heatedseats" xml:space="preserve">
+    <value>Ülésfűtés</value>
+  </data>
+  <data name="Choice.Parkingsensors" xml:space="preserve">
+    <value>Parkolóradar</value>
+  </data>
+  <data name="Choice.Reversingcamera" xml:space="preserve">
+    <value>Tolatókamera</value>
+  </data>
+  <data name="Choice.Cruisecontrol" xml:space="preserve">
+    <value>Tempomat</value>
+  </data>
+  <data name="Choice.Towbar" xml:space="preserve">
+    <value>Vonóhorog</value>
+  </data>
+  <data name="Choice.Bluetooth" xml:space="preserve">
+    <value>Bluetooth</value>
+  </data>
+  <data name="Choice.Alloywheels" xml:space="preserve">
+    <value>Alufelni</value>
+  </data>
+  <data name="Choice.Insurance" xml:space="preserve">
+    <value>Biztosítás</value>
+  </data>
+  <data name="Choice.Registration" xml:space="preserve">
+    <value>Forgalmi engedély</value>
+  </data>
+  <data name="Choice.Inspection" xml:space="preserve">
+    <value>Műszaki vizsga</value>
+  </data>
+  <data name="Choice.Roadtax" xml:space="preserve">
+    <value>Gépjárműadó</value>
+  </data>
+  <data name="Choice.Vignette" xml:space="preserve">
+    <value>Autópálya-matrica</value>
+  </data>
+  <data name="Entity.Flag.Yes" xml:space="preserve">
+    <value>Igen</value>
+  </data>
+  <data name="Entity.NotSet" xml:space="preserve">
+    <value>Nincs megadva</value>
+  </data>
+  <data name="Entity.CheckList.Own" xml:space="preserve">
+    <value>Saját tétel:</value>
+  </data>
+  <data name="Entity.CheckList.Add" xml:space="preserve">
+    <value>Hozzáadás</value>
+  </data>
+  <data name="Entity.File.Choose" xml:space="preserve">
+    <value>Fájl kiválasztása…</value>
+  </data>
+  <data name="Entity.File.Remove" xml:space="preserve">
+    <value>Fájl eltávolítása</value>
+  </data>
+  <data name="Entity.File.Filter" xml:space="preserve">
+    <value>Dokumentumok és képek|*.pdf;*.jpg;*.jpeg;*.png;*.gif;*.bmp;*.tif;*.tiff;*.webp;*.heic|Minden fájl|*.*</value>
+  </data>
+  <data name="Entity.File.None" xml:space="preserve">
+    <value>Nincs fájl</value>
+  </data>
+  <data name="Entity.File.Missing" xml:space="preserve">
+    <value>A(z) „{0}” fájl már nincs a TidyMind mappájában.</value>
+  </data>
+  <data name="Entity.File.Open" xml:space="preserve">
+    <value>Fájl megnyitása</value>
+  </data>
+  <data name="Entity.File.CouldntCopy" xml:space="preserve">
+    <value>A(z) „{0}” fájlt nem sikerült bemásolni a TidyMind mappájába ({1}), ezért a dokumentum nem lett mentve.</value>
+  </data>
+  <data name="Entity.Card.Empty" xml:space="preserve">
+    <value>Még nincs kitöltve.</value>
+  </data>
+  <data name="Entity.Card.Fill" xml:space="preserve">
+    <value>Kitöltés</value>
+  </data>
+  <data name="Entity.Log.Empty" xml:space="preserve">
+    <value>Még nincs bejegyzés.</value>
+  </data>
+  <data name="Entity.Log.Odometer" xml:space="preserve">
+    <value>Km-óra állások</value>
+  </data>
+  <data name="Entity.Column.Reading" xml:space="preserve">
+    <value>Állás</value>
+  </data>
+  <data name="Entity.Remind.DaysBefore.Other" xml:space="preserve">
+    <value>{0} nappal előtte</value>
+  </data>
+  <data name="Entity.Remind.None" xml:space="preserve">
+    <value>Nincs emlékeztető</value>
+  </data>
+  <data name="Entity.Reminder.Failed" xml:space="preserve">
+    <value>A jármű mentve, de egy dokumentum emlékeztetőjét nem sikerült beállítani vagy törölni (a reminders.json vagy a Windows Feladatütemező nem válaszolt). Nézd meg az Emlékeztetőkben.</value>
+  </data>
+  <data name="Entity.Reminder.Message" xml:space="preserve">
+    <value>{0} lejár: {1}.</value>
+  </data>
+  <data name="Vehicle.AddPictures" xml:space="preserve">
+    <value>Képek hozzáadása</value>
+  </data>
+  <data name="Vehicle.EditBasics" xml:space="preserve">
+    <value>Név és képek szerkesztése</value>
+  </data>
+  <data name="Vehicle.Odometer.Update" xml:space="preserve">
+    <value>Km-óra frissítése</value>
+  </data>
+  <data name="Vehicle.Odometer.None" xml:space="preserve">
+    <value>Még nincs km-állás</value>
+  </data>
+  <data name="Vehicle.Odometer.Prompt" xml:space="preserve">
+    <value>Jelenlegi állás ({0})</value>
+  </data>
+  <data name="Vehicle.Odometer.Lower" xml:space="preserve">
+    <value>Ez kevesebb, mint az előző állás ({0}). Mégis mented?</value>
+  </data>
+  <data name="Vehicle.Overview.Deadlines" xml:space="preserve">
+    <value>Közelgő határidők</value>
+  </data>
+  <data name="Vehicle.Overview.NoDeadlines" xml:space="preserve">
+    <value>Még nincs határidő. Add hozzá a jármű dokumentumait (biztosítás, műszaki vizsga, gépjárműadó…) a lejárat dátumával, és itt, a kártyán és a Kezdőlapon is megjelennek.</value>
+  </data>
+  <data name="Vehicle.Overview.AllDocuments" xml:space="preserve">
+    <value>Összes dokumentum</value>
+  </data>
+  <data name="Vehicle.Overview.KeySpecs" xml:space="preserve">
+    <value>Fő adatok</value>
+  </data>
+  <data name="Vehicle.Overview.NoSpecs" xml:space="preserve">
+    <value>A gyártmány, a modell és a motor még nincs kitöltve.</value>
+  </data>
+  <data name="Vehicle.Overview.AddSpecs" xml:space="preserve">
+    <value>Adatok megadása</value>
+  </data>
+  <data name="Vehicle.Overview.AllSpecs" xml:space="preserve">
+    <value>Összes adat</value>
+  </data>
+  <data name="Vehicle.Overview.LastService" xml:space="preserve">
+    <value>Utolsó szerviz</value>
+  </data>
+  <data name="Vehicle.Overview.NoService" xml:space="preserve">
+    <value>Még nincs szerviz bejegyezve.</value>
+  </data>
+  <data name="Settings.Currency.Title" xml:space="preserve">
+    <value>Pénznem</value>
+  </data>
+  <data name="Settings.Currency.Note" xml:space="preserve">
+    <value>Az árak mellett jelenik meg. Üresen hagyva: {0}, a gép területi beállításából.</value>
   </data>
 </root>

@@ -150,8 +150,10 @@ static partial class Program
             ExcelSample(language + "-9-vehicles", path => ExportService.ExportMemory(garage, path, ExportFormat.Excel), book =>
             {
                 IXLWorksheet sheet = book.Worksheet(1);
-                IXLCell insurance = sheet.Row(XlHeader).CellsUsed().First(c => c.GetString() == Loc.T("Entity.Field.Insurance"));
-                Check(sheet.Cell(5, insurance.Address.ColumnNumber).GetDateTime() == new DateTime(2027, 3, 31), "  vehicle dates are date cells");
+                IXLWorksheet documents = book.Worksheet(VehicleSchema.Documents.Label);
+                IXLCell validUntil = documents.Row(XlHeader).CellsUsed().First(c => c.GetString() == Loc.T("Entity.Field.ValidUntil"));
+                Check(documents.Column(validUntil.Address.ColumnNumber).CellsUsed().Any(c => c.DataType == XLDataType.DateTime && c.GetDateTime() == new DateTime(2027, 3, 31)),
+                    "  vehicle dates are date cells (the old insurance date, as a document)");
                 IXLCell notes = sheet.Row(XlHeader).CellsUsed().First(c => c.GetString() == Loc.T("Entity.Field.Notes"));
                 string allNotes = string.Join("\n", sheet.Column(notes.Address.ColumnNumber).CellsUsed().Where(c => c.Address.RowNumber > 5).Select(c => c.GetString()));
                 Check(sheet.LastRowUsed().RowNumber() > 7 && allNotes.Contains("1. megjegyzés") && allNotes.Contains("60. megjegyzés"),

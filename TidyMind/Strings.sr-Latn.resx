@@ -620,12 +620,6 @@ Tvoja poslednja izmena nije sačuvana.</value>
   <data name="Entity.Edit.Vehicle" xml:space="preserve">
     <value>Izmeni vozilo</value>
   </data>
-  <data name="Entity.Expiry.Inspection" xml:space="preserve">
-    <value>Tehnički pregled</value>
-  </data>
-  <data name="Entity.Expiry.Insurance" xml:space="preserve">
-    <value>Osiguranje</value>
-  </data>
   <data name="Entity.ExpiryLine" xml:space="preserve">
     <value>{0}: {1}</value>
   </data>
@@ -638,17 +632,8 @@ Tvoja poslednja izmena nije sačuvana.</value>
   <data name="Entity.Field.Pictures" xml:space="preserve">
     <value>Slike</value>
   </data>
-  <data name="Entity.Field.Inspection" xml:space="preserve">
-    <value>Tehnički pregled ističe</value>
-  </data>
-  <data name="Entity.Field.Insurance" xml:space="preserve">
-    <value>Osiguranje ističe</value>
-  </data>
   <data name="Entity.Field.Kind" xml:space="preserve">
     <value>Vrsta</value>
-  </data>
-  <data name="Entity.Field.MakeModel" xml:space="preserve">
-    <value>Marka i model</value>
   </data>
   <data name="Entity.Field.Material" xml:space="preserve">
     <value>Materijal</value>
@@ -660,7 +645,7 @@ Tvoja poslednja izmena nije sačuvana.</value>
     <value>Beleške</value>
   </data>
   <data name="Entity.Field.Odometer" xml:space="preserve">
-    <value>Kilometraža (km)</value>
+    <value>Kilometraža</value>
   </data>
   <data name="Entity.Field.Plate" xml:space="preserve">
     <value>Registarska tablica</value>
@@ -2859,5 +2844,404 @@ Na poslednjoj stranici strelica započinje novu.</value>
   </data>
   <data name="Welcome.Trip.Task4" xml:space="preserve">
     <value>Proveri vremensku prognozu</value>
+  </data>
+  <data name="Entity.Field.Make" xml:space="preserve">
+    <value>Marka</value>
+  </data>
+  <data name="Entity.Field.Model" xml:space="preserve">
+    <value>Model</value>
+  </data>
+  <data name="Entity.Field.Edition" xml:space="preserve">
+    <value>Izvedba (generacija, oprema)</value>
+  </data>
+  <data name="Entity.Field.BodyType" xml:space="preserve">
+    <value>Tip karoserije</value>
+  </data>
+  <data name="Entity.Field.FirstRegistration" xml:space="preserve">
+    <value>Prva registracija</value>
+  </data>
+  <data name="Entity.Field.Vin" xml:space="preserve">
+    <value>Broj šasije (VIN)</value>
+  </data>
+  <data name="Entity.Field.RegistrationNumber" xml:space="preserve">
+    <value>Broj saobraćajne dozvole</value>
+  </data>
+  <data name="Entity.Field.EngineCode" xml:space="preserve">
+    <value>Kod motora</value>
+  </data>
+  <data name="Entity.Field.Displacement" xml:space="preserve">
+    <value>Zapremina motora</value>
+  </data>
+  <data name="Entity.Field.Power" xml:space="preserve">
+    <value>Snaga</value>
+  </data>
+  <data name="Entity.Field.Torque" xml:space="preserve">
+    <value>Obrtni moment</value>
+  </data>
+  <data name="Entity.Field.Fuel" xml:space="preserve">
+    <value>Gorivo</value>
+  </data>
+  <data name="Entity.Field.Gearbox" xml:space="preserve">
+    <value>Menjač</value>
+  </data>
+  <data name="Entity.Field.Gears" xml:space="preserve">
+    <value>Broj stepeni prenosa</value>
+  </data>
+  <data name="Entity.Field.Drive" xml:space="preserve">
+    <value>Pogon</value>
+  </data>
+  <data name="Entity.Field.EmissionClass" xml:space="preserve">
+    <value>Ekološka klasa</value>
+  </data>
+  <data name="Entity.Field.Consumption" xml:space="preserve">
+    <value>Fabrička potrošnja</value>
+  </data>
+  <data name="Entity.Field.Co2" xml:space="preserve">
+    <value>Emisija CO2</value>
+  </data>
+  <data name="Entity.Field.Doors" xml:space="preserve">
+    <value>Broj vrata</value>
+  </data>
+  <data name="Entity.Field.Seats" xml:space="preserve">
+    <value>Broj sedišta</value>
+  </data>
+  <data name="Entity.Field.KerbWeight" xml:space="preserve">
+    <value>Masa praznog vozila</value>
+  </data>
+  <data name="Entity.Field.GrossWeight" xml:space="preserve">
+    <value>Najveća dozvoljena masa</value>
+  </data>
+  <data name="Entity.Field.BootCapacity" xml:space="preserve">
+    <value>Zapremina prtljažnika</value>
+  </data>
+  <data name="Entity.Field.PurchaseDate" xml:space="preserve">
+    <value>Datum kupovine</value>
+  </data>
+  <data name="Entity.Field.PurchaseOdometer" xml:space="preserve">
+    <value>Kilometraža pri kupovini</value>
+  </data>
+  <data name="Entity.Field.PreviousOwners" xml:space="preserve">
+    <value>Prethodni vlasnici</value>
+  </data>
+  <data name="Entity.Field.ServiceBook" xml:space="preserve">
+    <value>Postoji servisna knjižica</value>
+  </data>
+  <data name="Entity.Field.AccidentHistory" xml:space="preserve">
+    <value>Istorija nezgoda</value>
+  </data>
+  <data name="Entity.Field.Equipment" xml:space="preserve">
+    <value>Oprema i dodaci</value>
+  </data>
+  <data name="Entity.Field.OdometerUnit" xml:space="preserve">
+    <value>Jedinica za udaljenost</value>
+  </data>
+  <data name="Entity.Field.Type" xml:space="preserve">
+    <value>Tip</value>
+  </data>
+  <data name="Entity.Field.Number" xml:space="preserve">
+    <value>Broj</value>
+  </data>
+  <data name="Entity.Field.ValidUntil" xml:space="preserve">
+    <value>Važi do</value>
+  </data>
+  <data name="Entity.Field.RemindDays" xml:space="preserve">
+    <value>Podsetnik</value>
+  </data>
+  <data name="Entity.Field.File" xml:space="preserve">
+    <value>Datoteka</value>
+  </data>
+  <data name="Entity.Section.Identity" xml:space="preserve">
+    <value>Identifikacija</value>
+  </data>
+  <data name="Entity.Section.Engine" xml:space="preserve">
+    <value>Motor i pogon</value>
+  </data>
+  <data name="Entity.Section.Body" xml:space="preserve">
+    <value>Karoserija i dimenzije</value>
+  </data>
+  <data name="Entity.Section.Ownership" xml:space="preserve">
+    <value>Vlasništvo i istorija</value>
+  </data>
+  <data name="Entity.Section.Odometer" xml:space="preserve">
+    <value>Kilometraža</value>
+  </data>
+  <data name="Entity.Section.Notes" xml:space="preserve">
+    <value>Beleške</value>
+  </data>
+  <data name="Entity.Records.Documents" xml:space="preserve">
+    <value>Dokumenta</value>
+  </data>
+  <data name="Entity.Records.Documents.Add" xml:space="preserve">
+    <value>Dodaj dokument</value>
+  </data>
+  <data name="Entity.Records.Documents.Empty" xml:space="preserve">
+    <value>Još nema dokumenata. Dodaj osiguranje, registraciju, tehnički pregled, porez ili vinjetu sa datumom isteka: prikazaće se na kartici i na Početnoj, a možeš dobiti i podsetnik na vreme.</value>
+  </data>
+  <data name="Entity.Tab.Overview" xml:space="preserve">
+    <value>Pregled</value>
+  </data>
+  <data name="Entity.Tab.Specs" xml:space="preserve">
+    <value>Podaci</value>
+  </data>
+  <data name="Entity.Tab.Documents" xml:space="preserve">
+    <value>Dokumenta</value>
+  </data>
+  <data name="Entity.Tab.Service" xml:space="preserve">
+    <value>Servis i troškovi</value>
+  </data>
+  <data name="Entity.Unit.km" xml:space="preserve">
+    <value>km</value>
+  </data>
+  <data name="Entity.Unit.mi" xml:space="preserve">
+    <value>mi</value>
+  </data>
+  <data name="Entity.Unit.kW" xml:space="preserve">
+    <value>kW</value>
+  </data>
+  <data name="Entity.Unit.hp" xml:space="preserve">
+    <value>KS</value>
+  </data>
+  <data name="Entity.Unit.Nm" xml:space="preserve">
+    <value>Nm</value>
+  </data>
+  <data name="Entity.Unit.cm3" xml:space="preserve">
+    <value>cm³</value>
+  </data>
+  <data name="Entity.Unit.kg" xml:space="preserve">
+    <value>kg</value>
+  </data>
+  <data name="Entity.Unit.l" xml:space="preserve">
+    <value>l</value>
+  </data>
+  <data name="Entity.Unit.l100km" xml:space="preserve">
+    <value>l/100 km</value>
+  </data>
+  <data name="Entity.Unit.gkm" xml:space="preserve">
+    <value>g/km</value>
+  </data>
+  <data name="Choice.Sedan" xml:space="preserve">
+    <value>Limuzina</value>
+  </data>
+  <data name="Choice.Hatchback" xml:space="preserve">
+    <value>Hečbek</value>
+  </data>
+  <data name="Choice.Estate" xml:space="preserve">
+    <value>Karavan</value>
+  </data>
+  <data name="Choice.Coupe" xml:space="preserve">
+    <value>Kupe</value>
+  </data>
+  <data name="Choice.Convertible" xml:space="preserve">
+    <value>Kabriolet</value>
+  </data>
+  <data name="Choice.SUV" xml:space="preserve">
+    <value>SUV</value>
+  </data>
+  <data name="Choice.MPV" xml:space="preserve">
+    <value>Monovolumen</value>
+  </data>
+  <data name="Choice.Pickup" xml:space="preserve">
+    <value>Pikap</value>
+  </data>
+  <data name="Choice.Van" xml:space="preserve">
+    <value>Kombi</value>
+  </data>
+  <data name="Choice.Petrol" xml:space="preserve">
+    <value>Benzin</value>
+  </data>
+  <data name="Choice.Diesel" xml:space="preserve">
+    <value>Dizel</value>
+  </data>
+  <data name="Choice.Hybrid" xml:space="preserve">
+    <value>Hibrid</value>
+  </data>
+  <data name="Choice.Pluginhybrid" xml:space="preserve">
+    <value>Plug-in hibrid</value>
+  </data>
+  <data name="Choice.Electric" xml:space="preserve">
+    <value>Električni</value>
+  </data>
+  <data name="Choice.LPG" xml:space="preserve">
+    <value>TNG (autogas)</value>
+  </data>
+  <data name="Choice.CNG" xml:space="preserve">
+    <value>KPG (metan)</value>
+  </data>
+  <data name="Choice.Manual" xml:space="preserve">
+    <value>Manuelni</value>
+  </data>
+  <data name="Choice.Automatic" xml:space="preserve">
+    <value>Automatski</value>
+  </data>
+  <data name="Choice.Frontwheel" xml:space="preserve">
+    <value>Prednji</value>
+  </data>
+  <data name="Choice.Rearwheel" xml:space="preserve">
+    <value>Zadnji</value>
+  </data>
+  <data name="Choice.Allwheel" xml:space="preserve">
+    <value>Na sva četiri točka</value>
+  </data>
+  <data name="Choice.Airconditioning" xml:space="preserve">
+    <value>Klima uređaj</value>
+  </data>
+  <data name="Choice.Navigation" xml:space="preserve">
+    <value>Navigacija</value>
+  </data>
+  <data name="Choice.Leatherseats" xml:space="preserve">
+    <value>Kožna sedišta</value>
+  </data>
+  <data name="Choice.Heatedseats" xml:space="preserve">
+    <value>Grejanje sedišta</value>
+  </data>
+  <data name="Choice.Parkingsensors" xml:space="preserve">
+    <value>Parking senzori</value>
+  </data>
+  <data name="Choice.Reversingcamera" xml:space="preserve">
+    <value>Kamera za vožnju unazad</value>
+  </data>
+  <data name="Choice.Cruisecontrol" xml:space="preserve">
+    <value>Tempomat</value>
+  </data>
+  <data name="Choice.Towbar" xml:space="preserve">
+    <value>Kuka za vuču</value>
+  </data>
+  <data name="Choice.Bluetooth" xml:space="preserve">
+    <value>Bluetooth</value>
+  </data>
+  <data name="Choice.Alloywheels" xml:space="preserve">
+    <value>Alu felne</value>
+  </data>
+  <data name="Choice.Insurance" xml:space="preserve">
+    <value>Osiguranje</value>
+  </data>
+  <data name="Choice.Registration" xml:space="preserve">
+    <value>Registracija</value>
+  </data>
+  <data name="Choice.Inspection" xml:space="preserve">
+    <value>Tehnički pregled</value>
+  </data>
+  <data name="Choice.Roadtax" xml:space="preserve">
+    <value>Porez na vozilo</value>
+  </data>
+  <data name="Choice.Vignette" xml:space="preserve">
+    <value>Vinjeta</value>
+  </data>
+  <data name="Entity.Flag.Yes" xml:space="preserve">
+    <value>Da</value>
+  </data>
+  <data name="Entity.NotSet" xml:space="preserve">
+    <value>Nije uneto</value>
+  </data>
+  <data name="Entity.CheckList.Own" xml:space="preserve">
+    <value>Svoja stavka:</value>
+  </data>
+  <data name="Entity.CheckList.Add" xml:space="preserve">
+    <value>Dodaj</value>
+  </data>
+  <data name="Entity.File.Choose" xml:space="preserve">
+    <value>Izaberi datoteku…</value>
+  </data>
+  <data name="Entity.File.Remove" xml:space="preserve">
+    <value>Ukloni datoteku</value>
+  </data>
+  <data name="Entity.File.Filter" xml:space="preserve">
+    <value>Dokumenti i slike|*.pdf;*.jpg;*.jpeg;*.png;*.gif;*.bmp;*.tif;*.tiff;*.webp;*.heic|Sve datoteke|*.*</value>
+  </data>
+  <data name="Entity.File.None" xml:space="preserve">
+    <value>Nema datoteke</value>
+  </data>
+  <data name="Entity.File.Missing" xml:space="preserve">
+    <value>Datoteka „{0}” više nije u TidyMind fascikli.</value>
+  </data>
+  <data name="Entity.File.Open" xml:space="preserve">
+    <value>Otvori datoteku</value>
+  </data>
+  <data name="Entity.File.CouldntCopy" xml:space="preserve">
+    <value>„{0}” nije moguće kopirati u TidyMind fasciklu ({1}), pa dokument nije sačuvan.</value>
+  </data>
+  <data name="Entity.Card.Empty" xml:space="preserve">
+    <value>Još ništa nije uneto.</value>
+  </data>
+  <data name="Entity.Card.Fill" xml:space="preserve">
+    <value>Popuni</value>
+  </data>
+  <data name="Entity.Log.Empty" xml:space="preserve">
+    <value>Još nema unosa.</value>
+  </data>
+  <data name="Entity.Log.Odometer" xml:space="preserve">
+    <value>Stanja kilometraže</value>
+  </data>
+  <data name="Entity.Column.Reading" xml:space="preserve">
+    <value>Stanje</value>
+  </data>
+  <data name="Entity.Remind.DaysBefore.One" xml:space="preserve">
+    <value>{0} dan ranije</value>
+  </data>
+  <data name="Entity.Remind.DaysBefore.Few" xml:space="preserve">
+    <value>{0} dana ranije</value>
+  </data>
+  <data name="Entity.Remind.DaysBefore.Other" xml:space="preserve">
+    <value>{0} dana ranije</value>
+  </data>
+  <data name="Entity.Remind.None" xml:space="preserve">
+    <value>Bez podsetnika</value>
+  </data>
+  <data name="Entity.Reminder.Failed" xml:space="preserve">
+    <value>Vozilo je sačuvano, ali podsetnik za dokument nije moguće postaviti ili ukloniti (reminders.json ili Windows planer zadataka nije odgovorio). Proveri u Podsetnicima.</value>
+  </data>
+  <data name="Entity.Reminder.Message" xml:space="preserve">
+    <value>{0} ističe {1}.</value>
+  </data>
+  <data name="Vehicle.AddPictures" xml:space="preserve">
+    <value>Dodaj slike</value>
+  </data>
+  <data name="Vehicle.EditBasics" xml:space="preserve">
+    <value>Izmeni naziv i slike</value>
+  </data>
+  <data name="Vehicle.Odometer.Update" xml:space="preserve">
+    <value>Ažuriraj kilometražu</value>
+  </data>
+  <data name="Vehicle.Odometer.None" xml:space="preserve">
+    <value>Još nema stanja kilometraže</value>
+  </data>
+  <data name="Vehicle.Odometer.Prompt" xml:space="preserve">
+    <value>Trenutno stanje ({0})</value>
+  </data>
+  <data name="Vehicle.Odometer.Lower" xml:space="preserve">
+    <value>To je manje od prethodnog stanja ({0}). Ipak sačuvati?</value>
+  </data>
+  <data name="Vehicle.Overview.Deadlines" xml:space="preserve">
+    <value>Predstojeći rokovi</value>
+  </data>
+  <data name="Vehicle.Overview.NoDeadlines" xml:space="preserve">
+    <value>Još nema rokova. Dodaj dokumenta vozila (osiguranje, tehnički pregled, porez…) sa datumom isteka i pojaviće se ovde, na kartici i na Početnoj.</value>
+  </data>
+  <data name="Vehicle.Overview.AllDocuments" xml:space="preserve">
+    <value>Sva dokumenta</value>
+  </data>
+  <data name="Vehicle.Overview.KeySpecs" xml:space="preserve">
+    <value>Osnovni podaci</value>
+  </data>
+  <data name="Vehicle.Overview.NoSpecs" xml:space="preserve">
+    <value>Marka, model i motor još nisu uneti.</value>
+  </data>
+  <data name="Vehicle.Overview.AddSpecs" xml:space="preserve">
+    <value>Unesi podatke</value>
+  </data>
+  <data name="Vehicle.Overview.AllSpecs" xml:space="preserve">
+    <value>Svi podaci</value>
+  </data>
+  <data name="Vehicle.Overview.LastService" xml:space="preserve">
+    <value>Poslednji servis</value>
+  </data>
+  <data name="Vehicle.Overview.NoService" xml:space="preserve">
+    <value>Još nema upisanog servisa.</value>
+  </data>
+  <data name="Settings.Currency.Title" xml:space="preserve">
+    <value>Valuta</value>
+  </data>
+  <data name="Settings.Currency.Note" xml:space="preserve">
+    <value>Prikazuje se uz cene. Ako je prazno: {0}, iz regionalnih podešavanja računara.</value>
   </data>
 </root>

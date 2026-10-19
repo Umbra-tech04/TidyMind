@@ -48,6 +48,22 @@ namespace TidyMind
             }
         }
 
+        // Every collection's items, for a decision that must see all of them (whether a file is still used): false
+        // if the list of memories or any collection can't be read.
+        public static bool TryLoadAll(out List<Entity> items)
+        {
+            items = new List<Entity>();
+            if (!ProfileManager.TryLoadProfiles(out List<Profile> profiles, out _))
+                return false;
+            foreach (Profile memory in profiles.Where(p => p.Type == ProfileType.Collection))
+            {
+                if (!TryLoad(memory, out List<Entity> some, out _))
+                    return false;
+                items.AddRange(some);
+            }
+            return true;
+        }
+
         // For views that only show items (search): an unreadable file contributes none.
         public static List<Entity> LoadOrEmpty(Profile memory)
         {

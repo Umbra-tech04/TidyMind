@@ -31,8 +31,8 @@ namespace TidyMind
     public class DashboardExpiry
     {
         public string ItemName { get; set; } = "";
-        public FieldDefinition Field { get; set; } = new FieldDefinition();
-        public string Name => Field.ExpiryName; // in the current language, also for an entry cached before a switch
+        public Deadline Deadline { get; set; } = null!;
+        public string Name => Deadline.Name; // in the current language, also for an entry cached before a switch
         public string MemoryName { get; set; } = "";
         public DateTime Date { get; set; }
         public SearchResult Target { get; set; } = new SearchResult();
@@ -60,16 +60,17 @@ namespace TidyMind
             List<CalendarDay> days = CalendarService.LoadDays();
 
             HashSet<Guid>? blockIds = DayPlanReminders.BlockIds();
-            data.TodayItems = ItemsOn(today, reminders, days, blockIds);
+            Dictionary<Guid, EntityRecord>? documents = reminders.Count == 0 ? null : VehicleReminders.DocumentIndex();
+            data.TodayItems = ItemsOn(today, reminders, days, blockIds, documents);
 
             // Every occurrence: Home shows the week day by day, so a daily reminder belongs on each of its days.
             for (int day = 1; day <= UpcomingDays; day++)
-                data.UpcomingItems.AddRange(ItemsOn(today.AddDays(day), reminders, days, blockIds));
+                data.UpcomingItems.AddRange(ItemsOn(today.AddDays(day), reminders, days, blockIds, documents));
         }
 
         // The day's note first (it covers the whole day), then its reminders by time.
         private static List<DashboardAgendaItem> ItemsOn(DateTime date, List<Reminder> reminders, List<CalendarDay> days,
-            ISet<Guid>? blockIds)
+            ISet<Guid>? blockIds, IReadOnlyDictionary<Guid, EntityRecord>? documents)
         {
             List<DashboardAgendaItem> items = new List<DashboardAgendaItem>();
 
@@ -95,7 +96,7 @@ namespace TidyMind
                     Kind = AgendaKind.Reminder,
                     Date = date,
                     Time = date + reminder.NextFireTime.TimeOfDay,
-                    Text = reminder.Message,
+                    Text = VehicleReminders.ShownMessage(reminder, documents),
                     Detail = string.Join("  ·  ", new[] { title, repeat }.Where(s => s != null)),
                     Reminder = reminder
                 });
@@ -131,7 +132,7 @@ namespace TidyMind
                         .SelectMany(entity => EntityTypes.Expiries(entity).Select(expiry => new DashboardExpiry
                         {
                             ItemName = entity.Name ?? "",
-                            Field = expiry.Field,
+                            Deadline = expiry,
                             Date = expiry.Date,
                             Target = new SearchResult { Kind = SearchResultKind.Entity, Title = entity.Name, Profile = profile, ItemId = entity.Id }
                         }))

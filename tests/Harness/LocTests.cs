@@ -234,7 +234,8 @@ static partial class Program
         }
         // Choice values, palette names and repeat types are looked up by the stored value or name.
         IEnumerable<string> choiceValues = Choices.Material.Concat(Choices.Season).Concat(Choices.Condition)
-            .Concat(EntityTypes.Fields(EntityTypes.Vehicle).SelectMany(fd => fd.Choices));
+            .Concat(EntityTypes.Fields(EntityTypes.Vehicle).Concat(EntityTypes.Records(EntityTypes.Vehicle).SelectMany(r => r.Fields))
+                .Where(fd => fd.ChoiceLabel.Method.DeclaringType == typeof(Choices)).SelectMany(fd => fd.Choices));
         foreach (string value in choiceValues)
             dynamic.Add("Choice." + new string(value.Where(char.IsLetterOrDigit).ToArray()));
         foreach ((string colorName, string _) in BackgroundDialog.Palette)
@@ -468,8 +469,9 @@ static partial class Program
         {
             main.ShowSample(ProfileType.Collection);
             await Wait(400);
-            Entity bike = EntityStore.Load(WelcomeMemory.Find(Profiles(main), ProfileType.Collection)).OrderBy(e => e.Order).Last();
-            ((CollectionView)Content(main)).Reveal(bike.Id);
+            // A garment: its detail card on the page (a vehicle opens its own window, a page of its own below).
+            Entity garment = EntityStore.Load(WelcomeMemory.Find(Profiles(main), ProfileType.Collection)).OrderBy(e => e.Order).Last(e => e.EntityType == EntityTypes.Clothing);
+            ((CollectionView)Content(main)).Reveal(garment.Id);
             await Wait(300);
         }, main, "03-collection");
         await Page("Day Plan (timeline)", async () =>
@@ -554,6 +556,7 @@ static partial class Program
             ("Day plan block", () => Make<DayPlanBlockDialog>(null, DateTime.Today, 9 * 60, 10 * 60, (IEnumerable<Profile>)Profiles(main), new List<PlanTodo>(), null, true)),
             ("Vehicle form", () => new EntityForm(EntityTypes.Vehicle)),
             ("Clothing form", () => new EntityForm(EntityTypes.Clothing)),
+            ("Vehicle window", () => new VehicleWindow(SampleVehicle(), new VehicleWindow.Host())),
             ("Item type", () => new EntityTypeSelector()),
             ("Export format", () => new ExportFormatWindow()),
             ("Licenses", () => new LicensesWindow()),

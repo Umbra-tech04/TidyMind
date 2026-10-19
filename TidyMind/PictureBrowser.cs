@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
@@ -10,7 +11,8 @@ using System.Windows.Media;
 namespace TidyMind
 {
     // An item's pictures to look through: the selected one large, with a previous / next arrow on it, and a strip of
-    // thumbnails under it (the first marked Cover, the selected one framed). Used by the item form and the detail card.
+    // thumbnails under it (the first marked Cover, the selected one framed). Used by the item form, the detail card and
+    // the vehicle window.
     //
     // It only shows what its owner says (Show): the owner keeps the list and the selected index, the one source of
     // truth, and draws again after any change. A thumbnail click, an arrow or the Left / Right key asks for another
@@ -169,6 +171,24 @@ namespace TidyMind
 
             if (Selected >= 0 && (keyboardInStrip || (focusedArrow != null && !focusedArrow.IsEnabled)))
                 strip.Children[Selected].Focus();
+        }
+
+        // An item's stored pictures (EntityImages names) with `selected` large. What is decoded already is drawn at once;
+        // the rest is decoded off the UI thread and drawn then, if stillShowing (once: a missing file stays empty).
+        public void ShowStored(IReadOnlyList<string> names, int selected, Func<bool> stillShowing)
+        {
+            List<ImageSource> shown = names.Select(n => (ImageSource)EntityImages.Loaded(n)).ToList();
+            Show(shown, selected);
+            List<string> missing = names.Where((n, i) => shown[i] == null).Distinct().ToList();
+            if (missing.Count > 0)
+                _ = DecodeAndShow(names, missing, stillShowing);
+        }
+
+        private async System.Threading.Tasks.Task DecodeAndShow(IReadOnlyList<string> names, List<string> missing, Func<bool> stillShowing)
+        {
+            await System.Threading.Tasks.Task.WhenAll(missing.Select(EntityImages.LoadAsync));
+            if (stillShowing())
+                Show(names.Select(n => (ImageSource)EntityImages.Loaded(n)).ToList(), Selected);
         }
 
         private static FrameworkElement Thumbnail(ImageSource picture, bool cover, bool selected)

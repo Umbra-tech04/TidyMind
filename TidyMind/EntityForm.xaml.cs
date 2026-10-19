@@ -40,9 +40,9 @@ namespace TidyMind
         private TextBox brandBox, colorBox, priceBox;
         private ComboBox materialBox, seasonBox;
 
-        // Types with a definition (EntityTypes, e.g. Vehicle): one control per field, one LogEditor per log.
-        private readonly Dictionary<FieldDefinition, Control> fieldControls = new Dictionary<FieldDefinition, Control>();
-        private readonly Dictionary<LogDefinition, LogEditor> logEditors = new Dictionary<LogDefinition, LogEditor>();
+        // Types with a definition (EntityTypes, e.g. Vehicle): an input for each field it asks for here (InForm); the
+        // rest is filled in the vehicle's window.
+        private readonly List<FieldEditor> fieldEditors = new List<FieldEditor>();
 
         public EntityForm(string entityType)
         {
@@ -77,18 +77,12 @@ namespace TidyMind
             priceBox?.Text, GetComboValue(materialBox), GetComboValue(seasonBox),
             string.Join("|", pictures.Select(p => p.Stored ?? p.PickedFile)),
             JsonSerializer.Serialize(sizes),
-            string.Join("\n", fieldControls.Select(f => FieldValue(f.Key, f.Value))),
-            JsonSerializer.Serialize(logEditors.Values.Select(editor => editor.Rows)));
+            string.Join("\n", fieldEditors.Select(f => f.Value)));
 
         // Closing without saving (X, Alt+F4) asks first when something was typed or changed; Save doesn't.
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
         {
-            // A log cell still being typed in counts too: leaving it stores it (TextEditing.InlineEditor).
-            if (DialogResult != true)
-                System.Windows.Input.Keyboard.ClearFocus();
-
-            // A refused log value (red line under its table) counts as a change, so it isn't dropped without asking.
-            if (DialogResult != true && (CurrentInput() != opened || logEditors.Values.Any(editor => editor.HasProblem))
+            if (DialogResult != true && CurrentInput() != opened
                 && Msg.Show(this, Loc.T("Common.DiscardChanges"), Loc.T("Common.UnsavedChanges"), MessageBoxButton.YesNo,
                     MessageBoxImage.Question) != MessageBoxResult.Yes)
                 e.Cancel = true;
@@ -109,89 +103,27 @@ namespace TidyMind
         {
             FormPanel.Children.Clear();
             AddImagePicker();
-            AddTextBox(EntityTypes.NameLabel(entityType), ref nameBox);
+            AddTextBox(Loc.T("Entity.Field.Name"), ref nameBox);
             if (EntityTypes.Fields(entityType).Count > 0)
                 BuildDefinedFields();
             else
                 BuildClothing();
             AddTextBoxMultiline(Loc.T("Entity.Field.Notes"), ref notesBox);
-            BuildLogs();
         }
 
         // ---- Types with a definition (EntityTypes) -------------------------
 
+        // The fields it asks for here, starting from the item's values when editing.
         private void BuildDefinedFields()
         {
-            foreach (FieldDefinition field in EntityTypes.Fields(entityType))
+            Entity owner = existing ?? new Entity { EntityType = entityType };
+            foreach (FieldDefinition field in EntityTypes.Fields(entityType).Where(f => f.InForm))
             {
-                if (field.Kind == ValueKind.Choice)
-                {
-                    ComboBox combo = null;
-                    AddComboBox(field.Label, ref combo, field.Choices);
-                    fieldControls[field] = combo;
-                }
-                else if (field.Kind == ValueKind.Date)
-                    fieldControls[field] = AddDatePicker(field);
-                else
-                {
-                    TextBox box = null;
-                    AddTextBox(field.Label, ref box);
-                    fieldControls[field] = box;
-                }
-            }
-        }
-
-        // An expiry date says how close it is beside the picker ("in 12 days"), highlighted within 30 days.
-        private DatePicker AddDatePicker(FieldDefinition field)
-        {
-            AddLabel(field.Label);
-            StackPanel row = new StackPanel { Orientation = Orientation.Horizontal };
-            DatePicker picker = new DatePicker { Width = 180, Height = 32, VerticalContentAlignment = VerticalAlignment.Center };
-            System.Windows.Automation.AutomationProperties.SetName(picker, field.Label);
-            row.Children.Add(picker);
-
-            if (field.IsExpiry)
-            {
-                TextBlock status = new TextBlock { FontSize = 12, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0, 0, 0) };
-                picker.SelectedDateChanged += (s, e) =>
-                {
-                    DateTime? date = picker.SelectedDate;
-                    ExpiryLevel level = date == null ? ExpiryLevel.Later : Expiry.Level(date.Value, DateTime.Today);
-                    status.Text = date == null ? "" : Expiry.Describe(date.Value, DateTime.Today);
-                    status.Foreground = Expiry.Brush(level);
-                    status.FontWeight = Expiry.Weight(level);
-                };
-                row.Children.Add(status);
-            }
-
-            FormPanel.Children.Add(row);
-            return picker;
-        }
-
-        private void BuildLogs()
-        {
-            IReadOnlyList<LogDefinition> logs = EntityTypes.Logs(entityType);
-            if (logs.Count > 0)
-                Width = 600; // room for the log columns
-
-            foreach (LogDefinition log in logs)
-            {
-                AddLabel(log.Label);
-                LogEditor editor = new LogEditor(log);
-                logEditors[log] = editor;
-                FormPanel.Children.Add(editor);
-            }
-        }
-
-        // The field's value in its stored form: "" for nothing, null if a number field holds something else.
-        private string FieldValue(FieldDefinition field, Control control)
-        {
-            switch (control)
-            {
-                case ComboBox combo: return GetComboValue(combo) ?? "";
-                case DatePicker picker: return Values.FromDate(picker.SelectedDate) ?? "";
-                case TextBox box: return Values.Normalize(field.Kind, box.Text);
-                default: return "";
+                FieldEditor editor = new FieldEditor(field, owner, field.Read(owner));
+                fieldEditors.Add(editor);
+                if (!editor.HasOwnLabel)
+                    AddLabel(field.Label);
+                FormPanel.Children.Add(editor.Element);
             }
         }
 
@@ -527,16 +459,6 @@ namespace TidyMind
             selectedPicture = 0;
             ShowPictures();
 
-            foreach (KeyValuePair<FieldDefinition, Control> field in fieldControls)
-            {
-                string value = field.Key.Get(e);
-                if (field.Value is ComboBox combo) SetComboBox(combo, value);
-                else if (field.Value is DatePicker picker) picker.SelectedDate = Values.ParseDate(value);
-                else if (field.Value is TextBox box) box.Text = value ?? "";
-            }
-            foreach (KeyValuePair<LogDefinition, LogEditor> log in logEditors)
-                log.Value.Load(EntityTypes.Rows(e, log.Key));
-
             if (sizesPanel == null)
                 return; // the rest is Clothing's
 
@@ -560,30 +482,20 @@ namespace TidyMind
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            // A log value that was just refused: fix it first (the reason is under its table).
-            LogEditor? refused = logEditors.Values.FirstOrDefault(editor => editor.HasProblem);
-            if (refused != null)
-            {
-                refused.BringIntoView();
-                return;
-            }
-
             if (string.IsNullOrWhiteSpace(nameBox?.Text))
             {
-                Msg.Show(this, Loc.F("Entity.Required", EntityTypes.NameLabel(entityType)), Loc.T("Common.Error"),
+                Msg.Show(this, Loc.F("Entity.Required", Loc.T("Entity.Field.Name")), Loc.T("Common.Error"),
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            foreach (KeyValuePair<FieldDefinition, Control> field in fieldControls)
+            FieldEditor unreadable = fieldEditors.FirstOrDefault(editor => editor.Value == null);
+            if (unreadable != null)
             {
-                if (FieldValue(field.Key, field.Value) == null)
-                {
-                    Msg.Show(this, Loc.F("Entity.NeedsNumber", field.Key.Label), Loc.T("Common.Error"), MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
-                    field.Value.Focus();
-                    return;
-                }
+                Msg.Show(this, Loc.F("Entity.NeedsNumber", unreadable.Field.Label), Loc.T("Common.Error"), MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                unreadable.Focus();
+                return;
             }
 
             // A copy through JSON carries everything, including fields this version doesn't know (ExtensionData).
@@ -593,30 +505,19 @@ namespace TidyMind
             ResultEntity.EntityType = entityType;
             ResultEntity.Name = nameBox.Text;
             ResultEntity.Notes = notesBox?.Text;
-            ResultEntity.Brand = brandBox?.Text;
-            ResultEntity.Color = colorBox?.Text;
-            ResultEntity.PurchasePrice = priceBox?.Text;
-            ResultEntity.Material = GetComboValue(materialBox);
-            ResultEntity.Season = GetComboValue(seasonBox);
-            ResultEntity.Sizes = sizes;
+            foreach (FieldEditor editor in fieldEditors)
+                editor.Field.Write(ResultEntity, editor.Value);
 
-            foreach (KeyValuePair<FieldDefinition, Control> field in fieldControls)
+            // Clothing's own fields; a type with a definition keeps its others (a vehicle's color is one of them).
+            if (sizesPanel != null)
             {
-                string value = FieldValue(field.Key, field.Value);
-                field.Key.Set(ResultEntity, value.Length == 0 ? null : value);
+                ResultEntity.Brand = brandBox.Text;
+                ResultEntity.Color = colorBox.Text;
+                ResultEntity.PurchasePrice = priceBox.Text;
+                ResultEntity.Material = GetComboValue(materialBox);
+                ResultEntity.Season = GetComboValue(seasonBox);
+                ResultEntity.Sizes = sizes;
             }
-
-            // Only logs with rows are stored; logs this version doesn't know stay as they were.
-            foreach (KeyValuePair<LogDefinition, LogEditor> log in logEditors)
-            {
-                List<Dictionary<string, string>> rows = log.Value.FilledRows;
-                if (rows.Count > 0)
-                    (ResultEntity.Logs ??= new Dictionary<string, List<Dictionary<string, string>>>())[log.Key.Key] = rows;
-                else
-                    ResultEntity.Logs?.Remove(log.Key.Key);
-            }
-            if (ResultEntity.Logs?.Count == 0)
-                ResultEntity.Logs = null;
 
             this.DialogResult = true;
             this.Close();

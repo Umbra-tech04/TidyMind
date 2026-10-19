@@ -572,12 +572,6 @@ Your last change wasn't saved.</value>
   <data name="Entity.Edit.Vehicle" xml:space="preserve">
     <value>Edit vehicle</value>
   </data>
-  <data name="Entity.Expiry.Inspection" xml:space="preserve">
-    <value>Inspection</value>
-  </data>
-  <data name="Entity.Expiry.Insurance" xml:space="preserve">
-    <value>Insurance</value>
-  </data>
   <data name="Entity.ExpiryLine" xml:space="preserve">
     <value>{0} {1}</value>
   </data>
@@ -590,17 +584,8 @@ Your last change wasn't saved.</value>
   <data name="Entity.Field.Pictures" xml:space="preserve">
     <value>Pictures</value>
   </data>
-  <data name="Entity.Field.Inspection" xml:space="preserve">
-    <value>Inspection expires</value>
-  </data>
-  <data name="Entity.Field.Insurance" xml:space="preserve">
-    <value>Insurance expires</value>
-  </data>
   <data name="Entity.Field.Kind" xml:space="preserve">
     <value>Kind</value>
-  </data>
-  <data name="Entity.Field.MakeModel" xml:space="preserve">
-    <value>Make and model</value>
   </data>
   <data name="Entity.Field.Material" xml:space="preserve">
     <value>Material</value>
@@ -612,13 +597,13 @@ Your last change wasn't saved.</value>
     <value>Notes</value>
   </data>
   <data name="Entity.Field.Odometer" xml:space="preserve">
-    <value>Odometer (km)</value>
+    <value>Odometer</value>
   </data>
   <data name="Entity.Field.Plate" xml:space="preserve">
     <value>Plate</value>
   </data>
   <data name="Entity.Field.PurchasePrice" xml:space="preserve">
-    <value>Purchase Price</value>
+    <value>Purchase price</value>
   </data>
   <data name="Entity.Field.Season" xml:space="preserve">
     <value>Season</value>
@@ -2750,5 +2735,401 @@ On the last page, the arrow starts a new page.</value>
   </data>
   <data name="Welcome.Trip.Task4" xml:space="preserve">
     <value>Check the weather</value>
+  </data>
+  <data name="Entity.Field.Make" xml:space="preserve">
+    <value>Make</value>
+  </data>
+  <data name="Entity.Field.Model" xml:space="preserve">
+    <value>Model</value>
+  </data>
+  <data name="Entity.Field.Edition" xml:space="preserve">
+    <value>Edition (generation, trim)</value>
+  </data>
+  <data name="Entity.Field.BodyType" xml:space="preserve">
+    <value>Body type</value>
+  </data>
+  <data name="Entity.Field.FirstRegistration" xml:space="preserve">
+    <value>First registration</value>
+  </data>
+  <data name="Entity.Field.Vin" xml:space="preserve">
+    <value>VIN</value>
+  </data>
+  <data name="Entity.Field.RegistrationNumber" xml:space="preserve">
+    <value>Registration document no.</value>
+  </data>
+  <data name="Entity.Field.EngineCode" xml:space="preserve">
+    <value>Engine code</value>
+  </data>
+  <data name="Entity.Field.Displacement" xml:space="preserve">
+    <value>Displacement</value>
+  </data>
+  <data name="Entity.Field.Power" xml:space="preserve">
+    <value>Power</value>
+  </data>
+  <data name="Entity.Field.Torque" xml:space="preserve">
+    <value>Torque</value>
+  </data>
+  <data name="Entity.Field.Fuel" xml:space="preserve">
+    <value>Fuel</value>
+  </data>
+  <data name="Entity.Field.Gearbox" xml:space="preserve">
+    <value>Gearbox</value>
+  </data>
+  <data name="Entity.Field.Gears" xml:space="preserve">
+    <value>Number of gears</value>
+  </data>
+  <data name="Entity.Field.Drive" xml:space="preserve">
+    <value>Drive</value>
+  </data>
+  <data name="Entity.Field.EmissionClass" xml:space="preserve">
+    <value>Emission class</value>
+  </data>
+  <data name="Entity.Field.Consumption" xml:space="preserve">
+    <value>Factory consumption</value>
+  </data>
+  <data name="Entity.Field.Co2" xml:space="preserve">
+    <value>CO2 emissions</value>
+  </data>
+  <data name="Entity.Field.Doors" xml:space="preserve">
+    <value>Doors</value>
+  </data>
+  <data name="Entity.Field.Seats" xml:space="preserve">
+    <value>Seats</value>
+  </data>
+  <data name="Entity.Field.KerbWeight" xml:space="preserve">
+    <value>Kerb weight</value>
+  </data>
+  <data name="Entity.Field.GrossWeight" xml:space="preserve">
+    <value>Permitted gross weight</value>
+  </data>
+  <data name="Entity.Field.BootCapacity" xml:space="preserve">
+    <value>Boot capacity</value>
+  </data>
+  <data name="Entity.Field.PurchaseDate" xml:space="preserve">
+    <value>Purchase date</value>
+  </data>
+  <data name="Entity.Field.PurchaseOdometer" xml:space="preserve">
+    <value>Odometer at purchase</value>
+  </data>
+  <data name="Entity.Field.PreviousOwners" xml:space="preserve">
+    <value>Previous owners</value>
+  </data>
+  <data name="Entity.Field.ServiceBook" xml:space="preserve">
+    <value>Service book present</value>
+  </data>
+  <data name="Entity.Field.AccidentHistory" xml:space="preserve">
+    <value>Accident history</value>
+  </data>
+  <data name="Entity.Field.Equipment" xml:space="preserve">
+    <value>Equipment and extras</value>
+  </data>
+  <data name="Entity.Field.OdometerUnit" xml:space="preserve">
+    <value>Distance unit</value>
+  </data>
+  <data name="Entity.Field.Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Entity.Field.Number" xml:space="preserve">
+    <value>Number</value>
+  </data>
+  <data name="Entity.Field.ValidUntil" xml:space="preserve">
+    <value>Valid until</value>
+  </data>
+  <data name="Entity.Field.RemindDays" xml:space="preserve">
+    <value>Reminder</value>
+  </data>
+  <data name="Entity.Field.File" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="Entity.Section.Identity" xml:space="preserve">
+    <value>Identity</value>
+  </data>
+  <data name="Entity.Section.Engine" xml:space="preserve">
+    <value>Engine and drivetrain</value>
+  </data>
+  <data name="Entity.Section.Body" xml:space="preserve">
+    <value>Body and dimensions</value>
+  </data>
+  <data name="Entity.Section.Ownership" xml:space="preserve">
+    <value>Ownership</value>
+  </data>
+  <data name="Entity.Section.Odometer" xml:space="preserve">
+    <value>Odometer</value>
+  </data>
+  <data name="Entity.Section.Notes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="Entity.Records.Documents" xml:space="preserve">
+    <value>Documents</value>
+  </data>
+  <data name="Entity.Records.Documents.Add" xml:space="preserve">
+    <value>Add document</value>
+  </data>
+  <data name="Entity.Records.Documents.Empty" xml:space="preserve">
+    <value>No documents yet. Add the insurance, registration, inspection, road tax or vignette with the date it runs out: it shows on the card and on Home, and you can be reminded in time.</value>
+  </data>
+  <data name="Entity.Tab.Overview" xml:space="preserve">
+    <value>Overview</value>
+  </data>
+  <data name="Entity.Tab.Specs" xml:space="preserve">
+    <value>Specs</value>
+  </data>
+  <data name="Entity.Tab.Documents" xml:space="preserve">
+    <value>Documents</value>
+  </data>
+  <data name="Entity.Tab.Service" xml:space="preserve">
+    <value>Service &amp; costs</value>
+  </data>
+  <data name="Entity.Unit.km" xml:space="preserve">
+    <value>km</value>
+  </data>
+  <data name="Entity.Unit.mi" xml:space="preserve">
+    <value>mi</value>
+  </data>
+  <data name="Entity.Unit.kW" xml:space="preserve">
+    <value>kW</value>
+  </data>
+  <data name="Entity.Unit.hp" xml:space="preserve">
+    <value>hp</value>
+  </data>
+  <data name="Entity.Unit.Nm" xml:space="preserve">
+    <value>Nm</value>
+  </data>
+  <data name="Entity.Unit.cm3" xml:space="preserve">
+    <value>cm³</value>
+  </data>
+  <data name="Entity.Unit.kg" xml:space="preserve">
+    <value>kg</value>
+  </data>
+  <data name="Entity.Unit.l" xml:space="preserve">
+    <value>l</value>
+  </data>
+  <data name="Entity.Unit.l100km" xml:space="preserve">
+    <value>l/100 km</value>
+  </data>
+  <data name="Entity.Unit.gkm" xml:space="preserve">
+    <value>g/km</value>
+  </data>
+  <data name="Choice.Sedan" xml:space="preserve">
+    <value>Sedan</value>
+  </data>
+  <data name="Choice.Hatchback" xml:space="preserve">
+    <value>Hatchback</value>
+  </data>
+  <data name="Choice.Estate" xml:space="preserve">
+    <value>Estate</value>
+  </data>
+  <data name="Choice.Coupe" xml:space="preserve">
+    <value>Coupé</value>
+  </data>
+  <data name="Choice.Convertible" xml:space="preserve">
+    <value>Convertible</value>
+  </data>
+  <data name="Choice.SUV" xml:space="preserve">
+    <value>SUV</value>
+  </data>
+  <data name="Choice.MPV" xml:space="preserve">
+    <value>MPV</value>
+  </data>
+  <data name="Choice.Pickup" xml:space="preserve">
+    <value>Pickup</value>
+  </data>
+  <data name="Choice.Van" xml:space="preserve">
+    <value>Van</value>
+  </data>
+  <data name="Choice.Petrol" xml:space="preserve">
+    <value>Petrol</value>
+  </data>
+  <data name="Choice.Diesel" xml:space="preserve">
+    <value>Diesel</value>
+  </data>
+  <data name="Choice.Hybrid" xml:space="preserve">
+    <value>Hybrid</value>
+  </data>
+  <data name="Choice.Pluginhybrid" xml:space="preserve">
+    <value>Plug-in hybrid</value>
+  </data>
+  <data name="Choice.Electric" xml:space="preserve">
+    <value>Electric</value>
+  </data>
+  <data name="Choice.LPG" xml:space="preserve">
+    <value>LPG</value>
+  </data>
+  <data name="Choice.CNG" xml:space="preserve">
+    <value>CNG</value>
+  </data>
+  <data name="Choice.Manual" xml:space="preserve">
+    <value>Manual</value>
+  </data>
+  <data name="Choice.Automatic" xml:space="preserve">
+    <value>Automatic</value>
+  </data>
+  <data name="Choice.Frontwheel" xml:space="preserve">
+    <value>Front-wheel</value>
+  </data>
+  <data name="Choice.Rearwheel" xml:space="preserve">
+    <value>Rear-wheel</value>
+  </data>
+  <data name="Choice.Allwheel" xml:space="preserve">
+    <value>All-wheel</value>
+  </data>
+  <data name="Choice.Airconditioning" xml:space="preserve">
+    <value>Air conditioning</value>
+  </data>
+  <data name="Choice.Navigation" xml:space="preserve">
+    <value>Navigation</value>
+  </data>
+  <data name="Choice.Leatherseats" xml:space="preserve">
+    <value>Leather seats</value>
+  </data>
+  <data name="Choice.Heatedseats" xml:space="preserve">
+    <value>Heated seats</value>
+  </data>
+  <data name="Choice.Parkingsensors" xml:space="preserve">
+    <value>Parking sensors</value>
+  </data>
+  <data name="Choice.Reversingcamera" xml:space="preserve">
+    <value>Reversing camera</value>
+  </data>
+  <data name="Choice.Cruisecontrol" xml:space="preserve">
+    <value>Cruise control</value>
+  </data>
+  <data name="Choice.Towbar" xml:space="preserve">
+    <value>Tow bar</value>
+  </data>
+  <data name="Choice.Bluetooth" xml:space="preserve">
+    <value>Bluetooth</value>
+  </data>
+  <data name="Choice.Alloywheels" xml:space="preserve">
+    <value>Alloy wheels</value>
+  </data>
+  <data name="Choice.Insurance" xml:space="preserve">
+    <value>Insurance</value>
+  </data>
+  <data name="Choice.Registration" xml:space="preserve">
+    <value>Registration</value>
+  </data>
+  <data name="Choice.Inspection" xml:space="preserve">
+    <value>Inspection</value>
+  </data>
+  <data name="Choice.Roadtax" xml:space="preserve">
+    <value>Road tax</value>
+  </data>
+  <data name="Choice.Vignette" xml:space="preserve">
+    <value>Vignette</value>
+  </data>
+  <data name="Entity.Flag.Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="Entity.NotSet" xml:space="preserve">
+    <value>Not set</value>
+  </data>
+  <data name="Entity.CheckList.Own" xml:space="preserve">
+    <value>Add your own:</value>
+  </data>
+  <data name="Entity.CheckList.Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Entity.File.Choose" xml:space="preserve">
+    <value>Choose file…</value>
+  </data>
+  <data name="Entity.File.Remove" xml:space="preserve">
+    <value>Remove file</value>
+  </data>
+  <data name="Entity.File.Filter" xml:space="preserve">
+    <value>Documents and pictures|*.pdf;*.jpg;*.jpeg;*.png;*.gif;*.bmp;*.tif;*.tiff;*.webp;*.heic|All files|*.*</value>
+  </data>
+  <data name="Entity.File.None" xml:space="preserve">
+    <value>No file</value>
+  </data>
+  <data name="Entity.File.Missing" xml:space="preserve">
+    <value>The file "{0}" is no longer in TidyMind's folder.</value>
+  </data>
+  <data name="Entity.File.Open" xml:space="preserve">
+    <value>Open the file</value>
+  </data>
+  <data name="Entity.File.CouldntCopy" xml:space="preserve">
+    <value>"{0}" couldn't be copied into TidyMind's folder ({1}), so the document wasn't saved.</value>
+  </data>
+  <data name="Entity.Card.Empty" xml:space="preserve">
+    <value>Nothing filled in yet.</value>
+  </data>
+  <data name="Entity.Card.Fill" xml:space="preserve">
+    <value>Fill in</value>
+  </data>
+  <data name="Entity.Log.Empty" xml:space="preserve">
+    <value>Nothing written down yet.</value>
+  </data>
+  <data name="Entity.Log.Odometer" xml:space="preserve">
+    <value>Odometer readings</value>
+  </data>
+  <data name="Entity.Column.Reading" xml:space="preserve">
+    <value>Reading</value>
+  </data>
+  <data name="Entity.Remind.DaysBefore.One" xml:space="preserve">
+    <value>{0} day before</value>
+  </data>
+  <data name="Entity.Remind.DaysBefore.Other" xml:space="preserve">
+    <value>{0} days before</value>
+  </data>
+  <data name="Entity.Remind.None" xml:space="preserve">
+    <value>No reminder</value>
+  </data>
+  <data name="Entity.Reminder.Failed" xml:space="preserve">
+    <value>The vehicle was saved, but a document's reminder couldn't be set or removed (reminders.json or the Windows Task Scheduler didn't respond). Check it in Reminders.</value>
+  </data>
+  <data name="Entity.Reminder.Message" xml:space="preserve">
+    <value>{0} runs out on {1}.</value>
+  </data>
+  <data name="Vehicle.AddPictures" xml:space="preserve">
+    <value>Add pictures</value>
+  </data>
+  <data name="Vehicle.EditBasics" xml:space="preserve">
+    <value>Edit name and pictures</value>
+  </data>
+  <data name="Vehicle.Odometer.Update" xml:space="preserve">
+    <value>Update odometer</value>
+  </data>
+  <data name="Vehicle.Odometer.None" xml:space="preserve">
+    <value>No reading yet</value>
+  </data>
+  <data name="Vehicle.Odometer.Prompt" xml:space="preserve">
+    <value>Current reading ({0})</value>
+  </data>
+  <data name="Vehicle.Odometer.Lower" xml:space="preserve">
+    <value>That's lower than the last reading ({0}). Save it anyway?</value>
+  </data>
+  <data name="Vehicle.Overview.Deadlines" xml:space="preserve">
+    <value>Coming up</value>
+  </data>
+  <data name="Vehicle.Overview.NoDeadlines" xml:space="preserve">
+    <value>No dates yet. Add the vehicle's documents (insurance, inspection, road tax…) with the date they run out, and they show up here, on the card and on Home.</value>
+  </data>
+  <data name="Vehicle.Overview.AllDocuments" xml:space="preserve">
+    <value>All documents</value>
+  </data>
+  <data name="Vehicle.Overview.KeySpecs" xml:space="preserve">
+    <value>Key specs</value>
+  </data>
+  <data name="Vehicle.Overview.NoSpecs" xml:space="preserve">
+    <value>Make, model and engine aren't filled in yet.</value>
+  </data>
+  <data name="Vehicle.Overview.AddSpecs" xml:space="preserve">
+    <value>Add specs</value>
+  </data>
+  <data name="Vehicle.Overview.AllSpecs" xml:space="preserve">
+    <value>All specs</value>
+  </data>
+  <data name="Vehicle.Overview.LastService" xml:space="preserve">
+    <value>Last service</value>
+  </data>
+  <data name="Vehicle.Overview.NoService" xml:space="preserve">
+    <value>No service written down yet.</value>
+  </data>
+  <data name="Settings.Currency.Title" xml:space="preserve">
+    <value>Currency</value>
+  </data>
+  <data name="Settings.Currency.Note" xml:space="preserve">
+    <value>Shown with prices. Left empty: {0}, from this PC's region settings.</value>
   </data>
 </root>

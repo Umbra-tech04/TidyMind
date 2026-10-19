@@ -69,6 +69,9 @@ namespace TidyMind
                 foreach (IGrouping<Profile, ExportItem> collection in items.Where(i => i.Entity != null).GroupBy(i => i.Memory))
                     AddTableSheet(workbook, collection.First().Group ?? title, title, exported, EntityTable(collection.Select(i => i.Entity).ToList()));
 
+                foreach ((string name, XlTable records) in RecordTables(items, byMemory))
+                    AddTableSheet(workbook, name, title, exported, records);
+
                 foreach ((string name, XlTable log) in LogTables(items, byMemory))
                     AddTableSheet(workbook, name, title, exported, log);
 
@@ -223,8 +226,8 @@ namespace TidyMind
             return table;
         }
 
-        // An item's values with their labels: a type's date fields as dates and its number fields as numbers; clothing
-        // (no definition) as the text shown everywhere else.
+        // An item's values with their labels: a type's date fields as dates and its number fields as numbers (the unit
+        // in the column's name), the rest as the text shown everywhere else; clothing (no definition) all as text.
         private static IEnumerable<(string Label, object Value)> EntityValues(Entity entity)
         {
             IReadOnlyList<FieldDefinition> definitions = EntityTypes.Fields(entity.EntityType);
@@ -237,13 +240,20 @@ namespace TidyMind
 
             foreach (FieldDefinition field in definitions)
             {
-                string? value = field.Get(entity);
-                if (string.IsNullOrWhiteSpace(value))
-                    continue;
-                yield return (field.Label, field.Kind == ValueKind.Choice ? Choices.Label(value) : TypedValue(field.Kind, value));
+                string? value = field.Read(entity);
+                if (!string.IsNullOrWhiteSpace(value))
+                    yield return (XlLabel(field, entity), XlValue(field, value, entity));
             }
             yield return (Loc.T("Entity.Field.Notes"), entity.Notes ?? "");
         }
+
+        private static string XlLabel(FieldDefinition field, Entity owner) =>
+            field.Unit == null ? field.Label : field.Label + " (" + Units.Label(field.Unit, owner) + ")";
+
+        // A stored value of a date or number field (culture-invariant, checked when typed in) as a date or number cell;
+        // any other as it is shown.
+        private static object XlValue(FieldDefinition field, string stored, Entity owner) =>
+            field.Kind == ValueKind.Date || field.Kind == ValueKind.Number ? TypedValue(field.Kind, stored) : field.Show(stored, owner);
 
         // A stored value of a date or number field (culture-invariant, checked when typed in) as a date or number cell.
         private static object TypedValue(ValueKind kind, string stored) => kind switch
@@ -285,6 +295,51 @@ namespace TidyMind
                 }
                 yield return (log.Label, table);
             }
+        }
+
+        // Each kind of record list the items have (a vehicle's documents) as a table: a row per record, a column per
+        // field (a file by its name), dates and numbers typed.
+        private static IEnumerable<(string Name, XlTable Table)> RecordTables(List<ExportItem> items, bool byMemory)
+        {
+            List<ExportItem> entities = items.Where(i => i.Entity != null).ToList();
+            foreach (RecordDefinition records in entities.SelectMany(i => EntityTypes.Records(i.Entity.EntityType)).Distinct())
+            {
+                List<(ExportItem Item, EntityRecord Record)> entries = entities
+                    .SelectMany(i => records.Read(i.Entity).Select(record => (Item: i, Record: record))).ToList();
+                if (entries.Count == 0)
+                    continue;
+
+                XlTable table = new XlTable();
+                if (byMemory)
+                    table.Column(Loc.T("Export.Column.Memory"), entries.Select(e => e.Item.Group), 30);
+                table.Column(Loc.T("Export.Column.Name"), entries.Select(e => NameOrUnnamed(e.Item.Name)), 30);
+                List<object[]> cells = entries.Select(e => records.Fields.Select(f => RecordCell(f, e.Record, e.Item.Entity)).ToArray()).ToList();
+                for (int c = 0; c < records.Fields.Length; c++)
+                {
+                    FieldDefinition field = records.Fields[c];
+                    List<object> column = cells.Select(row => row[c]).ToList();
+                    table.Column(field.Label, column.All(v => v is DateTime || "".Equals(v)) ? 13
+                        : FitWidth(column.Select(v => v.ToString()), field.Label, 40));
+                }
+                foreach (((ExportItem item, _), object[] values) in entries.Zip(cells))
+                {
+                    List<object> row = new List<object>();
+                    if (byMemory)
+                        row.Add(item.Group ?? "");
+                    row.Add(NameOrUnnamed(item.Name));
+                    row.AddRange(values);
+                    table.Rows.Add((row.ToArray(), false));
+                }
+                yield return (records.Label, table);
+            }
+        }
+
+        private static object RecordCell(FieldDefinition field, EntityRecord record, Entity owner)
+        {
+            if (field.Kind == ValueKind.File)
+                return record.File?.DisplayName ?? "";
+            string? stored = record.Get(field.Key);
+            return string.IsNullOrWhiteSpace(stored) ? "" : XlValue(field, stored, owner);
         }
 
         private static void AddTableSheet(XLWorkbook workbook, string name, string title, string exported, XlTable table)

@@ -50,6 +50,17 @@ namespace TidyMind
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? SkippedUpdate { get; set; }
 
+        // Settings > General: what amounts are shown in (Currency), as typed; null: the Windows region's symbol.
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? Currency { get; set; }
+
+        // The vehicle window's size when it was last closed.
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public double? VehicleWindowWidth { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public double? VehicleWindowHeight { get; set; }
+
         // Fields this version doesn't know (written by another TidyMind version): kept so saving doesn't drop them.
         [JsonExtensionData]
         public Dictionary<string, JsonElement>? ExtensionData { get; set; }

@@ -360,7 +360,7 @@ namespace TidyMind
 
             ContextMenu menu = new ContextMenu();
             MenuItem edit = new MenuItem { Header = Loc.T("Common.Edit") };
-            edit.Click += (s, e) => EditEntity(entity);
+            edit.Click += (s, e) => { if (entity.EntityType == EntityTypes.Vehicle) OpenDetail(entity); else EditEntity(entity); };
             MenuItem delete = new MenuItem { Header = Loc.T("Common.Delete") };
             delete.Click += (s, e) => DeleteEntity(entity);
             MenuItem reminder = new MenuItem { Header = Loc.T("Common.AddReminder") };
@@ -431,14 +431,14 @@ namespace TidyMind
                 });
             }
 
-            var nearest = EntityTypes.NearestExpiry(entity);
+            Deadline? nearest = EntityTypes.NearestExpiry(entity);
             if (nearest == null)
             {
                 subtitle.Text = "";
                 return;
             }
-            ExpiryLevel level = Expiry.Level(nearest.Value.Date, DateTime.Today);
-            subtitle.Text = Loc.F("Entity.ExpiryLine", nearest.Value.Field.ExpiryName, Expiry.Describe(nearest.Value.Date, DateTime.Today));
+            ExpiryLevel level = Expiry.Level(nearest.Date, DateTime.Today);
+            subtitle.Text = Loc.F("Entity.ExpiryLine", nearest.Name, Expiry.Describe(nearest.Date, DateTime.Today));
             subtitle.Foreground = Expiry.Brush(level);
             subtitle.FontWeight = Expiry.Weight(level);
         }
@@ -464,8 +464,14 @@ namespace TidyMind
             OpenDetail(entity);
         }
 
+        // A vehicle opens its own window (VehicleWindow); any other item the detail card.
         private void OpenDetail(Entity entity)
         {
+            if (entity.EntityType == EntityTypes.Vehicle)
+            {
+                OpenVehicle(entity);
+                return;
+            }
             currentDetailEntity = entity;
             ShowDetailPicture(entity, 0);
             FillDetail(entity);
@@ -480,25 +486,12 @@ namespace TidyMind
         }
 
         // The detail card's pictures: the cover first, then whichever is picked with an arrow, a key or the strip
-        // (arrows and strip only with more than one picture). What isn't decoded yet is drawn empty and decoded off
-        // the UI thread, then drawn again if the card still shows that item (once: a missing file stays empty).
-        private void ShowDetailPicture(Entity entity, int index, bool decodeMissing = true)
+        // (arrows and strip only with more than one picture), decoded off the UI thread while the card shows the item.
+        private void ShowDetailPicture(Entity entity, int index)
         {
             List<string> names = EntityImages.Names(entity);
             detailPicture = names.Count == 0 ? 0 : Math.Clamp(index, 0, names.Count - 1);
-            List<ImageSource> shown = names.Select(n => (ImageSource)EntityImages.Loaded(n)).ToList();
-            detailPictures.Show(shown, detailPicture);
-
-            List<string> missing = names.Where((n, i) => shown[i] == null).Distinct().ToList();
-            if (decodeMissing && missing.Count > 0)
-                _ = DecodeDetailPictures(entity, missing);
-        }
-
-        private async System.Threading.Tasks.Task DecodeDetailPictures(Entity entity, List<string> names)
-        {
-            await System.Threading.Tasks.Task.WhenAll(names.Select(EntityImages.LoadAsync));
-            if (currentDetailEntity == entity && OverlayGrid.Visibility == Visibility.Visible)
-                ShowDetailPicture(entity, detailPicture, decodeMissing: false);
+            detailPictures.ShowStored(names, detailPicture, () => currentDetailEntity == entity && OverlayGrid.Visibility == Visibility.Visible);
         }
 
         // The detail card's rows; filled again after a language switch.
@@ -506,39 +499,16 @@ namespace TidyMind
         {
             DetailName.Text = entity.Name;
             DetailPanel.Children.Clear();
-
-            if (EntityTypes.Fields(entity.EntityType).Count > 0)
-                AddDefinedDetails(entity);
-            else
-            {
-                AddDetailRow(Loc.T("Entity.Field.Brand"), entity.Brand);
-                AddDetailRow(Loc.T("Entity.Field.Color"), entity.Color);
-                AddDetailRow(Loc.T("Entity.Field.Material"), Choices.Label(entity.Material));
-                AddDetailRow(Loc.T("Entity.Field.Season"), Choices.Label(entity.Season));
-                AddDetailRow(Loc.T("Entity.Field.PurchasePrice"), entity.PurchasePrice);
-                AddSizesDetail(entity);
-                AddDetailRow(Loc.T("Entity.Field.Notes"), entity.Notes);
-            }
+            AddDetailRow(Loc.T("Entity.Field.Brand"), entity.Brand);
+            AddDetailRow(Loc.T("Entity.Field.Color"), entity.Color);
+            AddDetailRow(Loc.T("Entity.Field.Material"), Choices.Label(entity.Material));
+            AddDetailRow(Loc.T("Entity.Field.Season"), Choices.Label(entity.Season));
+            AddDetailRow(Loc.T("Entity.Field.PurchasePrice"), entity.PurchasePrice);
+            AddSizesDetail(entity);
+            AddDetailRow(Loc.T("Entity.Field.Notes"), entity.Notes);
         }
 
-        // A type with a definition (EntityTypes): its fields, notes and logs; an expiry date also says how close it is.
-        private void AddDefinedDetails(Entity entity)
-        {
-            foreach ((string label, string value) in EntityTypes.Describe(entity))
-            {
-                bool expiry = EntityTypes.Fields(entity.EntityType).Any(f => f.IsExpiry && f.Label == label);
-                DateTime? date = expiry ? Values.ParseDate(value) : null;
-                if (date == null)
-                {
-                    AddDetailRow(label, value);
-                    continue;
-                }
-                ExpiryLevel level = Expiry.Level(date.Value, DateTime.Today);
-                AddDetailRow(label, value + ", " + Expiry.Describe(date.Value, DateTime.Today), Expiry.Brush(level), Expiry.Weight(level));
-            }
-        }
-
-        private void AddDetailRow(string label, string value, Brush? foreground = null, FontWeight? weight = null)
+        private void AddDetailRow(string label, string value)
         {
             if (string.IsNullOrWhiteSpace(value)) return;
 
@@ -549,7 +519,7 @@ namespace TidyMind
                 FontSize = 11,
                 Margin = new Thickness(0, 8, 0, 2)
             });
-            DetailPanel.Children.Add(TextCopy.Selectable(value, 13, foreground ?? B("#1C1B19"), weight));
+            DetailPanel.Children.Add(TextCopy.Selectable(value, 13, B("#1C1B19")));
         }
 
         private void AddSizesDetail(Entity entity)
@@ -607,63 +577,93 @@ namespace TidyMind
 
         // ---- CRUD ---------------------------------------------------------
 
+        // A new vehicle opens in its window straight away, for everything the short form doesn't ask.
         private void AddEntityButton_Click(object sender, RoutedEventArgs e)
         {
             EntityTypeSelector selector = new EntityTypeSelector();
-            if (selector.ShowDialog() == true)
-            {
-                EntityForm form = new EntityForm(selector.SelectedType);
-                if (form.ShowDialog() == true)
-                {
-                    Entity added = form.ResultEntity;
-                    added.Id = Guid.NewGuid();
-                    added.TabId = tabStrip.ActiveTabId;
-                    added.Order = entities.Count == 0 ? 0 : entities.Max(x => x.Order) + 1;
-                    added.CreatedDate = DateTime.Now;
-                    List<string> imported = ApplyPictures(added, form.Pictures);
-
-                    entities.Add(added);
-                    if (!SaveEntities())
-                    {
-                        entities.Remove(added);
-                        RemoveCopies(imported);
-                    }
-                    RenderEntities();
-                }
-            }
-        }
-
-        // The form edits a copy (Id, tab, place and fields it doesn't show come along). Newly picked pictures are
-        // copied in, and the pictures the item no longer has are deleted only once it is saved without them (and no
-        // other item uses them); if the save fails, the item stays as it was and the new copies go again.
-        private void EditEntity(Entity entity)
-        {
-            EntityForm form = new EntityForm(entity);
+            if (selector.ShowDialog() != true)
+                return;
+            EntityForm form = new EntityForm(selector.SelectedType);
             if (form.ShowDialog() != true)
                 return;
 
-            Entity edited = form.ResultEntity;
-            List<string> imported = ApplyPictures(edited, form.Pictures);
+            Entity added = form.ResultEntity;
+            added.Id = Guid.NewGuid();
+            added.TabId = tabStrip.ActiveTabId;
+            added.Order = entities.Count == 0 ? 0 : entities.Max(x => x.Order) + 1;
+            added.CreatedDate = DateTime.Now;
+            List<string> imported = ApplyPictures(added, form.Pictures);
 
-            // By Id, since a reload replaces the list's objects. An item deleted meanwhile has nothing to save into.
-            int index = entities.FindIndex(x => x.Id == entity.Id);
-            if (index < 0)
+            entities.Add(added);
+            if (!SaveEntities())
             {
+                entities.Remove(added);
                 RemoveCopies(imported);
                 RenderEntities();
                 return;
             }
+            RenderEntities();
+            if (added.EntityType == EntityTypes.Vehicle)
+                OpenVehicle(added);
+        }
+
+        // The form edits a copy (Id, tab, place and fields it doesn't show come along). Newly picked pictures are
+        // copied in; if the item can't be saved, it stays as it was and the new copies go again. Returns the item as
+        // saved, or null.
+        private Entity EditEntity(Entity entity)
+        {
+            EntityForm form = new EntityForm(entity);
+            if (form.ShowDialog() != true)
+                return null;
+
+            Entity edited = form.ResultEntity;
+            List<string> imported = ApplyPictures(edited, form.Pictures);
+            bool saved = Replace(edited);
+            if (!saved)
+                RemoveCopies(imported);
+            RenderEntities();
+            return saved ? edited : null;
+        }
+
+        // Puts an edited copy in place of the item with its Id (by Id, since a reload replaces the list's objects) and
+        // saves. Once saved, the files the item no longer has are deleted (if no other item uses them) and its
+        // documents' reminders follow. False if it can't be saved, or was deleted meanwhile: nothing changes then.
+        private bool Replace(Entity edited)
+        {
+            int index = entities.FindIndex(x => x.Id == edited.Id);
+            if (index < 0)
+                return false;
 
             Entity original = entities[index];
             entities[index] = edited;
-            if (SaveEntities())
-                EntityImages.DeleteUnreferenced(EntityImages.Names(original), entities);
-            else
+            if (!SaveEntities())
             {
                 entities[index] = original;
-                RemoveCopies(imported);
+                return false;
             }
+            EntityFiles.DeleteUnreferenced(new[] { original }, entities);
+            WarnReminders(VehicleReminders.Follow(original, edited));
+            return true;
+        }
+
+        // The vehicle's window, saving through this view; the cards show the result once it closes.
+        private void OpenVehicle(Entity vehicle)
+        {
+            VehicleWindow window = new VehicleWindow(vehicle, new VehicleWindow.Host
+            {
+                Save = Replace,
+                EditBasics = EditEntity,
+                Delete = DeleteEntity
+            })
+            { Owner = Window.GetWindow(this) };
+            window.ShowDialog();
             RenderEntities();
+        }
+
+        private static void WarnReminders(string problem)
+        {
+            if (problem != null)
+                Msg.Show(problem, Loc.T("Common.CouldntSave"), MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         // Gives the item the form's pictures: picked files are copied in. One that can't be copied is left out and
@@ -685,33 +685,36 @@ namespace TidyMind
                 EntityImages.DeleteCopy(name);
         }
 
-        private void DeleteEntity(Entity entity)
+        // True once the item is gone (asked first).
+        private bool DeleteEntity(Entity entity)
         {
             var result = Msg.Show(Loc.F("Common.DeleteNamed", entity.Name), Loc.T("Common.ConfirmDelete"),
                 MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (result != MessageBoxResult.Yes)
+                return false;
 
-            if (result == MessageBoxResult.Yes)
-            {
-                RemoveEntities(new[] { entity });
-                RenderEntities();
-            }
+            RemoveEntities(new[] { entity });
+            RenderEntities();
+            return !entities.Any(x => x.Id == entity.Id);
         }
 
-        // Deleting items: one from its menu, or a multi-selection's Delete. Their pictures go once the list is saved
-        // without them. If that couldn't be saved, the list is read back from disk, so the items reappear instead of
-        // looking deleted until some later save drops them (and leaves their pictures behind).
+        // Deleting items: one from its menu, or a multi-selection's Delete. Their files and reminders go once the list
+        // is saved without them. If that couldn't be saved, the list is read back from disk, so the items reappear
+        // instead of looking deleted until some later save drops them (and leaves their files behind).
         private void RemoveEntities(IEnumerable<Entity> doomed)
         {
-            List<Entity> removed = doomed.ToList();
-            foreach (Entity entity in removed)
-                entities.Remove(entity);
+            // By Id: a caller may hold a copy of an item (a reload replaces the list's objects).
+            HashSet<Guid> ids = doomed.Select(e => e.Id).ToHashSet();
+            List<Entity> removed = entities.Where(e => ids.Contains(e.Id)).ToList();
+            entities.RemoveAll(e => ids.Contains(e.Id));
 
             if (!SaveEntities())
             {
                 ReloadEntities();
                 return;
             }
-            EntityImages.DeleteUnreferenced(removed.SelectMany(EntityImages.Names), entities);
+            EntityFiles.DeleteUnreferenced(removed, entities);
+            WarnReminders(removed.Select(entity => VehicleReminders.Follow(entity, null)).ToList().FirstOrDefault(problem => problem != null));
         }
 
         private static SolidColorBrush B(string hex)

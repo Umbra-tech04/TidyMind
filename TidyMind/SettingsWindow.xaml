@@ -155,23 +155,40 @@
                 <StackPanel x:Name="GeneralPage">
                     <TextBlock Text="{local:Tr Settings.Section.General}" Style="{StaticResource PageTitleStyle}"/>
                     <Border Style="{StaticResource CardStyle}">
-                        <Grid Style="{StaticResource RowStyle}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="{local:Tr Settings.Language.Title}" Style="{StaticResource RowTitleStyle}"/>
-                                <TextBlock Text="{local:Tr Settings.Language.Note}" Style="{StaticResource RowNoteStyle}"/>
-                            </StackPanel>
-                            <!-- English / Magyar / Srpski, each named in its own language (filled from Loc.Languages) -->
-                            <Border Grid.Column="1" Margin="16,0,0,0" Height="32" Padding="2" VerticalAlignment="Center"
-                                    Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
-                                    BorderThickness="1" CornerRadius="4">
-                                <StackPanel x:Name="LanguageChoices" Orientation="Horizontal"
-                                            AutomationProperties.Name="{local:Tr Settings.Language.Title}"/>
-                            </Border>
-                        </Grid>
+                        <StackPanel>
+                            <Grid Style="{StaticResource RowStyle}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{local:Tr Settings.Language.Title}" Style="{StaticResource RowTitleStyle}"/>
+                                    <TextBlock Text="{local:Tr Settings.Language.Note}" Style="{StaticResource RowNoteStyle}"/>
+                                </StackPanel>
+                                <!-- English / Magyar / Srpski, each named in its own language (filled from Loc.Languages) -->
+                                <Border Grid.Column="1" Margin="16,0,0,0" Height="32" Padding="2" VerticalAlignment="Center"
+                                        Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
+                                        BorderThickness="1" CornerRadius="4">
+                                    <StackPanel x:Name="LanguageChoices" Orientation="Horizontal"
+                                                AutomationProperties.Name="{local:Tr Settings.Language.Title}"/>
+                                </Border>
+                            </Grid>
+                            <Border Style="{StaticResource RowDividerStyle}"/>
+                            <!-- What amounts are shown in (Currency); empty: the Windows region's symbol. Applies as typed. -->
+                            <Grid Style="{StaticResource RowStyle}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{local:Tr Settings.Currency.Title}" Style="{StaticResource RowTitleStyle}"/>
+                                    <TextBlock x:Name="CurrencyNote" Style="{StaticResource RowNoteStyle}"/>
+                                </StackPanel>
+                                <TextBox x:Name="CurrencyBox" Grid.Column="1" Width="110" Height="32" Margin="16,0,0,0"
+                                         VerticalAlignment="Center" VerticalContentAlignment="Center" MaxLength="12"
+                                         AutomationProperties.Name="{local:Tr Settings.Currency.Title}"/>
+                            </Grid>
+                        </StackPanel>
                     </Border>
                 </StackPanel>
 

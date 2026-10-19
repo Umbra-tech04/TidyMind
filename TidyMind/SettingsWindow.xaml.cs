@@ -44,6 +44,20 @@ namespace TidyMind
             AutoUpdateSwitch.IsChecked = AppSettings.Load().CheckForUpdates != false;
             ShowUpdates();
             Loc.Track(this, ShowUpdates);
+            CurrencyBox.Text = AppSettings.Load().Currency ?? "";
+            CurrencyBox.TextChanged += (s, e) => SaveCurrency();
+            ShowCurrencyNote();
+            Loc.Track(this, ShowCurrencyNote);
+        }
+
+        private void ShowCurrencyNote() => CurrencyNote.Text = Loc.F("Settings.Currency.Note", Currency.RegionSymbol);
+
+        // As typed: amounts everywhere show it from now on (they are stored without it, so nothing is converted).
+        private void SaveCurrency()
+        {
+            string typed = CurrencyBox.Text.Trim();
+            AppSettings.Update(s => s.Currency = typed.Length == 0 ? null : typed);
+            Currency.Changed(typed);
         }
 
         // One segment per language; picking one switches the whole app at once (Loc.Switch), this window included.

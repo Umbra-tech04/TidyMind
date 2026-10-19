@@ -94,38 +94,8 @@ namespace TidyMind
         // Removes the copies among `names` that no item in any collection refers to (the saved files say so; `inUse`
         // are items of the view that is asking, in case its memory isn't in profiles.json). If a file can't be read,
         // nothing is removed: a copy left behind is harmless, a deleted one that was in use isn't.
-        public static void DeleteUnreferenced(IEnumerable<string> names, IEnumerable<Entity> inUse = null)
-        {
-            List<string> candidates = names.Where(n => !string.IsNullOrEmpty(n) && !IsLegacyPath(n))
-                .Select(Path.GetFileName).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-            if (candidates.Count == 0)
-                return;
-
-            HashSet<string> used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            if (!TryCollectReferenced(used))
-                return;
-            foreach (Entity entity in inUse ?? Enumerable.Empty<Entity>())
-                foreach (string name in Names(entity))
-                    used.Add(Path.GetFileName(name));
-
-            foreach (string name in candidates.Where(n => !used.Contains(n)))
-                Store.Delete(name);
-        }
-
-        private static bool TryCollectReferenced(HashSet<string> used)
-        {
-            if (!ProfileManager.TryLoadProfiles(out List<Profile> profiles, out _))
-                return false;
-            foreach (Profile memory in profiles.Where(p => p.Type == ProfileType.Collection))
-            {
-                if (!EntityStore.TryLoad(memory, out List<Entity> items, out _))
-                    return false;
-                foreach (Entity item in items)
-                    foreach (string name in Names(item))
-                        used.Add(Path.GetFileName(name));
-            }
-            return true;
-        }
+        public static void DeleteUnreferenced(IEnumerable<string> names, IEnumerable<Entity> inUse = null) =>
+            EntityFiles.DeleteUnreferenced(names.Where(n => !IsLegacyPath(n)), EntityFiles.Pictures, inUse, Store.Delete);
 
         // ---- Saving the form's list --------------------------------------------
 

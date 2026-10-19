@@ -1,0 +1,1 @@
+- Vehicles get their own window: a large picture gallery, the key facts and upcoming deadlines on top, and tabs for an overview, specs (identity, engine, body, ownership, odometer), documents with files and reminders, and the service and fuel logs, each section edited in place; "Update odometer" keeps a history; a currency setting for prices.
