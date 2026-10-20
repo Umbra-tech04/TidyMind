@@ -17,11 +17,13 @@ using System.Windows.Threading;
 using TidyMind;
 
 // Harness vehicle <data> <shotsFolder>: the vehicle record. Old vehicles are read without a write and their two
-// dates show as documents; an older version keeps the new fields and its date edits are picked up. The window: header,
-// tabs, editing a section in place (numbers checked, kW and hp), documents with a file and their reminders (set, moved,
-// removed, retitled, after a delete of the document, the vehicle, a selection and the memory), the odometer update,
-// Esc, picture keys, its remembered size, three languages at a narrow size without clipped text. Transfer packages
-// (format 3, document files, new Ids, reminders on import), exports, search and Home. A few screenshots.
+// dates show as documents; an older version keeps the new fields and its date edits are picked up. The item window:
+// the title block's chips, its pages, a section edited in place (numbers checked, kW and hp), records added in a
+// dialog and shown as rows that open (documents with a file and their reminders: set, moved, removed, retitled, after
+// a delete of the document, the vehicle, a selection and the memory; wheel sets; parts under parts; the service log
+// with its costs and filter), the odometer update, Esc, picture keys, its remembered size, three languages at a narrow
+// size without clipped text. Transfer packages (format 3, document files, new Ids, reminders on import), exports,
+// search and Home. A few screenshots.
 static partial class Program
 {
     static string vehicleWork;
@@ -68,31 +70,16 @@ static partial class Program
 
     // ---- Helpers -----------------------------------------------------------------------
 
-    static Entity Vehicle(string name, int order = 0) => new Entity
-    {
-        Id = Guid.NewGuid(), EntityType = EntityTypes.Vehicle, Name = name, Order = order, CreatedDate = DateTime.Now
-    };
-
-    static EntityRecord Document(string type, DateTime? validUntil, int? remindDays, string name = null)
-    {
-        EntityRecord document = new EntityRecord { Id = Guid.NewGuid() };
-        document.Set(VehicleDocuments.TypeKey, type);
-        document.Set(VehicleDocuments.NameKey, name);
-        document.Set(VehicleDocuments.ValidUntilKey, Values.FromDate(validUntil));
-        document.Set(VehicleDocuments.RemindKey, remindDays?.ToString());
-        return document;
-    }
-
-    // Runs `act` on the vehicle window once it is up (the caller's ShowDialog is open meanwhile), then closes it.
-    static void DriveVehicle(MainWindow main, Func<VehicleWindow, Task> act)
+    // Runs `act` on the item window once it is up (the caller's ShowDialog is open meanwhile), then closes it.
+    static void DriveItem(MainWindow main, Func<ItemWindow, Task> act)
     {
         _ = main.Dispatcher.BeginInvoke(new Action(async () =>
         {
-            VehicleWindow window = null;
+            ItemWindow window = null;
             for (int i = 0; i < 50 && window == null; i++)
             {
                 await Wait(100);
-                window = Application.Current.Windows.OfType<VehicleWindow>().FirstOrDefault();
+                window = Application.Current.Windows.OfType<ItemWindow>().FirstOrDefault();
             }
             try
             {
@@ -101,49 +88,61 @@ static partial class Program
             }
             catch (Exception e)
             {
-                Check(false, "the vehicle window driver threw: " + e);
+                Check(false, "the item window driver threw: " + e);
             }
             window?.Close();
         }), DispatcherPriority.Background);
     }
 
-    // A vehicle with something on every tab, for pages and screenshots (not stored).
-    static Entity SampleVehicle()
-    {
-        Entity car = Vehicle("Škoda Octavia – „Đurđa”");
-        car.VehicleKind = "Car";
-        car.Plate = "NS-123-ĆŽ";
-        car.Year = 2017;
-        car.OdometerKm = 152300;
-        car.Details = new Dictionary<string, string> { ["Make"] = "Škoda", ["Model"] = "Octavia", ["Edition"] = "III RS", ["Fuel"] = "Diesel", ["Power"] = "135", ["Gearbox"] = "Automatic" };
-        VehicleSchema.Documents.Write(car, new List<EntityRecord>
-        {
-            Document("Inspection", DateTime.Today.AddDays(12), 7),
-            Document("Vignette", DateTime.Today.AddDays(-2), null, "Ausztria"),
-            Document("Insurance", DateTime.Today.AddDays(200), 30, "Allianz")
-        });
-        EntityRecord summer = VehicleSchema.WheelSets.New(car);
-        summer.Set("Name", "Nyári");
-        summer.Set("Season", "Summer");
-        summer.Set("TyreSize", "225/40 R18 92Y");
-        VehicleSchema.WheelSets.Write(car, new List<EntityRecord> { summer });
-        VehicleSchema.WheelSets.SetCurrent(car, summer.Id);
-        EntityRecord disc = Node("Féktárcsa");
-        disc.Specs = new List<SpecLine> { new SpecLine { Name = "Méret", Value = "312x25 mm" } };
-        VehicleSchema.Parts.Write(car, new List<EntityRecord> { Node("Fékek", Node("Első fékek", disc)) });
-        car.Logs = new Dictionary<string, List<Dictionary<string, string>>>
-        {
-            ["Service"] = new List<Dictionary<string, string>> { new Dictionary<string, string> { ["Date"] = "2026-09-01", ["Work"] = "Olajcsere", ["Km"] = "150000" } }
-        };
-        return car;
-    }
-
     // Opens the item from the collection page (its window, as a click on the card does) and drives it.
-    static async Task WithVehicle(MainWindow main, CollectionView view, Guid id, Func<VehicleWindow, Task> act)
+    static async Task WithVehicle(MainWindow main, CollectionView view, Guid id, Func<ItemWindow, Task> act)
     {
-        DriveVehicle(main, act);
+        DriveItem(main, act);
         view.Reveal(id); // returns once the window is closed
         await Wait(200);
+    }
+
+    // Fills in the record dialog about to open with `fill`, then presses its Save (it closes once saved).
+    static void AnswerRecord(MainWindow main, Func<EditDialog, Task> fill)
+    {
+        _ = main.Dispatcher.BeginInvoke(new Action(async () =>
+        {
+            EditDialog dialog = null;
+            for (int i = 0; i < 50 && dialog == null; i++)
+            {
+                await Wait(100);
+                dialog = Application.Current.Windows.OfType<EditDialog>().FirstOrDefault();
+            }
+            if (dialog == null)
+            {
+                Check(false, "a record dialog opened");
+                return;
+            }
+            try
+            {
+                await Wait(200);
+                await fill(dialog);
+                ClickNow(ButtonNamed(dialog, Loc.T("Common.Save")));
+                await Wait(500);
+            }
+            catch (Exception e)
+            {
+                Check(false, "the record dialog driver threw: " + e);
+            }
+            if (dialog.IsVisible)
+            {
+                Check(false, "the record dialog closed after Save");
+                dialog.Close();
+            }
+        }), DispatcherPriority.Background);
+    }
+
+    // A new record of `records` through its dialog (as "+ Add …" does), filled in by `fill`.
+    static async Task AddRecord(MainWindow main, ItemWindow w, RecordDefinition records, Func<EditDialog, Task> fill)
+    {
+        AnswerRecord(main, fill);
+        Invoke(w, "OpenRecord", records, null, null); // returns once the dialog is closed
+        await Wait(300);
     }
 
     // Types `value` into the next text prompt (InputDialog) and confirms it, or cancels it with null.
@@ -170,24 +169,43 @@ static partial class Program
         }), DispatcherPriority.Background);
     }
 
-    static List<UIElement> Cards(VehicleWindow window) => Field<CellPanel>(window, "Cards").Children.Cast<UIElement>().ToList();
+    static StackPanel PageOf(ItemWindow window) => Field<StackPanel>(window, "Page");
 
-    static SectionCard CardTitled(VehicleWindow window, string title) =>
-        Cards(window).OfType<SectionCard>().First(c => Descendants(c).OfType<TextBlock>().First().Text == title);
+    static List<FieldsSection> Sections(ItemWindow window) => Descendants(PageOf(window)).OfType<FieldsSection>().ToList();
 
-    static List<FieldEditor> Editors(SectionCard card) => Field<List<FieldEditor>>(card, "editors");
+    static FieldsSection SectionTitled(ItemWindow window, string title) => Sections(window).First(s => s.Definition.Label == title);
 
-    static FieldEditor EditorOf(SectionCard card, string key) => Editors(card).First(e => e.Field.Key == key);
+    static List<RecordRow> Rows(ItemWindow window) => Descendants(PageOf(window)).OfType<RecordRow>().ToList();
+
+    static RecordRow RowOf(ItemWindow window, Guid id) => Rows(window).Single(r => r.Record.Id == id);
+
+    static RecordRow RowNamed(ItemWindow window, string name) => Rows(window).First(r => r.Record.Get("Name") == name);
+
+    static List<string> PageTexts(ItemWindow window) => Descendants(PageOf(window)).OfType<TextBlock>().Select(t => t.Text).ToList();
+
+    static List<string> ChipTexts(ItemWindow window) => Descendants(Field<WrapPanel>(window, "Chips")).OfType<TextBlock>().Select(t => t.Text).ToList();
+
+    // The search's matches: a row each, named "where: what".
+    static List<Button> Matches(ItemWindow window) => Descendants(PageOf(window)).OfType<Button>()
+        .Where(b => System.Windows.Automation.AutomationProperties.GetName(b).Contains(": ")).ToList();
+
+    static List<FieldEditor> Editors(FieldsSection section) => Field<List<FieldEditor>>(section, "editors");
+
+    static FieldEditor EditorOf(FieldsSection section, string key) => Editors(section).First(e => e.Field.Key == key);
+
+    static FieldEditor EditorOf(EditDialog dialog, string key) => dialog.Editors.First(e => e.Field.Key == key);
 
     static void Choose(FieldEditor editor, string value) =>
         ((ComboBox)editor.Element).SelectedItem = ((ComboBox)editor.Element).Items.Cast<ComboBoxItem>().First(i => (string)i.Tag == value);
 
-    static TextBox BoxOf(FieldEditor editor, int index = 0) =>
-        editor.Element as TextBox ?? ((Panel)editor.Element).Children.OfType<TextBox>().ElementAt(index);
+    static string Chosen(FieldEditor editor) => (string)((ComboBoxItem)((ComboBox)editor.Element).SelectedItem).Tag;
 
-    static async Task SaveCard(VehicleCard card)
+    static TextBox BoxOf(FieldEditor editor, int index = 0) =>
+        editor.Element as TextBox ?? Descendants(editor.Element).OfType<TextBox>().ElementAt(index);
+
+    static async Task SaveSection(FieldsSection section)
     {
-        ClickNow(Descendants(card).OfType<Button>().First(b => b.Content as string == Loc.T("Common.Save")));
+        ClickNow(ButtonNamed(section, Loc.T("Common.Save")));
         await Wait(400);
     }
 
@@ -249,13 +267,16 @@ static partial class Program
 
         await WithVehicle(main, view, golf.Id, async w =>
         {
-            Check(Field<TextBox>(w, "NameText").Text == "Golf" && Field<TextBox>(w, "PlateText").Text == "ABC-123"
-                  && Field<TextBlock>(w, "OdometerText").Text == Units.Format(120500, Units.Distance, golf), "the header: name, plate, odometer");
-            Check(Field<WrapPanel>(w, "Badges").Children.Count == 2, "two deadline badges");
-            Check(Field<WrapPanel>(w, "TabsPanel").Children.Count == 6, "six tabs: Overview, Specs, Wheels & tyres, Fluids & parts, Documents, Service & costs");
+            List<string> chips = ChipTexts(w);
+            Check(Field<TextBox>(w, "NameText").Text == "Golf" && chips.Contains("ABC-123") && chips.Contains(Units.Format(120500, Units.Distance, golf)),
+                "the title block: the name, the plate and the odometer as chips");
+            Check(chips.Contains(Loc.F("Entity.ExpiryLine", "Insurance", Expiry.Describe(golf.InsuranceExpires.Value, DateTime.Today)))
+                  && chips.Count(c => c.Contains("Inspection")) == 0, "the insurance soon as a chip; the inspection, months off, only on the Overview");
+            Check(PageTexts(w).Contains("Inspection") && PageTexts(w).Contains("Insurance"), "the Overview's Coming up lists both");
+            Check(Field<ListBox>(w, "SectionList").Items.Count == 6, "six pages: Overview, Specs, Wheels & tyres, Fluids & parts, Documents, Service & costs");
             foreach (string tab in new[] { "Specs", "Wheels", "Parts", "Documents", "Service", "Overview" })
             {
-                w.SelectTab(tab);
+                w.SelectPage(tab);
                 await Wait(150);
             }
         });
@@ -321,18 +342,20 @@ static partial class Program
 
         await WithVehicle(main, view, octavia, async w =>
         {
-            PictureBrowser gallery = Field<PictureBrowser>(w, "gallery");
+            PictureHero hero = Field<PictureHero>(w, "hero");
             await Wait(500);
             PressKey(w, Key.Right);
-            Check(gallery.Selected == 1, "Right shows the next picture");
+            Check(hero.Selected == 1, "Right shows the next picture");
             PressKey(w, Key.Left);
-            Check(gallery.Selected == 0, "Left goes back");
+            Check(hero.Selected == 0, "Left goes back");
+            PressKey(w, Key.Left);
+            Check(hero.Selected == 0, "...and no further than the first");
 
-            w.SelectTab("Specs");
+            w.SelectPage("Specs");
             await Wait(200);
-            Check(Cards(w).OfType<SectionCard>().Count() == 5, "Specs: identity, engine, body, ownership, odometer");
-            SectionCard engine = CardTitled(w, VehicleSchema.Engine.Label);
-            Check(Descendants(engine).OfType<TextBlock>().Any(t => t.Text == Loc.T("Entity.Card.Empty")), "an empty section says so");
+            Check(Sections(w).Count == 5, "Specs: identity, engine, body, ownership, odometer");
+            FieldsSection engine = SectionTitled(w, VehicleSchema.Engine.Label);
+            Check(Descendants(engine).OfType<TextBlock>().Any(t => t.Text == Loc.T("Entity.Card.Empty")), "an empty section says so, on one line");
             engine.BeginEdit();
             await Wait(200);
             BoxOf(EditorOf(engine, "Power")).Text = "110";
@@ -343,17 +366,17 @@ static partial class Program
             BoxOf(EditorOf(engine, "Displacement")).Text = "sok";
             Choose(EditorOf(engine, "Fuel"), "Diesel");
             int boxes = selectBoxes.Count;
-            await SaveCard(engine);
+            await SaveSection(engine);
             Check(selectBoxes.Count == boxes + 1 && StoredVehicle(vehicleGarage, octavia).Details == null, "a number field with words: said, nothing saved");
             BoxOf(EditorOf(engine, "Displacement")).Text = "1 968";
-            await SaveCard(engine);
+            await SaveSection(engine);
             Entity saved = StoredVehicle(vehicleGarage, octavia);
             Check(saved.Details?["Power"] == "110" && saved.Details["Displacement"] == "1968" && saved.Details["Fuel"] == "Diesel"
                   && saved.Plate == "SU-123-AB" && EntityImages.Names(saved).SequenceEqual(pictures), "saved at once: invariant numbers, the choice's English value, the rest kept");
-            engine = CardTitled(w, VehicleSchema.Engine.Label);
+            engine = SectionTitled(w, VehicleSchema.Engine.Label);
             Check(Descendants(engine).OfType<TextBox>().Any(t => t.Text == "110 kW (150 hp)"), "shown as 110 kW (150 hp)");
 
-            SectionCard ownership = CardTitled(w, VehicleSchema.Ownership.Label);
+            FieldsSection ownership = SectionTitled(w, VehicleSchema.Ownership.Label);
             ownership.BeginEdit();
             await Wait(200);
             WrapPanel checks = Descendants(EditorOf(ownership, "Equipment").Element).OfType<WrapPanel>().First();
@@ -363,23 +386,23 @@ static partial class Program
             ClickNow(Descendants(EditorOf(ownership, "Equipment").Element).OfType<Button>().First());
             ((CheckBox)EditorOf(ownership, "ServiceBook").Element).IsChecked = true;
             BoxOf(EditorOf(ownership, "PurchasePrice")).Text = "4500000";
-            await SaveCard(ownership);
+            await SaveSection(ownership);
             saved = StoredVehicle(vehicleGarage, octavia);
             Check(saved.Details["Equipment"] == "Air conditioning\nÁllófűtés" && saved.Details["ServiceBook"] == "true" && saved.Details["PurchasePrice"] == "4500000",
                 "equipment: an offered one and the user's own, one per line; the flag; the price as a plain number");
 
             // Esc while editing stops the edit (asking first: the watcher says Yes), and a second Esc closes.
-            CardTitled(w, VehicleSchema.Body.Label).BeginEdit();
+            SectionTitled(w, VehicleSchema.Body.Label).BeginEdit();
             await Wait(200);
-            BoxOf(EditorOf(CardTitled(w, VehicleSchema.Body.Label), "Doors")).Text = "5";
+            BoxOf(EditorOf(SectionTitled(w, VehicleSchema.Body.Label), "Doors")).Text = "5";
             boxes = selectBoxes.Count;
             PressKey(w, Key.Escape);
             await Wait(300);
-            Check(selectBoxes.Count == boxes + 1 && !CardTitled(w, VehicleSchema.Body.Label).IsEditing && w.IsVisible,
+            Check(selectBoxes.Count == boxes + 1 && !SectionTitled(w, VehicleSchema.Body.Label).IsEditing && w.IsVisible,
                 "Esc during an edit with changes asks, then stops it; the window stays");
             RenderWindow(w, "vehicle-01-specs-en");
         });
-        Check(Application.Current.Windows.OfType<VehicleWindow>().Count() == 0, "closed");
+        Check(Application.Current.Windows.OfType<ItemWindow>().Count() == 0, "closed");
         Invoke(main, "NavigateHome");
     }
 
@@ -397,20 +420,21 @@ static partial class Program
 
         await WithVehicle(main, view, octavia, async w =>
         {
-            w.SelectTab("Documents");
+            w.SelectPage("Documents");
             await Wait(200);
-            Check(Cards(w).OfType<VehicleCard>().Any(c => Descendants(c).OfType<TextBlock>().Any(t => t.Text == Loc.T("Entity.Records.Documents.Empty"))),
-                "no documents yet: the list says what it is for");
-            Invoke(w, "StartAdd", VehicleSchema.Documents, null);
-            await Wait(300);
-            SectionCard card = Cards(w).OfType<SectionCard>().Single(c => c.IsEditing);
-            Check((string)((ComboBoxItem)((ComboBox)EditorOf(card, "Type").Element).SelectedItem).Tag == "Insurance"
-                  && (string)((ComboBoxItem)((ComboBox)EditorOf(card, "RemindDays").Element).SelectedItem).Tag == "30", "a new document: Insurance, 30 days before");
-            BoxOf(EditorOf(card, "Name")).Text = "Allianz casco";
-            ((DatePicker)EditorOf(card, "ValidUntil").Element).SelectedDate = due;
-            typeof(FieldEditor).GetProperty("PickedFile").GetSetMethod(true).Invoke(EditorOf(card, "File"), new object[] { scan });
-            await SaveCard(card);
-            await Wait(400);
+            Check(PageTexts(w).Contains(Loc.T("Entity.Records.Documents.Empty")), "no documents yet: the list says what it is for");
+            Check(Descendants(w).OfType<Button>().Any(b => b.Content as string == "+ " + VehicleSchema.Documents.AddLabel),
+                "its Add on the page title's line (the page is that one list)");
+            await AddRecord(main, w, VehicleSchema.Documents, d =>
+            {
+                Check(d.Title == VehicleSchema.Documents.AddLabel && Chosen(EditorOf(d, "Type")) == "Insurance" && Chosen(EditorOf(d, "RemindDays")) == "30",
+                    "a new document, in a dialog: Insurance, 30 days before");
+                BoxOf(EditorOf(d, "Name")).Text = "Allianz casco";
+                ((DatePicker)EditorOf(d, "ValidUntil").Element).SelectedDate = due;
+                typeof(FieldEditor).GetProperty("PickedFile").GetSetMethod(true).Invoke(EditorOf(d, "File"), new object[] { scan });
+                return Task.CompletedTask;
+            });
+            Check(Rows(w).Count == 1 && Rows(w)[0].IsOpen, "saved: its row, open");
         });
 
         Entity saved = StoredVehicle(vehicleGarage, octavia);
@@ -457,11 +481,11 @@ static partial class Program
         string stored = AttachmentStore.PathOf(document.File.StoredFileName);
         await WithVehicle(main, view, octavia, async w =>
         {
-            w.SelectTab("Documents");
+            w.SelectPage("Documents");
             await Wait(200);
-            SectionCard card = Cards(w).OfType<SectionCard>().Single();
-            Check(Descendants(card).OfType<Button>().Any(b => b.Content as string == "kötvény.pdf"), "the document's card links its file");
-            card.Delete();
+            RecordRow row = Rows(w).Single();
+            Check(Descendants(row).OfType<Button>().Any(b => b.Content as string == "kötvény.pdf"), "the document's row, opened, links its file");
+            ClickNow(ButtonNamed(row, Loc.T("Common.Delete")));
             await Wait(400);
         });
         Check(VehicleDocuments.Of(StoredVehicle(vehicleGarage, octavia)).Count == 0 && !File.Exists(stored) && ReminderOf(documentId) == null,
@@ -486,7 +510,7 @@ static partial class Program
             List<Dictionary<string, string>> readings = saved.Logs[VehicleSchema.OdometerLog];
             Check(saved.OdometerKm == 153450 && readings.Count == 1 && readings[0]["Reading"] == "153450" && readings[0]["Date"] == Values.FromDate(DateTime.Today),
                 "a reading: the current one and a dated row in the readings");
-            Check(Field<TextBlock>(w, "OdometerText").Text == Units.Format(153450, Units.Distance, saved), "the header shows it");
+            Check(ChipTexts(w).Contains(Units.Format(153450, Units.Distance, saved)), "the title block's chip shows it");
 
             int boxes = selectBoxes.Count;
             AnswerPrompt(main, "150000");
@@ -494,14 +518,14 @@ static partial class Program
             await Wait(300);
             Check(selectBoxes.Count == boxes + 1 && StoredVehicle(vehicleGarage, octavia).OdometerKm == 150000, "lower than before: asked (Yes here), then saved");
 
-            w.SelectTab("Specs");
+            w.SelectPage("Specs");
             await Wait(200);
-            SectionCard odometer = CardTitled(w, VehicleSchema.OdometerSection.Label);
+            FieldsSection odometer = SectionTitled(w, VehicleSchema.OdometerSection.Label);
             odometer.BeginEdit();
             await Wait(200);
             Choose(EditorOf(odometer, VehicleSchema.OdometerUnitKey), Units.Mi);
-            await SaveCard(odometer);
-            Check(Field<TextBlock>(w, "OdometerText").Text == "150,000 mi", "miles chosen: every distance says mi (" + Field<TextBlock>(w, "OdometerText").Text + ")");
+            await SaveSection(odometer);
+            Check(ChipTexts(w).Contains("150,000 mi"), "miles chosen: every distance says mi (" + string.Join(", ", ChipTexts(w)) + ")");
         });
         Invoke(main, "NavigateHome");
     }
@@ -515,36 +539,31 @@ static partial class Program
         await Wait(400);
         await WithVehicle(main, view, octavia, async w =>
         {
-            w.SelectTab("Wheels");
+            w.SelectPage("Wheels");
             await Wait(200);
-            Check(Cards(w).OfType<VehicleCard>().Any(c => Descendants(c).OfType<TextBlock>().Any(t => t.Text == Loc.T("Entity.Records.WheelSets.Empty"))),
-                "no sets yet: the list says what it is for");
+            Check(PageTexts(w).Contains(Loc.T("Entity.Records.WheelSets.Empty")), "no sets yet: the list says what it is for");
             foreach ((string name, string season, string size) in new[] { ("Nyári", "Summer", "205/55 R16 91V"), ("Téli", "Winter", "195/65 R15 91T") })
-            {
-                Invoke(w, "StartAdd", VehicleSchema.WheelSets, null);
-                await Wait(300);
-                SectionCard card = Cards(w).OfType<SectionCard>().Single(c => c.IsEditing);
-                BoxOf(EditorOf(card, "Name")).Text = name;
-                Choose(EditorOf(card, "Season"), season);
-                BoxOf(EditorOf(card, "TyreSize")).Text = size;
-                BoxOf(EditorOf(card, "BoltPattern")).Text = "5x112";
-                BoxOf(EditorOf(card, "BoltTorque")).Text = "120";
-                await SaveCard(card);
-            }
+                await AddRecord(main, w, VehicleSchema.WheelSets, d =>
+                {
+                    BoxOf(EditorOf(d, "Name")).Text = name;
+                    Choose(EditorOf(d, "Season"), season);
+                    BoxOf(EditorOf(d, "TyreSize")).Text = size;
+                    BoxOf(EditorOf(d, "BoltPattern")).Text = "5x112";
+                    BoxOf(EditorOf(d, "BoltTorque")).Text = "120";
+                    return Task.CompletedTask;
+                });
             List<EntityRecord> sets = VehicleSchema.WheelSets.Read(StoredVehicle(vehicleGarage, octavia));
             Check(sets.Count == 2 && sets[0].Get("TyreSize") == "205/55 R16 91V" && sets[1].Get("BoltTorque") == "120" && sets[1].Get("Season") == "Winter",
                 "two sets stored in order: the tyre size as typed, numbers invariant, the season's English value");
+            Check(Rows(w).Count == 2 && RowOf(w, sets[1].Id).IsOpen && !RowOf(w, sets[0].Id).IsOpen, "two rows, the one just added open");
 
-            SectionCard winter = Cards(w).OfType<SectionCard>().Single(c => sets[1].Id.Equals(c.Tag));
-            ClickNow(Descendants(winter).OfType<Button>().First(b => b.Content as string == Loc.T("Entity.Records.WheelSets.MakeCurrent")));
+            ClickNow(ButtonNamed(RowOf(w, sets[1].Id), Loc.T("Entity.Records.WheelSets.MakeCurrent")));
             await Wait(300);
             Check(StoredVehicle(vehicleGarage, octavia).Details[VehicleSchema.MountedWheelSetKey] == sets[1].Id.ToString(), "Mark as mounted: stored");
-            winter = Cards(w).OfType<SectionCard>().Single(c => sets[1].Id.Equals(c.Tag));
-            SectionCard summer = Cards(w).OfType<SectionCard>().Single(c => sets[0].Id.Equals(c.Tag));
-            Check(Descendants(winter).OfType<TextBlock>().Any(t => t.Text == Loc.T("Entity.Records.WheelSets.Current"))
-                  && Descendants(summer).OfType<Button>().Any(b => b.Content as string == Loc.T("Entity.Records.WheelSets.MakeCurrent")),
+            Check(Descendants(RowOf(w, sets[1].Id)).OfType<TextBlock>().Any(t => t.Text == Loc.T("Entity.Records.WheelSets.Current"))
+                  && Descendants(RowOf(w, sets[0].Id)).OfType<Button>().Any(b => b.Content as string == Loc.T("Entity.Records.WheelSets.MakeCurrent")),
                 "the mounted set says so, the other offers it");
-            winter.Delete();
+            ClickNow(ButtonNamed(RowOf(w, sets[1].Id), Loc.T("Common.Delete")));
             await Wait(400);
             Entity saved = StoredVehicle(vehicleGarage, octavia);
             Check(VehicleSchema.WheelSets.Read(saved).Count == 1 && !saved.Details.ContainsKey(VehicleSchema.MountedWheelSetKey),
@@ -570,15 +589,15 @@ static partial class Program
         await Wait(400);
         await WithVehicle(main, view, octavia, async w =>
         {
-            w.SelectTab("Parts");
+            w.SelectPage("Parts");
             await Wait(200);
-            SectionCard fluids = CardTitled(w, VehicleSchema.Fluids.Label);
+            FieldsSection fluids = SectionTitled(w, VehicleSchema.Fluids.Label);
             fluids.BeginEdit();
             await Wait(200);
             BoxOf(EditorOf(fluids, "OilFilter")).Text = "Mann W 712/52";
             BoxOf(EditorOf(fluids, "OilCapacity")).Text = "4.3";
             BoxOf(EditorOf(fluids, "OilViscosity")).Text = "5W-30";
-            await SaveCard(fluids);
+            await SaveSection(fluids);
             Entity saved = StoredVehicle(vehicleGarage, octavia);
             Check(saved.Details["OilFilter"] == "Mann W 712/52" && saved.Details["OilCapacity"] == "4.3", "fluids saved in place");
 
@@ -587,94 +606,89 @@ static partial class Program
             List<EntityRecord> systems = VehicleSchema.Parts.Read(StoredVehicle(vehicleGarage, octavia));
             Check(systems.Select(s => s.Get("Name")).SequenceEqual(VehicleSchema.PartsTemplate.Select(k => Loc.T("Entity.Parts.Template." + k))),
                 "Start with the usual systems: nine, named in the language");
+            Check(Rows(w).Count == 9, "...a row each, nothing under them yet");
 
-            ClickNow(ButtonNamed(w, Loc.T("Entity.Parts.Template.Brakes")));
-            await Wait(200);
-            ClickNow(ButtonNamed(w, Loc.T("Entity.Records.Parts.AddUnder")));
-            await Wait(300);
-            SectionCard card = Cards(w).OfType<SectionCard>().Single(c => c.IsEditing);
-            Check(Descendants(card).OfType<TextBlock>().First().Text == Loc.F("Entity.Records.Parts.NewUnder", "Brakes"), "a new part says where it goes");
-            BoxOf(EditorOf(card, "Name")).Text = "Front brakes";
-            await SaveCard(card);
-            ClickNow(ButtonNamed(w, Loc.T("Entity.Records.Parts.AddUnder")));
-            await Wait(300);
-            card = Cards(w).OfType<SectionCard>().Single(c => c.IsEditing);
-            BoxOf(EditorOf(card, "Name")).Text = "Brake disc";
-            BoxOf(EditorOf(card, "Brand")).Text = "ATE";
-            BoxOf(EditorOf(card, "OemNumber")).Text = "1K0615301AA";
-            Button addSpec = ButtonNamed(EditorOf(card, "Specs").Element, Loc.T("Entity.Specs.Add"));
-            ClickNow(addSpec);
-            ClickNow(addSpec);
-            ClickNow(addSpec); // one left empty: not stored
-            await Wait(100);
-            List<TextBox> specBoxes = Descendants(EditorOf(card, "Specs").Element).OfType<TextBox>().ToList();
-            specBoxes[0].Text = "Size";
-            specBoxes[1].Text = "M10x1.25x40";
-            specBoxes[2].Text = "Torque";
-            specBoxes[3].Text = "45 Nm";
-            EditorOf(card, "Photos").AddPictures(new[] { photo });
-            await SaveCard(card);
-            await Wait(200);
+            await AddUnder(main, w, Loc.T("Entity.Parts.Template.Brakes"), d =>
+            {
+                Check(d.Title == Loc.F("Entity.Records.Parts.NewUnder", "Brakes"), "a new part's dialog says where it goes");
+                BoxOf(EditorOf(d, "Name")).Text = "Front brakes";
+                return Task.CompletedTask;
+            });
+            Check(RowNamed(w, "Front brakes") != null, "the system opened to show it");
+            await AddUnder(main, w, "Front brakes", async d =>
+            {
+                BoxOf(EditorOf(d, "Name")).Text = "Brake disc";
+                BoxOf(EditorOf(d, "Brand")).Text = "ATE";
+                BoxOf(EditorOf(d, "OemNumber")).Text = "1K0615301AA";
+                Button addSpec = ButtonNamed(EditorOf(d, "Specs").Element, Loc.T("Entity.Specs.Add"));
+                ClickNow(addSpec);
+                ClickNow(addSpec);
+                ClickNow(addSpec); // one left empty: not stored
+                await Wait(100);
+                List<TextBox> specBoxes = Descendants(EditorOf(d, "Specs").Element).OfType<TextBox>().ToList();
+                specBoxes[0].Text = "Size";
+                specBoxes[1].Text = "M10x1.25x40";
+                specBoxes[2].Text = "Torque";
+                specBoxes[3].Text = "45 Nm";
+                EditorOf(d, "Photos").AddPictures(new[] { photo });
+            });
 
             saved = StoredVehicle(vehicleGarage, octavia);
             EntityRecord disc = PartNamed(saved, "Brake disc");
             Check(PartNamed(saved, "Brakes").Children.Single().Get("Name") == "Front brakes" && PartNamed(saved, "Front brakes").Children.Single() == disc
                   && disc.Specs.Count == 2 && disc.Specs[1].Value == "45 Nm" && disc.Pictures.Count == 1 && Stored(disc.Pictures[0])
                   && SameBytes(ImageStore.Items.PathOf(disc.Pictures[0]), photo), "Brakes › Front brakes › Brake disc: specs (no empty one) and its photo copied in");
-            card = Cards(w).OfType<SectionCard>().Single(c => disc.Id.Equals(c.Tag));
-            Check(Descendants(card).OfType<TextBlock>().First().Text == "Brakes › Front brakes › Brake disc"
-                  && Descendants(card).OfType<TextBox>().Any(t => t.Text == "M10x1.25x40"), "the new part is shown, named with the ones above it, specs listed");
+            RecordRow row = RowOf(w, disc.Id);
+            Check(row.IsOpen && Descendants(row).OfType<TextBlock>().Any(t => t.Text == "Brake disc")
+                  && Descendants(row).OfType<TextBox>().Any(t => t.Text == "M10x1.25x40"), "the new part's row, open under the ones above it, its specs listed");
             RenderWindow(w, "vehicle-04-parts-en");
 
-            ClickNow(ButtonNamed(card, Loc.T("Entity.Records.Parts.Out")));
+            ClickNow(ButtonNamed(row, Loc.T("Entity.Records.Parts.Out")));
             await Wait(300);
             Check(PartNamed(StoredVehicle(vehicleGarage, octavia), "Brakes").Children.Select(c => c.Get("Name")).SequenceEqual(new[] { "Front brakes", "Brake disc" })
                   && PartNamed(StoredVehicle(vehicleGarage, octavia), "Front brakes").Children == null, "Out: beside Front brakes, which holds nothing now");
-            card = Cards(w).OfType<SectionCard>().Single(c => disc.Id.Equals(c.Tag));
-            Check(!ButtonNamed(card, Loc.T("Entity.Records.Parts.Down")).IsEnabled, "the last one can't go down");
-            ClickNow(ButtonNamed(card, Loc.T("Entity.Records.Parts.In")));
+            row = RowOf(w, disc.Id);
+            Check(row.IsOpen && !ButtonNamed(row, Loc.T("Entity.Records.Parts.Down")).IsEnabled, "still open; the last one can't go down");
+            ClickNow(ButtonNamed(row, Loc.T("Entity.Records.Parts.In")));
             await Wait(300);
             Check(PartNamed(StoredVehicle(vehicleGarage, octavia), "Front brakes").Children.Single().Id == disc.Id, "In: under Front brakes again");
 
             // Search over the whole vehicle: accents and case ignored, a match opens where it is.
-            w.SelectTab("Overview");
+            w.SelectPage("Overview");
             await Wait(200);
             TextBox search = Field<TextBox>(w, "SearchBox");
             search.Text = "m10";
             await Wait(200);
-            List<Button> found = Descendants(Cards(w)[0]).OfType<Button>().ToList();
+            List<Button> found = Matches(w);
             Check(found.Count == 1 && System.Windows.Automation.AutomationProperties.GetName(found[0]).Contains("Brakes › Front brakes › Brake disc: Size: M10x1.25x40"),
                 "\"m10\": the spec, with where it is (" + string.Join("; ", found.Select(b => System.Windows.Automation.AutomationProperties.GetName(b))) + ")");
             ClickNow(found[0]);
             await Wait(300);
-            Check(search.Text == "" && Field<Guid?>(w, "selectedPart") == disc.Id && ((RadioButton)Field<WrapPanel>(w, "TabsPanel").Children[3]).IsChecked == true,
-                "a click: Fluids & parts, the disc selected");
+            Check(search.Text == "" && Field<string>(w, "page") == "Parts" && RowOf(w, disc.Id).IsOpen
+                  && ((ListBoxItem)Field<ListBox>(w, "SectionList").SelectedItem)?.Tag as string == "Parts", "a click: Fluids & parts, the disc open");
             search.Text = "W 712";
             await Wait(200);
-            Check(Descendants(Cards(w)[0]).OfType<Button>().Any(b => System.Windows.Automation.AutomationProperties.GetName(b).Contains("Mann W 712/52")), "a fluid field is found too");
+            Check(Matches(w).Any(b => System.Windows.Automation.AutomationProperties.GetName(b).Contains("Mann W 712/52")), "a fluid field is found too");
             search.Text = "fekbetet-nincs";
             await Wait(200);
-            Check(Descendants(Cards(w)[0]).OfType<TextBlock>().First().Text == Loc.F("Vehicle.Search.None", "fekbetet-nincs"), "nothing found: said so");
+            Check(PageTexts(w).Contains(Loc.F("Vehicle.Search.None", "fekbetet-nincs")) && Matches(w).Count == 0, "nothing found: said so");
             PressKey(search, Key.Escape);
             await Wait(200);
             Check(search.Text == "" && w.IsVisible, "Esc empties the search; the window stays");
 
             // A system with a part under it: one question naming how many go with it.
-            w.SelectTab("Parts");
+            w.SelectPage("Parts");
             await Wait(200);
-            ClickNow(ButtonNamed(w, Loc.T("Entity.Parts.Template.Interior")));
-            await Wait(200);
-            ClickNow(ButtonNamed(w, Loc.T("Entity.Records.Parts.AddUnder")));
-            await Wait(300);
-            card = Cards(w).OfType<SectionCard>().Single(c => c.IsEditing);
-            BoxOf(EditorOf(card, "Name")).Text = "Üléshuzat";
-            await SaveCard(card);
-            ClickNow(ButtonNamed(w, Loc.T("Entity.Parts.Template.Interior")));
-            await Wait(200);
+            string interior = Loc.T("Entity.Parts.Template.Interior");
+            await AddUnder(main, w, interior, d =>
+            {
+                BoxOf(EditorOf(d, "Name")).Text = "Üléshuzat";
+                return Task.CompletedTask;
+            });
             int boxes = selectBoxes.Count;
-            Cards(w).OfType<SectionCard>().Single(c => c.Tag != null && !c.IsEditing && Descendants(c).OfType<TextBlock>().First().Text == Loc.T("Entity.Parts.Template.Interior")).Delete();
+            ClickNow(ButtonNamed(RowNamed(w, interior), Loc.T("Common.Delete")));
             await Wait(400);
-            Check(selectBoxes.Skip(boxes).Any(b => b.Contains(Loc.Plural("Entity.Records.Parts.DeleteWithChildren", 1, Loc.T("Entity.Parts.Template.Interior")))),
+            Check(selectBoxes.Skip(boxes).Any(b => b.Contains(Loc.Plural("Entity.Records.Parts.DeleteWithChildren", 1, interior))),
                 "deleting a system asks once, saying 1 part goes with it");
             Check(!RecordTree.Walk(VehicleSchema.Parts.Read(StoredVehicle(vehicleGarage, octavia))).Any(x => x.Record.Get("Name") == "Üléshuzat"),
                 "...and both are gone");
@@ -682,17 +696,15 @@ static partial class Program
         Invoke(main, "NavigateHome");
     }
 
-    // ---- Service log and costs ------------------------------------------------------------------------
-
-    static EntityRecord Entry(string type, DateTime date, string cost = null, string work = null)
+    // A part under `parent` through its row's Add a part under it (the dialog filled in by `fill`).
+    static async Task AddUnder(MainWindow main, ItemWindow w, string parent, Func<EditDialog, Task> fill)
     {
-        EntityRecord entry = new EntityRecord { Id = Guid.NewGuid() };
-        entry.Set(VehicleService.TypeKey, type);
-        entry.Set(VehicleService.DateKey, Values.FromDate(date));
-        entry.Set("Cost", cost);
-        entry.Set("Work", work);
-        return entry;
+        AnswerRecord(main, fill);
+        ClickNow(ButtonNamed(RowNamed(w, parent), Loc.T("Entity.Records.Parts.AddUnder"))); // returns once the dialog is closed
+        await Wait(300);
     }
+
+    // ---- Service log and costs ------------------------------------------------------------------------
 
     static void VehicleServiceLegacy()
     {
@@ -737,22 +749,21 @@ static partial class Program
 
         await WithVehicle(main, view, octavia, async w =>
         {
-            w.SelectTab("Service");
+            w.SelectPage("Service");
             await Wait(200);
-            Invoke(w, "StartAdd", VehicleSchema.ServiceLog, null);
-            await Wait(300);
-            SectionCard card = Cards(w).OfType<SectionCard>().Single(c => c.IsEditing);
-            Check((string)((ComboBoxItem)((ComboBox)EditorOf(card, "Type").Element).SelectedItem).Tag == "Service"
-                  && ((DatePicker)EditorOf(card, "Date").Element).SelectedDate == DateTime.Today && BoxOf(EditorOf(card, "Odometer")).Text == reading.ToString(),
-                "a new entry: a service, today, at the current reading");
-            BoxOf(EditorOf(card, "Work")).Text = "Fékcsere elöl";
-            BoxOf(EditorOf(card, "Cost")).Text = "85000";
-            CheckBox discBox = Descendants(EditorOf(card, "LinkedParts").Element).OfType<CheckBox>().Single(c => (string)c.Tag == disc.Id.ToString());
-            Check((string)discBox.Content == "Brakes › Front brakes › Brake disc", "the parts to tick are named with the ones above them");
-            discBox.IsChecked = true;
-            ((DatePicker)EditorOf(card, "NextDueDate").Element).SelectedDate = due;
-            BoxOf(EditorOf(card, "NextDueOdometer")).Text = (reading + 800).ToString();
-            await SaveCard(card);
+            await AddRecord(main, w, VehicleSchema.ServiceLog, d =>
+            {
+                Check(Chosen(EditorOf(d, "Type")) == "Service" && ((DatePicker)EditorOf(d, "Date").Element).SelectedDate == DateTime.Today
+                      && BoxOf(EditorOf(d, "Odometer")).Text == reading.ToString(), "a new entry: a service, today, at the current reading");
+                BoxOf(EditorOf(d, "Work")).Text = "Fékcsere elöl";
+                BoxOf(EditorOf(d, "Cost")).Text = "85000";
+                CheckBox discBox = Descendants(EditorOf(d, "LinkedParts").Element).OfType<CheckBox>().Single(c => (string)c.Tag == disc.Id.ToString());
+                Check((string)discBox.Content == "Brakes › Front brakes › Brake disc", "the parts to tick are named with the ones above them");
+                discBox.IsChecked = true;
+                ((DatePicker)EditorOf(d, "NextDueDate").Element).SelectedDate = due;
+                BoxOf(EditorOf(d, "NextDueOdometer")).Text = (reading + 800).ToString();
+                return Task.CompletedTask;
+            });
 
             Entity saved = StoredVehicle(vehicleGarage, octavia);
             EntityRecord entry = saved.Records["ServiceLog"].Single(e => e.Get("Work") == "Fékcsere elöl");
@@ -766,19 +777,18 @@ static partial class Program
                   && VehicleReminders.ShownMessage(reminder, VehicleReminders.DeadlineIndex()) == Loc.F("Entity.Reminder.Due", "Service", due.ToString(Loc.T("Format.LongDate"), Loc.Culture)),
                 "the next due date has its reminder, two weeks before: " + reminder?.NextFireTime);
             DistanceDue soon = EntityTypes.DistanceDues(saved).Single();
-            Check(soon.Remaining == 800 && soon.Level == ExpiryLevel.Soon
-                  && Descendants(Field<WrapPanel>(w, "Badges")).OfType<TextBlock>().Any(t => t.Text == Loc.F("Entity.ExpiryLine", "Service", soon.Describe(saved))),
-                "due in 800 by the odometer: a badge says so (" + soon.Describe(saved) + ")");
+            Check(soon.Remaining == 800 && soon.Level == ExpiryLevel.Soon && ChipTexts(w).Contains(Loc.F("Entity.ExpiryLine", "Service", soon.Describe(saved))),
+                "due in 800 by the odometer: a chip says so (" + soon.Describe(saved) + ")");
             Check(DashboardDataAggregator.Build(Profiles(main), DateTime.Now).Expiries.Any(x => x.Reading != null && x.ItemName == saved.Name),
                 "...and Home lists it");
 
-            // The part's card shows what fitted it (found through the search, which opens the parts above it).
+            // The part's row shows what fitted it (found through the search, which opens the parts above it).
             Field<TextBox>(w, "SearchBox").Text = "brake disc";
             await Wait(200);
-            ClickNow(Descendants(Cards(w)[0]).OfType<Button>().First(b => System.Windows.Automation.AutomationProperties.GetName(b).EndsWith("› Front brakes: Brake disc")));
+            ClickNow(Matches(w).First(b => System.Windows.Automation.AutomationProperties.GetName(b).EndsWith("› Front brakes: Brake disc")));
             await Wait(300);
-            SectionCard part = Cards(w).OfType<SectionCard>().Single(c => disc.Id.Equals(c.Tag));
-            Check(Descendants(part).OfType<TextBox>().Any(t => t.Text.Contains("Fékcsere elöl")), "the part's history lists the entry");
+            RecordRow part = RowOf(w, disc.Id);
+            Check(part.IsOpen && Descendants(part).OfType<TextBox>().Any(t => t.Text.Contains("Fékcsere elöl")), "the part's row, open, lists the entry in its history");
 
             // Another kind and a newer service without a next due: filter, costs, and the old next due no longer counts.
             foreach (EntityRecord added in new[] { Entry("Repair", DateTime.Today.AddDays(-400), "20000", "Izzó"), Entry("Fee", DateTime.Today, "15000", "Pályamatrica"),
@@ -796,38 +806,44 @@ static partial class Program
 
         await WithVehicle(main, view, octavia, async w =>
         {
-            w.SelectTab("Service");
+            w.SelectPage("Service");
             await Wait(200);
             string money(double amount) => Units.Format(amount, Units.Money, StoredVehicle(vehicleGarage, octavia));
-            VehicleCard costs = Cards(w).OfType<VehicleCard>().First(c => Descendants(c).OfType<TextBlock>().First().Text == Loc.T("Entity.Costs.Title"));
-            List<string> shown = Descendants(costs).OfType<TextBox>().Select(t => t.Text).ToList();
+            List<string> shown = Descendants(PageOf(w)).OfType<TextBox>().Select(t => t.Text).ToList();
             Check(shown.Contains(money(125000)) && shown.Contains(money(20000)) && shown.Contains(money(160000)),
-                "costs: per kind (services 125 000), per year, and in all: " + string.Join(", ", shown));
-            int all = Cards(w).OfType<SectionCard>().Count();
+                "costs as figures: per kind (services 125 000), all time (160 000): " + string.Join(", ", shown.Take(8)));
+            int all = Rows(w).Count;
             RadioButton repairs = Descendants(w).OfType<RadioButton>().First(r => r.GroupName == "FilterServiceLog" && r.Content as string == Loc.T("Choice.Repair"));
             repairs.IsChecked = true;
             await Wait(200);
-            Check(Cards(w).OfType<SectionCard>().Count() == 1 && all >= 4, "Repair chosen: only the repair (of " + all + ")");
-            Check(Descendants(Cards(w).OfType<SectionCard>().Single()).OfType<TextBlock>().First().Text.EndsWith(Loc.T("Choice.Repair")),
-                "its heading: date and kind");
+            Check(Rows(w).Count == 1 && all >= 4, "Repair chosen: only the repair (of " + all + ")");
+            Check(Descendants(Rows(w).Single()).OfType<TextBlock>().Any(t => t.Text.EndsWith(" · " + Loc.T("Choice.Repair"))), "its row: date · kind");
             Descendants(w).OfType<RadioButton>().First(r => r.GroupName == "FilterServiceLog" && r.Content as string == Loc.T("Entity.Filter.All")).IsChecked = true;
             await Wait(200);
-            List<string> dates = Cards(w).OfType<SectionCard>().Select(c => Descendants(c).OfType<TextBlock>().First().Text).ToList();
-            Check(Cards(w).OfType<SectionCard>().Count() == all, "All: every entry again, newest first: " + string.Join(" | ", dates.Take(3)));
+            List<DateTime> dates = Rows(w).Select(r => Values.ParseDate(r.Record.Get(VehicleService.DateKey)) ?? DateTime.MinValue).ToList();
+            Check(Rows(w).Count == all && dates.SequenceEqual(dates.OrderByDescending(d => d)), "All: every entry again, newest first");
+            Check(Rows(w).All(r => !r.IsOpen), "none open");
+            // A row with something more to show (its other fields) opens on a click and closes on the next; one with nothing
+            // more has nothing to open, and a click on it closes the one that is open: one open at a time.
+            RecordRow withMore = Rows(w).First(r => Descendants(r).OfType<CellPanel>().Any());
+            RecordRow plain = Rows(w).First(r => !Descendants(r).OfType<CellPanel>().Any());
+            ClickNow(Descendants(withMore).OfType<Button>().First());
+            await Wait(200);
+            Check(withMore.IsOpen && Rows(w).Count(r => r.IsOpen) == 1, "a click opens a row with more to show");
+            ClickNow(Descendants(plain).OfType<Button>().First());
+            await Wait(200);
+            Check(!plain.IsOpen && Rows(w).All(r => !r.IsOpen), "a row with nothing more has nothing to open, and the click closes the open one");
+            ClickNow(Descendants(withMore).OfType<Button>().First());
+            await Wait(200);
+            ClickNow(Descendants(withMore).OfType<Button>().First());
+            await Wait(200);
+            Check(!withMore.IsOpen, "and the same row closes on the next click");
             RenderWindow(w, "vehicle-05-service-en");
         });
         Invoke(main, "NavigateHome");
     }
 
     // ---- The outline's moves -------------------------------------------------------------------------
-
-    static EntityRecord Node(string name, params EntityRecord[] under)
-    {
-        EntityRecord node = new EntityRecord { Id = Guid.NewGuid() };
-        node.Set("Name", name);
-        node.Children = under.Length > 0 ? under.ToList() : null;
-        return node;
-    }
 
     static void RecordTreeMoves()
     {
@@ -887,19 +903,28 @@ static partial class Program
                 List<string> clipped = new List<string>();
                 foreach (string tab in new[] { "Overview", "Specs", "Wheels", "Parts", "Documents", "Service" })
                 {
-                    w.SelectTab(tab);
+                    w.SelectPage(tab);
                     await Wait(250);
                     if (tab == "Specs" || tab == "Parts")
-                        foreach (SectionCard card in Cards(w).OfType<SectionCard>().ToList())
+                        foreach (FieldsSection card in Sections(w))
                             card.BeginEdit(); // one at a time: each new one stops the last
                     await Wait(150);
                     clipped.AddRange(Clipped(w).Select(c => tab + ": " + c));
                 }
+                // The service entry's dialog, every field in it.
+                _ = main.Dispatcher.BeginInvoke(new Action(async () =>
+                {
+                    await Wait(500);
+                    EditDialog dialog = Application.Current.Windows.OfType<EditDialog>().First();
+                    clipped.AddRange(Clipped(dialog).Select(c => "service dialog: " + c));
+                    dialog.Close();
+                }), DispatcherPriority.Background);
+                Invoke(w, "OpenRecord", VehicleSchema.ServiceLog, null, null);
                 Check(clipped.Count == 0, language + ": nothing clipped at 660 px" + (clipped.Count > 0 ? ": " + string.Join("; ", clipped.Take(6)) : ""));
-                Check(((RadioButton)Field<WrapPanel>(w, "TabsPanel").Children[0]).Content as string == Loc.T("Entity.Tab.Overview"), language + ": the tabs in the language");
+                Check((string)((ListBoxItem)Field<ListBox>(w, "SectionList").Items[0]).Content == Loc.T("Entity.Tab.Overview"), language + ": the pages in the language");
                 if (language == Loc.Hungarian)
                 {
-                    w.SelectTab("Documents");
+                    w.SelectPage("Documents");
                     await Wait(250);
                     RenderWindow(w, "vehicle-02-documents-hu-narrow");
                 }
@@ -907,7 +932,7 @@ static partial class Program
                 {
                     w.Width = 1100;
                     w.Height = 800;
-                    w.SelectTab("Overview");
+                    w.SelectPage("Overview");
                     await Wait(400);
                     RenderWindow(w, "vehicle-03-overview-sr-wide");
                 }
@@ -916,7 +941,7 @@ static partial class Program
         Loc.Switch(Loc.English);
 
         AppSettings settings = AppSettings.Load();
-        Check(settings.VehicleWindowWidth == 1100 && settings.VehicleWindowHeight == 800, "its size is remembered when it closes");
+        Check(settings.ItemWindowWidth == 1100 && settings.ItemWindowHeight == 800, "its size is remembered when it closes");
         await WithVehicle(main, view, octavia, w =>
         {
             Check(w.Width == Math.Min(1100, SystemParameters.WorkArea.Width - 40), "...and used the next time");

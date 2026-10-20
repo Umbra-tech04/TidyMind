@@ -54,12 +54,12 @@ namespace TidyMind
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Currency { get; set; }
 
-        // The vehicle window's size when it was last closed.
+        // The item window's size when it was last closed.
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public double? VehicleWindowWidth { get; set; }
+        public double? ItemWindowWidth { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public double? VehicleWindowHeight { get; set; }
+        public double? ItemWindowHeight { get; set; }
 
         // Fields this version doesn't know (written by another TidyMind version): kept so saving doesn't drop them.
         [JsonExtensionData]

@@ -256,7 +256,7 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <CheckBox IsChecked="{Binding IsDone}" FontSize="14"
+                                <CheckBox IsChecked="{Binding IsDone}" FontSize="14" Click="TaskCheck_Click"
                                           VerticalAlignment="Center" VerticalContentAlignment="Center">
                                     <TextBlock Text="{Binding Title}" TextWrapping="Wrap"/>
                                 </CheckBox>

@@ -465,14 +465,10 @@ static partial class Program
         sample.Arrange(new Rect(sample.DesiredSize));
         RenderPopup(sample, tag + "-tooltip");
         await Page("Project memory", async () => { main.ShowSample(ProfileType.Project); await Wait(300); }, main, "02-project");
-        await Page("Collection with an item open", async () =>
+        await Page("Collection", async () =>
         {
             main.ShowSample(ProfileType.Collection);
             await Wait(400);
-            // A garment: its detail card on the page (a vehicle opens its own window, a page of its own below).
-            Entity garment = EntityStore.Load(WelcomeMemory.Find(Profiles(main), ProfileType.Collection)).OrderBy(e => e.Order).Last(e => e.EntityType == EntityTypes.Clothing);
-            ((CollectionView)Content(main)).Reveal(garment.Id);
-            await Wait(300);
         }, main, "03-collection");
         await Page("Day Plan (timeline)", async () =>
         {
@@ -556,7 +552,8 @@ static partial class Program
             ("Day plan block", () => Make<DayPlanBlockDialog>(null, DateTime.Today, 9 * 60, 10 * 60, (IEnumerable<Profile>)Profiles(main), new List<PlanTodo>(), null, true)),
             ("Vehicle form", () => new EntityForm(EntityTypes.Vehicle)),
             ("Clothing form", () => new EntityForm(EntityTypes.Clothing)),
-            ("Vehicle window", () => new VehicleWindow(SampleVehicle(), new VehicleWindow.Host())),
+            ("Vehicle window", () => new ItemWindow(SampleVehicle(), new ItemWindow.Host())),
+            ("Garment window", () => new ItemWindow(SampleGarment(), new ItemWindow.Host())),
             ("Item type", () => new EntityTypeSelector()),
             ("Export format", () => new ExportFormatWindow()),
             ("Licenses", () => new LicensesWindow()),
@@ -943,6 +940,7 @@ static partial class Program
         main.ShowSample(ProfileType.Collection);
         await Wait(300);
         Entity first = EntityStore.Load(WelcomeMemory.Find(Profiles(main), ProfileType.Collection)).OrderBy(e => e.Order).First();
+        DriveItem(main, w => Wait(200)); // its window (the item window pages are in the window list), closed again
         ((CollectionView)Content(main)).Reveal(first.Id);
         await Wait(300);
         main.ShowDayPlan(DateTime.Today);

@@ -39,7 +39,8 @@ namespace TidyMind
             if (currentProject.Tasks == null)
                 currentProject.Tasks = new List<TaskItem>();
 
-            foreach (TaskItem task in currentProject.Tasks)
+            // The open tasks, then the done ones (TaskOrder): what is stored keeps its order.
+            foreach (TaskItem task in TaskOrder.OpenFirst(currentProject.Tasks, t => t.IsDone))
                 TaskList.Items.Add(task);
 
             Files.Load(currentProject.Attachments);
@@ -214,8 +215,46 @@ namespace TidyMind
             TaskItem newTask = new TaskItem();
             newTask.Title = TaskInput.Text;
             currentProject.Tasks.Add(newTask);
-            TaskList.Items.Add(newTask);
+            TaskList.Items.Insert(TaskOrder.OpenFirst(currentProject.Tasks, t => t.IsDone).IndexOf(newTask), newTask); // last of the open ones
             TaskInput.Clear();
+        }
+
+        // A tick or an untick (the box has changed the task already): the task goes to the other group, at its own place
+        // among that group's tasks as stored. Only that row moves; the others keep their rows, so the selection of the
+        // rest, the scroll position and the keyboard (on the same box, which is not scrolled to) stay as they were.
+        private void TaskCheck_Click(object sender, RoutedEventArgs e)
+        {
+            TaskItem task = (TaskItem)((FrameworkElement)sender).DataContext;
+            int from = TaskList.Items.IndexOf(task);
+            int to = TaskOrder.OpenFirst(currentProject.Tasks, t => t.IsDone).IndexOf(task);
+            if (from < 0 || from == to)
+                return;
+            bool selected = TaskList.SelectedItems.Contains(task);
+            bool keyboard = ((CheckBox)sender).IsKeyboardFocused;
+            TaskOrder.KeepView(TaskList, () =>
+            {
+                TaskList.Items.RemoveAt(from);
+                TaskList.Items.Insert(to, task);
+                if (selected)
+                    TaskList.SelectedItems.Add(task);
+                if (keyboard)
+                {
+                    TaskList.UpdateLayout();
+                    if (TaskList.ItemContainerGenerator.ContainerFromItem(task) is DependencyObject row && FindCheckBox(row) is CheckBox box)
+                        box.Focus();
+                }
+            });
+        }
+
+        private static CheckBox FindCheckBox(DependencyObject parent)
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(parent, i);
+                if (child is CheckBox box || (box = FindCheckBox(child)) != null)
+                    return box;
+            }
+            return null;
         }
 
         // Where the next Shift+click run starts: the task clicked last.

@@ -31,7 +31,7 @@ namespace TidyMind
             "<ContentPresenter/></ControlTemplate>");
 
         // A round, light button over the picture; dimmed when there's nothing more that way.
-        private static readonly ControlTemplate ArrowTemplate = (ControlTemplate)XamlReader.Parse(
+        internal static readonly ControlTemplate ArrowTemplate = (ControlTemplate)XamlReader.Parse(
             "<ControlTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'" +
             " xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml' TargetType='Button'>" +
             "<Border x:Name='b' Width='32' Height='32' CornerRadius='16' Background='#F2FFFFFF' BorderBrush='#E0E0DE' BorderThickness='1'>" +

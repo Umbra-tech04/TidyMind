@@ -485,9 +485,6 @@ Az utolsó módosításod nem lett mentve.</value>
   <data name="Entity.Add.Vehicle" xml:space="preserve">
     <value>Új jármű</value>
   </data>
-  <data name="Entity.AddSize" xml:space="preserve">
-    <value>Méret hozzáadása</value>
-  </data>
   <data name="Entity.ChoosePictures" xml:space="preserve">
     <value>Képek hozzáadása…</value>
   </data>
@@ -495,7 +492,7 @@ Az utolsó módosításod nem lett mentve.</value>
     <value>Dátum</value>
   </data>
   <data name="Entity.Column.Km" xml:space="preserve">
-    <value>Km</value>
+    <value>Km-állás</value>
   </data>
   <data name="Entity.Column.Liters" xml:space="preserve">
     <value>Liter</value>
@@ -610,15 +607,6 @@ Az utolsó módosításod nem lett mentve.</value>
   </data>
   <data name="Entity.Required" xml:space="preserve">
     <value>Ezt meg kell adni: {0}.</value>
-  </data>
-  <data name="Entity.Size.Less" xml:space="preserve">
-    <value>Eggyel kevesebb</value>
-  </data>
-  <data name="Entity.Size.More" xml:space="preserve">
-    <value>Eggyel több</value>
-  </data>
-  <data name="Entity.Size.Remove" xml:space="preserve">
-    <value>Méret eltávolítása</value>
   </data>
   <data name="Entity.SizeCount.Other" xml:space="preserve">
     <value>{0} méret</value>
@@ -2931,13 +2919,13 @@ Az utolsó oldalon a nyíl új oldalt kezd.</value>
     <value>A(z) „{0}” fájlt nem sikerült bemásolni a TidyMind mappájába ({1}), ezért a dokumentum nem lett mentve.</value>
   </data>
   <data name="Entity.Card.Empty" xml:space="preserve">
-    <value>Még nincs kitöltve.</value>
+    <value>Még nincs kitöltve</value>
   </data>
   <data name="Entity.Card.Fill" xml:space="preserve">
     <value>Kitöltés</value>
   </data>
   <data name="Entity.Log.Empty" xml:space="preserve">
-    <value>Még nincs bejegyzés.</value>
+    <value>Még nincs bejegyzés</value>
   </data>
   <data name="Entity.Log.Odometer" xml:space="preserve">
     <value>Km-óra állások</value>
@@ -2966,9 +2954,6 @@ Az utolsó oldalon a nyíl új oldalt kezd.</value>
   <data name="Vehicle.Odometer.Update" xml:space="preserve">
     <value>Km-óra frissítése</value>
   </data>
-  <data name="Vehicle.Odometer.None" xml:space="preserve">
-    <value>Még nincs km-állás</value>
-  </data>
   <data name="Vehicle.Odometer.Prompt" xml:space="preserve">
     <value>Jelenlegi állás ({0})</value>
   </data>
@@ -2978,29 +2963,8 @@ Az utolsó oldalon a nyíl új oldalt kezd.</value>
   <data name="Vehicle.Overview.Deadlines" xml:space="preserve">
     <value>Közelgő határidők</value>
   </data>
-  <data name="Vehicle.Overview.NoDeadlines" xml:space="preserve">
-    <value>Még nincs határidő. Add hozzá a jármű dokumentumait (biztosítás, műszaki vizsga, gépjárműadó…) a lejárat dátumával, és itt, a kártyán és a Kezdőlapon is megjelennek.</value>
-  </data>
-  <data name="Vehicle.Overview.AllDocuments" xml:space="preserve">
-    <value>Összes dokumentum</value>
-  </data>
-  <data name="Vehicle.Overview.KeySpecs" xml:space="preserve">
-    <value>Fő adatok</value>
-  </data>
-  <data name="Vehicle.Overview.NoSpecs" xml:space="preserve">
-    <value>A gyártmány, a modell és a motor még nincs kitöltve.</value>
-  </data>
   <data name="Vehicle.Overview.AddSpecs" xml:space="preserve">
     <value>Adatok megadása</value>
-  </data>
-  <data name="Vehicle.Overview.AllSpecs" xml:space="preserve">
-    <value>Összes adat</value>
-  </data>
-  <data name="Vehicle.Overview.LastService" xml:space="preserve">
-    <value>Utolsó szerviz</value>
-  </data>
-  <data name="Vehicle.Overview.NoService" xml:space="preserve">
-    <value>Még nincs szerviz bejegyezve.</value>
   </data>
   <data name="Settings.Currency.Title" xml:space="preserve">
     <value>Pénznem</value>
@@ -3368,20 +3332,8 @@ Az utolsó oldalon a nyíl új oldalt kezd.</value>
   <data name="Entity.Filter.All" xml:space="preserve">
     <value>Mind</value>
   </data>
-  <data name="Entity.Costs.Title" xml:space="preserve">
-    <value>Költségek</value>
-  </data>
   <data name="Entity.Costs.ByKind" xml:space="preserve">
-    <value>Fajta szerint</value>
-  </data>
-  <data name="Entity.Costs.ByYear" xml:space="preserve">
-    <value>Év szerint</value>
-  </data>
-  <data name="Entity.Costs.Total" xml:space="preserve">
-    <value>Összesen</value>
-  </data>
-  <data name="Entity.Costs.NoDate" xml:space="preserve">
-    <value>Dátum nélkül</value>
+    <value>Fajta szerint, összesen</value>
   </data>
   <data name="Entity.Reminder.Due" xml:space="preserve">
     <value>{0} esedékes: {1}.</value>
@@ -3394,5 +3346,68 @@ Az utolsó oldalon a nyíl új oldalt kezd.</value>
   </data>
   <data name="Expiry.AtReading" xml:space="preserve">
     <value>esedékes: {0}</value>
+  </data>
+  <data name="Entity.Picture.Count" xml:space="preserve">
+    <value>{0} / {1}</value>
+  </data>
+  <data name="Item.Overview.Latest" xml:space="preserve">
+    <value>Legutóbbi: {0}</value>
+  </data>
+  <data name="Item.Overview.All" xml:space="preserve">
+    <value>Mind</value>
+  </data>
+  <data name="Item.Overview.Empty.Title" xml:space="preserve">
+    <value>Itt még nincs mit mutatni</value>
+  </data>
+  <data name="Item.Overview.Empty.Text" xml:space="preserve">
+    <value>Töltsd ki az adatokat, vedd fel a dokumentumokat a dátumukkal, vagy írj be egy szervizt: a közelgő határidők, a legutóbbi szerviz és a jegyzeteid itt gyűlnek.</value>
+  </data>
+  <data name="Entity.Costs.ThisYear" xml:space="preserve">
+    <value>Idén ({0})</value>
+  </data>
+  <data name="Entity.Costs.AllTime" xml:space="preserve">
+    <value>Mindösszesen</value>
+  </data>
+  <data name="Entity.Unit.pcs" xml:space="preserve">
+    <value>db</value>
+  </data>
+  <data name="Entity.Section.Clothing" xml:space="preserve">
+    <value>Adatok</value>
+  </data>
+  <data name="Entity.Tab.Clothing" xml:space="preserve">
+    <value>Adatok</value>
+  </data>
+  <data name="Entity.Records.Sizes" xml:space="preserve">
+    <value>Méretek</value>
+  </data>
+  <data name="Entity.Records.Sizes.Add" xml:space="preserve">
+    <value>Méret hozzáadása</value>
+  </data>
+  <data name="Entity.Records.Sizes.Empty" xml:space="preserve">
+    <value>Még nincs méret. Vedd fel a meglévő méreteket az állapotukkal és a darabszámmal.</value>
+  </data>
+  <data name="Entity.Records.Sizes.Untitled" xml:space="preserve">
+    <value>Méret nélkül</value>
+  </data>
+  <data name="Entity.Records.Sizes.Count" xml:space="preserve">
+    <value>Darab</value>
+  </data>
+  <data name="Entity.Records.Sizes.Fewer" xml:space="preserve">
+    <value>Eggyel kevesebb</value>
+  </data>
+  <data name="Entity.Records.Sizes.More" xml:space="preserve">
+    <value>Eggyel több</value>
+  </data>
+  <data name="Entity.Field.Size" xml:space="preserve">
+    <value>Méret</value>
+  </data>
+  <data name="Entity.Field.Condition" xml:space="preserve">
+    <value>Állapot</value>
+  </data>
+  <data name="Item.Pages" xml:space="preserve">
+    <value>Szakaszok</value>
+  </data>
+  <data name="Entity.Unit.pcs.Count.Other" xml:space="preserve">
+    <value>{0} db</value>
   </data>
 </root>

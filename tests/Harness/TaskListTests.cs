@@ -58,6 +58,7 @@ static partial class Program
         }
         Loc.Switch(Loc.English);
         await LongLists(main);
+        await TaskOrderScenarios(main);
     }
 
     // Wheel, keyboard, caret, and the task actions, on the 60-task page.

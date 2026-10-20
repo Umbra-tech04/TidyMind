@@ -533,9 +533,6 @@ Your last change wasn't saved.</value>
   <data name="Entity.Add.Vehicle" xml:space="preserve">
     <value>Add vehicle</value>
   </data>
-  <data name="Entity.AddSize" xml:space="preserve">
-    <value>Add Size</value>
-  </data>
   <data name="Entity.ChoosePictures" xml:space="preserve">
     <value>Add Pictures…</value>
   </data>
@@ -543,7 +540,7 @@ Your last change wasn't saved.</value>
     <value>Date</value>
   </data>
   <data name="Entity.Column.Km" xml:space="preserve">
-    <value>Km</value>
+    <value>Odometer</value>
   </data>
   <data name="Entity.Column.Liters" xml:space="preserve">
     <value>Liters</value>
@@ -661,15 +658,6 @@ Your last change wasn't saved.</value>
   </data>
   <data name="Entity.Required" xml:space="preserve">
     <value>{0} is required.</value>
-  </data>
-  <data name="Entity.Size.Less" xml:space="preserve">
-    <value>One fewer</value>
-  </data>
-  <data name="Entity.Size.More" xml:space="preserve">
-    <value>One more</value>
-  </data>
-  <data name="Entity.Size.Remove" xml:space="preserve">
-    <value>Remove this size</value>
   </data>
   <data name="Entity.SizeCount.One" xml:space="preserve">
     <value>{0} size</value>
@@ -3040,13 +3028,13 @@ On the last page, the arrow starts a new page.</value>
     <value>"{0}" couldn't be copied into TidyMind's folder ({1}), so the document wasn't saved.</value>
   </data>
   <data name="Entity.Card.Empty" xml:space="preserve">
-    <value>Nothing filled in yet.</value>
+    <value>Not filled in yet</value>
   </data>
   <data name="Entity.Card.Fill" xml:space="preserve">
     <value>Fill in</value>
   </data>
   <data name="Entity.Log.Empty" xml:space="preserve">
-    <value>Nothing written down yet.</value>
+    <value>Nothing written down yet</value>
   </data>
   <data name="Entity.Log.Odometer" xml:space="preserve">
     <value>Odometer readings</value>
@@ -3078,9 +3066,6 @@ On the last page, the arrow starts a new page.</value>
   <data name="Vehicle.Odometer.Update" xml:space="preserve">
     <value>Update odometer</value>
   </data>
-  <data name="Vehicle.Odometer.None" xml:space="preserve">
-    <value>No reading yet</value>
-  </data>
   <data name="Vehicle.Odometer.Prompt" xml:space="preserve">
     <value>Current reading ({0})</value>
   </data>
@@ -3090,29 +3075,8 @@ On the last page, the arrow starts a new page.</value>
   <data name="Vehicle.Overview.Deadlines" xml:space="preserve">
     <value>Coming up</value>
   </data>
-  <data name="Vehicle.Overview.NoDeadlines" xml:space="preserve">
-    <value>No dates yet. Add the vehicle's documents (insurance, inspection, road tax…) with the date they run out, and they show up here, on the card and on Home.</value>
-  </data>
-  <data name="Vehicle.Overview.AllDocuments" xml:space="preserve">
-    <value>All documents</value>
-  </data>
-  <data name="Vehicle.Overview.KeySpecs" xml:space="preserve">
-    <value>Key specs</value>
-  </data>
-  <data name="Vehicle.Overview.NoSpecs" xml:space="preserve">
-    <value>Make, model and engine aren't filled in yet.</value>
-  </data>
   <data name="Vehicle.Overview.AddSpecs" xml:space="preserve">
     <value>Add specs</value>
-  </data>
-  <data name="Vehicle.Overview.AllSpecs" xml:space="preserve">
-    <value>All specs</value>
-  </data>
-  <data name="Vehicle.Overview.LastService" xml:space="preserve">
-    <value>Last service</value>
-  </data>
-  <data name="Vehicle.Overview.NoService" xml:space="preserve">
-    <value>No service written down yet.</value>
   </data>
   <data name="Settings.Currency.Title" xml:space="preserve">
     <value>Currency</value>
@@ -3486,20 +3450,8 @@ On the last page, the arrow starts a new page.</value>
   <data name="Entity.Filter.All" xml:space="preserve">
     <value>All</value>
   </data>
-  <data name="Entity.Costs.Title" xml:space="preserve">
-    <value>Costs</value>
-  </data>
   <data name="Entity.Costs.ByKind" xml:space="preserve">
-    <value>By kind</value>
-  </data>
-  <data name="Entity.Costs.ByYear" xml:space="preserve">
-    <value>By year</value>
-  </data>
-  <data name="Entity.Costs.Total" xml:space="preserve">
-    <value>In all</value>
-  </data>
-  <data name="Entity.Costs.NoDate" xml:space="preserve">
-    <value>No date</value>
+    <value>By kind, all time</value>
   </data>
   <data name="Entity.Reminder.Due" xml:space="preserve">
     <value>{0} is due on {1}.</value>
@@ -3512,5 +3464,71 @@ On the last page, the arrow starts a new page.</value>
   </data>
   <data name="Expiry.AtReading" xml:space="preserve">
     <value>due at {0}</value>
+  </data>
+  <data name="Entity.Picture.Count" xml:space="preserve">
+    <value>{0} / {1}</value>
+  </data>
+  <data name="Item.Overview.Latest" xml:space="preserve">
+    <value>Latest: {0}</value>
+  </data>
+  <data name="Item.Overview.All" xml:space="preserve">
+    <value>See all</value>
+  </data>
+  <data name="Item.Overview.Empty.Title" xml:space="preserve">
+    <value>Nothing to show here yet</value>
+  </data>
+  <data name="Item.Overview.Empty.Text" xml:space="preserve">
+    <value>Fill in the specs, add the documents with their dates or write down a service: what comes up next, the latest service and your notes gather here.</value>
+  </data>
+  <data name="Entity.Costs.ThisYear" xml:space="preserve">
+    <value>This year ({0})</value>
+  </data>
+  <data name="Entity.Costs.AllTime" xml:space="preserve">
+    <value>All time</value>
+  </data>
+  <data name="Entity.Unit.pcs" xml:space="preserve">
+    <value>pcs</value>
+  </data>
+  <data name="Entity.Section.Clothing" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Entity.Tab.Clothing" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Entity.Records.Sizes" xml:space="preserve">
+    <value>Sizes</value>
+  </data>
+  <data name="Entity.Records.Sizes.Add" xml:space="preserve">
+    <value>Add size</value>
+  </data>
+  <data name="Entity.Records.Sizes.Empty" xml:space="preserve">
+    <value>No sizes yet. Add each size you have, with its condition and how many.</value>
+  </data>
+  <data name="Entity.Records.Sizes.Untitled" xml:space="preserve">
+    <value>No size</value>
+  </data>
+  <data name="Entity.Records.Sizes.Count" xml:space="preserve">
+    <value>Pieces</value>
+  </data>
+  <data name="Entity.Records.Sizes.Fewer" xml:space="preserve">
+    <value>One fewer</value>
+  </data>
+  <data name="Entity.Records.Sizes.More" xml:space="preserve">
+    <value>One more</value>
+  </data>
+  <data name="Entity.Field.Size" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="Entity.Field.Condition" xml:space="preserve">
+    <value>Condition</value>
+  </data>
+  <data name="Item.Pages" xml:space="preserve">
+    <value>Sections</value>
+  </data>
+  <data name="Entity.Unit.pcs.Count.One" xml:space="preserve">
+    <value>{0} piece</value>
+  </data>
+  <data name="Entity.Unit.pcs.Count.Other" xml:space="preserve">
+    <value>{0} pieces</value>
   </data>
 </root>

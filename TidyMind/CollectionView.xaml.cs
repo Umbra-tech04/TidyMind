@@ -19,9 +19,6 @@ namespace TidyMind
     {
         private readonly Profile memory;
         private List<Entity> entities;
-        private Entity currentDetailEntity;
-        private int detailPicture; // which of its pictures the detail card shows
-        private readonly PictureBrowser detailPictures = new PictureBrowser(double.NaN, 150, canReorder: false, stripForOne: false);
         private readonly MemoryTabStrip tabStrip;
         private readonly DragReorder<Entity> cardDrag;
         private readonly CardSelectionController<Entity> selection;
@@ -38,30 +35,16 @@ namespace TidyMind
         public CollectionView(Profile profile, Func<bool> saveProfiles)
         {
             InitializeComponent();
-            DetailPictures.Content = detailPictures;
-            detailPictures.Picked += index => ShowDetailPicture(currentDetailEntity, index);
-
-            // With the detail card open, Left and Right go through its pictures (unless the keyboard is in its text).
-            PreviewKeyDown += (s, e) =>
-            {
-                if (OverlayGrid.Visibility == Visibility.Visible && (e.Key == Key.Left || e.Key == Key.Right)
-                    && Keyboard.Modifiers == ModifierKeys.None && !(e.OriginalSource is System.Windows.Controls.Primitives.TextBoxBase)
-                    && detailPictures.Browse(e.Key == Key.Left ? -1 : +1))
-                    e.Handled = true;
-            };
-
             searchPause.Tick += (s, e) =>
             {
                 searchPause.Stop();
                 RenderEntities();
             };
             memory = profile;
-            // An open item overlay isn't empty page: no background menu there.
-            MemoryPageBackground.Attach(Page, BackgroundLayer, profile, saveProfiles, HeaderPlate, EmptyCard, OverlayGrid);
+            MemoryPageBackground.Attach(Page, BackgroundLayer, profile, saveProfiles, HeaderPlate, EmptyCard);
             TitleText.Text = profile.Name;
 
-            // Counts, cards, an open detail card and the reason a file couldn't be read, in the new language; names
-            // and notes are the user's own.
+            // Counts, cards and the reason a file couldn't be read, in the new language; names are the user's own.
             Loc.Track(this, () =>
             {
                 if (unreadable)
@@ -72,11 +55,6 @@ namespace TidyMind
                 }
                 tabStrip.Render();
                 RenderEntities();
-                if (OverlayGrid.Visibility == Visibility.Visible && currentDetailEntity != null)
-                {
-                    FillDetail(currentDetailEntity);
-                    ShowDetailPicture(currentDetailEntity, detailPicture);
-                }
             });
 
             // An unreadable file is left alone: the page says why, and nothing on it can change or save items.
@@ -355,12 +333,12 @@ namespace TidyMind
 
             selection.Attach(card, entity); // first: a Ctrl or Shift click selects, and neither opens nor drags
             CardEffects.AttachHoverLift(card, shadow);
-            CardEffects.AttachClick(card, () => OpenDetail(entity));
+            CardEffects.AttachClick(card, () => OpenItem(entity));
             cardDrag.Attach(card, entity);
 
             ContextMenu menu = new ContextMenu();
             MenuItem edit = new MenuItem { Header = Loc.T("Common.Edit") };
-            edit.Click += (s, e) => { if (entity.EntityType == EntityTypes.Vehicle) OpenDetail(entity); else EditEntity(entity); };
+            edit.Click += (s, e) => OpenItem(entity);
             MenuItem delete = new MenuItem { Header = Loc.T("Common.Delete") };
             delete.Click += (s, e) => DeleteEntity(entity);
             MenuItem reminder = new MenuItem { Header = Loc.T("Common.AddReminder") };
@@ -457,132 +435,35 @@ namespace TidyMind
                 ? color + sizes : color + " · " + sizes;
         }
 
-        // ---- Detail overlay ----------------------------------------------
+        // ---- The item's window ------------------------------------------
 
-        // From global search: switch to the item's tab and open its detail card. Nothing if it's gone since.
+        // From global search or Home: switch to the item's tab and open it. Nothing if it's gone since.
         public void Reveal(Guid entityId)
         {
             Entity entity = unreadable ? null : entities.FirstOrDefault(e => e.Id == entityId);
             if (entity == null) return;
 
             tabStrip.Select(entity.TabId);
-            OpenDetail(entity);
+            OpenItem(entity);
         }
 
-        // A vehicle opens its own window (VehicleWindow); any other item the detail card.
-        private void OpenDetail(Entity entity)
+        // The item's own window (ItemWindow), saving through this view; the cards show the result once it closes.
+        private void OpenItem(Entity entity)
         {
-            if (entity.EntityType == EntityTypes.Vehicle)
+            ItemWindow window = new ItemWindow(entity, new ItemWindow.Host
             {
-                OpenVehicle(entity);
-                return;
-            }
-            currentDetailEntity = entity;
-            ShowDetailPicture(entity, 0);
-            FillDetail(entity);
-
-            OverlayGrid.Visibility = Visibility.Visible;
-            OverlayGrid.Opacity = 0;
-            DetailCard.RenderTransform = new TranslateTransform(0, 20);
-
-            OverlayGrid.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(180)));
-            DetailCard.RenderTransform.BeginAnimation(TranslateTransform.YProperty,
-                new DoubleAnimation(20, 0, TimeSpan.FromMilliseconds(180)));
-        }
-
-        // The detail card's pictures: the cover first, then whichever is picked with an arrow, a key or the strip
-        // (arrows and strip only with more than one picture), decoded off the UI thread while the card shows the item.
-        private void ShowDetailPicture(Entity entity, int index)
-        {
-            List<string> names = EntityImages.Names(entity);
-            detailPicture = names.Count == 0 ? 0 : Math.Clamp(index, 0, names.Count - 1);
-            detailPictures.ShowStored(names, detailPicture, () => currentDetailEntity == entity && OverlayGrid.Visibility == Visibility.Visible);
-        }
-
-        // The detail card's rows; filled again after a language switch.
-        private void FillDetail(Entity entity)
-        {
-            DetailName.Text = entity.Name;
-            DetailPanel.Children.Clear();
-            AddDetailRow(Loc.T("Entity.Field.Brand"), entity.Brand);
-            AddDetailRow(Loc.T("Entity.Field.Color"), entity.Color);
-            AddDetailRow(Loc.T("Entity.Field.Material"), Choices.Label(entity.Material));
-            AddDetailRow(Loc.T("Entity.Field.Season"), Choices.Label(entity.Season));
-            AddDetailRow(Loc.T("Entity.Field.PurchasePrice"), entity.PurchasePrice);
-            AddSizesDetail(entity);
-            AddDetailRow(Loc.T("Entity.Field.Notes"), entity.Notes);
-        }
-
-        private void AddDetailRow(string label, string value)
-        {
-            if (string.IsNullOrWhiteSpace(value)) return;
-
-            DetailPanel.Children.Add(new TextBlock
-            {
-                Text = label,
-                Foreground = (Brush)FindResource("TextSub"), // 5.1:1 on the white card
-                FontSize = 11,
-                Margin = new Thickness(0, 8, 0, 2)
-            });
-            DetailPanel.Children.Add(TextCopy.Selectable(value, 13, B("#1C1B19")));
-        }
-
-        private void AddSizesDetail(Entity entity)
-        {
-            if (entity.Sizes == null || entity.Sizes.Count == 0) return;
-
-            DetailPanel.Children.Add(new TextBlock
-            {
-                Text = Loc.T("Entity.Sizes"),
-                Foreground = (Brush)FindResource("TextSub"),
-                FontSize = 11,
-                Margin = new Thickness(0, 8, 0, 4)
-            });
-
-            foreach (SizeQuantity sq in entity.Sizes)
-            {
-                TextBox size = TextCopy.Selectable(sq.Size + " - " + Choices.Label(sq.Condition) + " x" + sq.Quantity, 13, B("#1C1B19"));
-                size.Margin = new Thickness(0, 0, 0, 4);
-                DetailPanel.Children.Add(size);
-            }
-        }
-
-        private void CloseOverlay()
-        {
-            DoubleAnimation fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(130));
-            fadeOut.Completed += (s, e) => OverlayGrid.Visibility = Visibility.Collapsed;
-            OverlayGrid.BeginAnimation(OpacityProperty, fadeOut);
-        }
-
-        private void CloseOverlay_Click(object sender, RoutedEventArgs e) => CloseOverlay();
-
-        private void OverlayGrid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) => CloseOverlay();
-
-        private void DetailCard_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) => e.Handled = true;
-
-        private void DetailEditButton_Click(object sender, RoutedEventArgs e)
-        {
-            CloseOverlay();
-            EditEntity(currentDetailEntity);
-        }
-
-        private void DetailDeleteButton_Click(object sender, RoutedEventArgs e)
-        {
-            Entity target = currentDetailEntity;
-            var result = Msg.Show(Loc.F("Common.DeleteNamed", target.Name), Loc.T("Common.ConfirmDelete"),
-                MessageBoxButton.YesNo, MessageBoxImage.Warning);
-
-            if (result == MessageBoxResult.Yes)
-            {
-                RemoveEntities(new[] { target });
-                CloseOverlay();
-                RenderEntities();
-            }
+                Save = Replace,
+                EditBasics = EditEntity,
+                Delete = DeleteEntity
+            })
+            { Owner = Window.GetWindow(this) };
+            window.ShowDialog();
+            RenderEntities();
         }
 
         // ---- CRUD ---------------------------------------------------------
 
-        // A new vehicle opens in its window straight away, for everything the short form doesn't ask.
+        // A new item opens in its window straight away, for everything the short form doesn't ask.
         private void AddEntityButton_Click(object sender, RoutedEventArgs e)
         {
             EntityTypeSelector selector = new EntityTypeSelector();
@@ -608,8 +489,7 @@ namespace TidyMind
                 return;
             }
             RenderEntities();
-            if (added.EntityType == EntityTypes.Vehicle)
-                OpenVehicle(added);
+            OpenItem(added);
         }
 
         // The form edits a copy (Id, tab, place and fields it doesn't show come along). Newly picked pictures are
@@ -649,20 +529,6 @@ namespace TidyMind
             EntityFiles.DeleteUnreferenced(new[] { original }, entities);
             WarnReminders(VehicleReminders.Follow(original, edited));
             return true;
-        }
-
-        // The vehicle's window, saving through this view; the cards show the result once it closes.
-        private void OpenVehicle(Entity vehicle)
-        {
-            VehicleWindow window = new VehicleWindow(vehicle, new VehicleWindow.Host
-            {
-                Save = Replace,
-                EditBasics = EditEntity,
-                Delete = DeleteEntity
-            })
-            { Owner = Window.GetWindow(this) };
-            window.ShowDialog();
-            RenderEntities();
         }
 
         private static void WarnReminders(string problem)

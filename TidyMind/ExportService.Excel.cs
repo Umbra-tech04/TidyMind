@@ -111,13 +111,13 @@ namespace TidyMind
 
         // ---- Tables -------------------------------------------------------------
 
-        // Every task and to-do in its own row, in the order of the app; the project (or list) column only when there
-        // is more than one.
+        // Every task and to-do in its own row, in the order the app shows them (TaskOrder: the open ones, then the done ones,
+        // as in the PDF and Word lists); the project (or list) column only when there is more than one.
         private static XlTable TaskTable(List<ExportItem> items, bool byMemory)
         {
             List<(ExportItem Source, string Text, bool Done)> entries = items.SelectMany(i =>
-                i.Project != null ? Parts(i.Project).Tasks.Select(t => (i, t.Title, t.IsDone))
-                : i.Todos != null ? i.Todos.Select(t => (i, t.Text, t.IsDone))
+                i.Project != null ? TaskOrder.OpenFirst(Parts(i.Project).Tasks, t => t.IsDone).Select(t => (i, t.Title, t.IsDone))
+                : i.Todos != null ? TaskOrder.OpenFirst(i.Todos, t => t.IsDone).Select(t => (i, t.Text, t.IsDone))
                 : Enumerable.Empty<(ExportItem, string, bool)>()).ToList();
             bool byProject = entries.Select(e => e.Source).Distinct().Count() > 1;
 
@@ -227,11 +227,11 @@ namespace TidyMind
         }
 
         // An item's values with their labels: a type's date fields as dates and its number fields as numbers (the unit
-        // in the column's name), the rest as the text shown everywhere else; clothing (no definition) all as text.
+        // in the column's name), the rest as the text shown everywhere else; a garment all as text (KeepsOwnExport).
         private static IEnumerable<(string Label, object Value)> EntityValues(Entity entity)
         {
             IReadOnlyList<FieldDefinition> definitions = EntityTypes.Fields(entity.EntityType);
-            if (definitions.Count == 0)
+            if (KeepsOwnExport(entity))
             {
                 foreach ((string label, string value) in ClothingFields(entity))
                     yield return (label, value);
@@ -303,7 +303,7 @@ namespace TidyMind
         private static IEnumerable<(string Name, XlTable Table)> RecordTables(List<ExportItem> items, bool byMemory)
         {
             List<ExportItem> entities = items.Where(i => i.Entity != null).ToList();
-            foreach (RecordDefinition records in entities.SelectMany(i => EntityTypes.Records(i.Entity.EntityType)).Distinct())
+            foreach (RecordDefinition records in entities.Where(i => !KeepsOwnExport(i.Entity)).SelectMany(i => EntityTypes.Records(i.Entity.EntityType)).Distinct())
             {
                 List<(ExportItem Item, EntityRecord Record, IReadOnlyList<EntityRecord> Above)> entries = entities
                     .SelectMany(i => RecordTree.Walk(records.Read(i.Entity)).Select(x => (Item: i, x.Record, x.Above))).ToList();

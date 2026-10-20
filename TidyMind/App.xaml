@@ -308,6 +308,60 @@
             </Style.Triggers>
         </Style>
 
+        <!-- ===== Pages with a list of sections on the left (Settings, an item's window) ===== -->
+        <!-- A category's heading, at the top of its page -->
+        <Style x:Key="PageTitleStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="17"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{StaticResource TextMain}"/>
+            <Setter Property="Margin" Value="2,0,0,12"/>
+        </Style>
+
+        <!-- Section headings, as in Project Details -->
+        <Style x:Key="SectionLabelStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#6B6965"/>
+            <Setter Property="Margin" Value="2,20,0,8"/>
+        </Style>
+
+        <!-- A group of rows: a white card like the other panels -->
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource BgPanel}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Border}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+        </Style>
+
+        <!-- A category in the list on the left: tinted on hover, accent while it's the one shown. The text wraps rather
+             than being cut, so a long translation stays readable. -->
+        <Style x:Key="CategoryStyle" TargetType="ListBoxItem">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{StaticResource TextMain}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="0,1"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="row" Background="Transparent" CornerRadius="6" Padding="12,8">
+                            <TextBlock Text="{TemplateBinding Content}" TextWrapping="Wrap"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="row" Property="Background" Value="{StaticResource BgSubtle}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="row" Property="Background" Value="{StaticResource AccentSoft}"/>
+                                <Setter Property="Foreground" Value="{StaticResource Accent}"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- ===== Form box of the small editing dialogs (a calendar day, a day plan block) ===== -->
         <Style x:Key="NoteInputStyle" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
             <Setter Property="Background"  Value="#FAFAF9"/>
@@ -396,6 +450,68 @@
             <Setter Property="Content" Value="&#xE70F;"/>
             <Setter Property="ToolTip" Value="{local:Tr Common.Rename}"/>
             <Setter Property="AutomationProperties.Name" Value="{local:Tr Common.Rename}"/>
+        </Style>
+
+        <!-- ===== Date picker: the dialogs' form box (NoteInputStyle's look) with a calendar button ===== -->
+        <!-- The text part: no frame of its own; the placeholder (PART_Watermark, filled by Loc.PrepareDatePicker) while empty -->
+        <Style TargetType="DatePickerTextBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="{StaticResource TextMain}"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DatePickerTextBox">
+                        <Grid>
+                            <ContentControl x:Name="PART_Watermark" Foreground="#8A8A87" Focusable="False" IsHitTestVisible="False"
+                                            VerticalAlignment="Center" Visibility="Collapsed"/>
+                            <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center" Focusable="False"
+                                          HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="Text" Value="">
+                                <Setter TargetName="PART_Watermark" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="DatePicker">
+            <Setter Property="Foreground" Value="{StaticResource TextMain}"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="IsTodayHighlighted" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DatePicker">
+                        <Border x:Name="border" Background="#FAFAF9" BorderBrush="#D5D5D2" BorderThickness="1" CornerRadius="6">
+                            <Grid x:Name="PART_Root">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <DatePickerTextBox x:Name="PART_TextBox" Margin="10,0,4,0" Foreground="{TemplateBinding Foreground}"
+                                                   Focusable="{TemplateBinding Focusable}"/>
+                                <Button x:Name="PART_Button" Grid.Column="1" Style="{StaticResource HoverIconButtonStyle}" Content="&#xE787;"
+                                        Margin="0,0,4,0" ToolTip="{local:Tr Common.SelectDate}" AutomationProperties.Name="{local:Tr Common.SelectDate}"/>
+                                <Popup x:Name="PART_Popup" AllowsTransparency="True" Placement="Bottom" PlacementTarget="{Binding ElementName=border}"
+                                       StaysOpen="False"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#BDBDB9"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                <Setter TargetName="border" Property="Background" Value="#FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <!-- ===== Square icon button ===== -->

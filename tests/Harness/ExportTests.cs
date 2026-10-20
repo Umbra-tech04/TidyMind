@@ -128,9 +128,10 @@ static partial class Program
             {
                 IXLWorksheet tasks = book.Worksheet(Loc.T("ProjectWindow.Tasks"));
                 Check(TaskTableLooksRight(tasks, 64), "  Tasks: a filterable table, header frozen and repeated, A4 one page wide, 64 rows");
-                Check(tasks.Cell(5, 1).GetString() == "☑ " + Loc.T("Export.Status.Done") && tasks.Cell(5, 1).Style.Font.FontColor.Color.R > 0x60
-                    && tasks.Cell(6, 1).GetString() == "☐ " + Loc.T("Export.Status.Open"), "  status words; done rows gray");
-                Check(tasks.Cell(6, 2).DataType == XLDataType.Text && tasks.Cell(6, 2).GetString().Contains("185 000 Ft"), "  amounts stay text");
+                // Open tasks first (as in the app), the done ones after them: the first row is the second task, the last the 64th... done.
+                Check(tasks.Cell(5, 1).GetString() == "☐ " + Loc.T("Export.Status.Open") && tasks.Cell(XlHeader + 64, 1).GetString() == "☑ " + Loc.T("Export.Status.Done")
+                    && tasks.Cell(XlHeader + 64, 1).Style.Font.FontColor.Color.R > 0x60, "  status words; open rows first, done rows last and gray");
+                Check(tasks.Cell(5, 2).DataType == XLDataType.Text && tasks.Cell(5, 2).GetString().Contains("185 000 Ft"), "  amounts stay text");
                 Check(tasks.CellsUsed().All(c => !c.HasFormula), "  no formulas");
                 IXLWorksheet files = book.Worksheet(Loc.T("ProjectWindow.Files"));
                 Check(files.Cell(5, 3).DataType == XLDataType.DateTime && files.Cell(5, 3).GetDateTime() == new DateTime(2026, 9, 1), "  Files: added dates are date cells");

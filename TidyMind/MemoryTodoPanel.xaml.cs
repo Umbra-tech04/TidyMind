@@ -24,6 +24,8 @@ namespace TidyMind
         private bool readable = true;
         private bool collapsed;
         private readonly ItemSelection<TodoEntry> selection;
+        private readonly Dictionary<TodoEntry, FrameworkElement> rows = new Dictionary<TodoEntry, FrameworkElement>();
+        private readonly Dictionary<TodoEntry, CheckBox> ticks = new Dictionary<TodoEntry, CheckBox>();
 
         public MemoryTodoPanel()
         {
@@ -114,8 +116,8 @@ namespace TidyMind
             Input.Clear();
             Render();
 
-            FrameworkElement added = (FrameworkElement)ItemList.Children[ItemList.Children.Count - 1];
-            Dispatcher.BeginInvoke(new Action(added.BringIntoView), DispatcherPriority.Loaded);
+            // The last of the open ones, above the done ones.
+            Dispatcher.BeginInvoke(new Action(rows[entry].BringIntoView), DispatcherPriority.Loaded);
         }
 
         private void Input_TextChanged(object sender, TextChangedEventArgs e)
@@ -125,14 +127,33 @@ namespace TidyMind
 
         // ---- List ---------------------------------------------------------
 
+        // The open to-dos, then the done ones (TaskOrder); todos.json keeps the order they were added in.
         private void Render()
         {
             ItemList.Children.Clear();
+            rows.Clear();
+            ticks.Clear();
             selection.BeginRender();
-            foreach (TodoEntry entry in todos)
-                ItemList.Children.Add(CreateRow(entry));
+            foreach (TodoEntry entry in TaskOrder.OpenFirst(todos, t => t.IsDone))
+            {
+                FrameworkElement row = CreateRow(entry);
+                rows[entry] = row;
+                ItemList.Children.Add(row);
+            }
             selection.EndRender();
             UpdateHeader();
+        }
+
+        // Ticked or unticked: the list is drawn again with the to-do in its other group. The selection is kept (it is by
+        // to-do), the list is not scrolled, and the keyboard goes back to the same box.
+        private void Moved(TodoEntry entry, bool keyboard)
+        {
+            TaskOrder.KeepView(ItemList, () =>
+            {
+                Render();
+                if (keyboard && ticks.TryGetValue(entry, out CheckBox box))
+                    box.Focus();
+            });
         }
 
         // Counter, folded preview and layout. With no to-dos there's nothing to fold or count: just the add box (and
@@ -200,8 +221,9 @@ namespace TidyMind
                 else
                     DayPlanTodos.SyncBlocks(TodoLink.ForMemory(memory, entry.Id), entry.IsDone);
                 PaintDone(text, entry.IsDone);
-                UpdateHeader();
+                Moved(entry, check.IsKeyboardFocused);
             };
+            ticks[entry] = check;
             check.KeyDown += (s, e) =>
             {
                 if (e.Key == Key.Delete)

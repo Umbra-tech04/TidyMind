@@ -104,13 +104,6 @@ namespace TidyMind
             }
         };
 
-        // On the Overview, not on a tab: Entity.Notes, which every item type has.
-        public static readonly SectionDefinition Notes = new SectionDefinition
-        {
-            Key = "Notes",
-            Fields = new[] { new FieldDefinition { Key = "Notes", Kind = ValueKind.LongText, Get = e => e.Notes, Set = (e, v) => e.Notes = v } }
-        };
-
         // ---- Documents ---------------------------------------------------------------
 
         public static readonly int[] RemindChoices = { 1, 7, 14, 30, 60 };
@@ -130,6 +123,9 @@ namespace TidyMind
             },
             TitleKeys = new[] { VehicleDocuments.TypeKey, VehicleDocuments.NameKey },
             Title = VehicleDocuments.Title,
+            Subtitle = (document, _) => document.Get("Number") ?? "",
+            Figures = new[] { VehicleDocuments.ValidUntilKey },
+            Icon = _ => "", // Document
             Start = (record, _) =>
             {
                 record.Set(VehicleDocuments.TypeKey, "Insurance");
@@ -181,6 +177,8 @@ namespace TidyMind
             },
             TitleKeys = new[] { "Name" },
             Title = set => FirstOf(set.Get("Name"), Choices.Label(set.Get("Season") ?? ""), Loc.T("Entity.Records.WheelSets.Untitled")),
+            Subtitle = (set, _) => string.Join(" · ", new[] { set.Get("TyreSize"), set.Get("RimSize") }.Where(t => !string.IsNullOrWhiteSpace(t))),
+            Figures = new[] { "SetDistance" },
             CurrentKey = MountedWheelSetKey
         };
 
@@ -237,7 +235,9 @@ namespace TidyMind
                 new FieldDefinition { Key = "Notes", Kind = ValueKind.LongText }
             },
             TitleKeys = new[] { "Name" },
-            Title = part => FirstOf(part.Get("Name"), Loc.T("Entity.Records.Parts.Untitled"))
+            Title = part => FirstOf(part.Get("Name"), Loc.T("Entity.Records.Parts.Untitled")),
+            Subtitle = (part, _) => string.Join(" · ", new[] { part.Get("Brand"), part.Get("PartNumber") ?? part.Get("OemNumber") }.Where(t => !string.IsNullOrWhiteSpace(t))),
+            Figures = new[] { "InstalledDate" }
         };
 
         private static string FirstOf(params string?[] texts) => texts.First(t => !string.IsNullOrWhiteSpace(t))!.Trim();
@@ -263,6 +263,9 @@ namespace TidyMind
             },
             TitleKeys = new[] { VehicleService.TypeKey, VehicleService.DateKey },
             Title = VehicleService.Title,
+            Subtitle = (entry, _) => string.Join(" · ", new[] { entry.Get("Work")?.Split('\n')[0].Trim(), entry.Get("Where") }.Where(t => !string.IsNullOrWhiteSpace(t))),
+            Figures = new[] { VehicleService.OdometerKey, "Cost" },
+            Icon = VehicleService.Icon,
             // A new entry: a service, today, at the current reading, reminded two weeks before its next due date.
             Start = (entry, vehicle) =>
             {
@@ -295,9 +298,9 @@ namespace TidyMind
                 Columns = new[]
                 {
                     new LogColumn { Key = "Date", Kind = ValueKind.Date },
-                    new LogColumn { Key = "Liters", Kind = ValueKind.Number },
-                    new LogColumn { Key = "Price", Kind = ValueKind.Number },
-                    new LogColumn { Key = "Km", Kind = ValueKind.Number }
+                    new LogColumn { Key = "Liters", Kind = ValueKind.Number, Unit = "l" },
+                    new LogColumn { Key = "Price", Kind = ValueKind.Number, Unit = Units.Money },
+                    new LogColumn { Key = "Km", Kind = ValueKind.Number, Unit = Units.Distance }
                 },
                 Summary = FuelConsumption
             },
@@ -307,12 +310,17 @@ namespace TidyMind
                 Columns = new[]
                 {
                     new LogColumn { Key = "Date", Kind = ValueKind.Date },
-                    new LogColumn { Key = "Reading", Kind = ValueKind.Number }
+                    new LogColumn { Key = "Reading", Kind = ValueKind.Number, Unit = Units.Distance }
                 }
             }
         };
 
         public static LogDefinition Log(string key) => Logs.First(l => l.Key == key);
+
+        // The window's title block: "Škoda Octavia III RS", the year, fuel, power, gearbox, drive and odometer as chips,
+        // the kind above the name, the plate as a badge.
+        public static readonly ItemHeadline Headline = new ItemHeadline(
+            new[] { "Make", "Model", "Edition" }, new[] { "Year", "Fuel", "Power", "Gearbox", "Drive", "Odometer" }, Eyebrow: "Kind", Badge: "Plate");
 
         // ---- The window's tabs, after its Overview -------------------------------------------------
 

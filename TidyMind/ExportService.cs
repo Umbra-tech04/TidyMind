@@ -175,12 +175,16 @@ namespace TidyMind
                 Name = entity.Name,
                 Entity = entity,
                 ImagePath = EntityImages.FullPath(entity),
-                // A type with a definition (Vehicle): its fields, notes and logs.
-                Fields = EntityTypes.Fields(entity.EntityType).Count > 0 ? EntityTypes.Describe(entity) : ClothingFields(entity)
+                // A vehicle: its fields, notes, records and logs. A garment (and a type this version doesn't know): the
+                // fields and sizes as its exports have always shown them.
+                Fields = KeepsOwnExport(entity) ? ClothingFields(entity) : EntityTypes.Describe(entity)
             };
         }
 
-        // An item without a type definition (clothing), as label and text.
+        private static bool KeepsOwnExport(Entity entity) =>
+            entity.EntityType == EntityTypes.Clothing || EntityTypes.Tabs(entity.EntityType).Count == 0;
+
+        // A garment, as label and text.
         private static List<(string Label, string Value)> ClothingFields(Entity entity) => new List<(string, string)>
         {
             (Loc.T("Entity.Field.Brand"), entity.Brand ?? ""),

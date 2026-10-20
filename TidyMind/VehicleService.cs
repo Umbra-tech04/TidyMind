@@ -99,6 +99,17 @@ namespace TidyMind
         public static string Title(EntityRecord entry) =>
             string.Join(" · ", new[] { DateOf(entry)?.ToString(Loc.T("Format.ShortDate"), Loc.Culture), TypeLabel(entry) }.Where(t => !string.IsNullOrEmpty(t)));
 
+        // Its kind's icon (Segoe MDL2): a gear for a service, a wrench for a repair, a pencil for a modification, a card for a
+        // tax or fee, a note for a note.
+        public static string Icon(EntityRecord entry) => (entry.Get(TypeKey) ?? Types[0]) switch
+        {
+            "Repair" => "",
+            "Modification" => "",
+            "Fee" => "",
+            "Note" => "",
+            _ => ""
+        };
+
         public static string TypeLabel(EntityRecord entry) => Choices.Label(entry.Get(TypeKey) ?? Types[0]);
 
         private static Dictionary<string, string> Row(EntityRecord entry) =>

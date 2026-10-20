@@ -131,6 +131,9 @@ namespace TidyMind
         public static string Format(double value, string? unit, Entity? owner)
         {
             string number = value.ToString(unit == null ? "0.###" : "#,0.###", Loc.Culture);
+            // A count with the language's own forms ("1 piece", "2 pieces", "2 komada").
+            if (unit != null && value == Math.Floor(value) && Loc.Find("Entity.Unit." + unit + ".Count.Other") != null)
+                return Loc.Plural("Entity.Unit." + unit + ".Count", (long)value, number);
             string label = unit == null ? "" : Label(unit, owner);
             return label.Length == 0 ? number : number + " " + label;
         }
@@ -189,10 +192,21 @@ namespace TidyMind
         public Func<EntityRecord, string> Title { get; init; } = _ => "";
         public Action<EntityRecord, Entity>? Start { get; init; }
         public bool Nested { get; init; }
+
+        // A short list of small records (a garment's sizes) drawn as a table with a column per field, every line there at
+        // once (CompactRecords), with - and + beside the number named by StepKey; no row to open.
+        public bool Compact { get; init; }
+        public string? StepKey { get; init; }
         public string? CurrentKey { get; init; }
         public string? NewestFirstKey { get; init; }
         public string? FilterKey { get; init; }
         public string? TotalKey { get; init; }
+
+        // How a record reads as a row of its list: its title, a quieter line under it (Subtitle), the fields shown as figures
+        // on the right (Figures: an odometer, a cost, a date that runs out), and an icon (MDL2 glyph) for its kind, or none.
+        public Func<EntityRecord, Entity, string>? Subtitle { get; init; }
+        public string[] Figures { get; init; } = Array.Empty<string>();
+        public Func<EntityRecord, string?>? Icon { get; init; }
 
         // Records that come due (a document's valid-until date, a service's next one; EntityTypes.Expiries): the date field
         // (DueKey) and its "remind me" days (RemindKey, VehicleReminders), the odometer reading it comes due at
@@ -301,6 +315,7 @@ namespace TidyMind
         public string Key { get; init; } = "";
         public string Label => Loc.T("Entity.Column." + Key);
         public ValueKind Kind { get; init; }
+        public string? Unit { get; init; } // a number's (Units), shown with it in the item window
     }
 
     // A log field: a list of rows with the type's columns (LogEditor). Summary: an optional line computed from the rows
@@ -333,8 +348,13 @@ namespace TidyMind
             : Loc.F("Expiry.InDistance", Units.Format(Remaining, Units.Distance, owner));
     }
 
-    // The item types described by definitions (Vehicle, VehicleSchema). Clothing keeps its own fields in EntityForm,
-    // CollectionView and ExportService and has no definition here: every list is empty for it.
+    // How the item window's title block reads for a type: the fields that make the line under the name (joined with
+    // spaces: "Škoda Octavia III RS"), the ones shown as chips beside each other, the one named next to the type above
+    // the name (a vehicle's kind) and the one shown as a badge (a plate). Empty ones are left out.
+    public sealed record ItemHeadline(string[] Subtitle, string[] Chips, string? Eyebrow = null, string? Badge = null);
+
+    // The item types described by definitions (VehicleSchema, ClothingSchema): what the item window, the form, search,
+    // export and transfer show of them. A type this version doesn't know has no definition: its name, pictures and notes.
     public static class EntityTypes
     {
         // Stored in each item (Entity.EntityType) as these English names, whatever the language; on screen they are
@@ -343,7 +363,17 @@ namespace TidyMind
         public const string Vehicle = "Vehicle";
 
         public static IReadOnlyList<TabDefinition> Tabs(string? type) =>
-            type == Vehicle ? VehicleSchema.Tabs : Array.Empty<TabDefinition>();
+            type == Vehicle ? VehicleSchema.Tabs : type == Clothing ? ClothingSchema.Tabs : Array.Empty<TabDefinition>();
+
+        public static ItemHeadline Headline(string? type) =>
+            type == Vehicle ? VehicleSchema.Headline : type == Clothing ? ClothingSchema.Headline : new ItemHeadline(Array.Empty<string>(), Array.Empty<string>());
+
+        // Every item's notes (Entity.Notes): a section of their own in the item window.
+        public static readonly SectionDefinition Notes = new SectionDefinition
+        {
+            Key = "Notes",
+            Fields = new[] { new FieldDefinition { Key = "Notes", Kind = ValueKind.LongText, Get = e => e.Notes, Set = (e, v) => e.Notes = v } }
+        };
 
         public static IEnumerable<SectionDefinition> Sections(string? type) => Tabs(type).SelectMany(t => t.Sections);
 

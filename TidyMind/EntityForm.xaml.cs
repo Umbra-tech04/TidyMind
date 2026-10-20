@@ -34,14 +34,7 @@ namespace TidyMind
         private TextBox notesBox;
         private TextBlock imagePathText;
 
-        // Clothing
-        private List<SizeQuantity> sizes = new List<SizeQuantity>();
-        private StackPanel sizesPanel;
-        private TextBox brandBox, colorBox, priceBox;
-        private ComboBox materialBox, seasonBox;
-
-        // Types with a definition (EntityTypes, e.g. Vehicle): an input for each field it asks for here (InForm); the
-        // rest is filled in the vehicle's window.
+        // The fields of its type asked for here (FieldDefinition.InForm); the rest are filled in the item window.
         private readonly List<FieldEditor> fieldEditors = new List<FieldEditor>();
 
         public EntityForm(string entityType)
@@ -73,10 +66,8 @@ namespace TidyMind
         // What the form showed when it opened, to tell whether closing with X would throw anything away.
         private readonly string opened;
 
-        private string CurrentInput() => string.Join("\n", nameBox?.Text, notesBox?.Text, brandBox?.Text, colorBox?.Text,
-            priceBox?.Text, GetComboValue(materialBox), GetComboValue(seasonBox),
+        private string CurrentInput() => string.Join("\n", nameBox?.Text, notesBox?.Text,
             string.Join("|", pictures.Select(p => p.Stored ?? p.PickedFile)),
-            JsonSerializer.Serialize(sizes),
             string.Join("\n", fieldEditors.Select(f => f.Value)));
 
         // Closing without saving (X, Alt+F4) asks first when something was typed or changed; Save doesn't.
@@ -104,14 +95,11 @@ namespace TidyMind
             FormPanel.Children.Clear();
             AddImagePicker();
             AddTextBox(Loc.T("Entity.Field.Name"), ref nameBox);
-            if (EntityTypes.Fields(entityType).Count > 0)
-                BuildDefinedFields();
-            else
-                BuildClothing();
+            BuildDefinedFields();
             AddTextBoxMultiline(Loc.T("Entity.Field.Notes"), ref notesBox);
         }
 
-        // ---- Types with a definition (EntityTypes) -------------------------
+        // ---- The type's fields (EntityTypes) -------------------------------
 
         // The fields it asks for here, starting from the item's values when editing.
         private void BuildDefinedFields()
@@ -124,106 +112,6 @@ namespace TidyMind
                 if (!editor.HasOwnLabel)
                     AddLabel(field.Label);
                 FormPanel.Children.Add(editor.Element);
-            }
-        }
-
-        private void BuildClothing()
-        {
-            AddTextBox(Loc.T("Entity.Field.Brand"), ref brandBox);
-            AddTextBox(Loc.T("Entity.Field.Color"), ref colorBox);
-            AddComboBox(Loc.T("Entity.Field.Material"), ref materialBox, Choices.Material);
-            AddComboBox(Loc.T("Entity.Field.Season"), ref seasonBox, Choices.Season);
-            AddTextBox(Loc.T("Entity.Field.PurchasePrice"), ref priceBox);
-            AddSizesSection();
-        }
-
-        private void AddSizesSection()
-        {
-            AddLabel(Loc.T("Entity.Field.Sizes"));
-            sizesPanel = new StackPanel();
-            FormPanel.Children.Add(sizesPanel);
-
-            Button addSizeBtn = new Button();
-            addSizeBtn.Content = "+ " + Loc.T("Entity.AddSize");
-            addSizeBtn.MinWidth = 120;
-            addSizeBtn.Padding = new Thickness(12, 0, 12, 0);
-            addSizeBtn.Height = 30;
-            addSizeBtn.HorizontalAlignment = HorizontalAlignment.Left;
-            addSizeBtn.Margin = new Thickness(0, 8, 0, 0);
-            addSizeBtn.Click += (s, e) =>
-            {
-                sizes.Add(new SizeQuantity { Size = "", Condition = "New", Quantity = 1 });
-                RenderSizes();
-            };
-            FormPanel.Children.Add(addSizeBtn);
-        }
-
-        private void RenderSizes()
-        {
-            sizesPanel.Children.Clear();
-            foreach (SizeQuantity sq in sizes)
-            {
-                StackPanel row = new StackPanel();
-                row.Orientation = Orientation.Horizontal;
-                row.Margin = new Thickness(0, 0, 0, 6);
-
-                TextBox sizeBox = new TextBox();
-                sizeBox.Width = 60;
-                sizeBox.Height = 32;
-                sizeBox.Text = sq.Size;
-                sizeBox.VerticalContentAlignment = VerticalAlignment.Center;
-                sizeBox.Margin = new Thickness(0, 0, 6, 0);
-                sizeBox.TextChanged += (s, e) => sq.Size = sizeBox.Text;
-
-                ComboBox condBox = new ComboBox();
-                condBox.Width = 150;
-                condBox.Height = 32;
-                condBox.Margin = new Thickness(0, 0, 6, 0);
-                foreach (string c in Choices.Condition)
-                    condBox.Items.Add(ChoiceItem(c));
-                SetComboBox(condBox, sq.Condition);
-                condBox.SelectionChanged += (s, e) => sq.Condition = GetComboValue(condBox);
-
-                Button minusBtn = new Button();
-                minusBtn.Content = "−";
-                AutomationProperties.SetName(minusBtn, Loc.T("Entity.Size.Less"));
-                minusBtn.Width = 32;
-                minusBtn.Height = 32;
-                minusBtn.Margin = new Thickness(0, 0, 4, 0);
-                minusBtn.Click += (s, e) => { if (sq.Quantity > 0) sq.Quantity--; RenderSizes(); };
-
-                TextBlock qty = new TextBlock();
-                qty.Text = sq.Quantity.ToString();
-                qty.Width = 24;
-                qty.TextAlignment = TextAlignment.Center;
-                qty.VerticalAlignment = VerticalAlignment.Center;
-                qty.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1C1B19"));
-                qty.FontSize = 14;
-
-                Button plusBtn = new Button();
-                plusBtn.Content = "+";
-                AutomationProperties.SetName(plusBtn, Loc.T("Entity.Size.More"));
-                plusBtn.Width = 32;
-                plusBtn.Height = 32;
-                plusBtn.Margin = new Thickness(4, 0, 6, 0);
-                plusBtn.Click += (s, e) => { sq.Quantity++; RenderSizes(); };
-
-                Button removeBtn = new Button();
-                removeBtn.Content = "✕";
-                AutomationProperties.SetName(removeBtn, Loc.T("Entity.Size.Remove"));
-                removeBtn.Width = 32;
-                removeBtn.Height = 32;
-                removeBtn.Background = new SolidColorBrush(
-                    (Color)ColorConverter.ConvertFromString("#8B1A1A"));
-                removeBtn.Click += (s, e) => { sizes.Remove(sq); RenderSizes(); };
-
-                row.Children.Add(sizeBox);
-                row.Children.Add(condBox);
-                row.Children.Add(minusBtn);
-                row.Children.Add(qty);
-                row.Children.Add(plusBtn);
-                row.Children.Add(removeBtn);
-                sizesPanel.Children.Add(row);
             }
         }
 
@@ -337,64 +225,27 @@ namespace TidyMind
             FormPanel.Children.Add(label);
         }
 
+        // The dialogs' form box (NoteInputStyle), as the item window's fields have.
         private void AddTextBox(string label, ref TextBox box)
         {
             AddLabel(label);
-            box = new TextBox();
-            box.Height = 32;
-            box.VerticalContentAlignment = VerticalAlignment.Center;
+            box = new TextBox { Style = (Style)FindResource("NoteInputStyle"), Height = 36 };
             FormPanel.Children.Add(box);
         }
 
         private void AddTextBoxMultiline(string label, ref TextBox box)
         {
             AddLabel(label);
-            box = new TextBox();
-            box.Height = 80;
-            box.TextWrapping = TextWrapping.Wrap;
-            box.AcceptsReturn = true;
-            box.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
-            FormPanel.Children.Add(box);
-        }
-
-        private void AddComboBox(string label, ref ComboBox box, string[] items)
-        {
-            AddLabel(label);
-            box = new ComboBox();
-            box.Height = 32;
-            foreach (string item in items)
-                box.Items.Add(ChoiceItem(item));
-            box.SelectedIndex = 0;
-            FormPanel.Children.Add(box);
-        }
-
-        // A choice shows in the current language and keeps its stored (English) value in Tag.
-        private static ComboBoxItem ChoiceItem(string value) => new ComboBoxItem { Content = Choices.Label(value), Tag = value };
-
-        // Shows the stored value exactly: one that isn't among the choices (saved by an older version, or typed into
-        // the file) is added as an extra choice, and an empty one stays empty, so saving the item unchanged never
-        // replaces it with the first option.
-        private void SetComboBox(ComboBox box, string value)
-        {
-            if (box == null) return; // a field this type doesn't have
-            if (string.IsNullOrEmpty(value)) { box.SelectedIndex = -1; return; }
-            foreach (ComboBoxItem item in box.Items)
+            box = new TextBox
             {
-                if ((string)item.Tag == value)
-                {
-                    box.SelectedItem = item;
-                    return;
-                }
-            }
-
-            ComboBoxItem kept = new ComboBoxItem { Content = value, Tag = value };
-            box.Items.Add(kept);
-            box.SelectedItem = kept;
+                Style = (Style)FindResource("NoteInputStyle"),
+                Height = 88,
+                TextWrapping = TextWrapping.Wrap,
+                AcceptsReturn = true,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto
+            };
+            FormPanel.Children.Add(box);
         }
-
-        // The stored value of the picked choice, never its on-screen text.
-        private string GetComboValue(ComboBox box)
-            => (string)((ComboBoxItem)box?.SelectedItem)?.Tag;
 
         // Several files at once, added after the pictures already there (the first of them selected). Only previewed
         // here; they're copied in when the item is saved (CollectionView). A file that isn't a readable picture is
@@ -433,26 +284,6 @@ namespace TidyMind
                 pictures.Add(new PictureSlot { Stored = name });
             selectedPicture = 0;
             ShowPictures();
-
-            if (sizesPanel == null)
-                return; // the rest is Clothing's
-
-            if (brandBox != null) brandBox.Text = e.Brand;
-            if (colorBox != null) colorBox.Text = e.Color;
-            if (priceBox != null) priceBox.Text = e.PurchasePrice;
-            SetComboBox(materialBox, e.Material);
-            SetComboBox(seasonBox, e.Season);
-
-            if (e.Sizes != null)
-                foreach (var sq in e.Sizes)
-                    sizes.Add(new SizeQuantity
-                    {
-                        Size = sq.Size,
-                        Condition = sq.Condition,
-                        Quantity = sq.Quantity,
-                        ExtensionData = sq.ExtensionData
-                    });
-            RenderSizes();
         }
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
@@ -482,17 +313,6 @@ namespace TidyMind
             ResultEntity.Notes = notesBox?.Text;
             foreach (FieldEditor editor in fieldEditors)
                 editor.Field.Write(ResultEntity, editor.Value);
-
-            // Clothing's own fields; a type with a definition keeps its others (a vehicle's color is one of them).
-            if (sizesPanel != null)
-            {
-                ResultEntity.Brand = brandBox.Text;
-                ResultEntity.Color = colorBox.Text;
-                ResultEntity.PurchasePrice = priceBox.Text;
-                ResultEntity.Material = GetComboValue(materialBox);
-                ResultEntity.Season = GetComboValue(seasonBox);
-                ResultEntity.Sizes = sizes;
-            }
 
             this.DialogResult = true;
             this.Close();

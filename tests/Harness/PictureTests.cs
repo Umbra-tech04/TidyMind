@@ -21,7 +21,7 @@ using TidyMind;
 // Entity.MoreImages the rest). The data (an old single-picture item untouched by a read, the field kept by a version
 // that doesn't know it), the item form (several at once, cover, reorder, remove, the limit, unreadable files), editing
 // and deleting (only files no item uses are removed, also for a selection and a whole memory, a failed save changes
-// nothing), the card badge and the detail card's strip, transfer packages (item, collection, shared pictures, a crafted
+// nothing), the card badge and the item window's pictures, transfer packages (item, collection, shared pictures, a crafted
 // package over the limit, a failure part-way) and the exports (the cover only), with a screenshot of the form.
 static partial class Program
 {
@@ -54,28 +54,6 @@ static partial class Program
     }
 
     // ---- Helpers ------------------------------------------------------------------
-
-    static readonly Color[] PicturePalette =
-    {
-        Color.FromRgb(0xC0, 0x39, 0x2B), Color.FromRgb(0x27, 0xAE, 0x60), Color.FromRgb(0x2E, 0x7B, 0xC4),
-        Color.FromRgb(0xE6, 0x7E, 0x22), Color.FromRgb(0x8E, 0x44, 0xAD), Color.FromRgb(0x16, 0xA0, 0x85)
-    };
-
-    static void ColorPicture(string path, int number)
-    {
-        DrawingVisual visual = new DrawingVisual();
-        using (DrawingContext dc = visual.RenderOpen())
-        {
-            dc.DrawRectangle(new SolidColorBrush(PicturePalette[number % PicturePalette.Length]), null, new Rect(0, 0, 240, 160));
-            dc.DrawEllipse(Brushes.White, null, new Point(120, 80), 40 + number % 5 * 4, 40 + number % 5 * 4);
-        }
-        RenderTargetBitmap bitmap = new RenderTargetBitmap(240, 160, 96, 96, PixelFormats.Pbgra32);
-        bitmap.Render(visual);
-        PngBitmapEncoder encoder = new PngBitmapEncoder();
-        encoder.Frames.Add(BitmapFrame.Create(bitmap));
-        using (FileStream output = File.Create(path))
-            encoder.Save(output);
-    }
 
     // The user's own picture files, in the work folder (not yet copied into the app).
     static string[] OwnPictures(int count, int first = 0) => Enumerable.Range(first, count).Select(i =>
@@ -588,7 +566,7 @@ static partial class Program
 
     static async Task PictureReviewFixes(MainWindow main)
     {
-        Console.WriteLine("Review findings: a failed copy, legacy paths anywhere, a cover in MoreImages only, the detail card's decoding");
+        Console.WriteLine("Review findings: a failed copy, legacy paths anywhere, a cover in MoreImages only, the item window's decoding");
         Profile memory = AddMemory(main, "Pictures review", ProfileType.Collection);
         string[] p = Enumerable.Range(0, 5).Select(StoredPicture).ToArray();
         string ownCover = Path.Combine(picWork, "saját borító.png"), ownMore = Path.Combine(picWork, "saját másik.png");
@@ -616,18 +594,19 @@ static partial class Program
         using (WordprocessingDocument document = WordprocessingDocument.Open(docx, false))
             Check(document.MainDocumentPart.ImageParts.Count() == 1, "and Word shows that cover");
 
-        // The detail card draws at once and decodes the rest off the UI thread.
+        // The item window draws at once and decodes the rest off the UI thread.
         Entity three = Field<List<Entity>>(view, "entities").First(e => e.Name == "Hármas");
-        view.Reveal(three.Id);
-        PictureBrowser detail = Field<PictureBrowser>(view, "detailPictures");
-        Image second = (Image)((Border)((Grid)((Button)StripOf(detail).Children[1]).Content).Children[0]).Child;
-        Check(second.Source == null && EntityImages.Loaded(p[1]) == null, "opening the card doesn't decode the other pictures on the spot");
+        ItemWindow window = ShowItem(main, three, 1000, 800);
+        PictureHero hero = Field<PictureHero>(window, "hero");
+        // The decode runs on a worker thread and may already be done; what matters is that the UI has not drawn it yet.
+        Check(!(ThumbOf(hero, 1).Background is ImageBrush), "opening the window doesn't draw the other pictures on the spot: they are decoded off the UI thread");
         await Wait(800);
-        Check(InSync(detail, p.Take(3).Select(n => (ImageSource)EntityImages.Loaded(n)).ToList(), 0) && EntityImages.Loaded(p[2]) != null,
+        Check(HeroInSync(hero, p.Take(3).Select(n => (ImageSource)EntityImages.Loaded(n)).ToList(), 0) && EntityImages.Loaded(p[2]) != null,
             "a moment later they are all there");
-        ClickNow(ArrowOf(detail, true));
-        PressKey((TextBox)view.FindName("DetailName"), Key.Right);
-        Check(Field<int>(view, "detailPicture") == 1, "Right in the card's name box moves its caret, not the picture");
+        ClickNow(Field<Button>(hero, "next"));
+        PressKey(Field<TextBox>(window, "NameText"), Key.Right);
+        Check(hero.Selected == 1, "Right in the name (a text box) moves its caret, not the picture");
+        window.Close();
 
         // A picked file that can't be copied at Save: left out and named, the rest of the edit kept.
         string fleeting = OwnPictures(1, 70)[0];
@@ -650,11 +629,11 @@ static partial class Program
         Invoke(main, "NavigateHome");
     }
 
-    // ---- The card and the detail card ----------------------------------------------------
+    // ---- The card and the item window's pictures ---------------------------------------------
 
     static async Task PictureCardAndDetail(MainWindow main)
     {
-        Console.WriteLine("The card badge and the detail card");
+        Console.WriteLine("The card badge and the item window's pictures");
         Profile memory = AddMemory(main, "Pictures cards", ProfileType.Collection);
         string[] p = Enumerable.Range(0, 5).Select(StoredPicture).ToArray();
         Entity three = PictureItem("Három", 0, p[0], p[1], p[2]), one = PictureItem("Egy", 1, p[3]), none = PictureItem("Nulla", 2);
@@ -667,44 +646,70 @@ static partial class Program
         TextBlock count = ((StackPanel)badges[0].Parent).Children.OfType<TextBlock>().Last();
         Check(count.Text == "3" && ((FrameworkElement)((FrameworkElement)badges[0].Parent).Parent).ToolTip.ToString() == "3 pictures", "it counts three: " + count.Text);
 
-        view.Reveal(three.Id);
+        ItemWindow window = ShowItem(main, three, 1000, 800);
+        PictureHero hero = Field<PictureHero>(window, "hero");
         for (int i = 0; i < 30 && p.Take(3).Any(x => EntityImages.Loaded(x) == null); i++) // decoded off the UI thread
             await Wait(100);
         await Wait(200);
-        PictureBrowser detail = Field<PictureBrowser>(view, "detailPictures");
-        WrapPanel strip = StripOf(detail);
-        Image big = PreviewOf(detail);
+        Button previous = Field<Button>(hero, "previous"), next = Field<Button>(hero, "next");
         List<ImageSource> shown = p.Take(3).Select(n => (ImageSource)EntityImages.Load(n)).ToList();
-        Check(StripScrollOf(detail).Visibility == Visibility.Visible && InSync(detail, shown, 0) && ArrowOf(detail, true).IsVisible
-              && !ArrowOf(detail, false).IsEnabled, "the detail card shows the cover, a strip of three and the arrows (back is off on the first)");
-        ClickNow((Button)strip.Children[1]);
-        Check(Field<int>(view, "detailPicture") == 1 && InSync(detail, shown, 1), "a thumbnail clicked: that picture, larger, framed");
-        ClickNow(ArrowOf(detail, true));
-        Check(Field<int>(view, "detailPicture") == 2 && InSync(detail, shown, 2) && !ArrowOf(detail, true).IsEnabled, "the next arrow: the third, and next is off at the end");
-        PressKey(view, Key.Left);
-        Check(InSync(detail, shown, 1), "the Left key browses back");
-        PressKey(view, Key.Right);
-        Check(InSync(detail, shown, 2) && EntityImages.Names(EntityStore.Load(memory)[0]).SequenceEqual(p.Take(3)), "the Right key browses on; the item's order is untouched");
+        Check(Field<Border>(hero, "stripPlate").Visibility == Visibility.Visible && HeroInSync(hero, shown, 0) && !previous.IsEnabled,
+            "the window shows the cover large, a strip of three and 1 / 3 (back is off on the first)");
+        Check(previous.Visibility == Visibility.Collapsed && next.Visibility == Visibility.Collapsed, "the arrows stay hidden while the mouse is elsewhere");
+        Check(hero.ActualWidth >= window.ActualWidth - 40 && hero.ActualHeight >= 200 && hero.ActualHeight <= 380, "the pictures fill the window's width, 200 to 380 high");
+        ClickNow((Button)Field<StackPanel>(hero, "strip").Children[1]);
+        Check(HeroInSync(hero, shown, 1), "a thumbnail clicked: that picture, large, framed");
+        ClickNow(next);
+        Check(HeroInSync(hero, shown, 2) && !next.IsEnabled, "the next arrow: the third, and next is off at the end");
+        PressKey(window, Key.Left);
+        Check(HeroInSync(hero, shown, 1), "the Left key browses back");
+        PressKey(window, Key.Right);
+        Check(HeroInSync(hero, shown, 2) && EntityImages.Names(EntityStore.Load(memory)[0]).SequenceEqual(p.Take(3)), "the Right key browses on; the item's order is untouched");
 
         Loc.Switch(Loc.Hungarian);
         await Wait(400);
-        Check(InSync(detail, shown, 2) && Field<int>(view, "detailPicture") == 2 && (string)ArrowOf(detail, true).ToolTip == "Következő kép",
-            "a language switch keeps the picture shown, the arrows in Hungarian");
+        Check(HeroInSync(hero, shown, 2) && (string)next.ToolTip == "Következő kép", "a language switch keeps the picture shown, the arrows in Hungarian");
         ToolTipText(view, "hu: 3 kép");
         Loc.Switch(Loc.SerbianLatin);
         await Wait(300);
         ToolTipText(view, "sr: 3 slike");
         Loc.Switch(Loc.English);
         await Wait(300);
+        window.Close();
 
-        view.Reveal(one.Id);
+        window = ShowItem(main, one, 1000, 800);
+        hero = Field<PictureHero>(window, "hero");
         await Wait(500);
-        Check(StripScrollOf(detail).Visibility != Visibility.Visible && !ArrowOf(detail, true).IsVisible && !ArrowOf(detail, false).IsVisible
-              && big.Source == EntityImages.Load(p[3]) && !detail.Browse(1), "one picture: no strip, no arrows, nothing to browse");
-        view.Reveal(none.Id);
-        await Wait(500);
-        Check(big.Source == null && StripScrollOf(detail).Visibility != Visibility.Visible && !ArrowOf(detail, true).IsVisible, "no picture: none, no strip, no arrows");
+        Check(Field<Border>(hero, "stripPlate").Visibility == Visibility.Collapsed && Field<Border>(hero, "countPlate").Visibility == Visibility.Collapsed
+              && Field<Image>(hero, "picture").Source == EntityImages.Load(p[3]) && !hero.Browse(1), "one picture: large, no strip, no count, nothing to browse");
+        PressKey(window, Key.Right);
+        Check(hero.Selected == 0, "...and Right does nothing");
+        window.Close();
+        window = ShowItem(main, none, 1000, 800);
+        await Wait(300);
+        Check(Field<ContentControl>(window, "Hero").Visibility == Visibility.Collapsed, "no picture: no picture area at all");
+        window.Close();
         Invoke(main, "NavigateHome");
+    }
+
+    static Border ThumbOf(PictureHero hero, int index) => (Border)((Button)Field<StackPanel>(hero, "strip").Children[index]).Content;
+
+    // What the hero draws agrees with `selected`: that picture large (and as the backdrop), exactly that thumbnail
+    // framed, the count, the arrows off exactly at the ends.
+    static bool HeroInSync(PictureHero hero, IReadOnlyList<ImageSource> pictures, int selected)
+    {
+        StackPanel strip = Field<StackPanel>(hero, "strip");
+        if (hero.Selected != selected || strip.Children.Count != pictures.Count || !ReferenceEquals(Field<Image>(hero, "picture").Source, pictures[selected])
+            || !ReferenceEquals(Field<Image>(hero, "backdrop").Source, pictures[selected]))
+            return false;
+        for (int i = 0; i < pictures.Count; i++)
+        {
+            Border thumb = ThumbOf(hero, i);
+            if ((thumb.BorderThickness.Left == 2) != (i == selected) || !(thumb.Background is ImageBrush brush) || !ReferenceEquals(brush.ImageSource, pictures[i]))
+                return false;
+        }
+        return Field<TextBlock>(hero, "count").Text == Loc.F("Entity.Picture.Count", selected + 1, pictures.Count)
+            && Field<Button>(hero, "previous").IsEnabled == (selected > 0) && Field<Button>(hero, "next").IsEnabled == (selected < pictures.Count - 1);
     }
 
     static void ToolTipText(CollectionView view, string expected)

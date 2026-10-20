@@ -581,9 +581,6 @@ Tvoja poslednja izmena nije sačuvana.</value>
   <data name="Entity.Add.Vehicle" xml:space="preserve">
     <value>Dodaj vozilo</value>
   </data>
-  <data name="Entity.AddSize" xml:space="preserve">
-    <value>Dodaj veličinu</value>
-  </data>
   <data name="Entity.ChoosePictures" xml:space="preserve">
     <value>Dodaj slike…</value>
   </data>
@@ -591,7 +588,7 @@ Tvoja poslednja izmena nije sačuvana.</value>
     <value>Datum</value>
   </data>
   <data name="Entity.Column.Km" xml:space="preserve">
-    <value>Km</value>
+    <value>Kilometraža</value>
   </data>
   <data name="Entity.Column.Liters" xml:space="preserve">
     <value>Litara</value>
@@ -712,15 +709,6 @@ Tvoja poslednja izmena nije sačuvana.</value>
   </data>
   <data name="Entity.Required" xml:space="preserve">
     <value>Polje „{0}“ je obavezno.</value>
-  </data>
-  <data name="Entity.Size.Less" xml:space="preserve">
-    <value>Jedan manje</value>
-  </data>
-  <data name="Entity.Size.More" xml:space="preserve">
-    <value>Jedan više</value>
-  </data>
-  <data name="Entity.Size.Remove" xml:space="preserve">
-    <value>Ukloni ovu veličinu</value>
   </data>
   <data name="Entity.SizeCount.Few" xml:space="preserve">
     <value>{0} veličine</value>
@@ -3062,10 +3050,10 @@ Na poslednjoj stranici strelica započinje novu.</value>
     <value>Automatski</value>
   </data>
   <data name="Choice.Frontwheel" xml:space="preserve">
-    <value>Prednji</value>
+    <value>Prednji pogon</value>
   </data>
   <data name="Choice.Rearwheel" xml:space="preserve">
-    <value>Zadnji</value>
+    <value>Zadnji pogon</value>
   </data>
   <data name="Choice.Allwheel" xml:space="preserve">
     <value>Na sva četiri točka</value>
@@ -3149,13 +3137,13 @@ Na poslednjoj stranici strelica započinje novu.</value>
     <value>„{0}” nije moguće kopirati u TidyMind fasciklu ({1}), pa dokument nije sačuvan.</value>
   </data>
   <data name="Entity.Card.Empty" xml:space="preserve">
-    <value>Još ništa nije uneto.</value>
+    <value>Još nije popunjeno</value>
   </data>
   <data name="Entity.Card.Fill" xml:space="preserve">
     <value>Popuni</value>
   </data>
   <data name="Entity.Log.Empty" xml:space="preserve">
-    <value>Još nema unosa.</value>
+    <value>Još nema unosa</value>
   </data>
   <data name="Entity.Log.Odometer" xml:space="preserve">
     <value>Stanja kilometraže</value>
@@ -3190,9 +3178,6 @@ Na poslednjoj stranici strelica započinje novu.</value>
   <data name="Vehicle.Odometer.Update" xml:space="preserve">
     <value>Ažuriraj kilometražu</value>
   </data>
-  <data name="Vehicle.Odometer.None" xml:space="preserve">
-    <value>Još nema stanja kilometraže</value>
-  </data>
   <data name="Vehicle.Odometer.Prompt" xml:space="preserve">
     <value>Trenutno stanje ({0})</value>
   </data>
@@ -3202,29 +3187,8 @@ Na poslednjoj stranici strelica započinje novu.</value>
   <data name="Vehicle.Overview.Deadlines" xml:space="preserve">
     <value>Predstojeći rokovi</value>
   </data>
-  <data name="Vehicle.Overview.NoDeadlines" xml:space="preserve">
-    <value>Još nema rokova. Dodaj dokumenta vozila (osiguranje, tehnički pregled, porez…) sa datumom isteka i pojaviće se ovde, na kartici i na Početnoj.</value>
-  </data>
-  <data name="Vehicle.Overview.AllDocuments" xml:space="preserve">
-    <value>Sva dokumenta</value>
-  </data>
-  <data name="Vehicle.Overview.KeySpecs" xml:space="preserve">
-    <value>Osnovni podaci</value>
-  </data>
-  <data name="Vehicle.Overview.NoSpecs" xml:space="preserve">
-    <value>Marka, model i motor još nisu uneti.</value>
-  </data>
   <data name="Vehicle.Overview.AddSpecs" xml:space="preserve">
     <value>Unesi podatke</value>
-  </data>
-  <data name="Vehicle.Overview.AllSpecs" xml:space="preserve">
-    <value>Svi podaci</value>
-  </data>
-  <data name="Vehicle.Overview.LastService" xml:space="preserve">
-    <value>Poslednji servis</value>
-  </data>
-  <data name="Vehicle.Overview.NoService" xml:space="preserve">
-    <value>Još nema upisanog servisa.</value>
   </data>
   <data name="Settings.Currency.Title" xml:space="preserve">
     <value>Valuta</value>
@@ -3604,20 +3568,8 @@ Na poslednjoj stranici strelica započinje novu.</value>
   <data name="Entity.Filter.All" xml:space="preserve">
     <value>Sve</value>
   </data>
-  <data name="Entity.Costs.Title" xml:space="preserve">
-    <value>Troškovi</value>
-  </data>
   <data name="Entity.Costs.ByKind" xml:space="preserve">
-    <value>Po vrsti</value>
-  </data>
-  <data name="Entity.Costs.ByYear" xml:space="preserve">
-    <value>Po godini</value>
-  </data>
-  <data name="Entity.Costs.Total" xml:space="preserve">
-    <value>Ukupno</value>
-  </data>
-  <data name="Entity.Costs.NoDate" xml:space="preserve">
-    <value>Bez datuma</value>
+    <value>Po vrsti, ukupno</value>
   </data>
   <data name="Entity.Reminder.Due" xml:space="preserve">
     <value>{0} dospeva {1}.</value>
@@ -3630,5 +3582,74 @@ Na poslednjoj stranici strelica započinje novu.</value>
   </data>
   <data name="Expiry.AtReading" xml:space="preserve">
     <value>dospeva na {0}</value>
+  </data>
+  <data name="Entity.Picture.Count" xml:space="preserve">
+    <value>{0} / {1}</value>
+  </data>
+  <data name="Item.Overview.Latest" xml:space="preserve">
+    <value>Poslednje: {0}</value>
+  </data>
+  <data name="Item.Overview.All" xml:space="preserve">
+    <value>Sve</value>
+  </data>
+  <data name="Item.Overview.Empty.Title" xml:space="preserve">
+    <value>Ovde još nema šta da se prikaže</value>
+  </data>
+  <data name="Item.Overview.Empty.Text" xml:space="preserve">
+    <value>Popuni podatke, dodaj dokumenta sa datumima ili upiši servis: rokovi koji dolaze, poslednji servis i tvoje beleške skupljaju se ovde.</value>
+  </data>
+  <data name="Entity.Costs.ThisYear" xml:space="preserve">
+    <value>Ove godine ({0})</value>
+  </data>
+  <data name="Entity.Costs.AllTime" xml:space="preserve">
+    <value>Ukupno</value>
+  </data>
+  <data name="Entity.Unit.pcs" xml:space="preserve">
+    <value>kom</value>
+  </data>
+  <data name="Entity.Section.Clothing" xml:space="preserve">
+    <value>Podaci</value>
+  </data>
+  <data name="Entity.Tab.Clothing" xml:space="preserve">
+    <value>Podaci</value>
+  </data>
+  <data name="Entity.Records.Sizes" xml:space="preserve">
+    <value>Veličine</value>
+  </data>
+  <data name="Entity.Records.Sizes.Add" xml:space="preserve">
+    <value>Dodaj veličinu</value>
+  </data>
+  <data name="Entity.Records.Sizes.Empty" xml:space="preserve">
+    <value>Još nema veličina. Dodaj svaku veličinu koju imaš, sa stanjem i količinom.</value>
+  </data>
+  <data name="Entity.Records.Sizes.Untitled" xml:space="preserve">
+    <value>Bez veličine</value>
+  </data>
+  <data name="Entity.Records.Sizes.Count" xml:space="preserve">
+    <value>Komada</value>
+  </data>
+  <data name="Entity.Records.Sizes.Fewer" xml:space="preserve">
+    <value>Jedan manje</value>
+  </data>
+  <data name="Entity.Records.Sizes.More" xml:space="preserve">
+    <value>Jedan više</value>
+  </data>
+  <data name="Entity.Field.Size" xml:space="preserve">
+    <value>Veličina</value>
+  </data>
+  <data name="Entity.Field.Condition" xml:space="preserve">
+    <value>Stanje</value>
+  </data>
+  <data name="Item.Pages" xml:space="preserve">
+    <value>Odeljci</value>
+  </data>
+  <data name="Entity.Unit.pcs.Count.One" xml:space="preserve">
+    <value>{0} komad</value>
+  </data>
+  <data name="Entity.Unit.pcs.Count.Few" xml:space="preserve">
+    <value>{0} komada</value>
+  </data>
+  <data name="Entity.Unit.pcs.Count.Other" xml:space="preserve">
+    <value>{0} komada</value>
   </data>
 </root>

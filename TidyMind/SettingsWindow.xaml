@@ -8,30 +8,6 @@
         WindowStartupLocation="CenterOwner"
         Background="{StaticResource BgMain}">
     <Window.Resources>
-        <!-- A category's heading, at the top of its page -->
-        <Style x:Key="PageTitleStyle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="17"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="{StaticResource TextMain}"/>
-            <Setter Property="Margin" Value="2,0,0,12"/>
-        </Style>
-
-        <!-- Section headings, as in Project Details -->
-        <Style x:Key="SectionLabelStyle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="#6B6965"/>
-            <Setter Property="Margin" Value="2,20,0,8"/>
-        </Style>
-
-        <!-- A group of rows: a white card like the other panels -->
-        <Style x:Key="CardStyle" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource BgPanel}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource Border}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="8"/>
-        </Style>
-
         <!-- One setting: what it does on the left, its button on the right -->
         <Style x:Key="RowStyle" TargetType="Grid">
             <Setter Property="Margin" Value="16,12"/>
@@ -79,35 +55,6 @@
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="track" Property="Opacity" Value="0.88"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- A category in the list on the left: tinted on hover, accent while it's the one shown. The text wraps rather
-             than being cut, so a long translation stays readable. -->
-        <Style x:Key="CategoryStyle" TargetType="ListBoxItem">
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Foreground" Value="{StaticResource TextMain}"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Margin" Value="0,1"/>
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ListBoxItem">
-                        <Border x:Name="row" Background="Transparent" CornerRadius="6" Padding="12,8">
-                            <TextBlock Text="{TemplateBinding Content}" TextWrapping="Wrap"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="row" Property="Background" Value="{StaticResource BgSubtle}"/>
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="row" Property="Background" Value="{StaticResource AccentSoft}"/>
-                                <Setter Property="Foreground" Value="{StaticResource Accent}"/>
-                                <Setter Property="FontWeight" Value="SemiBold"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

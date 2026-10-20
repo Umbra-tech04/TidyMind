@@ -22,9 +22,10 @@ namespace TidyMind
         // A to-do was ticked or unticked here (and the day plan blocks linked to it with it).
         public event Action DoneChanged;
 
-        // Ticked while this list is on screen: they stay put (struck through), also across refreshes, until the
-        // list is created again — so a mis-click can be undone where it happened.
+        // Ticked while this list is on screen: they stay on it (struck through, with the done ones), also across
+        // refreshes, until the list is created again — so a mis-click can be undone where it happened.
         private readonly HashSet<Guid> completedHere = new HashSet<Guid>();
+        private readonly Dictionary<Guid, CheckBox> ticks = new Dictionary<Guid, CheckBox>();
 
         // The host refreshes on window activation; this covers the date changing while the app stays in front.
         private readonly DispatcherTimer midnight = new DispatcherTimer();
@@ -140,19 +141,21 @@ namespace TidyMind
             selection.BeginRender();
             DateTime today = DateTime.Today;
 
-            // Within a group: finished ones last (except those ticked just now, which keep their place),
-            // overdue ones oldest first, then in the order they were added.
+            // The open ones first (TaskOrder: a done one never stands above an open one), then the done ones; each of the
+            // two by day (overdue ones oldest first), then in the order they were added. The ones ticked just now stay on
+            // the list even while the done ones are hidden, so a mis-click can be undone where it happened.
             List<QuickTodo> shown = todos.Where(IsShown)
-                .OrderBy(t => GroupOf(t, today))
-                .ThenBy(t => t.IsDone && !completedHere.Contains(t.Id))
+                .OrderBy(t => t.IsDone)
+                .ThenBy(t => GroupOf(t, today))
                 .ThenBy(t => t.DueDate)
                 .ThenBy(t => t.CreatedDate)
                 .ToList();
 
-            // No group headers — every row carries its day label; a hairline separates the groups.
+            // No group headers — every row carries its day label; a hairline separates the groups and, last, the done ones.
+            ticks.Clear();
             for (int i = 0; i < shown.Count; i++)
             {
-                if (i > 0 && GroupOf(shown[i], today) != GroupOf(shown[i - 1], today))
+                if (i > 0 && BlockOf(shown[i], today) != BlockOf(shown[i - 1], today))
                     TodoList.Children.Add(GroupDivider());
                 TodoList.Children.Add(CreateRow(shown[i], today));
             }
@@ -171,6 +174,9 @@ namespace TidyMind
                 SnapsToDevicePixels = true
             };
         }
+
+        // What a hairline separates: the day of an open to-do, all the done ones together.
+        private static int BlockOf(QuickTodo todo, DateTime today) => todo.IsDone ? -1 : (int)GroupOf(todo, today);
 
         private static DueGroup GroupOf(QuickTodo todo, DateTime today)
         {
@@ -229,7 +235,8 @@ namespace TidyMind
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(2, 4, 8, 4)
             };
-            check.Click += (s, e) => SetDone(todo, check, text, due, overdue);
+            check.Click += (s, e) => SetDone(todo, check);
+            ticks[todo.Id] = check;
             check.KeyDown += (s, e) =>
             {
                 if (e.Key == Key.Delete)
@@ -284,8 +291,9 @@ namespace TidyMind
             return true;
         }
 
-        // Restyles the row in place (no rebuild), so the checkbox keeps keyboard focus.
-        private void SetDone(QuickTodo todo, CheckBox check, TextBox text, TextBlock due, bool overdue)
+        // The to-do goes to its other group (the open ones above the done ones). The list is drawn again with the
+        // selection kept (it is by Id), not scrolled, and the keyboard back on the same box, which is not scrolled to.
+        private void SetDone(QuickTodo todo, CheckBox check)
         {
             bool done = check.IsChecked == true;
             if (!QuickTodoService.SetDone(todo.Id, done))
@@ -295,13 +303,18 @@ namespace TidyMind
                 return;
             }
 
+            bool keyboard = check.IsKeyboardFocused;
             todo.IsDone = done;
             todo.CompletedDate = done ? DateTime.Now : (DateTime?)null;
             if (done)
                 completedHere.Add(todo.Id);
 
-            PaintDone(text, due, overdue, done);
-            UpdateFooter();
+            TaskOrder.KeepView(TodoList, () =>
+            {
+                Render();
+                if (keyboard && ticks.TryGetValue(todo.Id, out CheckBox again))
+                    again.Focus();
+            });
             DoneChanged?.Invoke();
         }
 

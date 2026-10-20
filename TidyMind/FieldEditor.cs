@@ -58,7 +58,7 @@ namespace TidyMind
             switch (field.Kind)
             {
                 case ValueKind.Choice:
-                    combo = new ComboBox { Height = 32 };
+                    combo = new ComboBox { Height = InputHeight };
                     combo.Items.Add(new ComboBoxItem { Content = NotSetLabel(field), Tag = "" });
                     foreach (string choice in field.Choices)
                         combo.Items.Add(new ComboBoxItem { Content = field.ChoiceLabel(choice), Tag = choice });
@@ -69,7 +69,7 @@ namespace TidyMind
                     Element = combo;
                     break;
                 case ValueKind.Date:
-                    picker = new DatePicker { Height = 32, VerticalContentAlignment = VerticalAlignment.Center, SelectedDate = Values.ParseDate(initial) };
+                    picker = new DatePicker { Height = InputHeight, SelectedDate = Values.ParseDate(initial) };
                     Element = picker;
                     break;
                 case ValueKind.Flag:
@@ -85,8 +85,10 @@ namespace TidyMind
                     Element = Links(field, owner, initial);
                     break;
                 case ValueKind.LongText:
-                    box = new TextBox { Height = 80, Text = initial, TextWrapping = TextWrapping.Wrap, AcceptsReturn = true,
-                        VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+                    box = Box(initial, 96);
+                    box.TextWrapping = TextWrapping.Wrap;
+                    box.AcceptsReturn = true;
+                    box.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
                     Element = box;
                     break;
                 case ValueKind.File:
@@ -100,12 +102,12 @@ namespace TidyMind
                     Element = PicturesEditor();
                     break;
                 case ValueKind.Number:
-                    box = new TextBox { Height = 32, VerticalContentAlignment = VerticalAlignment.Center, Text = Typed(initial) };
-                    alternateBox = field.Alternate == null ? null : new TextBox { Height = 32, VerticalContentAlignment = VerticalAlignment.Center };
+                    box = Box(Typed(initial));
+                    alternateBox = field.Alternate == null ? null : Box();
                     Element = field.Unit == null ? box : NumberWithUnit(field, owner);
                     break;
                 default:
-                    box = new TextBox { Height = 32, VerticalContentAlignment = VerticalAlignment.Center, Text = initial };
+                    box = Box(initial);
                     Element = box;
                     break;
             }
@@ -143,6 +145,14 @@ namespace TidyMind
 
         // ---- Kinds ----------------------------------------------------------------
 
+        // Every input is this tall (a long text taller): the dialogs' form box (NoteInputStyle) for text, the app's own
+        // combo box and date picker beside it.
+        public const double InputHeight = 36;
+
+        // The app's input box, at the size and text inset of the form's dropdowns and date pickers beside it.
+        private static TextBox Box(string text = "", double height = InputHeight) =>
+            new TextBox { Style = (Style)Application.Current.FindResource("NoteInputStyle"), Height = height, Text = text, FontSize = 13, Padding = new Thickness(0) };
+
         // What "nothing chosen" is called: the field's own word for it (a document's reminder: "No reminder"), else "Not set".
         private static string NotSetLabel(FieldDefinition field)
         {
@@ -154,21 +164,27 @@ namespace TidyMind
         private static string Typed(string stored) =>
             Values.Number(stored) is double n ? n.ToString("0.###", Loc.Culture) : stored;
 
-        // The box with its unit after it; with an alternate unit a second box, the two filling each other as typed.
+        // The box with its unit after it; with an alternate unit a second box, the two filling each other as typed. The
+        // boxes share what room the cell has (never more than a number needs, never less than a few digits), so the pair
+        // fits the narrowest column instead of running out of it.
         private FrameworkElement NumberWithUnit(FieldDefinition field, Entity owner)
         {
-            StackPanel row = new StackPanel { Orientation = Orientation.Horizontal };
-            box!.Width = 110;
-            row.Children.Add(box);
-            row.Children.Add(UnitText(Units.Label(field.Unit!, owner)));
-            if (alternateBox == null || field.Alternate == null)
+            bool pair = alternateBox != null && field.Alternate != null;
+            Grid row = new Grid { MaxWidth = pair ? 320 : 170, HorizontalAlignment = HorizontalAlignment.Left };
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            if (pair)
+            {
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(12) });
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            }
+            row.Children.Add(BoxWithUnit(box!, Units.Label(field.Unit!, owner)));
+            if (!pair)
                 return row;
 
-            alternateBox.Width = 90;
-            alternateBox.Margin = new Thickness(12, 0, 0, 0);
-            AutomationProperties.SetName(alternateBox, field.Label + " (" + Units.Label(field.Alternate.Unit, owner) + ")");
-            row.Children.Add(alternateBox);
-            row.Children.Add(UnitText(Units.Label(field.Alternate.Unit, owner)));
+            AutomationProperties.SetName(alternateBox!, field.Label + " (" + Units.Label(field.Alternate!.Unit, owner) + ")");
+            FrameworkElement second = BoxWithUnit(alternateBox!, Units.Label(field.Alternate.Unit, owner));
+            Grid.SetColumn(second, 2);
+            row.Children.Add(second);
 
             bool filling = false;
             void Fill(TextBox from, TextBox to, double factor, int decimals)
@@ -185,13 +201,23 @@ namespace TidyMind
             return row;
         }
 
-        private static TextBlock UnitText(string unit) => new TextBlock
+        // The unit docked after the box, which takes the rest.
+        private static FrameworkElement BoxWithUnit(TextBox number, string unit)
         {
-            Text = unit,
-            Foreground = (Brush)Application.Current.FindResource("TextSub"),
-            VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(8, 0, 0, 0)
-        };
+            number.MinWidth = 56;
+            DockPanel group = new DockPanel();
+            TextBlock text = new TextBlock
+            {
+                Text = unit,
+                Foreground = (Brush)Application.Current.FindResource("TextSub"),
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(8, 0, 0, 0)
+            };
+            DockPanel.SetDock(text, Dock.Right);
+            group.Children.Add(text);
+            group.Children.Add(number);
+            return group;
+        }
 
         // A check box per offered choice and per item of the user's own, then a box to add one more.
         private FrameworkElement CheckList(FieldDefinition field, string stored)
@@ -200,7 +226,8 @@ namespace TidyMind
             foreach (string choice in field.Choices.Concat(chosen.Where(c => !field.Choices.Contains(c))))
                 AddCheck(field.ChoiceLabel(choice), choice, chosen.Contains(choice));
 
-            TextBox own = new TextBox { Height = 30, Width = 200, VerticalContentAlignment = VerticalAlignment.Center };
+            TextBox own = Box();
+            own.Width = 200;
             AutomationProperties.SetName(own, Loc.T("Entity.CheckList.Own"));
             Button add = new Button
             {
@@ -229,7 +256,8 @@ namespace TidyMind
                 e.Handled = true;
             };
 
-            StackPanel ownRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 6, 0, 0) };
+            // Wraps when the label, the box and the button don't fit one line.
+            WrapPanel ownRow = new WrapPanel { Margin = new Thickness(0, 6, 0, 0) };
             ownRow.Children.Add(new TextBlock { Text = Loc.T("Entity.CheckList.Own"), VerticalAlignment = VerticalAlignment.Center,
                 Foreground = (Brush)Application.Current.FindResource("TextSub"), Margin = new Thickness(0, 0, 8, 0) });
             ownRow.Children.Add(own);
@@ -261,11 +289,17 @@ namespace TidyMind
         // The file's name (or that there is none), Choose…, and Remove while there is one.
         private FrameworkElement FilePicker()
         {
-            StackPanel row = new StackPanel { Orientation = Orientation.Horizontal };
-            fileName = new TextBlock { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 12, 0), TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 320 };
+            // The name takes what the buttons leave and is trimmed to it.
+            Grid row = new Grid();
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            fileName = new TextBlock { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 12, 0), TextTrimming = TextTrimming.CharacterEllipsis };
             Button choose = new Button { Content = Loc.T("Entity.File.Choose"), Style = (Style)Application.Current.FindResource("GhostButtonStyle") };
             removeFile = new Button { Content = Loc.T("Entity.File.Remove"), Style = (Style)Application.Current.FindResource("LinkButtonStyle"),
                 Margin = new Thickness(12, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
+            Grid.SetColumn(choose, 1);
+            Grid.SetColumn(removeFile, 2);
             choose.Click += (s, e) =>
             {
                 OpenFileDialog dialog = new OpenFileDialog { Filter = Loc.T("Entity.File.Filter") };
@@ -324,8 +358,9 @@ namespace TidyMind
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(3, GridUnitType.Star) });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            TextBox nameBox = new TextBox { Text = name, Height = 30, VerticalContentAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 8, 0) };
-            TextBox valueBox = new TextBox { Text = value, Height = 30, VerticalContentAlignment = VerticalAlignment.Center };
+            TextBox nameBox = Box(name);
+            nameBox.Margin = new Thickness(0, 0, 8, 0);
+            TextBox valueBox = Box(value);
             AutomationProperties.SetName(nameBox, Loc.T("Entity.Specs.Name"));
             AutomationProperties.SetName(valueBox, Loc.T("Entity.Specs.Value"));
             Button remove = new Button
