@@ -87,7 +87,7 @@ static partial class Program
 
         foreach (string name in new[] { "DescriptionBox", "NotesBox" })
         {
-            RichTextBox editor = (RichTextBox)window.FindName(name);
+            RichTextBox editor = (RichTextBox)(name == "NotesBox" ? window.Notebook.FindName(name) : window.FindName(name));
             editor.BringIntoView();
             await Wait(200);
             before = page.VerticalOffset;
@@ -126,7 +126,7 @@ static partial class Program
             + before.ToString("0") + " → " + page.VerticalOffset.ToString("0") + ")");
 
         // A long notes page grows too, its ruled lines with it.
-        RichTextBox notes = (RichTextBox)window.FindName("NotesBox");
+        RichTextBox notes = (RichTextBox)window.Notebook.FindName("NotesBox");
         for (int i = 1; i <= 30; i++)
             notes.Document.Blocks.Add(new Paragraph(new Run("Note line " + i)));
         await Wait(300);

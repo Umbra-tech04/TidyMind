@@ -43,6 +43,7 @@ namespace TidyMind
             public List<(string Label, string Value)> Fields;
             public Project Project;       // a project: each format lays out its tasks, notes and files itself
             public List<TodoEntry> Todos; // a memory's to-do list, shown as a checklist
+            public List<NotePage> Notebook; // a memory's own notebook, its pages as a project's notes
             public Entity Entity;         // an item: Excel puts its values in typed columns
             public List<DayPlanBlock> Blocks; // a planned day: Excel lists its blocks in a table
         }
@@ -131,11 +132,11 @@ namespace TidyMind
 
         // ---- Memories, projects and items ----------------------------------------
 
-        // The memory's inline to-do list (if it has one) comes first, then its projects. `grouped` (export all): under
-        // the memory's heading.
+        // The memory's notebook and inline to-do list (if it has them) come first, then its projects. `grouped` (export
+        // all): under the memory's heading.
         private static List<ExportItem> BuildProjectItems(Profile memory, bool grouped = false)
         {
-            List<ExportItem> items = new List<ExportItem>();
+            List<ExportItem> items = NotebookItems(memory);
 
             List<TodoEntry> todos = LoadTodos(memory);
             if (todos.Count > 0)
@@ -154,7 +155,8 @@ namespace TidyMind
 
         private static List<ExportItem> BuildEntityItems(Profile memory, bool grouped = false)
         {
-            List<ExportItem> items = EntityStore.Load(memory).Select(EntityItem).ToList();
+            List<ExportItem> items = NotebookItems(memory);
+            items.AddRange(EntityStore.Load(memory).Select(EntityItem));
             return grouped ? UnderMemory(items, memory) : items;
         }
 
@@ -197,6 +199,15 @@ namespace TidyMind
             (Loc.T("Entity.Field.Notes"), entity.Notes ?? "")
         };
 
+        // The memory's notebook, if anything is written in it. An unreadable file just leaves it out, like the to-do list.
+        private static List<ExportItem> NotebookItems(Profile memory)
+        {
+            List<ExportItem> items = new List<ExportItem>();
+            if (MemoryNotebookStore.TryLoad(memory, out MemoryNotebook notebook, out _) && NotebookPages(notebook.Pages).Count > 0)
+                items.Add(new ExportItem { Name = Loc.T("Notebook.Title"), Notebook = notebook.Pages });
+            return items;
+        }
+
         // An unreadable file just leaves the to-do list out of the export.
         private static List<TodoEntry> LoadTodos(Profile memory)
         {
@@ -226,9 +237,13 @@ namespace TidyMind
         {
             Description = RichLines(project.Description),
             Tasks = project.Tasks?.Where(t => t != null).ToList() ?? new List<TaskItem>(),
-            NotePages = project.PagesOrLegacyNote().Select(p => RichLines(p.Body)).Where(p => p.Count > 0).ToList(),
+            NotePages = NotebookPages(project.PagesOrLegacyNote()),
             Files = project.Attachments?.Where(a => a != null).ToList() ?? new List<Attachment>()
         };
+
+        // Notebook pages with something on them, as lines (a project's notes, a memory's notebook).
+        private static List<List<RichLine>> NotebookPages(List<NotePage> pages) =>
+            pages.Where(p => p != null).Select(p => RichLines(p.Body)).Where(p => p.Count > 0).ToList();
 
         // Open entries in their own order, then the done ones (shown under a "Done" label when there are open ones too):
         // what is left to do reads first.

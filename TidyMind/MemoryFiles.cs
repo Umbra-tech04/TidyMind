@@ -22,6 +22,9 @@ namespace TidyMind
         // A project memory's inline to-do list.
         public static string Todos(Profile memory) => Path.Combine(Folder(memory), "todos.json");
 
+        // The memory's own notebook (MemoryNotebookStore), for anything about the whole memory. Only there once written in.
+        public static string Notebook(Profile memory) => Path.Combine(Folder(memory), "notebook.json");
+
         // After the memory has been removed from profiles.json. Best effort: a folder that can't be deleted now is
         // left behind, unused (nothing refers to its Id any more). A deleted memory whose delete can still be undone keeps
         // its folder (UndoService).

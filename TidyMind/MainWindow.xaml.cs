@@ -745,13 +745,19 @@ namespace TidyMind
             }
             NavigateTo(result.Profile);
             if (result.Kind == SearchResultKind.Memory) return;
-            if (result.Kind == SearchResultKind.Note)
-                ProjectWindow.OpenAtPage(result.ItemId, result.Page);
+            if (result.Kind == SearchResultKind.Note || result.Kind == SearchResultKind.MemoryNote)
+                NotebookEditor.OpenAtPage(result.ItemId, result.Page);
 
             // After the new view has loaded, so a project opens over its visible card (and can pulse on close).
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                if (ContentArea.Content is ProjectView projectView)
+                // A page of the memory's notebook: the notebook over its page, at that page.
+                if (result.Kind == SearchResultKind.MemoryNote)
+                {
+                    if ((ContentArea.Content as FrameworkElement)?.FindName("NotebookButton") is NotebookButton notebook)
+                        notebook.Open();
+                }
+                else if (ContentArea.Content is ProjectView projectView)
                     projectView.Reveal(result.ItemId);
                 else if (ContentArea.Content is CollectionView collectionView)
                     collectionView.Reveal(result.ItemId);

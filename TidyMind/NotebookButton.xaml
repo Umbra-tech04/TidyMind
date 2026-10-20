@@ -1,0 +1,36 @@
+<UserControl x:Class="TidyMind.NotebookButton"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:TidyMind">
+    <!-- Opens the memory's notebook (NotebookWindow): a panel-like button, light like the to-do panel beside it, with
+         the number of written pages once there are any. -->
+    <Button x:Name="OpenButton" Click="OpenButton_Click" Cursor="Hand"
+            AutomationProperties.Name="{local:Tr Notebook.Title}">
+        <Button.Template>
+            <ControlTemplate TargetType="Button">
+                <Border x:Name="border" Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
+                        BorderThickness="1" Padding="12,0,14,0"
+                        CornerRadius="{Binding Radius, RelativeSource={RelativeSource AncestorType=local:NotebookButton}}">
+                    <ContentPresenter VerticalAlignment="Center"/>
+                </Border>
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter TargetName="border" Property="Background" Value="{StaticResource BgSubtle}"/>
+                    </Trigger>
+                    <Trigger Property="IsKeyboardFocused" Value="True">
+                        <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                    </Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate>
+        </Button.Template>
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xE736;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{StaticResource TextSub}"
+                       VerticalAlignment="Center" Margin="0,1,8,0"/>
+            <TextBlock Text="{local:Tr Notebook.Title}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextBody}"
+                       VerticalAlignment="Center"/>
+            <!-- How many pages are written: shown only when there is something -->
+            <TextBlock x:Name="CountText" FontSize="11" Foreground="{StaticResource TextSub}" VerticalAlignment="Center"
+                       Margin="8,0,0,0" Visibility="Collapsed"/>
+        </StackPanel>
+    </Button>
+</UserControl>

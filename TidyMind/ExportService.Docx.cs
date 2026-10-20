@@ -84,6 +84,8 @@ namespace TidyMind
 
                     if (item.Project != null)
                         DocxProject(flow, item.Project);
+                    else if (item.Notebook != null)
+                        DocxNotePages(flow, NotebookPages(item.Notebook));
                     else if (item.Todos != null)
                         DocxChecklist(flow, item.Todos.Select(t => (t.Text, t.IsDone)));
                     else
@@ -265,18 +267,7 @@ namespace TidyMind
             if (parts.NotePages.Count > 0)
             {
                 DocxSectionLabel(flow, Loc.T("ProjectWindow.Notes"));
-                for (int i = 0; i < parts.NotePages.Count; i++)
-                {
-                    // Notebook pages are kept apart by a short rule: the border of an empty line indented to 60 points.
-                    if (i > 0)
-                    {
-                        Paragraph rule = flow.Line(0, 10);
-                        rule.ParagraphProperties.KeepNext = new KeepNext();
-                        rule.ParagraphProperties.ParagraphBorders = new ParagraphBorders { BottomBorder = DocxRule(Rule, 6, 1) };
-                        rule.ParagraphProperties.Indentation = new Indentation { Right = Twips(DocxTextWidth - 60) };
-                    }
-                    DocxRichText(flow, parts.NotePages[i]);
-                }
+                DocxNotePages(flow, parts.NotePages);
             }
 
             if (parts.Files.Count > 0)
@@ -289,6 +280,23 @@ namespace TidyMind
                     line.Append(DocxRun("   " + Loc.F("Export.FileDetails", AttachmentStore.FormatSize(file.SizeBytes),
                         file.AddedDate.ToString(Loc.T("Format.ShortDate"), Loc.Culture)), size: 8.5, color: Muted));
                 }
+            }
+        }
+
+        // A notebook's pages (a project's notes, a memory's notebook), kept apart by a short rule: the border of an
+        // empty line indented to 60 points.
+        private static void DocxNotePages(DocxFlow flow, List<List<RichLine>> pages)
+        {
+            for (int i = 0; i < pages.Count; i++)
+            {
+                if (i > 0)
+                {
+                    Paragraph rule = flow.Line(0, 10);
+                    rule.ParagraphProperties.KeepNext = new KeepNext();
+                    rule.ParagraphProperties.ParagraphBorders = new ParagraphBorders { BottomBorder = DocxRule(Rule, 6, 1) };
+                    rule.ParagraphProperties.Indentation = new Indentation { Right = Twips(DocxTextWidth - 60) };
+                }
+                DocxRichText(flow, pages[i]);
             }
         }
 

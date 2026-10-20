@@ -11,6 +11,7 @@ namespace TidyMind
         Entity,
         File, // a project's attached file; opens the project
         Note, // a page of a project's notes; opens the project at that page
+        MemoryNote, // a page of a memory's own notebook; opens the notebook at that page
         PlanBlock // a day plan block (no Profile); opens that day's plan
     }
 
@@ -60,6 +61,7 @@ namespace TidyMind
                     AddEntities(index, profile);
                 else
                     AddProjects(index, profile);
+                AddNotebook(index, profile);
             }
             AddDayPlan(index);
 
@@ -114,24 +116,40 @@ namespace TidyMind
                 }
 
                 // Its note pages with writing on them (an old single note is page 1, as Project Details shows it).
-                List<NotePage> pages = project.PagesOrLegacyNote();
-                for (int i = 0; i < pages.Count; i++)
-                {
-                    string text = RichTextHelper.ToPlainText(pages[i].Body ?? "");
-                    string firstLine = text.Split('\n').Select(line => line.Trim()).FirstOrDefault(line => line.Length > 0) ?? "";
-                    if (firstLine.Length == 0) continue;
+                AddPages(index, project.PagesOrLegacyNote(), SearchResultKind.Note, profile, project.Id,
+                    profile.Name + Arrow + project.Name + Arrow);
+            }
+        }
 
-                    index.Add(new SearchResult
-                    {
-                        Kind = SearchResultKind.Note,
-                        Title = firstLine,
-                        Text = text,
-                        Location = profile.Name + Arrow + project.Name + Arrow + Loc.F("Search.Page", i + 1),
-                        Profile = profile,
-                        ItemId = project.Id,
-                        Page = i
-                    });
-                }
+        // The memory's own notebook, its pages as the project's are. An unreadable notebook file adds nothing.
+        private static void AddNotebook(List<SearchResult> index, Profile profile)
+        {
+            if (MemoryNotebookStore.TryLoad(profile, out MemoryNotebook notebook, out _))
+                AddPages(index, notebook.Pages, SearchResultKind.MemoryNote, profile, profile.Id,
+                    profile.Name + Arrow + Loc.T("Notebook.Title") + Arrow);
+        }
+
+        // A result per page with writing on it, found by its text and named by its first line. owner: the project's or
+        // the memory's Id, where the page opens.
+        private static void AddPages(List<SearchResult> index, List<NotePage> pages, SearchResultKind kind, Profile profile, Guid owner,
+            string where)
+        {
+            for (int i = 0; i < pages.Count; i++)
+            {
+                string text = RichTextHelper.ToPlainText(pages[i].Body ?? "");
+                string firstLine = text.Split('\n').Select(line => line.Trim()).FirstOrDefault(line => line.Length > 0) ?? "";
+                if (firstLine.Length == 0) continue;
+
+                index.Add(new SearchResult
+                {
+                    Kind = kind,
+                    Title = firstLine,
+                    Text = text,
+                    Location = where + Loc.F("Search.Page", i + 1),
+                    Profile = profile,
+                    ItemId = owner,
+                    Page = i
+                });
             }
         }
 

@@ -57,8 +57,8 @@ namespace TidyMind
                 if (tasks.Rows.Count > 0)
                     AddTableSheet(workbook, Loc.T("ProjectWindow.Tasks"), title, exported, tasks);
 
-                List<(ExportItem Item, List<(string Label, List<RichLine> Lines)> Sections)> texts = items.Where(i => i.Project != null)
-                    .Select(i => (Item: i, Sections: ProjectText(i.Project))).Where(t => t.Sections.Count > 0).ToList();
+                List<(ExportItem Item, List<(string Label, List<RichLine> Lines)> Sections)> texts = items.Where(i => i.Project != null || i.Notebook != null)
+                    .Select(i => (Item: i, Sections: i.Project != null ? ProjectText(i.Project) : NotebookText(i.Notebook))).Where(t => t.Sections.Count > 0).ToList();
                 if (texts.Count > 0)
                     AddTextSheet(workbook, title, exported, texts, oneItem);
 
@@ -435,18 +435,31 @@ namespace TidyMind
         private static List<(string Label, List<RichLine> Lines)> ProjectText(Project project)
         {
             ProjectParts parts = Parts(project);
-            List<RichLine> notes = new List<RichLine>();
-            foreach (List<RichLine> page in parts.NotePages)
-            {
-                if (notes.Count > 0)
-                    notes.Add(new RichLine { Blank = true, Runs = new List<System.Windows.Documents.Run>() });
-                notes.AddRange(page);
-            }
             return new List<(string Label, List<RichLine> Lines)>
             {
                 (Loc.T("ProjectWindow.Description"), parts.Description),
-                (Loc.T("ProjectWindow.Notes"), notes)
+                (Loc.T("ProjectWindow.Notes"), JoinPages(parts.NotePages))
             }.Where(s => s.Lines.Count > 0).ToList();
+        }
+
+        // A memory's notebook (the item is named Notebook): its pages as one Notes section.
+        private static List<(string Label, List<RichLine> Lines)> NotebookText(List<NotePage> notebook)
+        {
+            List<RichLine> pages = JoinPages(NotebookPages(notebook));
+            return pages.Count == 0 ? new List<(string, List<RichLine>)>() : new List<(string, List<RichLine>)> { (Loc.T("ProjectWindow.Notes"), pages) };
+        }
+
+        // Notebook pages one after the other, an empty line between them.
+        private static List<RichLine> JoinPages(List<List<RichLine>> pages)
+        {
+            List<RichLine> lines = new List<RichLine>();
+            foreach (List<RichLine> page in pages)
+            {
+                if (lines.Count > 0)
+                    lines.Add(new RichLine { Blank = true, Runs = new List<System.Windows.Documents.Run>() });
+                lines.AddRange(page);
+            }
+            return lines;
         }
 
         // One wide column: per project its name, then each section's label over a dark rule, then its paragraphs.

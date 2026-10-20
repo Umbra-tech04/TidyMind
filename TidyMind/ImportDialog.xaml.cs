@@ -45,8 +45,11 @@ namespace TidyMind
             if (package.IsCollection)
             {
                 KindText.Text = Loc.F("Transfer.Import.Collection", name);
-                CountsText.Text = Loc.F("Transfer.Import.CollectionCounts",
-                    Loc.Plural("Transfer.Count.Items", package.Items), Loc.Plural("Transfer.Count.Pictures", package.Pictures));
+                CountsText.Text = package.NotebookPages > 0
+                    ? Loc.F("Transfer.Import.CollectionNotebookCounts", Loc.Plural("Transfer.Count.Items", package.Items),
+                        Loc.Plural("Transfer.Count.Pictures", package.Pictures), Loc.Plural("Transfer.Count.Pages", package.NotebookPages))
+                    : Loc.F("Transfer.Import.CollectionCounts",
+                        Loc.Plural("Transfer.Count.Items", package.Items), Loc.Plural("Transfer.Count.Pictures", package.Pictures));
             }
             else if (package.IsItem)
             {

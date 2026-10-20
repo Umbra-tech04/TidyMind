@@ -218,6 +218,7 @@ namespace TidyMind
                 ReadIfThere<List<Entity>>(folder, Path.Combine(memoryFolder, "entities.json"));
                 ReadIfThere<List<MemoryTab>>(folder, Path.Combine(memoryFolder, "tabs.json"));
                 ReadIfThere<List<TodoEntry>>(folder, Path.Combine(memoryFolder, "todos.json"));
+                ReadIfThere<MemoryNotebook>(folder, Path.Combine(memoryFolder, "notebook.json"));
             }
 
             // The one-time copy from the old version's folder is done for this data; never again over it.

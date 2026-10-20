@@ -293,6 +293,7 @@ namespace TidyMind
                 case SearchResultKind.Project: return "\uE7C3"; // page
                 case SearchResultKind.File: return "\uE723";    // paperclip
                 case SearchResultKind.Note: return "\uE70B";    // note
+                case SearchResultKind.MemoryNote: return "\uE736"; // notebook
                 case SearchResultKind.PlanBlock: return "\uE823"; // clock
                 default: return "\uE8EC";                       // tag
             }
@@ -306,6 +307,7 @@ namespace TidyMind
                 case SearchResultKind.Project: return Loc.T("Search.Kind.Project");
                 case SearchResultKind.File: return Loc.T("Search.Kind.File");
                 case SearchResultKind.Note: return Loc.T("Search.Kind.Note");
+                case SearchResultKind.MemoryNote: return Loc.T("Notebook.Title");
                 case SearchResultKind.PlanBlock: return Loc.T("Search.Kind.Plan");
                 default: return Loc.T("Search.Kind.Item");
             }

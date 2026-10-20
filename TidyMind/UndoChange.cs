@@ -610,6 +610,12 @@ namespace TidyMind
             () => MemoryTodoService.TryLoad(memory, out List<TodoEntry> todos) ? todos : null,
             todos => MemoryTodoService.TrySave(memory, todos), t => t.Id.ToString());
 
+        // A memory's notebook as one item (no file: none), so a change to it goes back whole.
+        public static ListPart<MemoryNotebook> Notebook(Profile memory) => new ListPart<MemoryNotebook>(MemoryFiles.Notebook(memory),
+            () => !MemoryNotebookStore.TryLoad(memory, out MemoryNotebook notebook, out _) ? null
+                : File.Exists(MemoryFiles.Notebook(memory)) ? new List<MemoryNotebook> { notebook } : new List<MemoryNotebook>(),
+            list => MemoryNotebookStore.TrySave(memory, list.Count > 0 ? list[0] : new MemoryNotebook()), n => "notebook");
+
         public static ListPart<QuickTodo> QuickTodos() => new ListPart<QuickTodo>(QuickTodoService.FilePath,
             () => QuickTodoService.TryRead(out List<QuickTodo> todos) ? todos : null,
             QuickTodoService.TryWrite, t => t.Id.ToString());

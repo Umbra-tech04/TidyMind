@@ -66,6 +66,32 @@ namespace TidyMind
             });
         }
 
+        // The frame shows focus like the other inputs do.
+        public static void ShowFocusOn(System.Windows.Controls.Border frame, RichTextBox editor)
+        {
+            System.Windows.Media.Brush rest = frame.BorderBrush;
+            editor.IsKeyboardFocusWithinChanged += (s, e) =>
+                frame.BorderBrush = editor.IsKeyboardFocusWithin ? (System.Windows.Media.Brush)frame.FindResource("Accent") : rest;
+        }
+
+        // The editors (a description, a notebook page) are as tall as their text and never scroll themselves; the wheel
+        // passes through them to the page. Typing or moving the cursor past the bottom of the window scrolls the page
+        // along, as a scrolling editor would. After layout, so the caret's place is up to date.
+        public static void FollowCaret(RichTextBox editor)
+        {
+            editor.SelectionChanged += (s, e) =>
+            {
+                if (!editor.IsKeyboardFocused)
+                    return;
+                editor.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    Rect caret = editor.CaretPosition.GetCharacterRect(LogicalDirection.Forward);
+                    if (!caret.IsEmpty)
+                        editor.BringIntoView(new Rect(caret.X, caret.Y - 8, Math.Max(caret.Width, 1), caret.Height + 16));
+                }), System.Windows.Threading.DispatcherPriority.Loaded);
+            };
+        }
+
         // For places that show a description or note without formatting (e.g. exports).
         public static string ToPlainText(string stored)
         {

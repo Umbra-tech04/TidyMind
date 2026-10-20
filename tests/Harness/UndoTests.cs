@@ -444,13 +444,13 @@ static partial class Program
             Check(host.Undo() && files.Attachments.Select(a => a.DisplayName).SequenceEqual(names) && files.Removed.Count == 0,
                 "undone: back in its place, and nothing left to delete on closing");
 
-            List<NotePage> Pages() => Field<List<NotePage>>(window, "pages");
-            List<string> Bodies() => Field<List<string>>(window, "pageBodies");
+            List<NotePage> Pages() => Field<List<NotePage>>(window.Notebook, "pages");
+            List<string> Bodies() => Field<List<string>>(window.Notebook, "pageBodies");
             List<string> bodies = Bodies().ToList();
-            Invoke(window, "DeletePages", (IReadOnlyList<NotePage>)new[] { Pages()[1] });
+            Invoke(window.Notebook, "DeletePages", (IReadOnlyList<NotePage>)new[] { Pages()[1] });
             Check(Pages().Count == 2, "a page deleted");
             Check(host.Undo() && Bodies().SequenceEqual(bodies) && Pages().Count == 3, "undone: page 2 back with its text");
-            Invoke(window, "DeletePages", (IReadOnlyList<NotePage>)Pages().ToList());
+            Invoke(window.Notebook, "DeletePages", (IReadOnlyList<NotePage>)Pages().ToList());
             Check(Pages().Count == 1 && Bodies()[0] == "", "every page deleted: page 1 stays, empty");
             Check(host.Undo() && Bodies().SequenceEqual(bodies), "undone: all three with their text");
             RenderWindow(window, "undo-04-project-window");
@@ -826,23 +826,23 @@ static partial class Program
         project.NotePages = Enumerable.Range(1, 3).Select(i => new NotePage { Body = RichTextHelper.ToStorableString(Doc("Page text " + i)) }).ToList();
         ProjectWindow window = await OpenProject(main, project);
         UndoHost host = UndoHost.Of(window);
-        List<NotePage> Pages() => Field<List<NotePage>>(window, "pages");
-        List<string> Bodies() => Field<List<string>>(window, "pageBodies");
-        RichTextBox editor = (RichTextBox)window.FindName("NotesBox");
+        List<NotePage> Pages() => Field<List<NotePage>>(window.Notebook, "pages");
+        List<string> Bodies() => Field<List<string>>(window.Notebook, "pageBodies");
+        RichTextBox editor = (RichTextBox)window.Notebook.FindName("NotesBox");
         try
         {
             NotePage second = Pages()[1];
-            Invoke(window, "DeletePages", (IReadOnlyList<NotePage>)new[] { second });
+            Invoke(window.Notebook, "DeletePages", (IReadOnlyList<NotePage>)new[] { second });
             Check(host.Undo() && Pages().Contains(second), "a page deleted and brought back");
-            Invoke(window, "FlipTo", Pages().IndexOf(second));
+            Invoke(window.Notebook, "FlipTo", Pages().IndexOf(second));
             editor.Document = Doc("Written after the undo");
             Check(host.Redo() && !Pages().Contains(second), "deleted again by a redo");
             Check(host.Undo() && RichTextHelper.ToPlainText(Bodies()[Pages().IndexOf(second)]).Contains("Written after the undo"),
                 "brought back again: with what was written after the first undo");
 
-            Invoke(window, "DeletePages", (IReadOnlyList<NotePage>)Pages().ToList());
+            Invoke(window.Notebook, "DeletePages", (IReadOnlyList<NotePage>)Pages().ToList());
             Check(host.Undo(), "every page deleted and brought back");
-            Invoke(window, "FlipTo", 0);
+            Invoke(window.Notebook, "FlipTo", 0);
             editor.Document = Doc("Page one, rewritten");
             Check(host.Redo() && host.Undo() && RichTextHelper.ToPlainText(Bodies()[0]).Contains("Page one, rewritten"),
                 "redone and undone: page 1 keeps what was written on it");
@@ -856,10 +856,10 @@ static partial class Program
         single.NotePages = new List<NotePage> { new NotePage { Body = RichTextHelper.ToStorableString(Doc("The only page")) } };
         window = await OpenProject(main, single);
         host = UndoHost.Of(window);
-        editor = (RichTextBox)window.FindName("NotesBox");
+        editor = (RichTextBox)window.Notebook.FindName("NotesBox");
         try
         {
-            Invoke(window, "DeletePages", (IReadOnlyList<NotePage>)Field<List<NotePage>>(window, "pages").ToList());
+            Invoke(window.Notebook, "DeletePages", (IReadOnlyList<NotePage>)Field<List<NotePage>>(window.Notebook, "pages").ToList());
             Check(host.Undo(), "the only page emptied and brought back");
             editor.Document = Doc("The only page, more");
             Check(host.Redo() && host.Undo() && RichTextHelper.ToPlainText(RichTextHelper.ToStorableString(editor.Document)).Contains("The only page, more"),

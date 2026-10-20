@@ -43,6 +43,7 @@ namespace TidyMind
             memory = profile;
             MemoryPageBackground.Attach(Page, BackgroundLayer, profile, saveProfiles, HeaderPlate, EmptyCard);
             TitleText.Text = profile.Name;
+            NotebookButton.Load(profile);
 
             // Counts, cards and the reason a file couldn't be read, in the new language; names are the user's own.
             Loc.Track(this, () =>
@@ -160,7 +161,10 @@ namespace TidyMind
             unreadableProblem = problem;
             selection?.ClearSelection();
             EntityPanel.Children.Clear();
-            Toolbar.Visibility = Visibility.Collapsed;
+            // The notebook has a file of its own and keeps working.
+            foreach (UIElement tool in Toolbar.Children)
+                if (tool != NotebookButton)
+                    tool.Visibility = Visibility.Collapsed;
             SelectionBar.Visibility = Visibility.Collapsed;
             TabStrip.Visibility = Visibility.Collapsed;
             SubtitleText.Text = Loc.T("Collection.Kind");
@@ -187,6 +191,7 @@ namespace TidyMind
         // After an undo or redo: the items and tabs as stored now.
         public void ReloadAfterUndo()
         {
+            NotebookButton.Refresh();
             if (unreadable)
                 return;
             ReloadEntities();

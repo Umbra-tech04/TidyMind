@@ -50,6 +50,10 @@ namespace TidyMind
                 readable = false;
                 problem = e.Message;
             }
+            // Its own notebook goes along (a notebook file that can't be read stops the export like the others).
+            MemoryNotebook notebook = new MemoryNotebook();
+            if (readable)
+                readable = MemoryNotebookStore.TryLoad(memory, out notebook, out problem);
             if (!readable)
             {
                 Msg.Show(owner, Loc.F("Transfer.Export.Unreadable", memory.Name, problem), Loc.T("Transfer.Export.Caption"),
@@ -59,7 +63,7 @@ namespace TidyMind
 
             string? path = AskWhere(owner, memory.Name);
             if (path != null)
-                Export(owner, memory.Name, path, (progress, cancel) => TransferPackage.ExportCollection(memory, tabs, entities, path, progress, cancel));
+                Export(owner, memory.Name, path, (progress, cancel) => TransferPackage.ExportCollection(memory, tabs, entities, path, progress, cancel, notebook));
         }
 
         // One item of a collection, as its card shows it (items are saved as soon as they change).

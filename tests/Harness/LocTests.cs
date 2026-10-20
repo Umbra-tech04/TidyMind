@@ -555,6 +555,7 @@ static partial class Program
             ("Vehicle window", () => new ItemWindow(SampleVehicle(), new ItemWindow.Host())),
             ("Garment window", () => new ItemWindow(SampleGarment(), new ItemWindow.Host())),
             ("Item type", () => new EntityTypeSelector()),
+            ("Memory notebook", () => new NotebookWindow(collection, new MemoryNotebook())),
             ("Export format", () => new ExportFormatWindow()),
             ("Licenses", () => new LicensesWindow()),
             ("Update", () => new UpdateDialog(UpdateRelease.Parse(GitHubJson("v9.9.9", null, 80000000, "- Faster start\n- Fixes"), UpdateEndpoints.Production, out _, out _))),

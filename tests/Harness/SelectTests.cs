@@ -411,19 +411,19 @@ static partial class Program
         ProjectWindow.OpenAtPage(project.Id, 2);
         ProjectWindow window = await OpenProject(main, project);
         await Foreground(window);
-        ItemSelection<NotePage> selection = Field<ItemSelection<NotePage>>(window, "pageSelection");
-        List<NotePage> Pages() => Field<List<NotePage>>(window, "pages");
-        System.Windows.Controls.Primitives.Popup popup = (System.Windows.Controls.Primitives.Popup)window.FindName("PageListPopup");
-        StackPanel rows = (StackPanel)window.FindName("PageListRows");
-        SelectionBar bar = (SelectionBar)window.FindName("PageSelectionBar");
-        RichTextBox editor = (RichTextBox)window.FindName("NotesBox");
-        TextBlock indicator = (TextBlock)window.FindName("PageIndicator");
+        ItemSelection<NotePage> selection = Field<ItemSelection<NotePage>>(window.Notebook, "pageSelection");
+        List<NotePage> Pages() => Field<List<NotePage>>(window.Notebook, "pages");
+        System.Windows.Controls.Primitives.Popup popup = (System.Windows.Controls.Primitives.Popup)window.Notebook.FindName("PageListPopup");
+        StackPanel rows = (StackPanel)window.Notebook.FindName("PageListRows");
+        SelectionBar bar = (SelectionBar)window.Notebook.FindName("PageSelectionBar");
+        RichTextBox editor = (RichTextBox)window.Notebook.FindName("NotesBox");
+        TextBlock indicator = (TextBlock)window.Notebook.FindName("PageIndicator");
         Button Row(int i) => (Button)rows.Children[i];
         string Shown() => new System.Windows.Documents.TextRange(editor.Document.ContentStart, editor.Document.ContentEnd).Text.Trim();
         async Task OpenList()
         {
             if (!popup.IsOpen)
-                ((Button)window.FindName("PageListButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                ((Button)window.Notebook.FindName("PageListButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await Wait(250);
         }
 
@@ -437,7 +437,7 @@ static partial class Program
         await Held(0x10, () => Press(Row(5)));
         Check(selection.Selected.SequenceEqual(original.Skip(3).Take(3)), "Shift+press: pages 4-6, from the last Ctrl+pressed");
         Check(Row(4).Background == SelectionLook.RowFill && Row(0).Background != SelectionLook.RowFill, "selected rows have the selected fill");
-        RenderPopup((FrameworkElement)window.FindName("PageListPanel"), "select-05-pages");
+        RenderPopup((FrameworkElement)window.Notebook.FindName("PageListPanel"), "select-05-pages");
 
         int boxes = selectBoxes.Count;
         PressKey(editor, Key.Delete);
@@ -494,7 +494,7 @@ static partial class Program
         // 🗑 on the open page: the same delete, its own question.
         popup.IsOpen = false;
         boxes = selectBoxes.Count;
-        Invoke(window, "DeletePage_Click", null, null);
+        Invoke(window.Notebook, "DeletePage_Click", null, null);
         await Wait(300);
         box = selectBoxes.Skip(boxes).FirstOrDefault() ?? "";
         Check(box.Contains(Loc.F("ProjectWindow.DeletePageConfirm", 3)) && Pages().Count == 2 && indicator.Text == "2 / 2" && Shown() == "Page text 4",

@@ -61,6 +61,7 @@ namespace TidyMind
                 RenderProjects();
             });
             TodoPanel.Load(profile, saveProfiles);
+            NotebookButton.Load(profile);
             TodoPanel.MouseWheel += (s, e) => WheelScroll.Forward(e, CardScroll); // the panel itself doesn't scroll
 
             // An unreadable file is left alone: the page says why, and nothing on it can change or save projects.
@@ -146,6 +147,7 @@ namespace TidyMind
         public void ReloadAfterUndo()
         {
             TodoPanel.Load(memory, saveProfiles);
+            NotebookButton.Refresh();
             if (unreadable)
                 return;
             ReloadProjects();

@@ -3820,4 +3820,41 @@ Na poslednjoj stranici strelica započinje novu.</value>
   <data name="Undo.Removed.Files.Other" xml:space="preserve">
     <value>Uklonjeno je {0} datoteka</value>
   </data>
+  <data name="Notebook.Title" xml:space="preserve">
+    <value>Beležnica</value>
+  </data>
+  <data name="Notebook.WindowTitle" xml:space="preserve">
+    <value>{0} – Beležnica</value>
+  </data>
+  <data name="Notebook.Intro" xml:space="preserve">
+    <value>Beleške za celu memoriju, a ne za jedan projekat ili stavku.</value>
+  </data>
+  <data name="Notebook.Tip" xml:space="preserve">
+    <value>Beleške za celu memoriju</value>
+  </data>
+  <data name="Notebook.Pages.One" xml:space="preserve">
+    <value>{0} ispisana stranica</value>
+  </data>
+  <data name="Notebook.Pages.Few" xml:space="preserve">
+    <value>{0} ispisane stranice</value>
+  </data>
+  <data name="Notebook.Pages.Other" xml:space="preserve">
+    <value>{0} ispisanih stranica</value>
+  </data>
+  <data name="Notebook.Unreadable" xml:space="preserve">
+    <value>Beležnica nije mogla da se pročita ({0}): {1}
+
+Ne otvara se, pa se ništa ne upisuje preko nje.</value>
+  </data>
+  <data name="Notebook.SaveFailed" xml:space="preserve">
+    <value>Beležnica nije mogla da se sačuva u {0}; datoteka je ostala ista.
+
+Ipak je zatvoriti i odbaciti izmene?</value>
+  </data>
+  <data name="Undo.NotebookChanged" xml:space="preserve">
+    <value>Izmene beležnice: „{0}“</value>
+  </data>
+  <data name="Transfer.Import.CollectionNotebookCounts" xml:space="preserve">
+    <value>{0}, {1}, {2}</value>
+  </data>
 </root>

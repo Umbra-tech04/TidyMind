@@ -22,6 +22,7 @@ namespace TidyMind
     //   collection.json                     a collection: its entry in profiles.json,
     //   tabs.json, entities.json            its tabs and items, as stored
     //   files/items/, files/background/     its item pictures and page background
+    //   notebook.json                       a collection's own notebook, as stored (only when something is in it)
     //   item.json, files/items/             one item, as entities.json stores it, and its pictures (cover first)
     // Files go in under their stored names only, never a path from this PC. Reminders, Day Plan blocks and the
     // memory to-do list belong to no project or collection, so none are in a package.
@@ -40,8 +41,9 @@ namespace TidyMind
         // of several pictures (they would drop the further ones). An item with records (a vehicle's documents: Ids of
         // their own, a reminder each, files in files/documents/) is format 3, alone or in a collection: older versions
         // would import it half (the files left behind, the same document Ids in every copy).
-        public const int FormatVersion = 3;
-        private const int ProjectFormat = 1, CollectionFormat = 1, ItemFormat = 2, RecordsFormat = 3;
+        // A collection with its own notebook is format 4: older versions would import the collection without it.
+        public const int FormatVersion = 4;
+        private const int ProjectFormat = 1, CollectionFormat = 1, ItemFormat = 2, RecordsFormat = 3, NotebookFormat = 4;
 
         public const string ProjectType = "project";
         public const string CollectionType = "collection";
@@ -53,6 +55,7 @@ namespace TidyMind
         private const string CollectionEntry = "collection.json";
         private const string TabsEntry = "tabs.json";
         private const string EntitiesEntry = "entities.json";
+        private const string NotebookEntry = "notebook.json";
         private const string ItemEntry = "item.json";
         private const string FilesDir = "files/";
         internal const string AttachmentsDir = "files/attachments/";
@@ -95,10 +98,11 @@ namespace TidyMind
             WriteAtomically(zipPath, manifest, new[] { (ProjectEntry, JsonSerializer.Serialize(project)) }, files, progress, cancel);
         }
 
-        // The memory's entry, tabs and items as read from its files. An item picture still at the user's own path
-        // (from before pictures were copied in) goes in under a new name, so no path from this PC is in the package.
+        // The memory's entry, tabs, items and notebook as read from its files. An item picture still at the user's own
+        // path (from before pictures were copied in) goes in under a new name, so no path from this PC is in the package.
+        // A notebook with nothing in it isn't packed.
         public static void ExportCollection(Profile memory, List<MemoryTab> tabs, List<Entity> entities, string zipPath,
-            IProgress<double>? progress, CancellationToken cancel)
+            IProgress<double>? progress, CancellationToken cancel, MemoryNotebook? notebook = null)
         {
             List<Entity> items = Clone(entities);
             List<(string Entry, string Source)> files = PicturesOf(items);
@@ -110,15 +114,21 @@ namespace TidyMind
             // An item with more than one picture or with records is something older versions would only half read (they
             // would leave the further pictures or the documents' files out), so such a collection is written in a newer
             // format, which they refuse as a whole.
-            int format = items.Any(HasRecords) ? RecordsFormat : items.Any(i => EntityImages.Count(i) > 1) ? ItemFormat : CollectionFormat;
+            if (notebook?.IsBlank() == true)
+                notebook = null;
+            int format = notebook != null ? NotebookFormat
+                : items.Any(HasRecords) ? RecordsFormat : items.Any(i => EntityImages.Count(i) > 1) ? ItemFormat : CollectionFormat;
             TransferManifest manifest = NewManifest(CollectionType, format, memory.Name);
-            manifest.Counts = new TransferCounts { Items = items.Count, Pictures = pictures };
-            WriteAtomically(zipPath, manifest, new[]
+            manifest.Counts = new TransferCounts { Items = items.Count, Pictures = pictures, NotePages = notebook?.Pages.Count(p => !string.IsNullOrEmpty(p.Body)) };
+            List<(string Entry, string Json)> data = new List<(string, string)>
             {
                 (CollectionEntry, JsonSerializer.Serialize(memory)),
                 (TabsEntry, JsonSerializer.Serialize(tabs)),
                 (EntitiesEntry, JsonSerializer.Serialize(items))
-            }, files, progress, cancel);
+            };
+            if (notebook != null)
+                data.Add((NotebookEntry, JsonSerializer.Serialize(notebook)));
+            WriteAtomically(zipPath, manifest, data, files, progress, cancel);
         }
 
         // One item of a collection, with its picture; its tab, Id and place are new where it is imported.
@@ -319,6 +329,11 @@ namespace TidyMind
                 foreach (Entity item in package.Entities)
                     Clean(item);
                 package.EntitiesJson = JsonSerializer.Serialize(package.Entities);
+                if (zip.GetEntry(NotebookEntry) is ZipArchiveEntry notebook)
+                {
+                    package.Notebook = ReadJson<MemoryNotebook>(notebook, out _) ?? new MemoryNotebook();
+                    Clean(package.Notebook);
+                }
             }
             else if (manifest.Type == ItemType)
             {
@@ -360,6 +375,13 @@ namespace TidyMind
             project.Description = SafeRichText(project.Description);
             project.Notes = SafeRichText(project.Notes);
             foreach (NotePage page in project.NotePages ?? new List<NotePage>())
+                page.Body = SafeRichText(page.Body);
+        }
+
+        private static void Clean(MemoryNotebook notebook)
+        {
+            notebook.Pages = (notebook.Pages ?? new List<NotePage>()).Where(p => p != null).ToList();
+            foreach (NotePage page in notebook.Pages)
                 page.Body = SafeRichText(page.Body);
         }
 
@@ -673,6 +695,8 @@ namespace TidyMind
                     throw new TransferException(Loc.F("Transfer.Error.CantWrite", MemoryFiles.Tabs(memory)));
                 if (!AtomicFile.TryWriteAllText(MemoryFiles.Items(memory), JsonSerializer.Serialize(items)))
                     throw new TransferException(Loc.F("Transfer.Error.CantWrite", MemoryFiles.Items(memory)));
+                if (package.Notebook != null && !MemoryNotebookStore.TrySave(memory, package.Notebook))
+                    throw new TransferException(Loc.F("Transfer.Error.CantWrite", MemoryFiles.Notebook(memory)));
                 MoveInto(moves);
                 profiles.Add(memory);
                 if (!ProfileManager.TrySaveProfiles(profiles))
@@ -1005,6 +1029,7 @@ namespace TidyMind
         public Profile? Collection { get; internal set; }
         public List<MemoryTab> Tabs { get; internal set; } = new List<MemoryTab>();
         public List<Entity> Entities { get; internal set; } = new List<Entity>();
+        public MemoryNotebook? Notebook { get; internal set; } // a collection's own notebook, if it came with one
 
         // The JSON as read, deserialized again on commit for a copy of its own.
         internal string ProjectJson = "", CollectionJson = "", EntitiesJson = "";
@@ -1016,6 +1041,7 @@ namespace TidyMind
             .Select(n => (n ?? "").Trim()).First(n => n.Length > 0);
         public int Tasks => Project?.Tasks?.Count(t => t != null) ?? 0;
         public int NotePages => Project == null ? 0 : TransferPackage.WrittenPages(Project);
+        public int NotebookPages => Notebook?.WrittenPages() ?? 0;
         public int Files => Project?.Attachments?.Count(a => a != null) ?? 0;
         public int Items => Entities.Count;
         public int Pictures => Entities.Sum(e => EntityImages.Names(e).Count(n => FileEntries.Contains(TransferPackage.ItemsDir + Path.GetFileName(n))));

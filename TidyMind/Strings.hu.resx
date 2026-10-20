@@ -3518,4 +3518,35 @@ Az utolsó oldalon a nyíl új oldalt kezd.</value>
   <data name="Undo.Removed.Files.Other" xml:space="preserve">
     <value>{0} fájl eltávolítva</value>
   </data>
+  <data name="Notebook.Title" xml:space="preserve">
+    <value>Jegyzetfüzet</value>
+  </data>
+  <data name="Notebook.WindowTitle" xml:space="preserve">
+    <value>{0} – Jegyzetfüzet</value>
+  </data>
+  <data name="Notebook.Intro" xml:space="preserve">
+    <value>Jegyzetek az egész memóriához, nem egy-egy projekthez vagy elemhez.</value>
+  </data>
+  <data name="Notebook.Tip" xml:space="preserve">
+    <value>Jegyzetek az egész memóriához</value>
+  </data>
+  <data name="Notebook.Pages.Other" xml:space="preserve">
+    <value>{0} megírt oldal</value>
+  </data>
+  <data name="Notebook.Unreadable" xml:space="preserve">
+    <value>Nem sikerült beolvasni a jegyzetfüzetet ({0}): {1}
+
+Nem nyílik meg, így semmi sem íródik felül benne.</value>
+  </data>
+  <data name="Notebook.SaveFailed" xml:space="preserve">
+    <value>Nem sikerült menteni a jegyzetfüzetet ide: {0}. A fájl változatlan maradt.
+
+Mégis bezárod, és elveted a módosításokat?</value>
+  </data>
+  <data name="Undo.NotebookChanged" xml:space="preserve">
+    <value>„{0}” jegyzetfüzetének módosításai</value>
+  </data>
+  <data name="Transfer.Import.CollectionNotebookCounts" xml:space="preserve">
+    <value>{0}, {1}, {2}</value>
+  </data>
 </root>

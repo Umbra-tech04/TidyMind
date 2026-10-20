@@ -88,6 +88,8 @@ namespace TidyMind
 
                         if (item.Project != null)
                             AddProject(flow, item.Project);
+                        else if (item.Notebook != null)
+                            AddNotePages(flow, NotebookPages(item.Notebook));
                         else if (item.Todos != null)
                             AddChecklist(flow, item.Todos.Select(t => (t.Text, t.IsDone)));
                         else
@@ -175,13 +177,7 @@ namespace TidyMind
             if (parts.NotePages.Count > 0)
             {
                 SectionLabel(flow, Loc.T("ProjectWindow.Notes"));
-                for (int i = 0; i < parts.NotePages.Count; i++)
-                {
-                    // Notebook pages are kept apart by a short rule.
-                    if (i > 0)
-                        flow.Heading(c => c.PaddingVertical(10).AlignLeft().Width(60).LineHorizontal(0.75f).LineColor(Rule));
-                    parts.NotePages[i].Select(PdfLine).ToList().ForEach(flow.Row);
-                }
+                AddNotePages(flow, parts.NotePages);
             }
 
             if (parts.Files.Count > 0)
@@ -194,6 +190,17 @@ namespace TidyMind
                         text.Span("   " + Loc.F("Export.FileDetails", AttachmentStore.FormatSize(file.SizeBytes),
                             file.AddedDate.ToString(Loc.T("Format.ShortDate"), Loc.Culture))).FontSize(8.5f).FontColor(Muted);
                     }));
+            }
+        }
+
+        // A notebook's pages (a project's notes, a memory's notebook), kept apart by a short rule.
+        private static void AddNotePages(PdfFlow flow, List<List<RichLine>> pages)
+        {
+            for (int i = 0; i < pages.Count; i++)
+            {
+                if (i > 0)
+                    flow.Heading(c => c.PaddingVertical(10).AlignLeft().Width(60).LineHorizontal(0.75f).LineColor(Rule));
+                pages[i].Select(PdfLine).ToList().ForEach(flow.Row);
             }
         }
 
