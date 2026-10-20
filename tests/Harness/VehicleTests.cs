@@ -998,7 +998,7 @@ static partial class Program
             Check((int)JsonNode.Parse(new StreamReader(zip.GetEntry("manifest.json").Open()).ReadToEnd())["Format"] == 2,
                 "a vehicle with only the old fields: format 2 as before");
         string collection = Path.Combine(vehicleWork, "atado" + TransferPackage.Extension);
-        TransferPackage.ExportCollection(source, new List<MemoryTab>(), EntityStore.Load(source), collection, null, CancellationToken.None);
+        TransferPackage.ExportCollection(source, new List<MemoryTab>(), EntityStore.Load(source), null, 0, collection, null, CancellationToken.None);
         using (ZipArchive zip = ZipFile.OpenRead(collection))
             Check((int)JsonNode.Parse(new StreamReader(zip.GetEntry("manifest.json").Open()).ReadToEnd())["Format"] == 3, "a collection holding it: format 3");
 

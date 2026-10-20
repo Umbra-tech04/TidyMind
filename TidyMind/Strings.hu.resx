@@ -3536,7 +3536,14 @@ Az utolsó oldalon a nyíl új oldalt kezd.</value>
   <data name="Notebook.Unreadable" xml:space="preserve">
     <value>Nem sikerült beolvasni a jegyzetfüzetet ({0}): {1}
 
-Nem nyílik meg, így semmi sem íródik felül benne.</value>
+A fájl változatlan maradt. Amint újra olvasható (vagy egy biztonsági mentés visszaállítása után), a jegyzetfüzet a szokásos módon megnyílik.</value>
+  </data>
+  <data name="Notebook.TipPages" xml:space="preserve">
+    <value>Jegyzetek az egész memóriához
+{0}</value>
+  </data>
+  <data name="Search.Kind.Notebook" xml:space="preserve">
+    <value>Jegyzetfüzet</value>
   </data>
   <data name="Notebook.SaveFailed" xml:space="preserve">
     <value>Nem sikerült menteni a jegyzetfüzetet ide: {0}. A fájl változatlan maradt.

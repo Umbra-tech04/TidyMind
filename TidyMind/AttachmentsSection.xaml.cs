@@ -523,7 +523,7 @@ namespace TidyMind
             TakeOut(gone);
             if (History == null || places.Count == 0)
                 return;
-            LocalStep step = new LocalStep(
+            LocalStep.Record(History,
                 places.Count == 1 ? Loc.F("Undo.Removed", places[0].File.DisplayName) : Loc.Plural("Undo.Removed.Files", places.Count),
                 destructive: true,
                 undo: () =>
@@ -536,8 +536,6 @@ namespace TidyMind
                     Render();
                 },
                 redo: () => TakeOut(places.Select(p => p.File)));
-            History.Push(step);
-            UndoHost.Announce(step);
         }
 
         private void TakeOut(IEnumerable<Attachment> gone)

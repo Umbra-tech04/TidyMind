@@ -753,10 +753,7 @@ namespace TidyMind
             {
                 // A page of the memory's notebook: the notebook over its page, at that page.
                 if (result.Kind == SearchResultKind.MemoryNote)
-                {
-                    if ((ContentArea.Content as FrameworkElement)?.FindName("NotebookButton") is NotebookButton notebook)
-                        notebook.Open();
-                }
+                    (ContentArea.Content as IMemoryPage)?.OpenNotebook();
                 else if (ContentArea.Content is ProjectView projectView)
                     projectView.Reveal(result.ItemId);
                 else if (ContentArea.Content is CollectionView collectionView)

@@ -43,7 +43,7 @@ namespace TidyMind
             public List<(string Label, string Value)> Fields;
             public Project Project;       // a project: each format lays out its tasks, notes and files itself
             public List<TodoEntry> Todos; // a memory's to-do list, shown as a checklist
-            public List<NotePage> Notebook; // a memory's own notebook, its pages as a project's notes
+            public List<List<RichLine>> NotebookPages; // a memory's own notebook: its written pages, laid out as a project's notes
             public Entity Entity;         // an item: Excel puts its values in typed columns
             public List<DayPlanBlock> Blocks; // a planned day: Excel lists its blocks in a table
         }
@@ -203,8 +203,9 @@ namespace TidyMind
         private static List<ExportItem> NotebookItems(Profile memory)
         {
             List<ExportItem> items = new List<ExportItem>();
-            if (MemoryNotebookStore.TryLoad(memory, out MemoryNotebook notebook, out _) && NotebookPages(notebook.Pages).Count > 0)
-                items.Add(new ExportItem { Name = Loc.T("Notebook.Title"), Notebook = notebook.Pages });
+            List<List<RichLine>> pages = MemoryNotebookStore.TryLoad(memory, out MemoryNotebook notebook, out _) ? NotebookPages(notebook.Pages) : new List<List<RichLine>>();
+            if (pages.Count > 0)
+                items.Add(new ExportItem { Name = Loc.T("Notebook.Title"), NotebookPages = pages });
             return items;
         }
 

@@ -88,8 +88,8 @@ namespace TidyMind
 
                         if (item.Project != null)
                             AddProject(flow, item.Project);
-                        else if (item.Notebook != null)
-                            AddNotePages(flow, NotebookPages(item.Notebook));
+                        else if (item.NotebookPages != null)
+                            AddNotePages(flow, item.NotebookPages);
                         else if (item.Todos != null)
                             AddChecklist(flow, item.Todos.Select(t => (t.Text, t.IsDone)));
                         else

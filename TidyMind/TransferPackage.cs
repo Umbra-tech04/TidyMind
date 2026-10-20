@@ -100,9 +100,10 @@ namespace TidyMind
 
         // The memory's entry, tabs, items and notebook as read from its files. An item picture still at the user's own
         // path (from before pictures were copied in) goes in under a new name, so no path from this PC is in the package.
-        // A notebook with nothing in it isn't packed.
-        public static void ExportCollection(Profile memory, List<MemoryTab> tabs, List<Entity> entities, string zipPath,
-            IProgress<double>? progress, CancellationToken cancel, MemoryNotebook? notebook = null)
+        // A notebook with nothing in it isn't packed; writtenPages is counted on the UI thread first (WrittenPages reads
+        // the formatted pages), as for a project.
+        public static void ExportCollection(Profile memory, List<MemoryTab> tabs, List<Entity> entities, MemoryNotebook? notebook,
+            int writtenPages, string zipPath, IProgress<double>? progress, CancellationToken cancel)
         {
             List<Entity> items = Clone(entities);
             List<(string Entry, string Source)> files = PicturesOf(items);
@@ -119,7 +120,7 @@ namespace TidyMind
             int format = notebook != null ? NotebookFormat
                 : items.Any(HasRecords) ? RecordsFormat : items.Any(i => EntityImages.Count(i) > 1) ? ItemFormat : CollectionFormat;
             TransferManifest manifest = NewManifest(CollectionType, format, memory.Name);
-            manifest.Counts = new TransferCounts { Items = items.Count, Pictures = pictures, NotePages = notebook?.Pages.Count(p => !string.IsNullOrEmpty(p.Body)) };
+            manifest.Counts = new TransferCounts { Items = items.Count, Pictures = pictures, NotePages = notebook == null ? null : writtenPages };
             List<(string Entry, string Json)> data = new List<(string, string)>
             {
                 (CollectionEntry, JsonSerializer.Serialize(memory)),
@@ -945,7 +946,7 @@ namespace TidyMind
         // Pages with something written on them: the count the preview shows. On the UI thread (formatted pages are
         // read through a FlowDocument).
         internal static int WrittenPages(Project project) =>
-            project.PagesOrLegacyNote().Count(p => RichTextHelper.ToPlainText(p.Body).Trim().Length > 0);
+            project.PagesOrLegacyNote().Count(p => RichTextHelper.HasText(p.Body));
 
         private static List<T> Clone<T>(List<T> list) => JsonSerializer.Deserialize<List<T>>(JsonSerializer.Serialize(list))!;
 

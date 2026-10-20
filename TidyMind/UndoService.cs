@@ -165,6 +165,16 @@ namespace TidyMind
             this.redo = redo;
         }
 
+        // A change made in a window with a history of its own (Project Details, a notebook): pushed there, and said in
+        // the window's toast when it's a delete.
+        public static void Record(UndoHistory history, string label, bool destructive, Action undo, Action redo)
+        {
+            LocalStep step = new LocalStep(label, destructive, undo, redo);
+            history.Push(step);
+            if (destructive)
+                UndoHost.Announce(step);
+        }
+
         internal override string? Revert(out bool conflict)
         {
             conflict = false;

@@ -4,6 +4,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Media;
 
 namespace TidyMind
 {
@@ -67,11 +68,11 @@ namespace TidyMind
         }
 
         // The frame shows focus like the other inputs do.
-        public static void ShowFocusOn(System.Windows.Controls.Border frame, RichTextBox editor)
+        public static void ShowFocusOn(Border frame, RichTextBox editor)
         {
-            System.Windows.Media.Brush rest = frame.BorderBrush;
+            Brush rest = frame.BorderBrush;
             editor.IsKeyboardFocusWithinChanged += (s, e) =>
-                frame.BorderBrush = editor.IsKeyboardFocusWithin ? (System.Windows.Media.Brush)frame.FindResource("Accent") : rest;
+                frame.BorderBrush = editor.IsKeyboardFocusWithin ? (Brush)frame.FindResource("Accent") : rest;
         }
 
         // The editors (a description, a notebook page) are as tall as their text and never scroll themselves; the wheel
@@ -102,6 +103,10 @@ namespace TidyMind
             FromStorableString(document, stored);
             return new TextRange(document.ContentStart, document.ContentEnd).Text.TrimEnd();
         }
+
+        // Whether a stored description or page has anything written on it (formatted pages read through a FlowDocument,
+        // so on the UI thread).
+        public static bool HasText(string? stored) => ToPlainText(stored ?? "").Trim().Length > 0;
 
         internal static bool IsMarkup(string stored)
         {

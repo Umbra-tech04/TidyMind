@@ -64,8 +64,8 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <!-- The section label, as Project Details' other labels; a host can name it otherwise (Label) -->
-            <TextBlock x:Name="NotebookLabel" Text="{local:Tr ProjectWindow.Notes}" FontSize="13" FontWeight="SemiBold"
-                       Foreground="#6B6965" VerticalAlignment="Center"/>
+            <TextBlock x:Name="NotebookLabel" Text="{local:Tr ProjectWindow.Notes}" Style="{StaticResource SectionLabelStyle}"
+                       Margin="0" VerticalAlignment="Center"/>
             <Button x:Name="PrevPageButton" Grid.Column="1" Style="{StaticResource IconButtonStyle}"
                     Width="30" Height="30" Margin="16,0,0,0" ToolTip="{local:Tr ProjectWindow.PrevPage}" AutomationProperties.Name="{local:Tr ProjectWindow.PrevPage}"
                     Click="PrevPage_Click">

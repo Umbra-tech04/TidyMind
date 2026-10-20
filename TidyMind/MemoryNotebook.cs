@@ -25,7 +25,7 @@ namespace TidyMind
         }
 
         // Pages with something written on them (on the UI thread: formatted pages are read through a FlowDocument).
-        public int WrittenPages() => Pages.Count(p => p != null && RichTextHelper.ToPlainText(p.Body).Trim().Length > 0);
+        public int WrittenPages() => Pages.Count(p => p != null && RichTextHelper.HasText(p.Body));
 
         // Nothing written and nothing from another version: no file is needed for it. The editor stores a blank page as
         // "", so this needs no FlowDocument and works on any thread (a transfer package is written on a worker thread).

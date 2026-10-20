@@ -3690,7 +3690,14 @@ On the last page, the arrow starts a new page.</value>
   <data name="Notebook.Unreadable" xml:space="preserve">
     <value>Couldn't read the notebook ({0}): {1}
 
-It isn't opened, so nothing is saved over it.</value>
+The file was left as it is. Once it can be read again (or after restoring a backup), the notebook opens as usual.</value>
+  </data>
+  <data name="Notebook.TipPages" xml:space="preserve">
+    <value>Notes for this whole memory
+{0}</value>
+  </data>
+  <data name="Search.Kind.Notebook" xml:space="preserve">
+    <value>Notebook</value>
   </data>
   <data name="Notebook.SaveFailed" xml:space="preserve">
     <value>Couldn't save the notebook to {0}; the file is as it was.

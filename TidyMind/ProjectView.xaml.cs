@@ -13,7 +13,7 @@ using ShapePath = System.Windows.Shapes.Path;
 
 namespace TidyMind
 {
-    public partial class ProjectView : UserControl, IUndoPage
+    public partial class ProjectView : UserControl, IUndoPage, IMemoryPage
     {
         private readonly Profile memory;
         private readonly Func<bool> saveProfiles;
@@ -142,6 +142,8 @@ namespace TidyMind
 
         // An undoable change to the projects (UndoService.Page: this page's history).
         private UndoChange Record() => UndoChange.Begin(unreadable ? null : UndoService.Page, UndoParts.Projects(memory));
+
+        public void OpenNotebook() => NotebookButton.Open();
 
         // After an undo or redo: the projects, tabs and to-do list as stored now.
         public void ReloadAfterUndo()

@@ -84,8 +84,8 @@ namespace TidyMind
 
                     if (item.Project != null)
                         DocxProject(flow, item.Project);
-                    else if (item.Notebook != null)
-                        DocxNotePages(flow, NotebookPages(item.Notebook));
+                    else if (item.NotebookPages != null)
+                        DocxNotePages(flow, item.NotebookPages);
                     else if (item.Todos != null)
                         DocxChecklist(flow, item.Todos.Select(t => (t.Text, t.IsDone)));
                     else

@@ -15,7 +15,7 @@ using System.Windows.Threading;
 
 namespace TidyMind
 {
-    public partial class CollectionView : UserControl, IUndoPage
+    public partial class CollectionView : UserControl, IUndoPage, IMemoryPage
     {
         private readonly Profile memory;
         private List<Entity> entities;
@@ -188,6 +188,8 @@ namespace TidyMind
         // An undoable change to the items (UndoService.Page: this page's history).
         private UndoChange Record() => UndoChange.Begin(unreadable ? null : UndoService.Page, UndoParts.Entities(memory), UndoParts.Reminders());
 
+        public void OpenNotebook() => NotebookButton.Open();
+
         // After an undo or redo: the items and tabs as stored now.
         public void ReloadAfterUndo()
         {
@@ -247,7 +249,7 @@ namespace TidyMind
 
         // ---- Multi-selection ----------------------------------------------
 
-        // While anything is selected, the selection bar stands in for the search box and Add button.
+        // While anything is selected, the selection bar stands in for the notebook button, search box and Add button.
         private void UpdateSelectionBar()
         {
             bool any = selection.Count > 0;

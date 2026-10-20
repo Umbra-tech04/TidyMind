@@ -11,7 +11,7 @@ namespace TidyMind
 {
     // A notebook of pages, each stored the same way as a project's description (formatted XAML). The same notebook
     // serves a project (in Project Details) and a whole memory (NotebookWindow): its owner hands it the pages and an
-    // Id, and on closing takes back the pages if they changed (TakeEdited). Nothing here reads or writes a file.
+    // Id, and on closing takes back the pages if they changed (Edited). Nothing here reads or writes a file.
     public partial class NotebookEditor : UserControl
     {
         // The page last viewed in each notebook while the app runs (not stored), by its owner's Id (a project's or a
@@ -37,14 +37,14 @@ namespace TidyMind
 
         public static void OpenAtPage(Guid owner, int page) => lastPageViewed[owner] = page;
 
-        // pages: what the notebook shows (never empty; a project from before pages passes its old note as page 1).
-        // history: where a deleted page goes, so Ctrl+Z in the window brings it back.
-        public void Load(Window window, Guid ownerId, List<NotePage> notebook, UndoHistory undo)
+        // shown: the pages (never empty; a project from before pages passes its old note as page 1).
+        // undo: where a deleted page goes, so Ctrl+Z in the window brings it back.
+        public void Load(Window window, Guid ownerId, List<NotePage> shown, UndoHistory undo)
         {
             host = window;
             owner = ownerId;
             history = undo;
-            pages = notebook;
+            pages = shown;
             pageBodies = pages.Select(p => p.Body ?? "").ToList();
             loadedPages = pages.ToList();
             loadedBodies = pageBodies.ToList();
@@ -85,8 +85,6 @@ namespace TidyMind
             Loc.Track(NotebookLabel, () => NotebookLabel.Text = Loc.T(key));
         }
 
-        public RichTextBox Editor => NotesBox;
-
         // Esc: an open page list closes first. True if it did (the window then stays open).
         public bool CloseList()
         {
@@ -96,22 +94,10 @@ namespace TidyMind
             return true;
         }
 
-        // On closing: the pages to store if they really changed (blank pages added here and left at the end dropped
-        // first), else null so nothing is written.
-        public List<NotePage>? TakeEdited()
-        {
-            KeepCurrentPage();
-            DropEmptyNewPages(0);
-            if (!PagesEdited(pages.Count))
-                return null;
-            for (int i = 0; i < pages.Count; i++)
-                pages[i].Body = pageBodies[i];
-            return pages;
-        }
-
-        // What the notebook shows now, unsaved edits included, as copies (Export for transfer); null if unchanged.
-        // Nothing is dropped from the notebook itself.
-        public List<NotePage>? AsShown()
+        // The pages as they are now, unsaved edits included, if they differ from the notebook as loaded (blank pages
+        // added here and left at the end don't count, and aren't in it); null if unchanged, so nothing is written.
+        // Copies: the notebook itself is left as it is, so a save that fails (or Export for transfer) changes nothing.
+        public List<NotePage>? Edited()
         {
             KeepCurrentPage();
             int kept = PagesToKeep(0);
@@ -125,14 +111,7 @@ namespace TidyMind
         private bool PagesEdited(int count) =>
             !pages.Take(count).SequenceEqual(loadedPages) || !pageBodies.Take(count).SequenceEqual(loadedBodies);
 
-        // A change made here, said in the window's toast when it's a delete.
-        private void Did(string label, bool destructive, Action undo, Action redo)
-        {
-            LocalStep step = new LocalStep(label, destructive, undo, redo);
-            history.Push(step);
-            if (destructive)
-                UndoHost.Announce(step);
-        }
+        private void Did(string label, bool destructive, Action undo, Action redo) => LocalStep.Record(history, label, destructive, undo, redo);
 
         // direction: 1 turning forward, -1 back, 0 no page turn (opening, after a delete).
         private void ShowPage(int index, int direction)
@@ -205,7 +184,7 @@ namespace TidyMind
         {
             int count = pages.Count;
             while (count - 1 > keepThrough && !loadedPages.Contains(pages[count - 1])
-                && RichTextHelper.ToPlainText(pageBodies[count - 1]).Trim().Length == 0)
+                && !RichTextHelper.HasText(pageBodies[count - 1]))
                 count--;
             return count;
         }
@@ -266,7 +245,7 @@ namespace TidyMind
         // One page (the 🗑 button, or one selected in the list): only a page with writing on it asks first. Several:
         // one question for all of them. Then the page after the current one shows if the current one went (the one
         // before if it was the last). There's always at least one page: the only page is cleared instead, which is
-        // stored like any edit (TakeEdited), and the cursor stays in it; when every page goes, page 1 stays, emptied.
+        // stored like any edit (Edited), and the cursor stays in it; when every page goes, page 1 stays, emptied.
         private bool DeletePages(IReadOnlyList<NotePage> doomed)
         {
             KeepCurrentPage();
@@ -382,7 +361,7 @@ namespace TidyMind
             return was;
         }
 
-        private bool PageIsBlank(int index) => RichTextHelper.ToPlainText(pageBodies[index]).Trim().Length == 0;
+        private bool PageIsBlank(int index) => !RichTextHelper.HasText(pageBodies[index]);
 
         // "N. <its first line>", in the list and in the question before several are deleted.
         private string PageTitle(int index)

@@ -65,7 +65,7 @@ namespace TidyMind
         protected override void OnClosing(CancelEventArgs e)
         {
             base.OnClosing(e);
-            if (e.Cancel || !(Notebook.TakeEdited() is List<NotePage> pages))
+            if (e.Cancel || !(Notebook.Edited() is List<NotePage> pages))
                 return;
 
             List<NotePage> before = notebook.Pages;

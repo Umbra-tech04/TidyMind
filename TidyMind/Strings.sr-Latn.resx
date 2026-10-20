@@ -3844,7 +3844,14 @@ Na poslednjoj stranici strelica započinje novu.</value>
   <data name="Notebook.Unreadable" xml:space="preserve">
     <value>Beležnica nije mogla da se pročita ({0}): {1}
 
-Ne otvara se, pa se ništa ne upisuje preko nje.</value>
+Datoteka je ostala kakva je bila. Kada ponovo bude mogla da se pročita (ili posle vraćanja rezervne kopije), beležnica će se otvoriti kao i obično.</value>
+  </data>
+  <data name="Notebook.TipPages" xml:space="preserve">
+    <value>Beleške za celu memoriju
+{0}</value>
+  </data>
+  <data name="Search.Kind.Notebook" xml:space="preserve">
+    <value>Beležnica</value>
   </data>
   <data name="Notebook.SaveFailed" xml:space="preserve">
     <value>Beležnica nije mogla da se sačuva u {0}; datoteka je ostala ista.

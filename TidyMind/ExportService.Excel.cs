@@ -57,8 +57,8 @@ namespace TidyMind
                 if (tasks.Rows.Count > 0)
                     AddTableSheet(workbook, Loc.T("ProjectWindow.Tasks"), title, exported, tasks);
 
-                List<(ExportItem Item, List<(string Label, List<RichLine> Lines)> Sections)> texts = items.Where(i => i.Project != null || i.Notebook != null)
-                    .Select(i => (Item: i, Sections: i.Project != null ? ProjectText(i.Project) : NotebookText(i.Notebook))).Where(t => t.Sections.Count > 0).ToList();
+                List<(ExportItem Item, List<(string Label, List<RichLine> Lines)> Sections)> texts = items.Where(i => i.Project != null || i.NotebookPages != null)
+                    .Select(i => (Item: i, Sections: i.Project != null ? ProjectText(i.Project) : NotebookText(i.NotebookPages))).Where(t => t.Sections.Count > 0).ToList();
                 if (texts.Count > 0)
                     AddTextSheet(workbook, title, exported, texts, oneItem);
 
@@ -443,9 +443,9 @@ namespace TidyMind
         }
 
         // A memory's notebook (the item is named Notebook): its pages as one Notes section.
-        private static List<(string Label, List<RichLine> Lines)> NotebookText(List<NotePage> notebook)
+        private static List<(string Label, List<RichLine> Lines)> NotebookText(List<List<RichLine>> notebook)
         {
-            List<RichLine> pages = JoinPages(NotebookPages(notebook));
+            List<RichLine> pages = JoinPages(notebook);
             return pages.Count == 0 ? new List<(string, List<RichLine>)>() : new List<(string, List<RichLine>)> { (Loc.T("ProjectWindow.Notes"), pages) };
         }
 
@@ -462,7 +462,7 @@ namespace TidyMind
             return lines;
         }
 
-        // One wide column: per project its name, then each section's label over a dark rule, then its paragraphs.
+        // One wide column: per project or notebook its name, then each section's label over a dark rule, then its paragraphs.
         private static void AddTextSheet(XLWorkbook workbook, string title, string exported,
             List<(ExportItem Item, List<(string Label, List<RichLine> Lines)> Sections)> projects, bool oneItem)
         {

@@ -62,8 +62,11 @@ namespace TidyMind
             }
 
             string? path = AskWhere(owner, memory.Name);
-            if (path != null)
-                Export(owner, memory.Name, path, (progress, cancel) => TransferPackage.ExportCollection(memory, tabs, entities, path, progress, cancel, notebook));
+            if (path == null)
+                return;
+            int writtenPages = notebook.WrittenPages(); // here: it reads formatted pages (UI thread)
+            Export(owner, memory.Name, path, (progress, cancel) =>
+                TransferPackage.ExportCollection(memory, tabs, entities, notebook, writtenPages, path, progress, cancel));
         }
 
         // One item of a collection, as its card shows it (items are saved as soon as they change).

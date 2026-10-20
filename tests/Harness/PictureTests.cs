@@ -783,8 +783,8 @@ static partial class Program
         Entity lone = PictureItem("Magányos", 0, p[5]);
         lone.TabId = plainTabs[0].Id;
         string collectionPackage = Path.Combine(picWork, "closet" + TransferPackage.Extension), plainPackage = Path.Combine(picWork, "plain" + TransferPackage.Extension);
-        TransferPackage.ExportCollection(closet, tabs, new List<Entity> { first, second, third }, collectionPackage, null, CancellationToken.None);
-        TransferPackage.ExportCollection(plain, plainTabs, new List<Entity> { lone }, plainPackage, null, CancellationToken.None);
+        TransferPackage.ExportCollection(closet, tabs, new List<Entity> { first, second, third }, null, 0, collectionPackage, null, CancellationToken.None);
+        TransferPackage.ExportCollection(plain, plainTabs, new List<Entity> { lone }, null, 0, plainPackage, null, CancellationToken.None);
         Check(ManifestFormat(collectionPackage) == 2 && ManifestFormat(plainPackage) == 1,
             "a collection with an item of several pictures is format 2 (older versions refuse it whole); with single pictures, format 1 as before");
         OpenedPackage collection = TransferPackage.Open(collectionPackage);

@@ -44,14 +44,7 @@ namespace TidyMind
 
         private readonly UndoHistory local = new UndoHistory("project window");
 
-        // A change made in this window, said in its toast when it's a delete.
-        private void Did(string label, bool destructive, Action undo, Action redo)
-        {
-            LocalStep step = new LocalStep(label, destructive, undo, redo);
-            local.Push(step);
-            if (destructive)
-                UndoHost.Announce(step);
-        }
+        private void Did(string label, bool destructive, Action undo, Action redo) => LocalStep.Record(local, label, destructive, undo, redo);
 
         public static void OpenAtPage(Guid projectId, int page) => NotebookEditor.OpenAtPage(projectId, page);
 
@@ -73,7 +66,7 @@ namespace TidyMind
                 copy.Name = name;
             if (EditedDescription() is string description)
                 copy.Description = description;
-            if (Notebook.AsShown() is List<NotePage> pages)
+            if (Notebook.Edited() is List<NotePage> pages)
                 copy.NotePages = pages;
             copy.Attachments = Files.Attachments;
             return copy;
@@ -135,7 +128,7 @@ namespace TidyMind
 
             // Only a real change stores the pages; the old Notes field is never touched, so an old note shown as
             // page 1 stays where older versions look for it.
-            if (Notebook.TakeEdited() is List<NotePage> pages)
+            if (Notebook.Edited() is List<NotePage> pages)
                 currentProject.NotePages = pages;
         }
 

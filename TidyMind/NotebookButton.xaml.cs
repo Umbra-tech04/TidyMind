@@ -43,7 +43,7 @@ namespace TidyMind
             CountText.Text = written.ToString(Loc.Culture);
             CountText.Visibility = written > 0 ? Visibility.Visible : Visibility.Collapsed;
             OpenButton.ToolTip = written > 0
-                ? Loc.T("Notebook.Tip") + "\n" + Loc.Plural("Notebook.Pages", written)
+                ? Loc.F("Notebook.TipPages", Loc.Plural("Notebook.Pages", written))
                 : Loc.T("Notebook.Tip");
         }
 

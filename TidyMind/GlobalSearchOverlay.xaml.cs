@@ -307,7 +307,7 @@ namespace TidyMind
                 case SearchResultKind.Project: return Loc.T("Search.Kind.Project");
                 case SearchResultKind.File: return Loc.T("Search.Kind.File");
                 case SearchResultKind.Note: return Loc.T("Search.Kind.Note");
-                case SearchResultKind.MemoryNote: return Loc.T("Notebook.Title");
+                case SearchResultKind.MemoryNote: return Loc.T("Search.Kind.Notebook");
                 case SearchResultKind.PlanBlock: return Loc.T("Search.Kind.Plan");
                 default: return Loc.T("Search.Kind.Item");
             }

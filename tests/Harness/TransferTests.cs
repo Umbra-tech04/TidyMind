@@ -253,7 +253,7 @@ static partial class Program
         EntityStore.SaveOrWarn(closet, items);
 
         string package = Path.Combine(transferWork, "closet" + TransferPackage.Extension);
-        TransferPackage.ExportCollection(closet, tabs, items, package, null, CancellationToken.None);
+        TransferPackage.ExportCollection(closet, tabs, items, null, 0, package, null, CancellationToken.None);
         using (ZipArchive zip = ZipFile.OpenRead(package))
         {
             string entities = new StreamReader(zip.GetEntry("entities.json")!.Open()).ReadToEnd();

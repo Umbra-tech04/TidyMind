@@ -84,7 +84,7 @@ static partial class Program
             Check(button != null && button.IsVisible && !CountOf(button).IsVisible, memory.Name + ": the Notebook button, no count");
             NotebookWindow window = await OpenNotebook(main, memory);
             Check(PagesOf(window).Count == 1 && BodiesOf(window)[0] == "", memory.Name + ": the notebook opens on one empty page");
-            PressKey(window.Notebook.Editor, Key.Escape);
+            PressKey(EditorOf(window), Key.Escape);
             await Wait(300);
             Check(!window.IsVisible, memory.Name + ": Esc closes it");
         }
@@ -135,7 +135,7 @@ static partial class Program
         Check((string)((Button)button.FindName("OpenButton")).ToolTip == Loc.T("Notebook.Tip"), "its tooltip: " + Loc.T("Notebook.Tip"));
 
         NotebookWindow window = await OpenFromButton(button);
-        Check(window.Owner == main && window.Notebook.Editor.IsVisible, "the button opens the notebook over the main window");
+        Check(window.Owner == main && EditorOf(window).IsVisible, "the button opens the notebook over the main window");
         Check(window.Title == Loc.F("Notebook.WindowTitle", memory.Name) && ((TextBlock)window.FindName("TitleText")).Text == memory.Name,
             "the window is titled with the memory's name: " + window.Title);
         Check(IndicatorOf(window) == "1 / 1", "one page");
@@ -166,7 +166,7 @@ static partial class Program
         // Formatted text survives a reopening, and an untouched notebook isn't written again.
         NotebookEditor.OpenAtPage(memory.Id, 0);
         window = await OpenNotebook(main, memory);
-        List<Run> runs = AllRuns(window.Notebook.Editor.Document);
+        List<Run> runs = AllRuns(EditorOf(window).Document);
         Check(runs.Any(r => r.Text == "bold" && r.FontWeight == FontWeights.Bold) && runs.Any(r => r.Text == "italic" && r.FontStyle == FontStyles.Italic)
               && PlainOf(window).Contains("harness-ősz-čćšžđ"), "reopened: bold, italic and the accents as written");
         DateTime written = File.GetLastWriteTimeUtc(MemoryFiles.Notebook(memory));
@@ -304,8 +304,12 @@ static partial class Program
         Invoke(main, "NavigateTo", memory);
         await Wait(500);
         Dictionary<string, string> before = FolderSnapshot();
+        NotebookEditor.OpenAtPage(memory.Id, 0);
         NotebookWindow window = await OpenNotebook(main, memory);
         SetPage(window, new Paragraph(new Run("This edit can't be saved")));
+        // Closed from a new blank page at the end: the page stays where it is when the window stays open.
+        Invoke(window.Notebook, "TurnForward");
+        int pages = PagesOf(window).Count;
         using (FileStream held = new FileStream(MemoryFiles.Notebook(memory), FileMode.Open, FileAccess.Read, FileShare.Read))
         {
             answerCancel = true;
@@ -315,7 +319,12 @@ static partial class Program
             await Wait(300);
             string box = selectBoxes.Skip(boxes).FirstOrDefault() ?? "";
             Check(box.Contains(Loc.T("Notebook.Title")) && box.Contains(MemoryFiles.Notebook(memory)), "the save failed and that is said: " + box);
-            Check(window.IsVisible && PlainOf(window).Contains("This edit can't be saved"), "No: the window stays open with the edit");
+            Check(window.IsVisible && PagesOf(window).Count == pages && IndicatorOf(window) == pages + " / " + pages,
+                "No: the window stays open on the same page (" + IndicatorOf(window) + ")");
+            SetPage(window, new Paragraph(new Run("Written after the failed save")));
+            Invoke(window.Notebook, "FlipTo", 0);
+            Check(PlainOf(window).Contains("This edit can't be saved") && BodiesOf(window)[pages - 1].Contains("Written after the failed save"),
+                "the edits are all still there and the pages turn");
             boxes = selectBoxes.Count;
             window.Close();
             await Wait(300);
@@ -407,14 +416,14 @@ static partial class Program
         string package = Path.Combine(folder, "garage" + TransferPackage.Extension);
         EntityStore.TryLoad(garage, out List<Entity> items, out _);
         MemoryNotebookStore.TryLoad(garage, out MemoryNotebook garageNotebook, out _);
-        TransferPackage.ExportCollection(garage, new List<MemoryTab>(), items, package, null, CancellationToken.None, garageNotebook);
+        TransferPackage.ExportCollection(garage, new List<MemoryTab>(), items, garageNotebook, garageNotebook.WrittenPages(), package, null, CancellationToken.None);
         using (ZipArchive archive = ZipFile.OpenRead(package))
         {
             JsonNode manifest = JsonNode.Parse(new StreamReader(archive.GetEntry("manifest.json").Open()).ReadToEnd());
             Check(archive.GetEntry("notebook.json") != null && (int)manifest["Format"] == 4, "the package has notebook.json, format 4");
         }
         string plain = Path.Combine(folder, "plain" + TransferPackage.Extension);
-        TransferPackage.ExportCollection(garage, new List<MemoryTab>(), items, plain, null, CancellationToken.None, new MemoryNotebook());
+        TransferPackage.ExportCollection(garage, new List<MemoryTab>(), items, new MemoryNotebook(), 0, plain, null, CancellationToken.None);
         using (ZipArchive archive = ZipFile.OpenRead(plain))
             Check(archive.GetEntry("notebook.json") == null && (int)JsonNode.Parse(new StreamReader(archive.GetEntry("manifest.json").Open()).ReadToEnd())["Format"] == 1,
                 "an empty notebook isn't packed: format 1, as older versions read");
@@ -471,17 +480,18 @@ static partial class Program
     static List<NotePage> PagesOf(NotebookWindow window) => Field<List<NotePage>>(window.Notebook, "pages");
     static List<string> BodiesOf(NotebookWindow window) => Field<List<string>>(window.Notebook, "pageBodies");
     static string IndicatorOf(NotebookWindow window) => ((TextBlock)window.Notebook.FindName("PageIndicator")).Text;
+    static RichTextBox EditorOf(NotebookWindow window) => (RichTextBox)window.Notebook.FindName("NotesBox");
 
     static string PlainOf(NotebookWindow window)
     {
-        FlowDocument page = window.Notebook.Editor.Document;
+        FlowDocument page = EditorOf(window).Document;
         return new TextRange(page.ContentStart, page.ContentEnd).Text;
     }
 
     // The page's text replaced, as typing would (the page keeps its document and ruled lines).
     static void SetPage(NotebookWindow window, params Block[] blocks)
     {
-        FlowDocument page = window.Notebook.Editor.Document;
+        FlowDocument page = EditorOf(window).Document;
         page.Blocks.Clear();
         page.Blocks.AddRange(blocks);
     }
