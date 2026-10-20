@@ -455,7 +455,7 @@ namespace TidyMind
             // In the saved language (App reads it before a reminder fires); reminders.log stays in English.
             string title = string.IsNullOrWhiteSpace(due.Title) ? Loc.T("Reminder.Toast.Title")
                 : Loc.F("Reminder.Toast.TitleFor", DayPlanReminders.ShownTitle(due, DayPlanReminders.BlockIds()));
-            string message = VehicleReminders.ShownMessage(due, VehicleReminders.DocumentIndex());
+            string message = VehicleReminders.ShownMessage(due, VehicleReminders.DeadlineIndex());
 
             NotificationResult result = SendToast(title, message);
             if (result.Outcome != NotificationOutcome.Failed)

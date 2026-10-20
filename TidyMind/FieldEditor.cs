@@ -24,7 +24,7 @@ namespace TidyMind
 
         // Long ones take a whole row of a card.
         public bool IsWide => Field.Kind == ValueKind.LongText || Field.Kind == ValueKind.CheckList || Field.Kind == ValueKind.File
-            || Field.Kind == ValueKind.Specs || Field.Kind == ValueKind.Pictures;
+            || Field.Kind == ValueKind.Specs || Field.Kind == ValueKind.Pictures || Field.Kind == ValueKind.Links;
 
         private readonly string initial; // the stored value it started from (a check list's in its shown order)
         private readonly TextBox? box, alternateBox;
@@ -79,6 +79,10 @@ namespace TidyMind
                 case ValueKind.CheckList:
                     checks = new WrapPanel();
                     Element = CheckList(field, initial);
+                    break;
+                case ValueKind.Links:
+                    checks = new WrapPanel();
+                    Element = Links(field, owner, initial);
                     break;
                 case ValueKind.LongText:
                     box = new TextBox { Height = 80, Text = initial, TextWrapping = TextWrapping.Wrap, AcceptsReturn = true,
@@ -235,6 +239,20 @@ namespace TidyMind
             panel.Children.Add(checks!);
             panel.Children.Add(ownRow);
             return panel;
+        }
+
+        // A check box per record it can point at (a part, named with the ones above it); one deleted since is left out.
+        // None yet: where they come from.
+        private FrameworkElement Links(FieldDefinition field, Entity owner, string stored)
+        {
+            HashSet<string> chosen = FieldDefinition.Items(stored).ToHashSet();
+            List<(string Value, string Label)> options = field.LinkOptions(owner);
+            foreach ((string value, string label) in options)
+                AddCheck(label, value, chosen.Contains(value));
+            if (options.Count > 0)
+                return checks!;
+            return new TextBlock { Text = Loc.T("Entity.Records." + field.LinkTo + ".NoneToLink"), TextWrapping = TextWrapping.Wrap,
+                Foreground = (Brush)Application.Current.FindResource("TextSub") };
         }
 
         private void AddCheck(string label, string value, bool isChecked) =>

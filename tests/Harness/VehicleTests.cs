@@ -46,6 +46,8 @@ static partial class Program
             await VehicleOdometer(main);
             await VehicleWheels(main);
             await VehicleParts(main);
+            VehicleServiceLegacy();
+            await VehicleServiceLog(main);
             await VehicleLanguagesAndSize(main);
             await VehicleTransfer(main);
             VehicleExportsAndSearch(main);
@@ -120,7 +122,7 @@ static partial class Program
             Document("Vignette", DateTime.Today.AddDays(-2), null, "Ausztria"),
             Document("Insurance", DateTime.Today.AddDays(200), 30, "Allianz")
         });
-        EntityRecord summer = VehicleSchema.WheelSets.New();
+        EntityRecord summer = VehicleSchema.WheelSets.New(car);
         summer.Set("Name", "Nyári");
         summer.Set("Season", "Summer");
         summer.Set("TyreSize", "225/40 R18 92Y");
@@ -201,16 +203,16 @@ static partial class Program
     {
         Console.WriteLine("Document reminder times");
         DateTime now = new DateTime(2026, 10, 19, 10, 0, 0);
-        Check(VehicleReminders.FireTime(Document("Insurance", new DateTime(2026, 12, 1), 30), now) == new DateTime(2026, 11, 1, 9, 0, 0),
+        Check(VehicleReminders.FireTime(new DateTime(2026, 12, 1), 30, now) == new DateTime(2026, 11, 1, 9, 0, 0),
             "30 days before Dec 1: Nov 1, 09:00");
-        Check(VehicleReminders.FireTime(Document("Insurance", new DateTime(2026, 10, 25), 30), now) == new DateTime(2026, 10, 20, 9, 0, 0),
+        Check(VehicleReminders.FireTime(new DateTime(2026, 10, 25), 30, now) == new DateTime(2026, 10, 20, 9, 0, 0),
             "that day already past (10:00): the next 09:00, tomorrow");
-        Check(VehicleReminders.FireTime(Document("Insurance", new DateTime(2026, 10, 25), 30), now.AddHours(-2)) == new DateTime(2026, 10, 19, 9, 0, 0),
+        Check(VehicleReminders.FireTime(new DateTime(2026, 10, 25), 30, now.AddHours(-2)) == new DateTime(2026, 10, 19, 9, 0, 0),
             "...or today at 09:00 when it's still before");
-        Check(VehicleReminders.FireTime(Document("Insurance", now.Date, 7), now) == null, "runs out today, after 09:00: none (tomorrow is too late)");
-        Check(VehicleReminders.FireTime(Document("Insurance", now.Date.AddDays(-1), 7), now) == null, "already run out: none");
-        Check(VehicleReminders.FireTime(Document("Insurance", now.Date.AddDays(90), null), now) == null
-              && VehicleReminders.FireTime(Document("Insurance", null, 30), now) == null, "no days or no date: none");
+        Check(VehicleReminders.FireTime(now.Date, 7, now) == null, "runs out today, after 09:00: none (tomorrow is too late)");
+        Check(VehicleReminders.FireTime(now.Date.AddDays(-1), 7, now) == null, "already run out: none");
+        Check(VehicleReminders.FireTime(now.Date.AddDays(90), null, now) == null
+              && VehicleReminders.FireTime(null, 30, now) == null, "no days or no date: none");
     }
 
     // ---- Old vehicles ----------------------------------------------------------------------------
@@ -420,9 +422,9 @@ static partial class Program
         Reminder reminder = ReminderOf(documentId);
         Check(reminder != null && reminder.NextFireTime == due.AddDays(-30).AddHours(9) && reminder.Title == "Családi autó" && reminder.Message == ""
               && TaskTrigger(documentId) == reminder.NextFireTime, "a one-off reminder with the document's Id, 30 days before at 09:00, its task too");
-        Check(VehicleReminders.ShownMessage(reminder, VehicleReminders.DocumentIndex())
+        Check(VehicleReminders.ShownMessage(reminder, VehicleReminders.DeadlineIndex())
               == Loc.F("Entity.Reminder.Message", "Insurance · Allianz casco", due.ToString(Loc.T("Format.LongDate"), Loc.Culture)),
-            "what it says is made when shown: " + VehicleReminders.ShownMessage(reminder, VehicleReminders.DocumentIndex()));
+            "what it says is made when shown: " + VehicleReminders.ShownMessage(reminder, VehicleReminders.DeadlineIndex()));
         Check(DashboardDataAggregator.Build(Profiles(main), DateTime.Now).Expiries.Any(x => x.Name == "Allianz casco" && x.Date == due),
             "Home lists it under its own name");
 
@@ -680,6 +682,143 @@ static partial class Program
         Invoke(main, "NavigateHome");
     }
 
+    // ---- Service log and costs ------------------------------------------------------------------------
+
+    static EntityRecord Entry(string type, DateTime date, string cost = null, string work = null)
+    {
+        EntityRecord entry = new EntityRecord { Id = Guid.NewGuid() };
+        entry.Set(VehicleService.TypeKey, type);
+        entry.Set(VehicleService.DateKey, Values.FromDate(date));
+        entry.Set("Cost", cost);
+        entry.Set("Work", work);
+        return entry;
+    }
+
+    static void VehicleServiceLegacy()
+    {
+        Console.WriteLine("The old Service log: shown as entries, kept in step");
+        Entity car = Vehicle("Régi napló");
+        car.Logs = new Dictionary<string, List<Dictionary<string, string>>>
+        {
+            ["Service"] = new List<Dictionary<string, string>>
+            {
+                new Dictionary<string, string> { ["Date"] = "2025-04-01", ["Work"] = "Olajcsere", ["Km"] = "100000", ["Cost"] = "30000", ["Where"] = "Bosch" },
+                new Dictionary<string, string> { ["Date"] = "2026-04-01", ["Work"] = "Fékbetét" }
+            }
+        };
+        List<EntityRecord> entries = VehicleService.Of(car);
+        Check(entries.Count == 2 && entries[0].Get("Type") == "Service" && entries[0].Get("Odometer") == "100000" && entries[0].Get("Where") == "Bosch"
+              && entries[0].Id == VehicleService.Of(car)[0].Id && car.Records == null, "old rows show as service entries (the same Ids every time), nothing written");
+
+        entries[1].Set("Cost", "12000");
+        entries.Add(Entry("Repair", new DateTime(2026, 5, 2), "8000", "Izzócsere"));
+        VehicleSchema.ServiceLog.Write(car, entries);
+        Check(car.Records["ServiceLog"].Count == 3 && car.Logs["Service"].Count == 3 && car.Logs["Service"][1]["Cost"] == "12000"
+              && car.Logs["Service"][2]["Work"] == "Izzócsere", "stored: the entries, and the old log written in step for an older version");
+        Check(VehicleService.Of(car).Count == 3, "read back: no row twice");
+
+        car.Logs["Service"].Add(new Dictionary<string, string> { ["Date"] = "2026-06-01", ["Work"] = "Mosás" }); // an older version adds one
+        Check(VehicleService.Of(car).Count == 4 && VehicleService.Of(car)[3].Get("Work") == "Mosás", "a row an older version added shows as an entry");
+
+        List<EntityRecord> latest = VehicleService.Latest(VehicleService.Of(car)).ToList();
+        Check(latest.Count == 2 && latest.Any(e => e.Get("Work") == "Mosás") && latest.Any(e => e.Get("Work") == "Izzócsere"),
+            "the newest of each kind is the one whose next due counts");
+    }
+
+    static async Task VehicleServiceLog(MainWindow main)
+    {
+        Console.WriteLine("Service log: an entry fits a part, next due by date and by reading, filter, costs");
+        CollectionView view = OpenCollectionView(main, vehicleGarage);
+        await Wait(400);
+        Entity before = StoredVehicle(vehicleGarage, octavia);
+        EntityRecord disc = PartNamed(before, "Brake disc");
+        int reading = before.OdometerKm!.Value;
+        DateTime due = DateTime.Today.AddDays(200);
+
+        await WithVehicle(main, view, octavia, async w =>
+        {
+            w.SelectTab("Service");
+            await Wait(200);
+            Invoke(w, "StartAdd", VehicleSchema.ServiceLog, null);
+            await Wait(300);
+            SectionCard card = Cards(w).OfType<SectionCard>().Single(c => c.IsEditing);
+            Check((string)((ComboBoxItem)((ComboBox)EditorOf(card, "Type").Element).SelectedItem).Tag == "Service"
+                  && ((DatePicker)EditorOf(card, "Date").Element).SelectedDate == DateTime.Today && BoxOf(EditorOf(card, "Odometer")).Text == reading.ToString(),
+                "a new entry: a service, today, at the current reading");
+            BoxOf(EditorOf(card, "Work")).Text = "Fékcsere elöl";
+            BoxOf(EditorOf(card, "Cost")).Text = "85000";
+            CheckBox discBox = Descendants(EditorOf(card, "LinkedParts").Element).OfType<CheckBox>().Single(c => (string)c.Tag == disc.Id.ToString());
+            Check((string)discBox.Content == "Brakes › Front brakes › Brake disc", "the parts to tick are named with the ones above them");
+            discBox.IsChecked = true;
+            ((DatePicker)EditorOf(card, "NextDueDate").Element).SelectedDate = due;
+            BoxOf(EditorOf(card, "NextDueOdometer")).Text = (reading + 800).ToString();
+            await SaveCard(card);
+
+            Entity saved = StoredVehicle(vehicleGarage, octavia);
+            EntityRecord entry = saved.Records["ServiceLog"].Single(e => e.Get("Work") == "Fékcsere elöl");
+            Check(entry.Get("LinkedParts") == disc.Id.ToString() && saved.Logs["Service"].Any(r => r.GetValueOrDefault("Work") == "Fékcsere elöl" && r["Km"] == reading.ToString()),
+                "stored with its part, and as a row of the old log");
+            EntityRecord fitted = PartNamed(saved, "Brake disc");
+            Check(fitted.Get("InstalledDate") == Values.FromDate(DateTime.Today) && fitted.Get("InstalledOdometer") == reading.ToString(),
+                "the part got the entry's date and reading as fitted");
+            Reminder reminder = ReminderOf(entry.Id);
+            Check(reminder?.NextFireTime == due.AddDays(-14).AddHours(9)
+                  && VehicleReminders.ShownMessage(reminder, VehicleReminders.DeadlineIndex()) == Loc.F("Entity.Reminder.Due", "Service", due.ToString(Loc.T("Format.LongDate"), Loc.Culture)),
+                "the next due date has its reminder, two weeks before: " + reminder?.NextFireTime);
+            DistanceDue soon = EntityTypes.DistanceDues(saved).Single();
+            Check(soon.Remaining == 800 && soon.Level == ExpiryLevel.Soon
+                  && Descendants(Field<WrapPanel>(w, "Badges")).OfType<TextBlock>().Any(t => t.Text == Loc.F("Entity.ExpiryLine", "Service", soon.Describe(saved))),
+                "due in 800 by the odometer: a badge says so (" + soon.Describe(saved) + ")");
+            Check(DashboardDataAggregator.Build(Profiles(main), DateTime.Now).Expiries.Any(x => x.Reading != null && x.ItemName == saved.Name),
+                "...and Home lists it");
+
+            // The part's card shows what fitted it (found through the search, which opens the parts above it).
+            Field<TextBox>(w, "SearchBox").Text = "brake disc";
+            await Wait(200);
+            ClickNow(Descendants(Cards(w)[0]).OfType<Button>().First(b => System.Windows.Automation.AutomationProperties.GetName(b).EndsWith("› Front brakes: Brake disc")));
+            await Wait(300);
+            SectionCard part = Cards(w).OfType<SectionCard>().Single(c => disc.Id.Equals(c.Tag));
+            Check(Descendants(part).OfType<TextBox>().Any(t => t.Text.Contains("Fékcsere elöl")), "the part's history lists the entry");
+
+            // Another kind and a newer service without a next due: filter, costs, and the old next due no longer counts.
+            foreach (EntityRecord added in new[] { Entry("Repair", DateTime.Today.AddDays(-400), "20000", "Izzó"), Entry("Fee", DateTime.Today, "15000", "Pályamatrica"),
+                         Entry("Service", DateTime.Today.AddDays(1), "40000", "Olajcsere") })
+            {
+                Entity edited = JsonSerializer.Deserialize<Entity>(JsonSerializer.Serialize(StoredVehicle(vehicleGarage, octavia)));
+                List<EntityRecord> list = VehicleSchema.ServiceLog.Read(edited);
+                list.Add(added);
+                VehicleSchema.ServiceLog.Write(edited, list);
+                Invoke(view, "Replace", edited);
+            }
+            Check(ReminderOf(entry.Id) == null && EntityTypes.DistanceDues(StoredVehicle(vehicleGarage, octavia)).Count == 0,
+                "a newer service: the older one's reminder and reading due are gone");
+        });
+
+        await WithVehicle(main, view, octavia, async w =>
+        {
+            w.SelectTab("Service");
+            await Wait(200);
+            string money(double amount) => Units.Format(amount, Units.Money, StoredVehicle(vehicleGarage, octavia));
+            VehicleCard costs = Cards(w).OfType<VehicleCard>().First(c => Descendants(c).OfType<TextBlock>().First().Text == Loc.T("Entity.Costs.Title"));
+            List<string> shown = Descendants(costs).OfType<TextBox>().Select(t => t.Text).ToList();
+            Check(shown.Contains(money(125000)) && shown.Contains(money(20000)) && shown.Contains(money(160000)),
+                "costs: per kind (services 125 000), per year, and in all: " + string.Join(", ", shown));
+            int all = Cards(w).OfType<SectionCard>().Count();
+            RadioButton repairs = Descendants(w).OfType<RadioButton>().First(r => r.GroupName == "FilterServiceLog" && r.Content as string == Loc.T("Choice.Repair"));
+            repairs.IsChecked = true;
+            await Wait(200);
+            Check(Cards(w).OfType<SectionCard>().Count() == 1 && all >= 4, "Repair chosen: only the repair (of " + all + ")");
+            Check(Descendants(Cards(w).OfType<SectionCard>().Single()).OfType<TextBlock>().First().Text.EndsWith(Loc.T("Choice.Repair")),
+                "its heading: date and kind");
+            Descendants(w).OfType<RadioButton>().First(r => r.GroupName == "FilterServiceLog" && r.Content as string == Loc.T("Entity.Filter.All")).IsChecked = true;
+            await Wait(200);
+            List<string> dates = Cards(w).OfType<SectionCard>().Select(c => Descendants(c).OfType<TextBlock>().First().Text).ToList();
+            Check(Cards(w).OfType<SectionCard>().Count() == all, "All: every entry again, newest first: " + string.Join(" | ", dates.Take(3)));
+            RenderWindow(w, "vehicle-05-service-en");
+        });
+        Invoke(main, "NavigateHome");
+    }
+
     // ---- The outline's moves -------------------------------------------------------------------------
 
     static EntityRecord Node(string name, params EntityRecord[] under)
@@ -807,6 +946,12 @@ static partial class Program
         pads.Pictures = new List<string> { ImageStore.Items.Import(partPhoto) };
         pads.Specs = new List<SpecLine> { new SpecLine { Name = "Vastagság", Value = "17 mm" } };
         VehicleSchema.Parts.Write(car, new List<EntityRecord> { Node("Fékek", pads) });
+        EntityRecord padsFitted = Entry("Service", DateTime.Today, "30000", "Betétcsere");
+        padsFitted.Set(VehicleService.PartsKey, pads.Id.ToString());
+        VehicleSchema.ServiceLog.Write(car, new List<EntityRecord> { padsFitted });
+        EntityRecord winterSet = VehicleSchema.WheelSets.New(car);
+        VehicleSchema.WheelSets.Write(car, new List<EntityRecord> { winterSet });
+        VehicleSchema.WheelSets.SetCurrent(car, winterSet.Id);
         Entity old = Vehicle("Régi Lada");
         old.InspectionExpires = DateTime.Today.AddDays(30);
         EntityStore.SaveOrWarn(source, new List<Entity> { car, old });
@@ -848,6 +993,9 @@ static partial class Program
         Check(padsCopy.Id != pads.Id && PartNamed(imported, "Fékek").Id != VehicleSchema.Parts.Read(car)[0].Id && padsCopy.Pictures.Single() != pads.Pictures[0]
               && SameBytes(ImageStore.Items.PathOf(padsCopy.Pictures[0]), partPhoto) && padsCopy.Specs.Single().Value == "17 mm",
             "the part under its system: new Ids at every level, its photo under a new name, its specs");
+        Check(VehicleSchema.ServiceLog.Read(imported).Single().Get(VehicleService.PartsKey) == padsCopy.Id.ToString()
+              && imported.Details[VehicleSchema.MountedWheelSetKey] == VehicleSchema.WheelSets.Read(imported).Single().Id.ToString()
+              && VehicleSchema.WheelSets.Read(imported).Single().Id != winterSet.Id, "what points at a record follows it: the service's part, the mounted wheel set");
         Check(EntityStore.Load(target).Single().InspectionExpires == null && EntityStore.Load(target).Single().Name == "Fabia", "stored in the target");
     }
 

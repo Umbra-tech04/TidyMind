@@ -587,9 +587,6 @@ Tvoja poslednja izmena nije sačuvana.</value>
   <data name="Entity.ChoosePictures" xml:space="preserve">
     <value>Dodaj slike…</value>
   </data>
-  <data name="Entity.Column.Cost" xml:space="preserve">
-    <value>Trošak</value>
-  </data>
   <data name="Entity.Column.Date" xml:space="preserve">
     <value>Datum</value>
   </data>
@@ -601,12 +598,6 @@ Tvoja poslednja izmena nije sačuvana.</value>
   </data>
   <data name="Entity.Column.Price" xml:space="preserve">
     <value>Cena</value>
-  </data>
-  <data name="Entity.Column.Where" xml:space="preserve">
-    <value>Gde</value>
-  </data>
-  <data name="Entity.Column.Work" xml:space="preserve">
-    <value>Šta je urađeno</value>
   </data>
   <data name="Entity.Picture.Cover" xml:space="preserve">
     <value>Naslovna</value>
@@ -670,9 +661,6 @@ Tvoja poslednja izmena nije sačuvana.</value>
   </data>
   <data name="Entity.Log.Fuel" xml:space="preserve">
     <value>Evidencija goriva</value>
-  </data>
-  <data name="Entity.Log.Service" xml:space="preserve">
-    <value>Servisna knjižica</value>
   </data>
   <data name="Entity.NeedsNumber" xml:space="preserve">
     <value>Polje „{0}“ mora da sadrži broj.</value>
@@ -3558,5 +3546,89 @@ Na poslednjoj stranici strelica započinje novu.</value>
   </data>
   <data name="Vehicle.Search.None" xml:space="preserve">
     <value>Ništa u ovom vozilu ne odgovara upitu „{0}”.</value>
+  </data>
+  <data name="Entity.Field.Date" xml:space="preserve">
+    <value>Datum</value>
+  </data>
+  <data name="Entity.Field.Work" xml:space="preserve">
+    <value>Šta je urađeno</value>
+  </data>
+  <data name="Entity.Field.Where" xml:space="preserve">
+    <value>Gde je urađeno</value>
+  </data>
+  <data name="Entity.Field.Cost" xml:space="preserve">
+    <value>Trošak</value>
+  </data>
+  <data name="Entity.Field.LinkedParts" xml:space="preserve">
+    <value>Ugrađeni delovi</value>
+  </data>
+  <data name="Entity.Field.NextDueDate" xml:space="preserve">
+    <value>Sledeći put dospeva</value>
+  </data>
+  <data name="Entity.Field.NextDueOdometer" xml:space="preserve">
+    <value>Sledeći put na kilometraži</value>
+  </data>
+  <data name="Choice.Service" xml:space="preserve">
+    <value>Servis</value>
+  </data>
+  <data name="Choice.Repair" xml:space="preserve">
+    <value>Popravka</value>
+  </data>
+  <data name="Choice.Modification" xml:space="preserve">
+    <value>Prepravka</value>
+  </data>
+  <data name="Choice.Fee" xml:space="preserve">
+    <value>Porez ili taksa</value>
+  </data>
+  <data name="Choice.Note" xml:space="preserve">
+    <value>Beleška</value>
+  </data>
+  <data name="Entity.Records.ServiceLog" xml:space="preserve">
+    <value>Servisna knjižica</value>
+  </data>
+  <data name="Entity.Records.ServiceLog.Add" xml:space="preserve">
+    <value>Dodaj unos</value>
+  </data>
+  <data name="Entity.Records.ServiceLog.Empty" xml:space="preserve">
+    <value>Još nema unosa. Dodaj servise, popravke, prepravke i takse sa datumom, kilometražom i troškom; označi ugrađene delove i navedi kada dospeva sledeći.</value>
+  </data>
+  <data name="Entity.Records.NoMatch" xml:space="preserve">
+    <value>Nema unosa ove vrste.</value>
+  </data>
+  <data name="Entity.Records.Parts.NoneToLink" xml:space="preserve">
+    <value>Još nema delova: dodaj ih na kartici Tečnosti i delovi.</value>
+  </data>
+  <data name="Entity.Records.Parts.History" xml:space="preserve">
+    <value>Ugrađeno ili servisirano</value>
+  </data>
+  <data name="Entity.Filter.All" xml:space="preserve">
+    <value>Sve</value>
+  </data>
+  <data name="Entity.Costs.Title" xml:space="preserve">
+    <value>Troškovi</value>
+  </data>
+  <data name="Entity.Costs.ByKind" xml:space="preserve">
+    <value>Po vrsti</value>
+  </data>
+  <data name="Entity.Costs.ByYear" xml:space="preserve">
+    <value>Po godini</value>
+  </data>
+  <data name="Entity.Costs.Total" xml:space="preserve">
+    <value>Ukupno</value>
+  </data>
+  <data name="Entity.Costs.NoDate" xml:space="preserve">
+    <value>Bez datuma</value>
+  </data>
+  <data name="Entity.Reminder.Due" xml:space="preserve">
+    <value>{0} dospeva {1}.</value>
+  </data>
+  <data name="Expiry.InDistance" xml:space="preserve">
+    <value>za {0}</value>
+  </data>
+  <data name="Expiry.PastDistance" xml:space="preserve">
+    <value>prekoračeno za {0}</value>
+  </data>
+  <data name="Expiry.AtReading" xml:space="preserve">
+    <value>dospeva na {0}</value>
   </data>
 </root>

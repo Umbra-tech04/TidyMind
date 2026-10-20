@@ -23,18 +23,27 @@ namespace TidyMind
         public List<DashboardAgendaItem> TodayItems { get; set; } = new List<DashboardAgendaItem>();
         public List<DashboardAgendaItem> UpcomingItems { get; set; } = new List<DashboardAgendaItem>();
 
-        // Expiry dates (EntityTypes) across every collection: within ExpiryDays or already past, soonest first.
+        // What comes due (EntityTypes) across every collection: dates within ExpiryDays or already past, and odometer readings
+        // close or passed; the most urgent first.
         public List<DashboardExpiry> Expiries { get; set; } = new List<DashboardExpiry>();
     }
 
-    // One expiry date of one item ("Inspection" of "Skoda Octavia"), and where it is.
+    // One date or odometer reading one item comes due at ("Inspection" of "Skoda Octavia"), and where it is.
     public class DashboardExpiry
     {
         public string ItemName { get; set; } = "";
-        public Deadline Deadline { get; set; } = null!;
-        public string Name => Deadline.Name; // in the current language, also for an entry cached before a switch
+        public Entity Item { get; set; } = null!;
+        public Deadline? Deadline { get; set; }
+        public DistanceDue? Reading { get; set; }
+        public string Name => Deadline?.Name ?? Reading!.Name; // in the current language, also for an entry cached before a switch
         public string MemoryName { get; set; } = "";
+
+        // The date; for a reading, the day it was found close (so it sorts with today's).
         public DateTime Date { get; set; }
+
+        public ExpiryLevel Level(DateTime today) => Reading?.Level ?? Expiry.Level(Date, today);
+        public string Describe(DateTime today) => Reading?.Describe(Item) ?? Expiry.Describe(Date, today);
+
         public SearchResult Target { get; set; } = new SearchResult();
     }
 
@@ -60,17 +69,17 @@ namespace TidyMind
             List<CalendarDay> days = CalendarService.LoadDays();
 
             HashSet<Guid>? blockIds = DayPlanReminders.BlockIds();
-            Dictionary<Guid, EntityRecord>? documents = reminders.Count == 0 ? null : VehicleReminders.DocumentIndex();
-            data.TodayItems = ItemsOn(today, reminders, days, blockIds, documents);
+            Dictionary<Guid, Deadline>? deadlines = reminders.Count == 0 ? null : VehicleReminders.DeadlineIndex();
+            data.TodayItems = ItemsOn(today, reminders, days, blockIds, deadlines);
 
             // Every occurrence: Home shows the week day by day, so a daily reminder belongs on each of its days.
             for (int day = 1; day <= UpcomingDays; day++)
-                data.UpcomingItems.AddRange(ItemsOn(today.AddDays(day), reminders, days, blockIds, documents));
+                data.UpcomingItems.AddRange(ItemsOn(today.AddDays(day), reminders, days, blockIds, deadlines));
         }
 
         // The day's note first (it covers the whole day), then its reminders by time.
         private static List<DashboardAgendaItem> ItemsOn(DateTime date, List<Reminder> reminders, List<CalendarDay> days,
-            ISet<Guid>? blockIds, IReadOnlyDictionary<Guid, EntityRecord>? documents)
+            ISet<Guid>? blockIds, IReadOnlyDictionary<Guid, Deadline>? deadlines)
         {
             List<DashboardAgendaItem> items = new List<DashboardAgendaItem>();
 
@@ -96,7 +105,7 @@ namespace TidyMind
                     Kind = AgendaKind.Reminder,
                     Date = date,
                     Time = date + reminder.NextFireTime.TimeOfDay,
-                    Text = VehicleReminders.ShownMessage(reminder, documents),
+                    Text = VehicleReminders.ShownMessage(reminder, deadlines),
                     Detail = string.Join("  ·  ", new[] { title, repeat }.Where(s => s != null)),
                     Reminder = reminder
                 });
@@ -130,12 +139,21 @@ namespace TidyMind
                     // A missing or unreadable file contributes nothing (the collection view says why).
                     cached = (written, EntityStore.LoadOrEmpty(profile)
                         .SelectMany(entity => EntityTypes.Expiries(entity).Select(expiry => new DashboardExpiry
-                        {
-                            ItemName = entity.Name ?? "",
-                            Deadline = expiry,
-                            Date = expiry.Date,
-                            Target = new SearchResult { Kind = SearchResultKind.Entity, Title = entity.Name, Profile = profile, ItemId = entity.Id }
-                        }))
+                            {
+                                ItemName = entity.Name ?? "",
+                                Item = entity,
+                                Deadline = expiry,
+                                Date = expiry.Date,
+                                Target = new SearchResult { Kind = SearchResultKind.Entity, Title = entity.Name, Profile = profile, ItemId = entity.Id }
+                            })
+                            .Concat(EntityTypes.DistanceDues(entity).Select(reading => new DashboardExpiry
+                            {
+                                ItemName = entity.Name ?? "",
+                                Item = entity,
+                                Reading = reading,
+                                Date = today,
+                                Target = new SearchResult { Kind = SearchResultKind.Entity, Title = entity.Name, Profile = profile, ItemId = entity.Id }
+                            })))
                         .ToList());
                     expiryCache[profile.Id] = cached;
                 }
@@ -149,7 +167,7 @@ namespace TidyMind
                 }
             }
 
-            data.Expiries = data.Expiries.OrderBy(x => x.Date).ThenBy(x => x.ItemName, Loc.Comparer).ToList();
+            data.Expiries = data.Expiries.OrderByDescending(x => x.Level(today)).ThenBy(x => x.Date).ThenBy(x => x.ItemName, Loc.Comparer).ToList();
         }
     }
 }

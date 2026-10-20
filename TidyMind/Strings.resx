@@ -539,9 +539,6 @@ Your last change wasn't saved.</value>
   <data name="Entity.ChoosePictures" xml:space="preserve">
     <value>Add Pictures…</value>
   </data>
-  <data name="Entity.Column.Cost" xml:space="preserve">
-    <value>Cost</value>
-  </data>
   <data name="Entity.Column.Date" xml:space="preserve">
     <value>Date</value>
   </data>
@@ -553,12 +550,6 @@ Your last change wasn't saved.</value>
   </data>
   <data name="Entity.Column.Price" xml:space="preserve">
     <value>Price</value>
-  </data>
-  <data name="Entity.Column.Where" xml:space="preserve">
-    <value>Where</value>
-  </data>
-  <data name="Entity.Column.Work" xml:space="preserve">
-    <value>What was done</value>
   </data>
   <data name="Entity.Picture.Cover" xml:space="preserve">
     <value>Cover</value>
@@ -622,9 +613,6 @@ Your last change wasn't saved.</value>
   </data>
   <data name="Entity.Log.Fuel" xml:space="preserve">
     <value>Fuel log</value>
-  </data>
-  <data name="Entity.Log.Service" xml:space="preserve">
-    <value>Service log</value>
   </data>
   <data name="Entity.NeedsNumber" xml:space="preserve">
     <value>{0} needs a number.</value>
@@ -3440,5 +3428,89 @@ On the last page, the arrow starts a new page.</value>
   </data>
   <data name="Vehicle.Search.None" xml:space="preserve">
     <value>Nothing in this vehicle matches “{0}”.</value>
+  </data>
+  <data name="Entity.Field.Date" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="Entity.Field.Work" xml:space="preserve">
+    <value>What was done</value>
+  </data>
+  <data name="Entity.Field.Where" xml:space="preserve">
+    <value>Done at</value>
+  </data>
+  <data name="Entity.Field.Cost" xml:space="preserve">
+    <value>Cost</value>
+  </data>
+  <data name="Entity.Field.LinkedParts" xml:space="preserve">
+    <value>Parts fitted</value>
+  </data>
+  <data name="Entity.Field.NextDueDate" xml:space="preserve">
+    <value>Next due on</value>
+  </data>
+  <data name="Entity.Field.NextDueOdometer" xml:space="preserve">
+    <value>Next due at</value>
+  </data>
+  <data name="Choice.Service" xml:space="preserve">
+    <value>Service</value>
+  </data>
+  <data name="Choice.Repair" xml:space="preserve">
+    <value>Repair</value>
+  </data>
+  <data name="Choice.Modification" xml:space="preserve">
+    <value>Modification</value>
+  </data>
+  <data name="Choice.Fee" xml:space="preserve">
+    <value>Tax or fee</value>
+  </data>
+  <data name="Choice.Note" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="Entity.Records.ServiceLog" xml:space="preserve">
+    <value>Service log</value>
+  </data>
+  <data name="Entity.Records.ServiceLog.Add" xml:space="preserve">
+    <value>Add entry</value>
+  </data>
+  <data name="Entity.Records.ServiceLog.Empty" xml:space="preserve">
+    <value>Nothing written down yet. Add services, repairs, modifications and fees with the date, the odometer and the cost; tick the parts that were fitted, and say when the next one is due.</value>
+  </data>
+  <data name="Entity.Records.NoMatch" xml:space="preserve">
+    <value>No entries of this kind.</value>
+  </data>
+  <data name="Entity.Records.Parts.NoneToLink" xml:space="preserve">
+    <value>No parts yet: add them under Fluids &amp; parts.</value>
+  </data>
+  <data name="Entity.Records.Parts.History" xml:space="preserve">
+    <value>Fitted or serviced</value>
+  </data>
+  <data name="Entity.Filter.All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Entity.Costs.Title" xml:space="preserve">
+    <value>Costs</value>
+  </data>
+  <data name="Entity.Costs.ByKind" xml:space="preserve">
+    <value>By kind</value>
+  </data>
+  <data name="Entity.Costs.ByYear" xml:space="preserve">
+    <value>By year</value>
+  </data>
+  <data name="Entity.Costs.Total" xml:space="preserve">
+    <value>In all</value>
+  </data>
+  <data name="Entity.Costs.NoDate" xml:space="preserve">
+    <value>No date</value>
+  </data>
+  <data name="Entity.Reminder.Due" xml:space="preserve">
+    <value>{0} is due on {1}.</value>
+  </data>
+  <data name="Expiry.InDistance" xml:space="preserve">
+    <value>in {0}</value>
+  </data>
+  <data name="Expiry.PastDistance" xml:space="preserve">
+    <value>{0} overdue</value>
+  </data>
+  <data name="Expiry.AtReading" xml:space="preserve">
+    <value>due at {0}</value>
   </data>
 </root>

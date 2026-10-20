@@ -43,6 +43,9 @@ namespace TidyMind
         private VehicleCard? editing;
         private (RecordDefinition Records, EntityRecord Record, Guid? Parent)? adding;
 
+        // The kind each flat list shows (RecordDefinition.FilterKey) by its key; none: all.
+        private readonly Dictionary<string, string> filters = new Dictionary<string, string>();
+
         // The nested list's (parts') outline: which record is shown and which are open, kept across redraws.
         private Guid? selectedPart;
         private readonly HashSet<Guid> openParts = new HashSet<Guid>();
@@ -99,34 +102,44 @@ namespace TidyMind
             OdometerText.Foreground = VehicleCard.Res(vehicle.OdometerKm == null ? "TextSub" : "TextMain");
 
             Badges.Children.Clear();
-            foreach (Deadline deadline in EntityTypes.Expiries(vehicle).Take(3))
-                Badges.Children.Add(Badge(deadline));
+            foreach (Due due in Dues().Take(3))
+                Badges.Children.Add(Badge(due));
 
             ShowPictures(gallery.Selected);
         }
 
-        // "Inspection in 12 days" in its urgency's color and weight (Expiry), never by color alone.
-        private static Border Badge(Deadline deadline)
+        // What comes due, the most urgent first: readings close or passed (EntityTypes.DistanceDues), then the dates
+        // (EntityTypes.Expiries) by how close they are. Shown as badges, on the Overview and on the card.
+        private sealed record Due(string Name, string When, string Detail, ExpiryLevel Level, string Tab);
+
+        private List<Due> Dues()
         {
-            ExpiryLevel level = Expiry.Level(deadline.Date, DateTime.Today);
-            return new Border
-            {
-                Background = VehicleCard.Res("BgSubtle"),
-                BorderBrush = VehicleCard.Res(level == ExpiryLevel.Later ? "Border" : level == ExpiryLevel.Expired ? "Danger" : "BtnHover"),
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(12),
-                Padding = new Thickness(10, 3, 10, 4),
-                Margin = new Thickness(0, 0, 8, 6),
-                ToolTip = deadline.Date.ToString(Loc.T("Format.LongDate"), Loc.Culture),
-                Child = new TextBlock
-                {
-                    Text = Loc.F("Entity.ExpiryLine", deadline.Name, Expiry.Describe(deadline.Date, DateTime.Today)),
-                    FontSize = 12,
-                    Foreground = Expiry.Brush(level),
-                    FontWeight = Expiry.Weight(level)
-                }
-            };
+            string TabOf(RecordDefinition kind) => EntityTypes.Tabs(vehicle.EntityType).First(t => t.Records.Contains(kind)).Key;
+            IEnumerable<Due> readings = EntityTypes.DistanceDues(vehicle).Select(d => new Due(d.Name, d.Describe(vehicle),
+                Loc.F("Expiry.AtReading", Units.Format(d.Remaining + vehicle.OdometerKm!.Value, Units.Distance, vehicle)), d.Level, TabOf(d.Kind)));
+            IEnumerable<Due> dates = EntityTypes.Expiries(vehicle).Select(d => new Due(d.Name, Expiry.Describe(d.Date, DateTime.Today),
+                d.Date.ToString(Loc.T("Format.LongDate"), Loc.Culture), Expiry.Level(d.Date, DateTime.Today), TabOf(d.Kind)));
+            return readings.Concat(dates).OrderByDescending(d => d.Level).ToList(); // stable: each kind keeps its own order
         }
+
+        // "Inspection in 12 days" in its urgency's color and weight (Expiry), never by color alone.
+        private static Border Badge(Due due) => new Border
+        {
+            Background = VehicleCard.Res("BgSubtle"),
+            BorderBrush = VehicleCard.Res(due.Level == ExpiryLevel.Later ? "Border" : due.Level == ExpiryLevel.Expired ? "Danger" : "BtnHover"),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(12),
+            Padding = new Thickness(10, 3, 10, 4),
+            Margin = new Thickness(0, 0, 8, 6),
+            ToolTip = due.Detail,
+            Child = new TextBlock
+            {
+                Text = Loc.F("Entity.ExpiryLine", due.Name, due.When),
+                FontSize = 12,
+                Foreground = Expiry.Brush(due.Level),
+                FontWeight = Expiry.Weight(due.Level)
+            }
+        };
 
         // The cover first, then whichever is picked (arrows, keys, strip); decoded off the UI thread.
         private void ShowPictures(int index)
@@ -277,38 +290,41 @@ namespace TidyMind
             yield return SectionCardOf(VehicleSchema.Notes);
         }
 
-        // Every dated document, soonest first, with how close it is.
+        // Everything that comes due, the most urgent first, with how close it is; a click opens its tab.
         private VehicleCard DeadlinesCard()
         {
             VehicleCard card = new VehicleCard(Loc.T("Vehicle.Overview.Deadlines"));
-            List<Deadline> deadlines = EntityTypes.Expiries(vehicle);
-            if (deadlines.Count == 0)
+            List<Due> dues = Dues();
+            if (dues.Count == 0)
             {
                 card.ShowEmpty(Loc.T("Vehicle.Overview.NoDeadlines"), VehicleSchema.Documents.AddLabel, () => { SelectTab("Documents"); StartAdd(VehicleSchema.Documents, null); });
                 return card;
             }
             card.Actions.Children.Add(VehicleCard.Link(Loc.T("Vehicle.Overview.AllDocuments"), () => SelectTab("Documents")));
-            foreach (Deadline deadline in deadlines)
+            foreach (Due due in dues)
             {
-                ExpiryLevel level = Expiry.Level(deadline.Date, DateTime.Today);
-                Grid row = new Grid { Margin = new Thickness(0, 0, 0, 8) };
+                Grid row = new Grid();
                 row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
                 row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
                 StackPanel what = new StackPanel();
-                what.Children.Add(new TextBlock { Text = deadline.Name, FontSize = 13, Foreground = VehicleCard.Res("TextMain"), TextWrapping = TextWrapping.Wrap });
-                what.Children.Add(VehicleCard.Muted(deadline.Date.ToString(Loc.T("Format.LongDate"), Loc.Culture), 12));
+                what.Children.Add(new TextBlock { Text = due.Name, FontSize = 13, Foreground = VehicleCard.Res("TextMain"), TextWrapping = TextWrapping.Wrap });
+                what.Children.Add(VehicleCard.Muted(due.Detail, 12));
                 row.Children.Add(what);
                 TextBlock when = new TextBlock
                 {
-                    Text = Expiry.Describe(deadline.Date, DateTime.Today),
+                    Text = due.When,
                     FontSize = 13,
-                    Foreground = Expiry.Brush(level),
-                    FontWeight = Expiry.Weight(level),
+                    Foreground = Expiry.Brush(due.Level),
+                    FontWeight = Expiry.Weight(due.Level),
                     Margin = new Thickness(16, 0, 0, 0)
                 };
                 Grid.SetColumn(when, 1);
                 row.Children.Add(when);
-                card.Body.Children.Add(row);
+                Button open = new Button { Template = PictureBrowser.FlatTemplate, Cursor = Cursors.Hand, Content = row, Margin = new Thickness(0, 0, 0, 8),
+                    HorizontalContentAlignment = HorizontalAlignment.Stretch };
+                AutomationProperties.SetName(open, due.Name + ", " + due.When);
+                open.Click += (s, e) => SelectTab(due.Tab);
+                card.Body.Children.Add(open);
             }
             return card;
         }
@@ -357,22 +373,20 @@ namespace TidyMind
             return card;
         }
 
+        // The newest service in the log, what it cost and when the next one is due.
         private VehicleCard LastServiceCard()
         {
             VehicleCard card = new VehicleCard(Loc.T("Vehicle.Overview.LastService"));
-            LogDefinition service = VehicleSchema.Log("Service");
-            Dictionary<string, string>? last = EntityTypes.Sorted(service, EntityTypes.Rows(vehicle, service)).FirstOrDefault();
+            RecordDefinition log = VehicleSchema.ServiceLog;
+            EntityRecord? last = log.Read(vehicle).Where(e => (e.Get(VehicleService.TypeKey) ?? VehicleService.Types[0]) == VehicleService.Types[0])
+                .OrderByDescending(e => VehicleService.DateOf(e) ?? DateTime.MinValue).FirstOrDefault();
             if (last == null)
             {
-                card.ShowEmpty(Loc.T("Vehicle.Overview.NoService"), Loc.T("Log.AddRow"), () =>
-                {
-                    SelectTab("Service");
-                    Cards.Children.OfType<LogCard>().First(c => c.Log == service).BeginEdit();
-                });
+                card.ShowEmpty(Loc.T("Vehicle.Overview.NoService"), log.AddLabel, () => { SelectTab("Service"); StartAdd(log, null); });
                 return card;
             }
-            card.Actions.Children.Add(VehicleCard.Link(service.Label, () => SelectTab("Service")));
-            card.Body.Children.Add(TextCopy.Selectable(EntityTypes.FormatRow(service, last), 13, VehicleCard.Res("TextMain")));
+            card.Actions.Children.Add(VehicleCard.Link(log.Label, () => SelectTab("Service")));
+            card.Body.Children.Add(TextCopy.Selectable(log.Line(last, vehicle), 13, VehicleCard.Res("TextMain")));
             return card;
         }
 
@@ -436,10 +450,112 @@ namespace TidyMind
                 empty.Body.Children.Add(VehicleCard.Muted(Loc.T("Entity.Records." + records.Key + ".Empty")));
                 yield return empty;
             }
+            if (records.TotalKey != null && TotalsCard(records, list) is VehicleCard totals)
+                yield return totals;
+
+            // Newest first, and only the chosen kind (FilterKey) when one is chosen.
+            IEnumerable<EntityRecord> shown = records.NewestFirstKey == null ? list
+                : list.OrderByDescending(r => Values.ParseDate(r.Get(records.NewestFirstKey)) ?? DateTime.MinValue);
+            if (records.FilterKey != null && list.Count > 0)
+            {
+                yield return FilterRow(records, list);
+                if (filters.GetValueOrDefault(records.Key) is string kind)
+                {
+                    shown = shown.Where(r => r.Get(records.FilterKey) == kind);
+                    if (!shown.Any())
+                    {
+                        TextBlock none = VehicleCard.Muted(Loc.T("Entity.Records.NoMatch"));
+                        CellPanel.SetWide(none, true);
+                        yield return none;
+                    }
+                }
+            }
             if (adding is { } fresh && fresh.Records == records)
                 yield return NewRecordCard(fresh.Records, fresh.Record, null, records.AddLabel);
-            foreach (EntityRecord record in list)
+            foreach (EntityRecord record in shown)
                 yield return RecordCard(records, record, records.Title(record));
+        }
+
+        // "All" and each kind the list has (FilterKey's choices, in their order); picking one shows only those.
+        private UIElement FilterRow(RecordDefinition records, List<EntityRecord> list)
+        {
+            FieldDefinition field = records.Fields.First(f => f.Key == records.FilterKey);
+            HashSet<string> present = list.Select(r => r.Get(field.Key) ?? "").ToHashSet();
+            string? chosen = filters.GetValueOrDefault(records.Key);
+            WrapPanel row = new WrapPanel { Margin = new Thickness(0, 0, 0, 2) };
+            CellPanel.SetWide(row, true);
+            foreach ((string? kind, string label) in field.Choices.Where(present.Contains).Select(c => ((string?)c, field.ChoiceLabel(c)))
+                         .Prepend((null, Loc.T("Entity.Filter.All"))))
+            {
+                RadioButton button = new RadioButton
+                {
+                    Content = label,
+                    Style = (Style)FindResource("SegmentStyle"),
+                    GroupName = "Filter" + records.Key,
+                    Height = 28,
+                    Margin = new Thickness(0, 0, 4, 4),
+                    IsChecked = kind == chosen
+                };
+                button.Checked += (s, e) =>
+                {
+                    if (kind == filters.GetValueOrDefault(records.Key) || !LeaveEdit())
+                        return;
+                    if (kind == null)
+                        filters.Remove(records.Key);
+                    else
+                        filters[records.Key] = kind;
+                    adding = null;
+                    ShowTab();
+                };
+                row.Children.Add(button);
+            }
+            return row;
+        }
+
+        // The sums of TotalKey per kind (FilterKey) and per year (NewestFirstKey's date), and in all; null with nothing to
+        // add up.
+        private VehicleCard? TotalsCard(RecordDefinition records, List<EntityRecord> list)
+        {
+            List<(EntityRecord Record, double Amount)> amounts = list.Select(r => (r, Values.Number(r.Get(records.TotalKey!))))
+                .Where(x => x.Item2 != null).Select(x => (x.r, x.Item2!.Value)).ToList();
+            if (amounts.Count == 0)
+                return null;
+
+            FieldDefinition? kinds = records.Fields.FirstOrDefault(f => f.Key == records.FilterKey);
+            VehicleCard card = new VehicleCard(Loc.T("Entity.Costs.Title"));
+            CellPanel.SetWide(card, true);
+            CellPanel panel = new CellPanel { MinColumn = 220, RowGap = 12 };
+            if (kinds != null)
+                panel.Children.Add(Amounts(Loc.T("Entity.Costs.ByKind"), amounts.GroupBy(x => x.Record.Get(kinds.Key) ?? "")
+                    .OrderBy(g => Array.IndexOf(kinds.Choices, g.Key)).Select(g => (kinds.ChoiceLabel(g.Key), g.Sum(x => x.Amount)))));
+            if (records.NewestFirstKey != null)
+                panel.Children.Add(Amounts(Loc.T("Entity.Costs.ByYear"), amounts.GroupBy(x => Values.ParseDate(x.Record.Get(records.NewestFirstKey))?.Year)
+                    .OrderByDescending(g => g.Key ?? 0).Select(g => (g.Key?.ToString() ?? Loc.T("Entity.Costs.NoDate"), g.Sum(x => x.Amount)))));
+            panel.Children.Add(Amounts(Loc.T("Entity.Costs.Total"), new[] { (records.Label, amounts.Sum(x => x.Amount)) }));
+            card.Body.Children.Add(panel);
+            return card;
+        }
+
+        // A heading over "label   amount" lines, the amounts right-aligned in the currency.
+        private UIElement Amounts(string heading, IEnumerable<(string Label, double Amount)> lines)
+        {
+            Grid table = new Grid();
+            table.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            table.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            foreach ((string label, double amount) in lines)
+            {
+                int row = table.RowDefinitions.Count;
+                table.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+                TextBlock name = new TextBlock { Text = label, FontSize = 13, Foreground = VehicleCard.Res("TextMain"), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 16, 4) };
+                TextBox sum = TextCopy.Selectable(Units.Format(amount, Units.Money, vehicle), 13, VehicleCard.Res("TextMain"), FontWeights.SemiBold);
+                sum.TextWrapping = TextWrapping.NoWrap;
+                Grid.SetRow(name, row);
+                Grid.SetRow(sum, row);
+                Grid.SetColumn(sum, 1);
+                table.Children.Add(name);
+                table.Children.Add(sum);
+            }
+            return VehicleCard.Cell(heading, table);
         }
 
         // A nested list: the outline beside the selected record's card (the first one until another is picked). Empty, what
@@ -484,7 +600,8 @@ namespace TidyMind
             else if (shown != null)
             {
                 (EntityRecord record, IReadOnlyList<EntityRecord> above) = RecordTree.Walk(list).First(x => x.Record.Id == shown);
-                yield return RecordCard(records, record, string.Join(" › ", above.Append(record).Select(records.Title)), Moves(records, list, record, above.Count));
+                yield return RecordCard(records, record, string.Join(" › ", above.Append(record).Select(records.Title)),
+                    WithHistory(records, record, Moves(records, list, record, above.Count)));
             }
         }
 
@@ -512,6 +629,31 @@ namespace TidyMind
             };
             card.BeginEdit();
             return card;
+        }
+
+        // The records of other lists that point at this one (a part's services, RecordDefinition fields of the kind Links),
+        // newest first, over `under`.
+        private UIElement WithHistory(RecordDefinition records, EntityRecord record, UIElement under)
+        {
+            List<string> lines = EntityTypes.Records(vehicle.EntityType)
+                .SelectMany(def => def.Fields.Where(f => f.Kind == ValueKind.Links && f.LinkTo == records.Key)
+                    .SelectMany(f => def.Read(vehicle).Where(r => FieldDefinition.Items(r.Get(f.Key)).Contains(record.Id.ToString()))
+                        .OrderByDescending(r => def.NewestFirstKey == null ? null : Values.ParseDate(r.Get(def.NewestFirstKey)))
+                        .Select(r => def.Line(r, vehicle))))
+                .ToList();
+            if (lines.Count == 0)
+                return under;
+            StackPanel footer = new StackPanel { Margin = new Thickness(0, 14, 0, 0) };
+            footer.Children.Add(new TextBlock { Text = Loc.T("Entity.Records." + records.Key + ".History"), FontSize = 11,
+                Foreground = VehicleCard.Res("TextSub"), Margin = new Thickness(0, 0, 0, 4) });
+            foreach (string line in lines)
+            {
+                TextBox text = TextCopy.Selectable(line, 13, VehicleCard.Res("TextMain"));
+                text.Margin = new Thickness(0, 0, 0, 4);
+                footer.Children.Add(text);
+            }
+            footer.Children.Add(under);
+            return footer;
         }
 
         // Under a nested record's fields: a record under it, and moving it up, down, into the one above or out a level.
@@ -560,7 +702,7 @@ namespace TidyMind
                 return;
             Commit(v => records.Write(v, VehicleSchema.PartsTemplate.Select(key =>
             {
-                EntityRecord system = records.New();
+                EntityRecord system = records.New(vehicle);
                 system.Set("Name", Loc.T("Entity.Parts.Template." + key));
                 return system;
             }).ToList()));
@@ -570,7 +712,7 @@ namespace TidyMind
         {
             if (!LeaveEdit())
                 return;
-            adding = (records, records.New(), parent);
+            adding = (records, records.New(vehicle), parent);
             if (parent != null)
                 openParts.Add(parent.Value);
             ShowTab();
@@ -632,6 +774,7 @@ namespace TidyMind
                 if (isNew)
                     (parent == null ? list : RecordTree.ChildrenOf(RecordTree.Find(list, parent.Value)!)).Add(target);
                 records.Write(v, list);
+                records.Saved?.Invoke(v, target);
             });
             if (!saved)
             {

@@ -415,8 +415,8 @@ namespace TidyMind
             return badge;
         }
 
-        // A vehicle's card: the plate under the make and model (one line each), and its nearest expiry date in the
-        // subtitle's place ("Inspection in 12 days"), highlighted when it's close or past (Expiry).
+        // A vehicle's card: the plate under the make and model (one line each), and what comes due first in the subtitle's
+        // place ("Inspection in 12 days", "Service in 800 km"), highlighted when it's close or past (Expiry).
         private static void ShowVehicleOnCard(Entity entity, TextBlock title, TextBlock subtitle)
         {
             if (!string.IsNullOrWhiteSpace(entity.Plate))
@@ -431,14 +431,19 @@ namespace TidyMind
                 });
             }
 
+            // A reading that is close or passed (a service due at so many km) when it is at least as urgent as the date.
             Deadline? nearest = EntityTypes.NearestExpiry(entity);
-            if (nearest == null)
+            DistanceDue? reading = EntityTypes.DistanceDues(entity).FirstOrDefault();
+            ExpiryLevel dateLevel = nearest == null ? ExpiryLevel.Later : Expiry.Level(nearest.Date, DateTime.Today);
+            if (nearest == null && reading == null)
             {
                 subtitle.Text = "";
                 return;
             }
-            ExpiryLevel level = Expiry.Level(nearest.Date, DateTime.Today);
-            subtitle.Text = Loc.F("Entity.ExpiryLine", nearest.Name, Expiry.Describe(nearest.Date, DateTime.Today));
+            bool byReading = reading != null && (nearest == null || reading.Level >= dateLevel);
+            ExpiryLevel level = byReading ? reading!.Level : dateLevel;
+            subtitle.Text = byReading ? Loc.F("Entity.ExpiryLine", reading!.Name, reading.Describe(entity))
+                : Loc.F("Entity.ExpiryLine", nearest!.Name, Expiry.Describe(nearest.Date, DateTime.Today));
             subtitle.Foreground = Expiry.Brush(level);
             subtitle.FontWeight = Expiry.Weight(level);
         }

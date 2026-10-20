@@ -275,7 +275,7 @@ namespace TidyMind
             else
                 value = TextCopy.Selectable(shown, 13, Res("TextMain"));
             StackPanel cell = Cell(field.Label, value);
-            CellPanel.SetWide(cell, field.Kind == ValueKind.LongText || field.Kind == ValueKind.CheckList);
+            CellPanel.SetWide(cell, field.Kind == ValueKind.LongText || field.Kind == ValueKind.CheckList || field.Kind == ValueKind.Links);
             return cell;
         }
 
@@ -343,7 +343,6 @@ namespace TidyMind
     public sealed class LogCard : VehicleCard
     {
         private readonly LogDefinition log;
-        public LogDefinition Log => log;
         private readonly List<Dictionary<string, string>> rows;
         private readonly EditGate gate;
         private readonly Func<List<Dictionary<string, string>>, bool> save;

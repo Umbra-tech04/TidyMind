@@ -491,9 +491,6 @@ Az utolsó módosításod nem lett mentve.</value>
   <data name="Entity.ChoosePictures" xml:space="preserve">
     <value>Képek hozzáadása…</value>
   </data>
-  <data name="Entity.Column.Cost" xml:space="preserve">
-    <value>Költség</value>
-  </data>
   <data name="Entity.Column.Date" xml:space="preserve">
     <value>Dátum</value>
   </data>
@@ -505,12 +502,6 @@ Az utolsó módosításod nem lett mentve.</value>
   </data>
   <data name="Entity.Column.Price" xml:space="preserve">
     <value>Ár</value>
-  </data>
-  <data name="Entity.Column.Where" xml:space="preserve">
-    <value>Hol</value>
-  </data>
-  <data name="Entity.Column.Work" xml:space="preserve">
-    <value>Elvégzett munka</value>
   </data>
   <data name="Entity.Picture.Cover" xml:space="preserve">
     <value>Borító</value>
@@ -574,9 +565,6 @@ Az utolsó módosításod nem lett mentve.</value>
   </data>
   <data name="Entity.Log.Fuel" xml:space="preserve">
     <value>Tankolási napló</value>
-  </data>
-  <data name="Entity.Log.Service" xml:space="preserve">
-    <value>Szerviznapló</value>
   </data>
   <data name="Entity.NeedsNumber" xml:space="preserve">
     <value>Ide számot kell írni: {0}.</value>
@@ -3322,5 +3310,89 @@ Az utolsó oldalon a nyíl új oldalt kezd.</value>
   </data>
   <data name="Vehicle.Search.None" xml:space="preserve">
     <value>Ebben a járműben semmi sem egyezik ezzel: „{0}”.</value>
+  </data>
+  <data name="Entity.Field.Date" xml:space="preserve">
+    <value>Dátum</value>
+  </data>
+  <data name="Entity.Field.Work" xml:space="preserve">
+    <value>Elvégzett munka</value>
+  </data>
+  <data name="Entity.Field.Where" xml:space="preserve">
+    <value>Hol készült</value>
+  </data>
+  <data name="Entity.Field.Cost" xml:space="preserve">
+    <value>Költség</value>
+  </data>
+  <data name="Entity.Field.LinkedParts" xml:space="preserve">
+    <value>Beépített alkatrészek</value>
+  </data>
+  <data name="Entity.Field.NextDueDate" xml:space="preserve">
+    <value>Következő esedékesség</value>
+  </data>
+  <data name="Entity.Field.NextDueOdometer" xml:space="preserve">
+    <value>Következő esedékesség km-állása</value>
+  </data>
+  <data name="Choice.Service" xml:space="preserve">
+    <value>Szerviz</value>
+  </data>
+  <data name="Choice.Repair" xml:space="preserve">
+    <value>Javítás</value>
+  </data>
+  <data name="Choice.Modification" xml:space="preserve">
+    <value>Átalakítás</value>
+  </data>
+  <data name="Choice.Fee" xml:space="preserve">
+    <value>Adó, díj</value>
+  </data>
+  <data name="Choice.Note" xml:space="preserve">
+    <value>Megjegyzés</value>
+  </data>
+  <data name="Entity.Records.ServiceLog" xml:space="preserve">
+    <value>Szerviznapló</value>
+  </data>
+  <data name="Entity.Records.ServiceLog.Add" xml:space="preserve">
+    <value>Bejegyzés hozzáadása</value>
+  </data>
+  <data name="Entity.Records.ServiceLog.Empty" xml:space="preserve">
+    <value>Még nincs bejegyzés. Vedd fel a szervizeket, javításokat, átalakításokat és díjakat a dátummal, a km-állással és a költséggel; jelöld be a beépített alkatrészeket, és add meg, mikor esedékes a következő.</value>
+  </data>
+  <data name="Entity.Records.NoMatch" xml:space="preserve">
+    <value>Ilyen bejegyzés nincs.</value>
+  </data>
+  <data name="Entity.Records.Parts.NoneToLink" xml:space="preserve">
+    <value>Még nincs alkatrész: a Folyadékok és alkatrészek fülön veheted fel őket.</value>
+  </data>
+  <data name="Entity.Records.Parts.History" xml:space="preserve">
+    <value>Beépítve, szervizelve</value>
+  </data>
+  <data name="Entity.Filter.All" xml:space="preserve">
+    <value>Mind</value>
+  </data>
+  <data name="Entity.Costs.Title" xml:space="preserve">
+    <value>Költségek</value>
+  </data>
+  <data name="Entity.Costs.ByKind" xml:space="preserve">
+    <value>Fajta szerint</value>
+  </data>
+  <data name="Entity.Costs.ByYear" xml:space="preserve">
+    <value>Év szerint</value>
+  </data>
+  <data name="Entity.Costs.Total" xml:space="preserve">
+    <value>Összesen</value>
+  </data>
+  <data name="Entity.Costs.NoDate" xml:space="preserve">
+    <value>Dátum nélkül</value>
+  </data>
+  <data name="Entity.Reminder.Due" xml:space="preserve">
+    <value>{0} esedékes: {1}.</value>
+  </data>
+  <data name="Expiry.InDistance" xml:space="preserve">
+    <value>{0} múlva</value>
+  </data>
+  <data name="Expiry.PastDistance" xml:space="preserve">
+    <value>{0} túllépve</value>
+  </data>
+  <data name="Expiry.AtReading" xml:space="preserve">
+    <value>esedékes: {0}</value>
   </data>
 </root>

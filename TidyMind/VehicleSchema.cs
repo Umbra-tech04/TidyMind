@@ -124,24 +124,31 @@ namespace TidyMind
                 Text(VehicleDocuments.NameKey),
                 Text("Number"),
                 new FieldDefinition { Key = VehicleDocuments.ValidUntilKey, Kind = ValueKind.Date, IsExpiry = true },
-                new FieldDefinition
-                {
-                    Key = VehicleDocuments.RemindKey, Kind = ValueKind.Choice,
-                    Choices = RemindChoices.Select(d => d.ToString(CultureInfo.InvariantCulture)).ToArray(),
-                    ChoiceLabel = days => Values.ToInt(days) is int n ? Loc.Plural("Entity.Remind.DaysBefore", n) : Loc.T("Entity.Remind.None")
-                },
+                RemindField(),
                 new FieldDefinition { Key = "File", Kind = ValueKind.File },
                 new FieldDefinition { Key = "Notes", Kind = ValueKind.LongText }
             },
             TitleKeys = new[] { VehicleDocuments.TypeKey, VehicleDocuments.NameKey },
             Title = VehicleDocuments.Title,
-            Start = record =>
+            Start = (record, _) =>
             {
                 record.Set(VehicleDocuments.TypeKey, "Insurance");
                 record.Set(VehicleDocuments.RemindKey, "30");
             },
             Load = VehicleDocuments.Of,
-            Store = VehicleDocuments.Store
+            Store = VehicleDocuments.Store,
+            DueKey = VehicleDocuments.ValidUntilKey,
+            RemindKey = VehicleDocuments.RemindKey,
+            DeadlineName = VehicleDocuments.ShortName,
+            ReminderText = (document, date) => Loc.F("Entity.Reminder.Message", VehicleDocuments.Title(document), date.ToString(Loc.T("Format.LongDate"), Loc.Culture))
+        };
+
+        // How many days before a date to be reminded of it (VehicleReminders); nothing: no reminder.
+        private static FieldDefinition RemindField() => new FieldDefinition
+        {
+            Key = VehicleDocuments.RemindKey, Kind = ValueKind.Choice,
+            Choices = RemindChoices.Select(d => d.ToString(CultureInfo.InvariantCulture)).ToArray(),
+            ChoiceLabel = days => Values.ToInt(days) is int n ? Loc.Plural("Entity.Remind.DaysBefore", n) : Loc.T("Entity.Remind.None")
         };
 
         // ---- Wheels and tyres -----------------------------------------------------------------
@@ -235,22 +242,53 @@ namespace TidyMind
 
         private static string FirstOf(params string?[] texts) => texts.First(t => !string.IsNullOrWhiteSpace(t))!.Trim();
 
+        // ---- Service log ------------------------------------------------------------------------------
+
+        public static readonly RecordDefinition ServiceLog = new RecordDefinition
+        {
+            Key = VehicleService.Key,
+            Fields = new[]
+            {
+                Choice(VehicleService.TypeKey, VehicleService.Types),
+                Date(VehicleService.DateKey),
+                Number(VehicleService.OdometerKey, Units.Distance),
+                new FieldDefinition { Key = "Work", Kind = ValueKind.LongText },
+                Text("Where"),
+                Number("Cost", Units.Money),
+                new FieldDefinition { Key = VehicleService.PartsKey, Kind = ValueKind.Links, LinkTo = "Parts" },
+                Date("NextDueDate"),
+                Number("NextDueOdometer", Units.Distance),
+                RemindField(),
+                new FieldDefinition { Key = "File", Kind = ValueKind.File }
+            },
+            TitleKeys = new[] { VehicleService.TypeKey, VehicleService.DateKey },
+            Title = VehicleService.Title,
+            // A new entry: a service, today, at the current reading, reminded two weeks before its next due date.
+            Start = (entry, vehicle) =>
+            {
+                entry.Set(VehicleService.TypeKey, VehicleService.Types[0]);
+                entry.Set(VehicleService.DateKey, Values.FromDate(DateTime.Today));
+                entry.Set(VehicleService.OdometerKey, Odometer.Read(vehicle));
+                entry.Set(VehicleDocuments.RemindKey, "14");
+            },
+            Load = VehicleService.Of,
+            Store = VehicleService.Store,
+            NewestFirstKey = VehicleService.DateKey,
+            FilterKey = VehicleService.TypeKey,
+            TotalKey = "Cost",
+            DueKey = "NextDueDate",
+            RemindKey = VehicleDocuments.RemindKey,
+            DueDistanceKey = "NextDueOdometer",
+            DueFrom = VehicleService.Latest,
+            DeadlineName = VehicleService.TypeLabel,
+            ReminderText = (entry, date) => Loc.F("Entity.Reminder.Due", VehicleService.TypeLabel(entry), date.ToString(Loc.T("Format.LongDate"), Loc.Culture)),
+            Saved = VehicleService.FitParts
+        };
+
         // ---- Logs ----------------------------------------------------------------------
 
         public static readonly LogDefinition[] Logs =
         {
-            new LogDefinition
-            {
-                Key = "Service",
-                Columns = new[]
-                {
-                    new LogColumn { Key = "Date", Kind = ValueKind.Date },
-                    new LogColumn { Key = "Work", Kind = ValueKind.Text },
-                    new LogColumn { Key = "Km", Kind = ValueKind.Number },
-                    new LogColumn { Key = "Cost", Kind = ValueKind.Number },
-                    new LogColumn { Key = "Where", Kind = ValueKind.Text }
-                }
-            },
             new LogDefinition
             {
                 Key = "Fuel",
@@ -284,7 +322,7 @@ namespace TidyMind
             new TabDefinition { Key = "Wheels", Records = new[] { WheelSets } },
             new TabDefinition { Key = "Parts", Sections = new[] { Fluids, Brakes, Electrical }, Records = new[] { Parts } },
             new TabDefinition { Key = "Documents", Records = new[] { Documents } },
-            new TabDefinition { Key = "Service", Logs = Logs }
+            new TabDefinition { Key = "Service", Records = new[] { ServiceLog }, Logs = Logs }
         };
 
         // From the two newest fill-ups: the newer one's liters over the km driven since the older one. Nothing if

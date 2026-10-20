@@ -422,7 +422,7 @@ namespace TidyMind
             ExpiryRows.Children.Clear();
             ExpirySection.Visibility = data.Expiries.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
 
-            int past = data.Expiries.Count(x => x.Date < today);
+            int past = data.Expiries.Count(x => x.Level(today) == ExpiryLevel.Expired);
             int coming = data.Expiries.Count - past;
             // Each part is a whole clause with its own count, so each language agrees its words with that count.
             string? pastPart = past == 0 ? null : Loc.Plural("Home.Expiries.Past", past);
@@ -451,8 +451,8 @@ namespace TidyMind
             text.Children.Add(Caption(expiry.Name + "  ·  " + expiry.MemoryName, 12, Res("TextSub"), FontWeights.Normal, new Thickness(0, 1, 0, 0)));
             grid.Children.Add(text);
 
-            ExpiryLevel level = Expiry.Level(expiry.Date, today);
-            TextBlock when = Caption(Expiry.Describe(expiry.Date, today), 13, Expiry.Brush(level), Expiry.Weight(level),
+            ExpiryLevel level = expiry.Level(today);
+            TextBlock when = Caption(expiry.Describe(today), 13, Expiry.Brush(level), Expiry.Weight(level),
                 new Thickness(16, 1, 0, 0));
             when.VerticalAlignment = VerticalAlignment.Top;
             Grid.SetColumn(when, 1);

@@ -158,9 +158,12 @@ static partial class Program
                 string allNotes = string.Join("\n", sheet.Column(notes.Address.ColumnNumber).CellsUsed().Where(c => c.Address.RowNumber > 5).Select(c => c.GetString()));
                 Check(sheet.LastRowUsed().RowNumber() > 7 && allNotes.Contains("1. megjegyzés") && allNotes.Contains("60. megjegyzés"),
                     "  notes too long for a row go on in the rows under it, all 60 lines");
-                IXLWorksheet service = book.Worksheet(EntityTypes.Logs(EntityTypes.Vehicle)[0].Label);
-                Check(service.LastRowUsed().RowNumber() - XlHeader == 18 && service.Cell(5, 2).DataType == XLDataType.DateTime
-                    && service.Cell(5, 4).DataType == XLDataType.Number, "  the service log: its own table, a row per entry, dates and km typed");
+                // The old Service log rows show as service log entries.
+                IXLWorksheet service = book.Worksheet(VehicleSchema.ServiceLog.Label);
+                int date = service.Row(XlHeader).CellsUsed().First(c => c.GetString() == Loc.T("Entity.Field.Date")).Address.ColumnNumber;
+                int odometer = service.Row(XlHeader).CellsUsed().First(c => c.GetString() == Loc.T("Entity.Field.Odometer")).Address.ColumnNumber;
+                Check(service.LastRowUsed().RowNumber() - XlHeader == 18 && service.Cell(5, date).DataType == XLDataType.DateTime
+                    && service.Cell(5, odometer).DataType == XLDataType.Number, "  the service log: its own table, a row per entry, dates and km typed");
             });
             ExcelSample(language + "-8-all", path => ExportService.ExportAll(Profiles(main), path, ExportFormat.Excel), book =>
             {

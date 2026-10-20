@@ -8,9 +8,10 @@ using System.Windows.Media;
 namespace TidyMind
 {
     // Text; Number (with a unit); Choice (one of fixed values); Date; Flag (yes, or nothing); CheckList (any of fixed
-    // values plus the user's own, one per line); LongText (several lines). A record's own lists: File (EntityRecord.File),
-    // Specs (name and value pairs) and Pictures.
-    public enum ValueKind { Text, Number, Choice, Date, Flag, CheckList, LongText, File, Specs, Pictures }
+    // values plus the user's own, one per line); LongText (several lines); Links (any of another record list's records, by
+    // Id, one per line: a service's parts). A record's own lists: File (EntityRecord.File), Specs (name and value pairs)
+    // and Pictures.
+    public enum ValueKind { Text, Number, Choice, Date, Flag, CheckList, LongText, File, Specs, Pictures, Links }
 
     // One field of a type described here: how the item form, the vehicle window, search and export show it. Values go
     // in and out as stored text (Values). Key is the field's stable name; what it's called on screen comes from it.
@@ -35,6 +36,9 @@ namespace TidyMind
 
         // Asked for in the item form too (adding a vehicle), not only in its window.
         public bool InForm { get; init; }
+
+        // Links: the key of the record list it points into (a vehicle's "Parts").
+        public string? LinkTo { get; init; }
 
         // A field Entity has a property of its own for (from before Details): how to read and write it. Null for the
         // others, which are stored in Entity.Details (or a record's Values) under Key.
@@ -74,6 +78,9 @@ namespace TidyMind
                     return ChoiceLabel(stored);
                 case ValueKind.CheckList:
                     return string.Join(", ", Items(stored).Select(ChoiceLabel));
+                case ValueKind.Links:
+                    Dictionary<string, string> labels = LinkOptions(owner).GroupBy(o => o.Value).ToDictionary(g => g.Key, g => g.First().Label);
+                    return string.Join(", ", Items(stored).Where(labels.ContainsKey).Select(id => labels[id])); // one deleted since: left out
                 case ValueKind.Date:
                     return Values.ParseDate(stored) is DateTime date ? date.ToString(Loc.T("Format.ShortDate"), Loc.Culture) : stored;
                 case ValueKind.Flag:
@@ -88,7 +95,16 @@ namespace TidyMind
             }
         }
 
-        // A CheckList's values: one per line.
+        // Links: the records it can point at, as stored value (the Id) and label (a nested one with the ones above it,
+        // "Brakes › Front brakes").
+        public List<(string Value, string Label)> LinkOptions(Entity owner)
+        {
+            RecordDefinition? target = EntityTypes.Records(owner.EntityType).FirstOrDefault(r => r.Key == LinkTo);
+            return target == null ? new List<(string, string)>()
+                : RecordTree.Walk(target.Read(owner)).Select(x => (x.Record.Id.ToString(), string.Join(" › ", x.Above.Append(x.Record).Select(target.Title)))).ToList();
+        }
+
+        // A CheckList's or Links' values: one per line.
         public static IEnumerable<string> Items(string? stored) =>
             (stored ?? "").Split('\n').Select(v => v.Trim()).Where(v => v.Length > 0);
     }
@@ -161,7 +177,8 @@ namespace TidyMind
     // A list of records an item holds (a vehicle's documents): the fields of each, what a new one starts with, and how
     // one is called in a line (Title, made from the fields TitleKeys names, which a line then doesn't repeat). Nested:
     // records hold records (RecordTree). CurrentKey: the Entity.Details field naming the one record in use now (the
-    // mounted wheel set).
+    // mounted wheel set). The window lists a flat one newest first by NewestFirstKey (a date field), with a filter by
+    // FilterKey (a choice field) and the sums of TotalKey (a money field) per choice and per year.
     public class RecordDefinition
     {
         public string Key { get; init; } = "";
@@ -170,9 +187,27 @@ namespace TidyMind
         public FieldDefinition[] Fields { get; init; } = Array.Empty<FieldDefinition>();
         public string[] TitleKeys { get; init; } = Array.Empty<string>();
         public Func<EntityRecord, string> Title { get; init; } = _ => "";
-        public Action<EntityRecord>? Start { get; init; }
+        public Action<EntityRecord, Entity>? Start { get; init; }
         public bool Nested { get; init; }
         public string? CurrentKey { get; init; }
+        public string? NewestFirstKey { get; init; }
+        public string? FilterKey { get; init; }
+        public string? TotalKey { get; init; }
+
+        // Records that come due (a document's valid-until date, a service's next one; EntityTypes.Expiries): the date field
+        // (DueKey) and its "remind me" days (RemindKey, VehicleReminders), the odometer reading it comes due at
+        // (DueDistanceKey, EntityTypes.DistanceDues), which records' due dates still count (DueFrom: a service's only until a
+        // newer one of its kind is written down), what one is called in a short line ("Inspection in 12 days") and what its
+        // reminder says.
+        public string? DueKey { get; init; }
+        public string? RemindKey { get; init; }
+        public string? DueDistanceKey { get; init; }
+        public Func<IReadOnlyList<EntityRecord>, IEnumerable<EntityRecord>> DueFrom { get; init; } = records => records;
+        public Func<EntityRecord, string> DeadlineName { get; init; } = _ => "";
+        public Func<EntityRecord, DateTime, string> ReminderText { get; init; } = (_, _) => "";
+
+        // After one of its records was saved, on the item being saved (a service fitting its parts: their installed date).
+        public Action<Entity, EntityRecord>? Saved { get; init; }
 
         // How the item's list is read and stored, when it isn't simply Entity.Records[Key] (documents keep the old
         // insurance and inspection dates in step).
@@ -199,10 +234,11 @@ namespace TidyMind
                 entity.Records = null;
         }
 
-        public EntityRecord New()
+        // A new record of the owner's (not added to it yet).
+        public EntityRecord New(Entity owner)
         {
             EntityRecord record = new EntityRecord { Id = Guid.NewGuid() };
-            Start?.Invoke(record);
+            Start?.Invoke(record, owner);
             return record;
         }
 
@@ -277,10 +313,24 @@ namespace TidyMind
         public Func<IReadOnlyList<Dictionary<string, string>>, string?>? Summary { get; init; }
     }
 
-    // A date one of an item's records runs out on ("Inspection" of a vehicle), and what it is called in a short line.
-    public sealed record Deadline(EntityRecord Document, DateTime Date)
+    // A date one of an item's records comes due on ("Inspection" of a vehicle), and what it is called in a short line.
+    public sealed record Deadline(RecordDefinition Kind, EntityRecord Record, DateTime Date)
     {
-        public string Name => VehicleDocuments.ShortName(Document); // in the current language, also when kept from before a switch
+        public string Name => Kind.DeadlineName(Record); // in the current language, also when kept from before a switch
+        public int? RemindDays => Kind.RemindKey == null ? null : Values.ToInt(Record.Get(Kind.RemindKey));
+    }
+
+    // An odometer reading one of a vehicle's records comes due at, close (within EntityTypes.DistanceSoon) or passed:
+    // Remaining is how far there is still to go, below 0 once passed. Shown like a date that is close or past.
+    public sealed record DistanceDue(RecordDefinition Kind, EntityRecord Record, double Remaining)
+    {
+        public string Name => Kind.DeadlineName(Record);
+        public ExpiryLevel Level => Remaining < 0 ? ExpiryLevel.Expired : ExpiryLevel.Soon;
+
+        // "in 800 km", "200 km overdue".
+        public string Describe(Entity owner) => Remaining < 0
+            ? Loc.F("Expiry.PastDistance", Units.Format(-Remaining, Units.Distance, owner))
+            : Loc.F("Expiry.InDistance", Units.Format(Remaining, Units.Distance, owner));
     }
 
     // The item types described by definitions (Vehicle, VehicleSchema). Clothing keeps its own fields in EntityForm,
@@ -304,9 +354,26 @@ namespace TidyMind
         public static IReadOnlyList<LogDefinition> Logs(string? type) =>
             type == Vehicle ? VehicleSchema.Logs : Array.Empty<LogDefinition>();
 
-        // The item's dates that run out, soonest first (an expired one first of all).
+        // The item's dates that come due (RecordDefinition.DueKey), soonest first (a passed one first of all).
         public static List<Deadline> Expiries(Entity entity) =>
-            entity.EntityType == Vehicle ? VehicleDocuments.Deadlines(entity) : new List<Deadline>();
+            Records(entity.EntityType).Where(r => r.DueKey != null)
+                .SelectMany(r => r.DueFrom(r.Read(entity)).Select(record => (Kind: r, Record: record, Date: Values.ParseDate(record.Get(r.DueKey!)))))
+                .Where(x => x.Date != null).Select(x => new Deadline(x.Kind, x.Record, x.Date!.Value)).OrderBy(d => d.Date).ToList();
+
+        // How far ahead an odometer reading that comes due is shown (in the vehicle's own unit).
+        public const double DistanceSoon = 1000;
+
+        // The odometer readings that come due (RecordDefinition.DueDistanceKey) within DistanceSoon of the current one, or
+        // passed, the nearest first. Only the manually updated current reading counts: none without one.
+        public static List<DistanceDue> DistanceDues(Entity entity)
+        {
+            if (entity.OdometerKm is not int now)
+                return new List<DistanceDue>();
+            return Records(entity.EntityType).Where(r => r.DueDistanceKey != null)
+                .SelectMany(r => r.DueFrom(r.Read(entity)).Select(record => (Kind: r, Record: record, At: Values.Number(record.Get(r.DueDistanceKey!)))))
+                .Where(x => x.At != null && x.At - now <= DistanceSoon)
+                .Select(x => new DistanceDue(x.Kind, x.Record, x.At!.Value - now)).OrderBy(d => d.Remaining).ToList();
+        }
 
         // The soonest one: what a card shows.
         public static Deadline? NearestExpiry(Entity entity) => Expiries(entity).FirstOrDefault();

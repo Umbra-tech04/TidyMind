@@ -35,8 +35,6 @@ namespace TidyMind
 
         public static DateTime? ValidUntil(EntityRecord document) => Values.ParseDate(document.Get(ValidUntilKey));
 
-        public static int? RemindDays(EntityRecord document) => Values.ToInt(document.Get(RemindKey));
-
         // The vehicle's documents, in a list of its own. A stored document whose date is taken from an old field is a
         // copy, so the item itself is never changed by reading it.
         public static List<EntityRecord> Of(Entity vehicle)
@@ -80,10 +78,6 @@ namespace TidyMind
             foreach ((string type, _, Action<Entity, DateTime?> set) in OldDates)
                 set(vehicle, documents.Where(d => d.Get(TypeKey) == type).Max(ValidUntil));
         }
-
-        // The documents with a date, soonest first.
-        public static List<Deadline> Deadlines(Entity vehicle) =>
-            Of(vehicle).Where(d => ValidUntil(d) != null).Select(d => new Deadline(d, ValidUntil(d)!.Value)).OrderBy(d => d.Date).ToList();
 
         // What it is called in a short line ("Inspection in 12 days"): its own name, else its type.
         public static string ShortName(EntityRecord document)

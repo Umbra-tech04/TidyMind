@@ -162,10 +162,10 @@ namespace TidyMind
             }
 
             HashSet<Guid>? blockIds = DayPlanReminders.BlockIds();
-            Dictionary<Guid, EntityRecord>? documents = VehicleReminders.DocumentIndex();
+            Dictionary<Guid, Deadline>? deadlines = VehicleReminders.DeadlineIndex();
             foreach (Reminder reminder in reminders)
             {
-                string message = VehicleReminders.ShownMessage(reminder, documents);
+                string message = VehicleReminders.ShownMessage(reminder, deadlines);
                 Border row = CreateReminderRow(reminder, message, blockIds);
                 RemindersPanel.Children.Add(row);
                 shownNames[reminder.Id] = message;

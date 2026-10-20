@@ -807,9 +807,12 @@ namespace TidyMind
         // moved in, one it didn't stays listed (as missing, as it was) under a name no file has.
         private static void TakeRecords(StagedImport staged, Entity item, List<(string From, string To)> moves)
         {
+            Dictionary<string, string> newIds = new Dictionary<string, string>();
             foreach (EntityRecord record in EntityFiles.Records(item))
             {
-                record.Id = Guid.NewGuid();
+                Guid id = Guid.NewGuid();
+                newIds.TryAdd(record.Id.ToString(), id.ToString());
+                record.Id = id;
                 if (record.Pictures != null)
                 {
                     List<string> names = new List<string>();
@@ -830,6 +833,17 @@ namespace TidyMind
                 if (source != null)
                     moves.Add((source, AttachmentStore.PathOf(record.File.StoredFileName)));
             }
+
+            // What points at a record by its Id follows it: a service's parts (fields of the kind Links; one the package
+            // doesn't hold is left out) and the record in use (CurrentKey: the mounted wheel set).
+            List<RecordDefinition> kinds = EntityTypes.Records(item.EntityType).ToList();
+            HashSet<string> linkKeys = kinds.SelectMany(r => r.Fields).Where(f => f.Kind == ValueKind.Links).Select(f => f.Key).ToHashSet();
+            foreach (EntityRecord record in EntityFiles.Records(item))
+                foreach (string key in linkKeys.Where(k => record.Get(k) != null))
+                    record.Set(key, string.Join("\n", FieldDefinition.Items(record.Get(key)).Where(newIds.ContainsKey).Select(id => newIds[id])));
+            foreach (string key in kinds.Select(r => r.CurrentKey).OfType<string>())
+                if (item.Details?.GetValueOrDefault(key) is string current)
+                    FieldDefinition.WriteDetail(item, key, newIds.GetValueOrDefault(current));
         }
 
         // A picture background whose file came along gets a new file name; one without its file (or with a type or
