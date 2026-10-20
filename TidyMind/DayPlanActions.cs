@@ -11,10 +11,16 @@ namespace TidyMind
     {
         public const int DefaultLength = 60; // a block made from a to-do, or from Add block
 
+        // Every change below to a block that was there already is one undo step of the Day Plan page, with the block's
+        // reminder (and a linked to-do).
+        private static UndoChange Record(params UndoPart[] more) =>
+            UndoChange.Begin(UndoService.Page, more.Prepend(UndoParts.Reminders()).Prepend(UndoParts.DayPlan()).ToArray());
+
         // Saves a new or edited block, then sets its reminder, or removes the one `previous` (the block as it was
         // stored, null for a new one) had. False (after saying so) if the block couldn't be saved; nothing changed then.
         public static bool Save(DayPlanBlock block, bool remind, DayPlanBlock? previous)
         {
+            using UndoChange? change = previous == null ? null : Record();
             if (!DayPlanStore.Save(block))
             {
                 WarnNotSaved(Loc.T("Plan.Block.NotSaved"));
@@ -28,6 +34,7 @@ namespace TidyMind
                     DayPlanReminders.Remove(previous);
                 return null;
             }, out bool failed);
+            change?.Commit(Loc.F("Undo.Changed", block.Title));
             Tell(note, failed, Loc.T("Plan.Block.Saved"));
             return true;
         }
@@ -35,12 +42,14 @@ namespace TidyMind
         // A drag on the timeline: new times, and the reminder moves along.
         public static bool Move(DayPlanBlock block, int start, int end)
         {
+            using UndoChange change = Record();
             if (!DayPlanStore.Change(block.Id, b => { b.StartMinute = start; b.EndMinute = end; }, out DayPlanBlock? moved))
             {
                 WarnNotSaved(Loc.T("Plan.Block.NotMoved"));
                 return false;
             }
             string? note = DayPlanReminders.Try(() => DayPlanReminders.Follow(moved!), out bool failed);
+            change.Commit(Loc.F("Undo.Moved", block.Title));
             Tell(note, failed, Loc.T("Plan.Block.Moved"));
             return true;
         }
@@ -49,17 +58,28 @@ namespace TidyMind
         // `linked`: the block's to-do if it still exists.
         public static bool SetDone(DayPlanBlock block, bool done, PlanTodo? linked, IEnumerable<Profile> memories)
         {
+            string label = Loc.F(done ? "Undo.Ticked" : "Undo.Unticked", block.Title);
             if (linked != null)
             {
+                Profile? memory = memories.FirstOrDefault(m => m.Id == linked.Link.MemoryId);
+                using UndoChange change = linked.Link.Source == TodoSource.Home ? Record(UndoParts.QuickTodos())
+                    : memory != null ? Record(UndoParts.Todos(memory)) : Record();
                 if (DayPlanTodos.SetDone(linked.Link, memories, done))
+                {
+                    change.Commit(label);
                     return true;
+                }
                 Msg.Show(DayPlanTodos.CantChange(linked) + " " + Loc.T("Plan.Block.NotChangedEither"), Loc.T("Common.CouldntSave"),
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 
+            using UndoChange own = Record();
             if (DayPlanStore.Change(block.Id, b => b.Done = done, out _))
+            {
+                own.Commit(label);
                 return true;
+            }
             WarnNotSaved(Loc.T("Plan.Block.NotChanged"));
             return false;
         }
@@ -92,6 +112,7 @@ namespace TidyMind
                     MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
                 return false;
 
+            using UndoChange change = Record();
             string? problem = RemoveReminder(block);
             if (problem != null)
             {
@@ -100,7 +121,10 @@ namespace TidyMind
                 return false;
             }
             if (DayPlanStore.Delete(block.Id))
+            {
+                change.Commit(Loc.F("Undo.Deleted", block.Title), destructive: true);
                 return true;
+            }
             Msg.Show(Loc.F("Plan.Delete.Failed", DayPlanStore.FilePath)
                 + (block.RemindMinutesBefore != null ? "\n\n" + Loc.T("Plan.Delete.ReminderRemoved") : ""),
                 Loc.T("Common.CouldntDelete"), MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -117,6 +141,7 @@ namespace TidyMind
             if (!BulkDelete.Confirm(null, "Bulk.Delete.Blocks", blocks.Select(Named).ToList()))
                 return false;
 
+            using UndoChange change = Record();
             List<DayPlanBlock> going = new List<DayPlanBlock>(), kept = new List<DayPlanBlock>();
             foreach (DayPlanBlock block in blocks)
                 (RemoveReminder(block) == null ? going : kept).Add(block);
@@ -129,6 +154,8 @@ namespace TidyMind
                     Loc.T("Common.CouldntDelete"), MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
+            change.Commit(going.Count == 1 ? Loc.F("Undo.Deleted", going[0].Title) : Loc.Plural("Undo.Deleted.Blocks", going.Count),
+                destructive: true);
             if (kept.Count > 0)
                 BulkDelete.ReportKept(null, kept.Select(Named).ToList(), Loc.T("Plan.DeleteMany.ReminderFailed"));
             return deleted;

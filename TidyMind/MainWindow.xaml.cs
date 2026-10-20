@@ -53,6 +53,10 @@ namespace TidyMind
             Closed += (s, e) => Updates.AvailableChanged -= ShowUpdateIndicator;
             ShowUpdateIndicator();
 
+            // Ctrl+Z here: the page's last step or the sidebar's, whichever is newer. Not while the tour runs.
+            Undo = UndoHost.Attach(this, () => new[] { UndoService.Page, UndoService.App }, AfterUndo,
+                ready: () => GuidedTour.Current == null);
+
             NavigateHome();
 
             // A fresh install (no memories, the tour never offered): the welcome card, once the window is up.
@@ -155,9 +159,11 @@ namespace TidyMind
 
         // ---- Navigation ---------------------------------------------------
 
+        // Each page has its own undo history (UndoService.Page): going to another page ends the one before.
         private void NavigateHome()
         {
             selectedKey = HomeKey;
+            UndoService.ShowPage(selectedKey);
             ContentArea.Content = new HomeView(profiles, GoToSearchResult, () => ShowDayPlan(DateTime.Today)); // rebuilt (and re-read from disk) on every visit
             BuildNav();
         }
@@ -168,6 +174,7 @@ namespace TidyMind
         {
             CloseCalendar();
             selectedKey = DayPlanKey;
+            UndoService.ShowPage(selectedKey);
             ContentArea.Content = new DayPlanView(profiles, date, select);
             BuildNav();
             TourSignals.Raise(TourSignals.DayPlanOpened);
@@ -176,6 +183,7 @@ namespace TidyMind
         private void NavigateTo(Profile profile)
         {
             selectedKey = KeyOf(profile);
+            UndoService.ShowPage(selectedKey);
 
             if (profile.Type == ProfileType.Collection)
                 ContentArea.Content = new CollectionView(profile, () => ProfileManager.TrySaveProfiles(profiles));
@@ -290,12 +298,14 @@ namespace TidyMind
         // Drag-and-drop in the sidebar. The whole list is renumbered 0..n; the other group's relative order is untouched.
         private void MoveMemory(Profile dragged, Profile target, bool after)
         {
+            using UndoChange change = UndoChange.Begin(UndoService.App, UndoParts.Profiles());
             DragReorder<Profile>.Move(profiles, dragged, target, after);
             for (int i = 0; i < profiles.Count; i++)
                 profiles[i].Order = i;
 
             if (!ProfileManager.TrySaveProfiles(profiles))
                 WarnProfilesNotSaved(Loc.T("Memory.NotSaved.Order"));
+            change.Commit(Loc.F("Undo.Moved", dragged.Name));
             BuildNav();
         }
 
@@ -458,6 +468,7 @@ namespace TidyMind
                 return;
             }
 
+            using UndoChange change = UndoChange.Begin(UndoService.App, UndoParts.Profiles());
             profile.Name = newName;
             if (!ProfileManager.TrySaveProfiles(profiles))
             {
@@ -465,6 +476,7 @@ namespace TidyMind
                 WarnProfilesNotSaved(Loc.T("Memory.NotSaved.NameUnchanged"));
                 return;
             }
+            change.Commit(Loc.F("Undo.RenamedTo", oldName, newName));
             NavigateTo(profile);
         }
 
@@ -482,8 +494,19 @@ namespace TidyMind
         // One memory (its menu) or several (a selection). They leave profiles.json first, in one save; only once that
         // worked are their folders and the pictures and attached files they own deleted (best effort: one that can't
         // be deleted is left behind, unused). If the save fails, nothing is deleted (false). The open one among them: Home.
+        // The delete is one undo step for the rest of the session: until it ends, the folders and files stay on disk
+        // (UndoService holds them, the deletes below skip them) and Ctrl+Z puts the memories back in the list.
         private bool RemoveMemories(IReadOnlyList<Profile> doomed)
         {
+            using UndoChange change = UndoChange.Begin(UndoService.App, UndoParts.Profiles(), UndoParts.Reminders());
+            HashSet<Guid> known = new HashSet<Guid>();
+            foreach (Profile profile in doomed)
+            {
+                change.Hold(UndoFiles.OfMemory(profile, out List<Guid> reminders));
+                change.WatchReminders(reminders);
+                known.UnionWith(reminders);
+            }
+            change.AfterMove = new MemoriesGained(doomed.ToList(), known).Follow;
             List<Profile> before = profiles.ToList();
             profiles.RemoveAll(doomed.Contains);
             if (!ProfileManager.TrySaveProfiles(profiles))
@@ -499,6 +522,8 @@ namespace TidyMind
                 DeleteOwnedFiles(profile);
                 MemoryFiles.DeleteFolder(profile);
             }
+            change.Commit(doomed.Count == 1 ? Loc.F("Undo.Deleted", doomed[0].Name) : Loc.Plural("Undo.Deleted.Memories", doomed.Count),
+                destructive: true);
 
             if (doomed.Any(p => selectedKey == KeyOf(p)))
                 NavigateHome();
@@ -508,6 +533,88 @@ namespace TidyMind
                 (ContentArea.Content as HomeView)?.Refresh(); // the deleted memories' projects/items were on it
             }
             return true;
+        }
+
+        // ---- Undo -----------------------------------------------------------
+
+        // The keys and the toast of this window (for the harness too).
+        public UndoHost Undo { get; }
+
+        // After an undo or redo: everything shown is read again. A sidebar step changed profiles.json, so the list of
+        // memories is read anew (the same list object, which Home and the Day Plan hold) and the page shown again with
+        // the memory as it is now (its undo history stays: the same page); one that is gone leaves Home showing.
+        private void AfterUndo(UndoHistory history, UndoStep step)
+        {
+            if (history == UndoService.App)
+            {
+                if (ProfileManager.TryLoadProfiles(out List<Profile> stored, out _))
+                {
+                    profiles.Clear();
+                    profiles.AddRange(stored);
+                }
+                if (CalendarPanel.IsOpen)
+                    CalendarPanel.Refresh();
+                Profile? shown = profiles.FirstOrDefault(p => KeyOf(p) == selectedKey);
+                if (shown != null)
+                {
+                    NavigateTo(shown);
+                    return;
+                }
+                if (selectedKey != HomeKey && selectedKey != DayPlanKey)
+                {
+                    NavigateHome();
+                    return;
+                }
+                BuildNav();
+            }
+            (ContentArea.Content as IUndoPage)?.ReloadAfterUndo();
+        }
+
+        // What deleted memories gained between an undo of their delete and its redo (an item's new picture, a new dated
+        // document): the parts recorded at the delete don't know it. On each redo its files are held too and the new
+        // reminders go (kept here); on the undo after, those reminders come back, if nothing put them back already.
+        private sealed class MemoriesGained
+        {
+            private readonly List<Profile> memories;
+            private readonly HashSet<Guid> known;
+            private readonly Dictionary<Guid, Reminder> taken = new Dictionary<Guid, Reminder>();
+
+            public MemoriesGained(List<Profile> memories, HashSet<Guid> known)
+            {
+                this.memories = memories;
+                this.known = known;
+            }
+
+            public string? Follow(StoredStep step, bool undone)
+            {
+                try
+                {
+                    List<Reminder> existing = ReminderManager.LoadReminders();
+                    if (undone)
+                    {
+                        foreach (Reminder reminder in taken.Values.Where(r => existing.All(e => e.Id != r.Id)))
+                            ReminderManager.UpdateReminder(reminder);
+                        taken.Clear();
+                        return null;
+                    }
+                    foreach (Profile memory in memories)
+                    {
+                        step.Hold(UndoFiles.OfMemory(memory, out List<Guid> dated));
+                        foreach (Reminder reminder in existing.Where(r => dated.Contains(r.Id) && !known.Contains(r.Id)))
+                        {
+                            taken[reminder.Id] = reminder;
+                            ReminderManager.DeleteReminder(reminder.Id);
+                        }
+                    }
+                    return null;
+                }
+                catch (Exception e) when (e is System.IO.IOException || e is UnauthorizedAccessException || e is System.Text.Json.JsonException
+                                          || e is System.Runtime.InteropServices.COMException)
+                {
+                    UnhandledErrors.LogQuietly("undo", e);
+                    return Loc.T("Undo.RemindersNote");
+                }
+            }
         }
 
         private static void WarnProfilesNotSaved(string consequence)

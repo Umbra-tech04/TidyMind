@@ -143,9 +143,6 @@ Datoteka nije promenjena. Popravi je ili je vrati iz rezervne kopije, pa ponovo 
 
 Sada će se zatvoriti, otvori ga ponovo.</value>
   </data>
-  <data name="Bulk.CantUndo" xml:space="preserve">
-    <value>Ovo ne može da se poništi.</value>
-  </data>
   <data name="Bulk.Delete.Blocks.Few" xml:space="preserve">
     <value>Obrisati {0} bloka iz plana?</value>
   </data>
@@ -228,7 +225,7 @@ Sada će se zatvoriti, otvori ga ponovo.</value>
     <value>Brisanje nije uspelo ({0}):</value>
   </data>
   <data name="Bulk.MemoriesWarning" xml:space="preserve">
-    <value>Svaka se briše zajedno sa svime što sadrži: projektima ili stavkama, listom obaveza, beleškama, slikama i priloženim datotekama. Ovo ne može da se poništi.</value>
+    <value>Svaka se briše zajedno sa svime što sadrži: projektima ili stavkama, listom obaveza, beleškama, slikama i priloženim datotekama. Dok je TidyMind otvoren, Ctrl+Z ih vraća.</value>
   </data>
   <data name="Bulk.More.Few" xml:space="preserve">
     <value>i još {0}</value>
@@ -3651,5 +3648,176 @@ Na poslednjoj stranici strelica započinje novu.</value>
   </data>
   <data name="Entity.Unit.pcs.Count.Other" xml:space="preserve">
     <value>{0} komada</value>
+  </data>
+  <data name="Undo.Button" xml:space="preserve">
+    <value>Poništi</value>
+  </data>
+  <data name="Undo.RedoButton" xml:space="preserve">
+    <value>Ponovi</value>
+  </data>
+  <data name="Undo.ButtonTip" xml:space="preserve">
+    <value>Poništi (Ctrl+Z)</value>
+  </data>
+  <data name="Undo.RedoTip" xml:space="preserve">
+    <value>Ponovi (Ctrl+Y)</value>
+  </data>
+  <data name="Undo.Dismiss" xml:space="preserve">
+    <value>Zatvori</value>
+  </data>
+  <data name="Undo.Undone" xml:space="preserve">
+    <value>Poništeno: {0}</value>
+  </data>
+  <data name="Undo.Redone" xml:space="preserve">
+    <value>Ponovljeno: {0}</value>
+  </data>
+  <data name="Undo.NothingToUndo" xml:space="preserve">
+    <value>Nema ništa za poništavanje</value>
+  </data>
+  <data name="Undo.NothingToRedo" xml:space="preserve">
+    <value>Nema ništa za ponavljanje</value>
+  </data>
+  <data name="Undo.Caption" xml:space="preserve">
+    <value>Poništavanje</value>
+  </data>
+  <data name="Undo.RedoCaption" xml:space="preserve">
+    <value>Ponavljanje</value>
+  </data>
+  <data name="Undo.Conflict" xml:space="preserve">
+    <value>Ovo više ne može da se poništi: ono što je promenjeno od tada je ponovo promenjeno.</value>
+  </data>
+  <data name="Undo.RedoConflict" xml:space="preserve">
+    <value>Ovo više ne može ponovo da se uradi: ono što bi promenilo od tada je promenjeno.</value>
+  </data>
+  <data name="Undo.Failed" xml:space="preserve">
+    <value>Ovo nije moglo da se poništi, pa ništa nije promenjeno.</value>
+  </data>
+  <data name="Undo.RedoFailed" xml:space="preserve">
+    <value>Ovo nije moglo ponovo da se uradi, pa ništa nije promenjeno.</value>
+  </data>
+  <data name="Undo.FileProblem" xml:space="preserve">
+    <value>Datoteka {0} nije mogla da se pročita ili upiše. Pokušaj ponovo malo kasnije.</value>
+  </data>
+  <data name="Undo.RemindersNote" xml:space="preserve">
+    <value>Gotovo, ali nisu svi podsetnici mogli da se vrate. Proveri ih u Podsetnicima.</value>
+  </data>
+  <data name="Undo.Deleted" xml:space="preserve">
+    <value>Obrisano: „{0}“</value>
+  </data>
+  <data name="Undo.Removed" xml:space="preserve">
+    <value>Uklonjeno: „{0}“</value>
+  </data>
+  <data name="Undo.Added" xml:space="preserve">
+    <value>Dodato: „{0}“</value>
+  </data>
+  <data name="Undo.RenamedTo" xml:space="preserve">
+    <value>Novo ime za „{0}“: „{1}“</value>
+  </data>
+  <data name="Undo.Moved" xml:space="preserve">
+    <value>Premešteno: „{0}“</value>
+  </data>
+  <data name="Undo.Ticked" xml:space="preserve">
+    <value>Označeno kao urađeno: „{0}“</value>
+  </data>
+  <data name="Undo.Unticked" xml:space="preserve">
+    <value>Više nije označeno kao urađeno: „{0}“</value>
+  </data>
+  <data name="Undo.Changed" xml:space="preserve">
+    <value>Izmene: „{0}“</value>
+  </data>
+  <data name="Undo.PageCleared" xml:space="preserve">
+    <value>Strana beležaka ispražnjena</value>
+  </data>
+  <data name="Bulk.UndoHint" xml:space="preserve">
+    <value>Odmah posle toga možeš da ga poništiš sa Ctrl+Z.</value>
+  </data>
+  <data name="Undo.Deleted.Memories.One" xml:space="preserve">
+    <value>Obrisana je {0} memorija</value>
+  </data>
+  <data name="Undo.Deleted.Memories.Few" xml:space="preserve">
+    <value>Obrisane su {0} memorije</value>
+  </data>
+  <data name="Undo.Deleted.Memories.Other" xml:space="preserve">
+    <value>Obrisano je {0} memorija</value>
+  </data>
+  <data name="Undo.Deleted.Projects.One" xml:space="preserve">
+    <value>Obrisan je {0} projekat</value>
+  </data>
+  <data name="Undo.Deleted.Projects.Few" xml:space="preserve">
+    <value>Obrisana su {0} projekta</value>
+  </data>
+  <data name="Undo.Deleted.Projects.Other" xml:space="preserve">
+    <value>Obrisano je {0} projekata</value>
+  </data>
+  <data name="Undo.Deleted.Items.One" xml:space="preserve">
+    <value>Obrisana je {0} stavka</value>
+  </data>
+  <data name="Undo.Deleted.Items.Few" xml:space="preserve">
+    <value>Obrisane su {0} stavke</value>
+  </data>
+  <data name="Undo.Deleted.Items.Other" xml:space="preserve">
+    <value>Obrisano je {0} stavki</value>
+  </data>
+  <data name="Undo.Deleted.Records.One" xml:space="preserve">
+    <value>Obrisan je {0} unos</value>
+  </data>
+  <data name="Undo.Deleted.Records.Few" xml:space="preserve">
+    <value>Obrisana su {0} unosa</value>
+  </data>
+  <data name="Undo.Deleted.Records.Other" xml:space="preserve">
+    <value>Obrisano je {0} unosa</value>
+  </data>
+  <data name="Undo.Deleted.Tasks.One" xml:space="preserve">
+    <value>Obrisan je {0} zadatak</value>
+  </data>
+  <data name="Undo.Deleted.Tasks.Few" xml:space="preserve">
+    <value>Obrisana su {0} zadatka</value>
+  </data>
+  <data name="Undo.Deleted.Tasks.Other" xml:space="preserve">
+    <value>Obrisano je {0} zadataka</value>
+  </data>
+  <data name="Undo.Deleted.Todos.One" xml:space="preserve">
+    <value>Obrisana je {0} obaveza</value>
+  </data>
+  <data name="Undo.Deleted.Todos.Few" xml:space="preserve">
+    <value>Obrisane su {0} obaveze</value>
+  </data>
+  <data name="Undo.Deleted.Todos.Other" xml:space="preserve">
+    <value>Obrisano je {0} obaveza</value>
+  </data>
+  <data name="Undo.Deleted.Blocks.One" xml:space="preserve">
+    <value>Obrisan je {0} blok</value>
+  </data>
+  <data name="Undo.Deleted.Blocks.Few" xml:space="preserve">
+    <value>Obrisana su {0} bloka</value>
+  </data>
+  <data name="Undo.Deleted.Blocks.Other" xml:space="preserve">
+    <value>Obrisano je {0} blokova</value>
+  </data>
+  <data name="Undo.Deleted.Reminders.One" xml:space="preserve">
+    <value>Obrisan je {0} podsetnik</value>
+  </data>
+  <data name="Undo.Deleted.Reminders.Few" xml:space="preserve">
+    <value>Obrisana su {0} podsetnika</value>
+  </data>
+  <data name="Undo.Deleted.Reminders.Other" xml:space="preserve">
+    <value>Obrisano je {0} podsetnika</value>
+  </data>
+  <data name="Undo.Deleted.Pages.One" xml:space="preserve">
+    <value>Obrisana je {0} stranica</value>
+  </data>
+  <data name="Undo.Deleted.Pages.Few" xml:space="preserve">
+    <value>Obrisane su {0} stranice</value>
+  </data>
+  <data name="Undo.Deleted.Pages.Other" xml:space="preserve">
+    <value>Obrisano je {0} stranica</value>
+  </data>
+  <data name="Undo.Removed.Files.One" xml:space="preserve">
+    <value>Uklonjena je {0} datoteka</value>
+  </data>
+  <data name="Undo.Removed.Files.Few" xml:space="preserve">
+    <value>Uklonjene su {0} datoteke</value>
+  </data>
+  <data name="Undo.Removed.Files.Other" xml:space="preserve">
+    <value>Uklonjeno je {0} datoteka</value>
   </data>
 </root>

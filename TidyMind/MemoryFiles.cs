@@ -23,12 +23,17 @@ namespace TidyMind
         public static string Todos(Profile memory) => Path.Combine(Folder(memory), "todos.json");
 
         // After the memory has been removed from profiles.json. Best effort: a folder that can't be deleted now is
-        // left behind, unused (nothing refers to its Id any more).
-        public static void DeleteFolder(Profile memory)
+        // left behind, unused (nothing refers to its Id any more). A deleted memory whose delete can still be undone keeps
+        // its folder (UndoService).
+        public static void DeleteFolder(Profile memory) => DeleteFolder(memory.Id);
+
+        public static void DeleteFolder(Guid memoryId)
         {
+            if (UndoService.IsHeld(HeldFile.Folder(memoryId)))
+                return;
             try
             {
-                string folder = Folder(memory);
+                string folder = AppPaths.Data(Path.Combine(FolderName, memoryId.ToString("N")));
                 if (Directory.Exists(folder))
                     Directory.Delete(folder, recursive: true);
             }

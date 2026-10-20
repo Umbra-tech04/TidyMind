@@ -10,6 +10,8 @@ namespace TidyMind
     public static class QuickTodoService
     {
         private static readonly string TodosFile = AppPaths.Data("quicktodos.json");
+
+        public static string FilePath => TodosFile;
         private const int KeepCompletedDays = 7;
 
         public static List<QuickTodo> LoadTodos()
@@ -94,8 +96,11 @@ namespace TidyMind
             if (!TryRead(out List<QuickTodo> todos) || !change(todos))
                 return false;
 
-            return AtomicFile.TryWriteAllText(TodosFile, JsonSerializer.Serialize(todos));
+            return TryWrite(todos);
         }
+
+        // The whole list (an undo puts one back). False if it couldn't be written; the file is then unchanged.
+        public static bool TryWrite(List<QuickTodo> todos) => AtomicFile.TryWriteAllText(TodosFile, JsonSerializer.Serialize(todos));
 
         // False if the file exists but can't be read; `todos` is then empty and the file must not be saved over.
         public static bool TryRead(out List<QuickTodo> todos)

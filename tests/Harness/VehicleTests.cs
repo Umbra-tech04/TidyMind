@@ -488,8 +488,10 @@ static partial class Program
             ClickNow(ButtonNamed(row, Loc.T("Common.Delete")));
             await Wait(400);
         });
-        Check(VehicleDocuments.Of(StoredVehicle(vehicleGarage, octavia)).Count == 0 && !File.Exists(stored) && ReminderOf(documentId) == null,
-            "deleted (asked first): the file and the reminder are gone");
+        Check(VehicleDocuments.Of(StoredVehicle(vehicleGarage, octavia)).Count == 0 && File.Exists(stored) && ReminderOf(documentId) == null,
+            "deleted (asked first): the reminder is gone, the file kept while it can be undone");
+        UndoService.EndAll();
+        Check(!File.Exists(stored), "then the file is gone too");
         Check(StoredVehicle(vehicleGarage, octavia).InsuranceExpires == null, "...and the old insurance field with it");
         Invoke(main, "NavigateHome");
     }
@@ -1094,18 +1096,23 @@ static partial class Program
         await Wait(400);
         Check((bool)view.GetType().GetMethod("DeleteEntity", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(view, new object[] { cars[0] }),
             "one deleted (asked first)");
-        Check(ReminderOf(DocumentOf(cars[0])) == null && !File.Exists(FileOf(cars[0])) && ReminderOf(DocumentOf(cars[1])) != null,
-            "its reminder and file are gone, the others' stay");
+        Check(ReminderOf(DocumentOf(cars[0])) == null && File.Exists(FileOf(cars[0])) && ReminderOf(DocumentOf(cars[1])) != null,
+            "its reminder is gone, the others' stay; its file is kept while the delete can be undone");
+        UndoService.EndAll();
+        Check(!File.Exists(FileOf(cars[0])), "then its file is gone");
         Check(Stored(shared), "a part photo another vehicle's part still shows stays");
 
         List<Entity> loaded = Field<List<Entity>>(view, "entities");
         Invoke(view, "RemoveEntities", new List<Entity> { loaded.First(e => e.Id == cars[1].Id), loaded.First(e => e.Id == cars[2].Id) });
+        UndoService.EndAll();
         Check(ReminderOf(DocumentOf(cars[1])) == null && ReminderOf(DocumentOf(cars[2])) == null && !File.Exists(FileOf(cars[2]))
               && ReminderOf(DocumentOf(cars[3])) != null, "a selection of two: both reminders and files gone, the last one kept");
 
         Invoke(main, "NavigateHome");
         Invoke(main, "RemoveMemories", new List<Profile> { garage });
-        Check(ReminderOf(DocumentOf(cars[3])) == null && !File.Exists(FileOf(cars[3])), "the memory deleted: its last vehicle's reminder and file too");
+        Check(ReminderOf(DocumentOf(cars[3])) == null && File.Exists(FileOf(cars[3])), "the memory deleted: its last vehicle's reminder too, its file kept while it can be undone");
+        UndoService.EndAll();
+        Check(!File.Exists(FileOf(cars[3])), "then the file");
         Check(!Stored(shared), "...and the part photo nobody shows now");
         await Wait(200);
     }

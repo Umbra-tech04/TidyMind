@@ -143,9 +143,6 @@ A fájl nem változott. Javítsd ki, vagy állítsd vissza egy mentésből, azt�
 
 Most bezárul, nyisd meg újra.</value>
   </data>
-  <data name="Bulk.CantUndo" xml:space="preserve">
-    <value>Ez nem vonható vissza.</value>
-  </data>
   <data name="Bulk.Delete.Blocks.Other" xml:space="preserve">
     <value>Törölsz {0} idősávot a tervből?</value>
   </data>
@@ -174,7 +171,7 @@ Most bezárul, nyisd meg újra.</value>
     <value>Nem sikerült törölni ({0}):</value>
   </data>
   <data name="Bulk.MemoriesWarning" xml:space="preserve">
-    <value>Mindegyik a teljes tartalmával együtt törlődik: a projektjeivel vagy elemeivel, a teendőlistájával, a jegyzeteivel, a képeivel és a mellékelt fájljaival. Ez nem vonható vissza.</value>
+    <value>Mindegyik a teljes tartalmával együtt törlődik: a projektjeivel vagy elemeivel, a teendőlistájával, a jegyzeteivel, a képeivel és a mellékelt fájljaival. Amíg a TidyMind nyitva van, a Ctrl+Z visszahozza őket.</value>
   </data>
   <data name="Bulk.More.Other" xml:space="preserve">
     <value>és még {0}</value>
@@ -3409,5 +3406,116 @@ Az utolsó oldalon a nyíl új oldalt kezd.</value>
   </data>
   <data name="Entity.Unit.pcs.Count.Other" xml:space="preserve">
     <value>{0} db</value>
+  </data>
+  <data name="Undo.Button" xml:space="preserve">
+    <value>Visszavonás</value>
+  </data>
+  <data name="Undo.RedoButton" xml:space="preserve">
+    <value>Mégis</value>
+  </data>
+  <data name="Undo.ButtonTip" xml:space="preserve">
+    <value>Visszavonás (Ctrl+Z)</value>
+  </data>
+  <data name="Undo.RedoTip" xml:space="preserve">
+    <value>Mégis (Ctrl+Y)</value>
+  </data>
+  <data name="Undo.Dismiss" xml:space="preserve">
+    <value>Bezárás</value>
+  </data>
+  <data name="Undo.Undone" xml:space="preserve">
+    <value>Visszavonva: {0}</value>
+  </data>
+  <data name="Undo.Redone" xml:space="preserve">
+    <value>Újra végrehajtva: {0}</value>
+  </data>
+  <data name="Undo.NothingToUndo" xml:space="preserve">
+    <value>Nincs mit visszavonni</value>
+  </data>
+  <data name="Undo.NothingToRedo" xml:space="preserve">
+    <value>Nincs mit újra végrehajtani</value>
+  </data>
+  <data name="Undo.Caption" xml:space="preserve">
+    <value>Visszavonás</value>
+  </data>
+  <data name="Undo.RedoCaption" xml:space="preserve">
+    <value>Mégis</value>
+  </data>
+  <data name="Undo.Conflict" xml:space="preserve">
+    <value>Ez már nem vonható vissza: amit megváltoztatott, azóta újra megváltozott.</value>
+  </data>
+  <data name="Undo.RedoConflict" xml:space="preserve">
+    <value>Ez már nem hajtható végre újra: amit megváltoztatna, azóta megváltozott.</value>
+  </data>
+  <data name="Undo.Failed" xml:space="preserve">
+    <value>Ezt nem sikerült visszavonni, így semmi sem változott.</value>
+  </data>
+  <data name="Undo.RedoFailed" xml:space="preserve">
+    <value>Ezt nem sikerült újra végrehajtani, így semmi sem változott.</value>
+  </data>
+  <data name="Undo.FileProblem" xml:space="preserve">
+    <value>A(z) {0} fájlt nem sikerült beolvasni vagy menteni. Próbáld újra egy kicsit később.</value>
+  </data>
+  <data name="Undo.RemindersNote" xml:space="preserve">
+    <value>Kész, de nem minden emlékeztetőt sikerült visszaállítani. Nézd meg őket az Emlékeztetők között.</value>
+  </data>
+  <data name="Undo.Deleted" xml:space="preserve">
+    <value>„{0}” törölve</value>
+  </data>
+  <data name="Undo.Removed" xml:space="preserve">
+    <value>„{0}” eltávolítva</value>
+  </data>
+  <data name="Undo.Added" xml:space="preserve">
+    <value>„{0}” hozzáadva</value>
+  </data>
+  <data name="Undo.RenamedTo" xml:space="preserve">
+    <value>„{0}” átnevezve erre: „{1}”</value>
+  </data>
+  <data name="Undo.Moved" xml:space="preserve">
+    <value>„{0}” áthelyezve</value>
+  </data>
+  <data name="Undo.Ticked" xml:space="preserve">
+    <value>„{0}” kipipálva</value>
+  </data>
+  <data name="Undo.Unticked" xml:space="preserve">
+    <value>„{0}” pipája levéve</value>
+  </data>
+  <data name="Undo.Changed" xml:space="preserve">
+    <value>„{0}” módosításai</value>
+  </data>
+  <data name="Undo.PageCleared" xml:space="preserve">
+    <value>Jegyzetoldal kiürítve</value>
+  </data>
+  <data name="Bulk.UndoHint" xml:space="preserve">
+    <value>Közvetlenül utána a Ctrl+Z-vel visszavonhatod.</value>
+  </data>
+  <data name="Undo.Deleted.Memories.Other" xml:space="preserve">
+    <value>{0} memória törölve</value>
+  </data>
+  <data name="Undo.Deleted.Projects.Other" xml:space="preserve">
+    <value>{0} projekt törölve</value>
+  </data>
+  <data name="Undo.Deleted.Items.Other" xml:space="preserve">
+    <value>{0} elem törölve</value>
+  </data>
+  <data name="Undo.Deleted.Records.Other" xml:space="preserve">
+    <value>{0} bejegyzés törölve</value>
+  </data>
+  <data name="Undo.Deleted.Tasks.Other" xml:space="preserve">
+    <value>{0} feladat törölve</value>
+  </data>
+  <data name="Undo.Deleted.Todos.Other" xml:space="preserve">
+    <value>{0} teendő törölve</value>
+  </data>
+  <data name="Undo.Deleted.Blocks.Other" xml:space="preserve">
+    <value>{0} idősáv törölve</value>
+  </data>
+  <data name="Undo.Deleted.Reminders.Other" xml:space="preserve">
+    <value>{0} emlékeztető törölve</value>
+  </data>
+  <data name="Undo.Deleted.Pages.Other" xml:space="preserve">
+    <value>{0} oldal törölve</value>
+  </data>
+  <data name="Undo.Removed.Files.Other" xml:space="preserve">
+    <value>{0} fájl eltávolítva</value>
   </data>
 </root>

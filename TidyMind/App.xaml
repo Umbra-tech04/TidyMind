@@ -280,6 +280,35 @@
             </Setter>
         </Style>
 
+        <!-- ===== The undo toast's buttons (UndoHost): light on the dark bar, a ring when the keyboard is on one ===== -->
+        <SolidColorBrush x:Key="ToastAction" Color="#9CCBF4"/> <!-- 9:1 on the Sidebar color -->
+        <Style x:Key="ToastButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource ToastAction}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="frame" Background="Transparent" BorderBrush="Transparent" BorderThickness="1.5"
+                                CornerRadius="5" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="frame" Property="Background" Value="#26FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="frame" Property="BorderBrush" Value="{StaticResource ToastAction}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- ===== Segmented switch: radio buttons in one bordered strip (Today / Tomorrow, Timeline / List) ===== -->
         <Style x:Key="SegmentStyle" TargetType="RadioButton">
             <Setter Property="Foreground" Value="{StaticResource TextSub}"/>

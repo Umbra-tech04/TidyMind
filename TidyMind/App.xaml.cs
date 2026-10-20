@@ -222,6 +222,8 @@ namespace TidyMind
 
         protected override void OnExit(ExitEventArgs e)
         {
+            // Nothing can be undone any more: the files that deletes kept for it go now, if nothing else needs them.
+            UndoService.Shutdown();
             activateWait?.Unregister(null);
             ReminderPopups.StopListening();
             // Released now rather than when the process ends: an update's installer waits for it.

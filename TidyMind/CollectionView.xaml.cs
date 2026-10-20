@@ -15,7 +15,7 @@ using System.Windows.Threading;
 
 namespace TidyMind
 {
-    public partial class CollectionView : UserControl
+    public partial class CollectionView : UserControl, IUndoPage
     {
         private readonly Profile memory;
         private List<Entity> entities;
@@ -85,7 +85,8 @@ namespace TidyMind
                     foreach (Entity entity in entities.Where(e => e.TabId == fromTab))
                         entity.TabId = toTab;
                     SaveEntities();
-                });
+                },
+                () => UndoChange.Begin(UndoService.Page, UndoParts.Tabs(memory), UndoParts.Entities(memory)));
             tabStrip.TabsChanged += RenderEntities;
 
             AssignOrphansToFirstTab();
@@ -170,12 +171,40 @@ namespace TidyMind
         // Drag-and-drop on the cards. Other tabs' items keep their relative order; everything is renumbered 0..n.
         private void MoveEntity(Entity dragged, Entity target, bool after)
         {
+            using UndoChange change = Record();
             DragReorder<Entity>.Move(entities, dragged, target, after);
             for (int i = 0; i < entities.Count; i++)
                 entities[i].Order = i;
 
             SaveEntities();
+            change.Commit(Loc.F("Undo.Moved", dragged.Name));
             RenderEntities();
+        }
+
+        // An undoable change to the items (UndoService.Page: this page's history).
+        private UndoChange Record() => UndoChange.Begin(unreadable ? null : UndoService.Page, UndoParts.Entities(memory), UndoParts.Reminders());
+
+        // After an undo or redo: the items and tabs as stored now.
+        public void ReloadAfterUndo()
+        {
+            if (unreadable)
+                return;
+            ReloadEntities();
+            if (unreadable)
+                return;
+            if (!TabStore.TryLoadOrCreate(memory, entities.Select(e => e.TabId), out List<MemoryTab> tabs, out string problem))
+            {
+                ShowUnreadable(MemoryFiles.Tabs(memory), problem);
+                return;
+            }
+            tabStrip.Reload(tabs); // draws the cards
+        }
+
+        // For the item's window after an undo: the item as stored now, null if it's gone.
+        private Entity? Reread(Guid id)
+        {
+            ReloadAfterUndo();
+            return unreadable ? null : entities.FirstOrDefault(e => e.Id == id);
         }
 
         private bool SaveEntities()
@@ -232,7 +261,7 @@ namespace TidyMind
                 DeleteEntity(doomed[0]);
                 return !entities.Any(x => x.Id == id);
             }
-            if (!BulkDelete.Confirm(Window.GetWindow(this), "Bulk.Delete.Items", doomed.Select(x => x.Name).ToList(), Loc.T("Bulk.CantUndo")))
+            if (!BulkDelete.Confirm(Window.GetWindow(this), "Bulk.Delete.Items", doomed.Select(x => x.Name).ToList(), Loc.T("Bulk.UndoHint")))
                 return false;
 
             RemoveEntities(doomed);
@@ -454,7 +483,8 @@ namespace TidyMind
             {
                 Save = Replace,
                 EditBasics = EditEntity,
-                Delete = DeleteEntity
+                Delete = DeleteEntity,
+                Reread = Reread
             })
             { Owner = Window.GetWindow(this) };
             window.ShowDialog();
@@ -511,14 +541,16 @@ namespace TidyMind
         }
 
         // Puts an edited copy in place of the item with its Id (by Id, since a reload replaces the list's objects) and
-        // saves. Once saved, the files the item no longer has are deleted (if no other item uses them) and its
-        // documents' reminders follow. False if it can't be saved, or was deleted meanwhile: nothing changes then.
+        // saves. Once saved, the files the item no longer has are deleted (if no other item uses them, and no undo step
+        // can still bring them back) and its documents' reminders follow. False if it can't be saved, or was deleted
+        // meanwhile: nothing changes then. Each save is one undo step for this item (its window undoes only those).
         private bool Replace(Entity edited)
         {
             int index = entities.FindIndex(x => x.Id == edited.Id);
             if (index < 0)
                 return false;
 
+            using UndoChange change = Record();
             Entity original = entities[index];
             entities[index] = edited;
             if (!SaveEntities())
@@ -528,7 +560,30 @@ namespace TidyMind
             }
             EntityFiles.DeleteUnreferenced(new[] { original }, entities);
             WarnReminders(VehicleReminders.Follow(original, edited));
+            change.Commit(Describe(original, edited, out bool deleted), deleted, edited.Id);
             return true;
+        }
+
+        // What an item's change did, in words: the record it deleted or added ("“Insurance” deleted"), or "Changes to …".
+        // deleted: a record went, which the toast offers to undo.
+        private static string Describe(Entity before, Entity after, out bool deleted)
+        {
+            List<string> gone = new List<string>(), added = new List<string>();
+            foreach (RecordDefinition kind in EntityTypes.Records(after.EntityType))
+            {
+                List<(EntityRecord Record, IReadOnlyList<EntityRecord> Above)> was = RecordTree.Walk(kind.Read(before)).ToList();
+                List<(EntityRecord Record, IReadOnlyList<EntityRecord> Above)> now = RecordTree.Walk(kind.Read(after)).ToList();
+                HashSet<Guid> wasIds = was.Select(x => x.Record.Id).ToHashSet(), nowIds = now.Select(x => x.Record.Id).ToHashSet();
+                // The records that went or came, not the ones under them that went or came along.
+                gone.AddRange(was.Where(x => !nowIds.Contains(x.Record.Id) && x.Above.All(a => nowIds.Contains(a.Id))).Select(x => kind.Title(x.Record)));
+                added.AddRange(now.Where(x => !wasIds.Contains(x.Record.Id) && x.Above.All(a => wasIds.Contains(a.Id))).Select(x => kind.Title(x.Record)));
+            }
+            deleted = gone.Count > 0;
+            if (gone.Count > 0)
+                return gone.Count == 1 ? Loc.F("Undo.Deleted", gone[0]) : Loc.Plural("Undo.Deleted.Records", gone.Count);
+            if (added.Count == 1)
+                return Loc.F("Undo.Added", added[0]);
+            return Loc.F("Undo.Changed", after.Name);
         }
 
         private static void WarnReminders(string problem)
@@ -571,11 +626,13 @@ namespace TidyMind
 
         // Deleting items: one from its menu, or a multi-selection's Delete. Their files and reminders go once the list
         // is saved without them. If that couldn't be saved, the list is read back from disk, so the items reappear
-        // instead of looking deleted until some later save drops them (and leaves their files behind).
+        // instead of looking deleted until some later save drops them (and leaves their files behind). One undo step:
+        // until it ends, their files stay on disk, and an undo brings the items and their reminders back.
         private void RemoveEntities(IEnumerable<Entity> doomed)
         {
             // By Id: a caller may hold a copy of an item (a reload replaces the list's objects).
             HashSet<Guid> ids = doomed.Select(e => e.Id).ToHashSet();
+            using UndoChange change = Record();
             List<Entity> removed = entities.Where(e => ids.Contains(e.Id)).ToList();
             entities.RemoveAll(e => ids.Contains(e.Id));
 
@@ -586,6 +643,8 @@ namespace TidyMind
             }
             EntityFiles.DeleteUnreferenced(removed, entities);
             WarnReminders(removed.Select(entity => VehicleReminders.Follow(entity, null)).ToList().FirstOrDefault(problem => problem != null));
+            change.Commit(removed.Count == 1 ? Loc.F("Undo.Deleted", removed[0].Name) : Loc.Plural("Undo.Deleted.Items", removed.Count),
+                destructive: true, removed.Count == 1 ? removed[0].Id : null);
         }
 
         private static SolidColorBrush B(string hex)

@@ -98,6 +98,35 @@ namespace TidyMind
             });
         }
 
+        // An undo's change to one reminder: made only if the stored one is still as `still` says, under the same lock as
+        // every other change (the reminder process may have fired it a moment ago). `to` null deletes it. A time that has
+        // passed meanwhile isn't scheduled in the past: a repeating one moves on to its next time, a one-off fires in a
+        // minute (as the task check does). Returns the reminder as written (null if deleted), or `skipped` if it wasn't
+        // as expected and nothing was done. Throws as UpdateReminder and DeleteReminder do.
+        internal static Reminder SetIf(Guid id, Func<Reminder, bool> still, Reminder to, out bool skipped)
+        {
+            bool notAsExpected = false;
+            Locked(() =>
+            {
+                if (!still(LoadReminders().Find(r => r.Id == id)))
+                {
+                    notAsExpected = true;
+                    return;
+                }
+                if (to == null)
+                {
+                    DeleteReminder(id); // the same named lock again: a mutex its owner can enter twice
+                    return;
+                }
+                DateTime soon = DateTime.Now.AddMinutes(1);
+                if (to.NextFireTime < soon)
+                    to.NextFireTime = Repeats(to.RepeatType) ? NextFutureFireTime(to.NextFireTime, to.RepeatType, DateTime.Now) : soon;
+                SaveAndSchedule(to);
+            });
+            skipped = notAsExpected;
+            return skipped ? null : to;
+        }
+
         public static void DeleteReminder(Guid id)
         {
             Locked(() =>

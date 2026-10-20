@@ -32,7 +32,14 @@ namespace TidyMind
             RenderReminders();
             Activated += (s, e) => RenderReminders();
             Loc.Track(this, RenderReminders);
+
+            // Its own undo history, for as long as it is open: a deleted reminder comes back with its task.
+            undo = UndoHost.Attach(this, () => new[] { history }, (h, step) => RenderReminders(), bottom: 68); // above the footer
+            Closed += (s, e) => history.End();
         }
+
+        private readonly UndoHistory history = new UndoHistory("reminders");
+        private readonly UndoHost undo;
 
         public static void ShowOrFocus()
         {
@@ -74,10 +81,10 @@ namespace TidyMind
             instance = null;
         }
 
-        // Esc closes the window; with reminders selected, it drops the selection first.
+        // Esc closes the window; with reminders selected, it drops the selection first. In the undo toast it closes that.
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key != Key.Escape)
+            if (e.Key != Key.Escape || undo.ToastHasKeyboard)
                 return;
             if (selection.Count > 0)
             {
@@ -109,7 +116,7 @@ namespace TidyMind
         // One question for all of them; each goes the way one does (ReminderActions).
         private bool DeleteSelected(IReadOnlyList<Guid> ids)
         {
-            bool deleted = ReminderActions.ConfirmDelete(this, ids, ids.Select(id => shownNames[id]).ToList());
+            bool deleted = ReminderActions.ConfirmDelete(this, ids, ids.Select(id => shownNames[id]).ToList(), history);
             RenderReminders();
             return deleted;
         }
@@ -119,7 +126,7 @@ namespace TidyMind
         {
             if (selection.IsSelected(id) && selection.Count > 1)
                 selection.DeleteSelected();
-            else if (ReminderActions.ConfirmDelete(id))
+            else if (ReminderActions.ConfirmDelete(id, history, shownNames.GetValueOrDefault(id)))
                 RenderReminders();
         }
 

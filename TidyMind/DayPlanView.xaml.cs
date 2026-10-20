@@ -15,7 +15,7 @@ namespace TidyMind
 {
     // One day's plan (DayPlanStore): its blocks as a timeline or a list, and the to-dos not on it yet. Built fresh
     // on every visit and redrawn from the files after every change, like Home.
-    public partial class DayPlanView : UserControl
+    public partial class DayPlanView : UserControl, IUndoPage
     {
         private const double PerMinute = 1.0;      // the timeline: 60 px an hour
         private const double Gutter = 58;          // the hour labels
@@ -81,6 +81,8 @@ namespace TidyMind
             ShowTodos();
             ShowMode();
         }
+
+        public void ReloadAfterUndo() => Refresh();
 
         // Both views, so the selection always knows every block's list row and timeline card.
         private void ShowBlocks()

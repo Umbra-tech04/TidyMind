@@ -212,14 +212,19 @@ namespace TidyMind
             };
             check.Click += (s, e) =>
             {
-                entry.IsDone = check.IsChecked == true;
-                if (!Save())
+                // One undo step with the plan blocks that follow the tick.
+                using (UndoChange change = Record(UndoParts.DayPlan().Secondary()))
                 {
-                    entry.IsDone = !entry.IsDone; // not saved: the tick goes back
-                    check.IsChecked = entry.IsDone;
+                    entry.IsDone = check.IsChecked == true;
+                    if (!Save())
+                    {
+                        entry.IsDone = !entry.IsDone; // not saved: the tick goes back
+                        check.IsChecked = entry.IsDone;
+                    }
+                    else
+                        DayPlanTodos.SyncBlocks(TodoLink.ForMemory(memory, entry.Id), entry.IsDone);
+                    change.Commit(Loc.F(entry.IsDone ? "Undo.Ticked" : "Undo.Unticked", entry.Text));
                 }
-                else
-                    DayPlanTodos.SyncBlocks(TodoLink.ForMemory(memory, entry.Id), entry.IsDone);
                 PaintDone(text, entry.IsDone);
                 Moved(entry, check.IsKeyboardFocused);
             };
@@ -281,10 +286,12 @@ namespace TidyMind
         // If saving fails (said so by Save), the old text is kept.
         private bool Rename(TodoEntry entry, string text)
         {
+            using UndoChange change = Record();
             string previous = entry.Text;
             entry.Text = text;
             if (Save())
             {
+                change.Commit(Loc.F("Undo.RenamedTo", previous, text));
                 TourSignals.Raise(TourSignals.TodoEdited);
                 return true;
             }
@@ -292,18 +299,27 @@ namespace TidyMind
             return false;
         }
 
+        // An undoable change to this list (and `more`), in the page's history. Nothing is recorded for a list that
+        // couldn't be read (it isn't changed either).
+        private UndoChange Record(params UndoPart[] more) =>
+            UndoChange.Begin(readable ? UndoService.Page : null, more.Prepend(UndoParts.Todos(memory)).ToArray());
+
         private void Delete(TodoEntry entry) => Remove(new[] { entry });
 
         // One item or several, in one save. Focus goes back to the input. If the removal can't be saved, the items
         // stay where they were (false). A day plan block made from one keeps its time and shows its to-do as gone.
         private bool Remove(IReadOnlyList<TodoEntry> entries)
         {
+            using UndoChange change = Record();
             List<TodoEntry> before = todos.ToList();
             if (todos.RemoveAll(entries.Contains) == 0)
                 return false;
             bool saved = Save();
             if (!saved)
                 todos = before;
+            else
+                change.Commit(entries.Count == 1 ? Loc.F("Undo.Deleted", entries[0].Text) : Loc.Plural("Undo.Deleted.Todos", entries.Count),
+                    destructive: true);
             Render();
             Input.Focus();
             return saved;

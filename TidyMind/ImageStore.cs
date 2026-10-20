@@ -15,18 +15,21 @@ namespace TidyMind
 
         // Card pictures: decoded at about twice the full card's width, sharp on high-DPI screens without holding
         // full-size photos for every customised card.
-        public static readonly ImageStore Cards = new ImageStore("CardImages", 400);
+        public static readonly ImageStore Cards = new ImageStore("CardImages", 400, HeldKind.CardPicture);
 
         // Memory page backgrounds: they cover the whole view (and are washed out to a faint watermark anyway).
-        public static readonly ImageStore Backgrounds = new ImageStore("BackgroundImages", 1000);
+        public static readonly ImageStore Backgrounds = new ImageStore("BackgroundImages", 1000, HeldKind.Background);
 
         // Collection items' pictures: shown on the card and, larger, in the item's detail card.
-        public static readonly ImageStore Items = new ImageStore("EntityImages", 800);
+        public static readonly ImageStore Items = new ImageStore("EntityImages", 800, HeldKind.ItemPicture);
 
-        private ImageStore(string folder, int decodeWidth)
+        private readonly HeldKind kind;
+
+        private ImageStore(string folder, int decodeWidth, HeldKind kind)
         {
             Folder = AppPaths.Data(folder);
             DecodeWidth = decodeWidth;
+            this.kind = kind;
         }
 
         public string Folder { get; }
@@ -84,10 +87,11 @@ namespace TidyMind
             }
         }
 
-        // Removes a copy nothing uses any more. Best effort: a file that can't be deleted now is just left behind.
+        // Removes a copy nothing uses any more. Best effort: a file that can't be deleted now is just left behind. One that
+        // a delete which can still be undone needs is left for it (UndoService).
         public void Delete(string fileName)
         {
-            if (string.IsNullOrEmpty(fileName))
+            if (string.IsNullOrEmpty(fileName) || UndoService.IsHeld(kind, fileName))
                 return;
 
             ImageCache.Forget(PathOf(fileName));

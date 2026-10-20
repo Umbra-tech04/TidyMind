@@ -12,7 +12,7 @@ namespace TidyMind
 {
     // Dashboard, built fresh every time Home is opened; clicking an item navigates to it. Read-only except the
     // quick to-do list, which is edited in place.
-    public partial class HomeView : UserControl
+    public partial class HomeView : UserControl, IUndoPage
     {
         private const string CalendarGlyph = "\uE787"; // Segoe MDL2: Calendar (a calendar note)
         private const int DaybookDays = 8;             // today + the aggregator's 7 upcoming days
@@ -95,6 +95,8 @@ namespace TidyMind
             if (QuickTodos.IsLoaded)
                 QuickTodos.Refresh();
         }
+
+        public void ReloadAfterUndo() => Refresh();
 
         // Side by side when there's room; otherwise the week goes under the to-do sheet and the margins tighten.
         private void ApplyWidth(double width)
@@ -371,8 +373,8 @@ namespace TidyMind
             row.Margin = new Thickness(-10, 0, 0, 0);
             TextCopy.AttachClick(row, open); // a click navigates; dragging over the text selects it
             ContextMenu menu = reminder
-                ? AgendaMenus.ForReminder(this, item.Reminder.Id, item.Date, copy, Refresh)
-                : AgendaMenus.ForNote(this, item.Date, copy, Refresh);
+                ? AgendaMenus.ForReminder(this, item.Reminder.Id, item.Date, copy, Refresh, UndoService.Page, item.Text)
+                : AgendaMenus.ForNote(this, item.Date, copy, Refresh, UndoService.Page);
             row.ContextMenu = menu;
 
             Grid grid = new Grid();

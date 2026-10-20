@@ -143,9 +143,6 @@ The file wasn't changed. Fix it or restore it from a backup, then start TidyMind
 
 It will close now; please open it again.</value>
   </data>
-  <data name="Bulk.CantUndo" xml:space="preserve">
-    <value>This can&apos;t be undone.</value>
-  </data>
   <data name="Bulk.Delete.Blocks.One" xml:space="preserve">
     <value>Delete {0} block from the plan?</value>
   </data>
@@ -201,7 +198,7 @@ It will close now; please open it again.</value>
     <value>Couldn&apos;t be deleted ({0}):</value>
   </data>
   <data name="Bulk.MemoriesWarning" xml:space="preserve">
-    <value>Each one is deleted with everything in it: its projects or items, its to-do list, notes, pictures and attached files. This can&apos;t be undone.</value>
+    <value>Each one is deleted with everything in it: its projects or items, its to-do list, notes, pictures and attached files. Until TidyMind is closed, Ctrl+Z brings them back.</value>
   </data>
   <data name="Bulk.More.One" xml:space="preserve">
     <value>and {0} more</value>
@@ -3530,5 +3527,146 @@ On the last page, the arrow starts a new page.</value>
   </data>
   <data name="Entity.Unit.pcs.Count.Other" xml:space="preserve">
     <value>{0} pieces</value>
+  </data>
+  <data name="Undo.Button" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="Undo.RedoButton" xml:space="preserve">
+    <value>Redo</value>
+  </data>
+  <data name="Undo.ButtonTip" xml:space="preserve">
+    <value>Undo (Ctrl+Z)</value>
+  </data>
+  <data name="Undo.RedoTip" xml:space="preserve">
+    <value>Redo (Ctrl+Y)</value>
+  </data>
+  <data name="Undo.Dismiss" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Undo.Undone" xml:space="preserve">
+    <value>Undone: {0}</value>
+  </data>
+  <data name="Undo.Redone" xml:space="preserve">
+    <value>Redone: {0}</value>
+  </data>
+  <data name="Undo.NothingToUndo" xml:space="preserve">
+    <value>Nothing to undo</value>
+  </data>
+  <data name="Undo.NothingToRedo" xml:space="preserve">
+    <value>Nothing to redo</value>
+  </data>
+  <data name="Undo.Caption" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="Undo.RedoCaption" xml:space="preserve">
+    <value>Redo</value>
+  </data>
+  <data name="Undo.Conflict" xml:space="preserve">
+    <value>This can&apos;t be undone any more: what it changed has been changed again since.</value>
+  </data>
+  <data name="Undo.RedoConflict" xml:space="preserve">
+    <value>This can&apos;t be done again any more: what it would change has been changed since.</value>
+  </data>
+  <data name="Undo.Failed" xml:space="preserve">
+    <value>Couldn&apos;t undo this, so nothing was changed.</value>
+  </data>
+  <data name="Undo.RedoFailed" xml:space="preserve">
+    <value>Couldn&apos;t do this again, so nothing was changed.</value>
+  </data>
+  <data name="Undo.FileProblem" xml:space="preserve">
+    <value>{0} couldn&apos;t be read or written. Try again in a moment.</value>
+  </data>
+  <data name="Undo.RemindersNote" xml:space="preserve">
+    <value>Done, but not every reminder could be set back. Check them in Reminders.</value>
+  </data>
+  <data name="Undo.Deleted" xml:space="preserve">
+    <value>“{0}” deleted</value>
+  </data>
+  <data name="Undo.Removed" xml:space="preserve">
+    <value>“{0}” removed</value>
+  </data>
+  <data name="Undo.Added" xml:space="preserve">
+    <value>“{0}” added</value>
+  </data>
+  <data name="Undo.RenamedTo" xml:space="preserve">
+    <value>“{0}” renamed to “{1}”</value>
+  </data>
+  <data name="Undo.Moved" xml:space="preserve">
+    <value>“{0}” moved</value>
+  </data>
+  <data name="Undo.Ticked" xml:space="preserve">
+    <value>“{0}” ticked off</value>
+  </data>
+  <data name="Undo.Unticked" xml:space="preserve">
+    <value>“{0}” no longer ticked off</value>
+  </data>
+  <data name="Undo.Changed" xml:space="preserve">
+    <value>Changes to “{0}”</value>
+  </data>
+  <data name="Undo.PageCleared" xml:space="preserve">
+    <value>Notes page emptied</value>
+  </data>
+  <data name="Bulk.UndoHint" xml:space="preserve">
+    <value>You can undo this right afterwards with Ctrl+Z.</value>
+  </data>
+  <data name="Undo.Deleted.Memories.One" xml:space="preserve">
+    <value>{0} memory deleted</value>
+  </data>
+  <data name="Undo.Deleted.Memories.Other" xml:space="preserve">
+    <value>{0} memories deleted</value>
+  </data>
+  <data name="Undo.Deleted.Projects.One" xml:space="preserve">
+    <value>{0} project deleted</value>
+  </data>
+  <data name="Undo.Deleted.Projects.Other" xml:space="preserve">
+    <value>{0} projects deleted</value>
+  </data>
+  <data name="Undo.Deleted.Items.One" xml:space="preserve">
+    <value>{0} item deleted</value>
+  </data>
+  <data name="Undo.Deleted.Items.Other" xml:space="preserve">
+    <value>{0} items deleted</value>
+  </data>
+  <data name="Undo.Deleted.Records.One" xml:space="preserve">
+    <value>{0} entry deleted</value>
+  </data>
+  <data name="Undo.Deleted.Records.Other" xml:space="preserve">
+    <value>{0} entries deleted</value>
+  </data>
+  <data name="Undo.Deleted.Tasks.One" xml:space="preserve">
+    <value>{0} task deleted</value>
+  </data>
+  <data name="Undo.Deleted.Tasks.Other" xml:space="preserve">
+    <value>{0} tasks deleted</value>
+  </data>
+  <data name="Undo.Deleted.Todos.One" xml:space="preserve">
+    <value>{0} to-do deleted</value>
+  </data>
+  <data name="Undo.Deleted.Todos.Other" xml:space="preserve">
+    <value>{0} to-dos deleted</value>
+  </data>
+  <data name="Undo.Deleted.Blocks.One" xml:space="preserve">
+    <value>{0} block deleted</value>
+  </data>
+  <data name="Undo.Deleted.Blocks.Other" xml:space="preserve">
+    <value>{0} blocks deleted</value>
+  </data>
+  <data name="Undo.Deleted.Reminders.One" xml:space="preserve">
+    <value>{0} reminder deleted</value>
+  </data>
+  <data name="Undo.Deleted.Reminders.Other" xml:space="preserve">
+    <value>{0} reminders deleted</value>
+  </data>
+  <data name="Undo.Deleted.Pages.One" xml:space="preserve">
+    <value>{0} page deleted</value>
+  </data>
+  <data name="Undo.Deleted.Pages.Other" xml:space="preserve">
+    <value>{0} pages deleted</value>
+  </data>
+  <data name="Undo.Removed.Files.One" xml:space="preserve">
+    <value>{0} file removed</value>
+  </data>
+  <data name="Undo.Removed.Files.Other" xml:space="preserve">
+    <value>{0} files removed</value>
   </data>
 </root>

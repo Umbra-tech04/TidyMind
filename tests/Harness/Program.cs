@@ -33,6 +33,7 @@ using TidyMind;
 //   Harness pictures <dataFolder> <shotsFolder> several pictures per collection item: data, form, delete safety, card, transfer
 //   Harness quicknote <dataFolder> <shotsFolder> the Quick note: not topmost, behind other apps, focus given back on close
 //   Harness vehicle <dataFolder> <shotsFolder> the vehicle record: old data untouched, the window, documents and reminders, odometer, transfer, exports
+//   Harness undo <dataFolder> <shotsFolder> Ctrl+Z / Ctrl+Y for data changes: every kind undone byte for byte, files and reminders, keys, toast
 static partial class Program
 {
     static int failures;
@@ -46,7 +47,7 @@ static partial class Program
         if (args.Length == 2 && args[0] == "--test-notification")
             return RunScheduledTest(args[1]);
         // Anything else (e.g. a "--remind" from a task left behind by a crashed run) does nothing.
-        string[] modes = { "toast", "ui", "plan", "loc", "locfirst", "locdata1", "locdata2", "probe", "taskpath", "export", "update", "tasks", "select", "bgshot", "transfer", "tint", "pictures", "quicknote", "vehicle", "items" };
+        string[] modes = { "toast", "ui", "plan", "loc", "locfirst", "locdata1", "locdata2", "probe", "taskpath", "export", "update", "tasks", "select", "bgshot", "transfer", "tint", "pictures", "quicknote", "vehicle", "items", "undo" };
         if (args.Length < 2 || !modes.Contains(args[0]))
             return 2;
         string data = Path.GetFullPath(args[1]);
@@ -178,6 +179,7 @@ static partial class Program
                     case "quicknote": await QuickNoteScenarios(main); break;
                     case "vehicle": await VehicleScenarios(main); break;
                     case "items": await ItemShots(main); break;
+                    case "undo": await UndoScenarios(main); break;
                     default: await Scenarios(main); break;
                 }
             }

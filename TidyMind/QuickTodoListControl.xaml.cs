@@ -282,25 +282,36 @@ namespace TidyMind
         // saved, the list says the file is unreadable and the old text is kept.
         private bool Rename(QuickTodo todo, string text)
         {
+            using UndoChange change = Record();
             if (!QuickTodoService.Rename(todo.Id, text))
             {
                 ShowUnreadable();
                 return false;
             }
+            change.Commit(Loc.F("Undo.RenamedTo", todo.Text, text.Trim()));
             todo.Text = text;
             return true;
         }
+
+        // An undoable change to Home's to-dos (and `more`), in the page's history.
+        private static UndoChange Record(params UndoPart[] more) =>
+            UndoChange.Begin(UndoService.Page, more.Prepend(UndoParts.QuickTodos()).ToArray());
 
         // The to-do goes to its other group (the open ones above the done ones). The list is drawn again with the
         // selection kept (it is by Id), not scrolled, and the keyboard back on the same box, which is not scrolled to.
         private void SetDone(QuickTodo todo, CheckBox check)
         {
             bool done = check.IsChecked == true;
-            if (!QuickTodoService.SetDone(todo.Id, done))
+            // One undo step with the plan blocks that follow the tick.
+            using (UndoChange change = Record(UndoParts.DayPlan().Secondary()))
             {
-                check.IsChecked = !done;
-                ShowUnreadable();
-                return;
+                if (!QuickTodoService.SetDone(todo.Id, done))
+                {
+                    check.IsChecked = !done;
+                    ShowUnreadable();
+                    return;
+                }
+                change.Commit(Loc.F(done ? "Undo.Ticked" : "Undo.Unticked", todo.Text));
             }
 
             bool keyboard = check.IsKeyboardFocused;
@@ -342,11 +353,14 @@ namespace TidyMind
         // day plan block made from one keeps its time and shows its to-do as gone. False if none went.
         private bool Remove(IReadOnlyCollection<Guid> ids)
         {
+            using UndoChange change = Record();
             if (!QuickTodoService.Delete(ids))
             {
                 ShowUnreadable();
                 return false;
             }
+            List<QuickTodo> gone = todos.Where(t => ids.Contains(t.Id)).ToList();
+            change.Commit(gone.Count == 1 ? Loc.F("Undo.Deleted", gone[0].Text) : Loc.Plural("Undo.Deleted.Todos", ids.Count), destructive: true);
 
             todos.RemoveAll(t => ids.Contains(t.Id));
             Render();

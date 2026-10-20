@@ -13,9 +13,10 @@ using ShapePath = System.Windows.Shapes.Path;
 
 namespace TidyMind
 {
-    public partial class ProjectView : UserControl
+    public partial class ProjectView : UserControl, IUndoPage
     {
         private readonly Profile memory;
+        private readonly Func<bool> saveProfiles;
         private List<Project> allProjects;
         private readonly MemoryTabStrip tabStrip;
 
@@ -43,6 +44,7 @@ namespace TidyMind
                 RenderProjects();
             };
             memory = profile;
+            this.saveProfiles = saveProfiles;
             MemoryPageBackground.Attach(Page, BackgroundLayer, profile, saveProfiles, HeaderPlate, EmptyCard);
             TitleText.Text = profile.Name;
 
@@ -89,7 +91,8 @@ namespace TidyMind
                     foreach (Project project in allProjects.Where(p => p.TabId == fromTab))
                         project.TabId = toTab;
                     SaveProjects();
-                });
+                },
+                () => UndoChange.Begin(UndoService.Page, UndoParts.Tabs(memory), UndoParts.Projects(memory)));
             tabStrip.TabsChanged += RenderProjects;
 
             AssignOrphansToFirstTab();
@@ -126,12 +129,35 @@ namespace TidyMind
         // Drag-and-drop on the cards. Other tabs' projects keep their relative order; everything is renumbered 0..n.
         private void MoveProject(Project dragged, Project target, bool after)
         {
+            using UndoChange change = Record();
             DragReorder<Project>.Move(allProjects, dragged, target, after);
             for (int i = 0; i < allProjects.Count; i++)
                 allProjects[i].Order = i;
 
             SaveProjects();
+            change.Commit(Loc.F("Undo.Moved", dragged.Name));
             RenderProjects();
+        }
+
+        // An undoable change to the projects (UndoService.Page: this page's history).
+        private UndoChange Record() => UndoChange.Begin(unreadable ? null : UndoService.Page, UndoParts.Projects(memory));
+
+        // After an undo or redo: the projects, tabs and to-do list as stored now.
+        public void ReloadAfterUndo()
+        {
+            TodoPanel.Load(memory, saveProfiles);
+            if (unreadable)
+                return;
+            ReloadProjects();
+            if (unreadable)
+                return;
+            pendingPulse.Clear();
+            if (!TabStore.TryLoadOrCreate(memory, allProjects.Select(p => p.TabId), out List<MemoryTab> tabs, out string problem))
+            {
+                ShowUnreadable(MemoryFiles.Tabs(memory), problem);
+                return;
+            }
+            tabStrip.Reload(tabs); // draws the cards
         }
 
         private bool SaveProjects()
@@ -200,15 +226,19 @@ namespace TidyMind
         {
             bool asked = projects.Count == 1
                 ? ProjectMenu.ConfirmDelete(projects[0])
-                : BulkDelete.Confirm(Window.GetWindow(this), "Bulk.Delete.Projects", projects.Select(p => p.Name).ToList(), Loc.T("Bulk.CantUndo"));
+                : BulkDelete.Confirm(Window.GetWindow(this), "Bulk.Delete.Projects", projects.Select(p => p.Name).ToList(), Loc.T("Bulk.UndoHint"));
             if (!asked)
                 return false;
 
-            ProjectMenu.Delete(projects, p =>
+            using (UndoChange change = Record())
             {
-                allProjects.Remove(p);
-                pendingPulse.Remove(p);
-            }, SaveProjects);
+                ProjectMenu.Delete(projects, p =>
+                {
+                    allProjects.Remove(p);
+                    pendingPulse.Remove(p);
+                }, SaveProjects);
+                change.Commit(ProjectMenu.Deleted(projects), destructive: true);
+            }
             ReloadProjects();
             RenderProjects();
             return true;
@@ -263,7 +293,8 @@ namespace TidyMind
                     allProjects.Remove(project);
                     pendingPulse.Remove(project);
                 },
-                reload: ReloadProjects);
+                reload: ReloadProjects,
+                record: Record);
 
             return card;
         }
@@ -337,9 +368,14 @@ namespace TidyMind
                 project.LastModified = DateTime.Now;
 
             MarkPulseIfJustCompleted(project, wasComplete);
-            // Removed files' copies go only once the project is saved without them; if the save failed they stay.
-            if (SaveProjects())
-                AttachmentStore.Delete(window.RemovedAttachments);
+            // Removed files' copies go only once the project is saved without them; if the save failed they stay. All
+            // the window changed is one undo step (the files kept until it ends).
+            using (UndoChange change = Record())
+            {
+                if (SaveProjects())
+                    AttachmentStore.Delete(window.RemovedAttachments);
+                change.Commit(Loc.F("Undo.Changed", project.Name));
+            }
             RenderProjects();
         }
 

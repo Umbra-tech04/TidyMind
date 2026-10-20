@@ -45,6 +45,23 @@ namespace TidyMind
 
             Files.Load(currentProject.Attachments);
             SetUpNotebook();
+
+            // Ctrl+Z here takes back what was done in this window (tasks, pages, files), which is stored only when it
+            // closes; once closed, all of it is one step of the project page.
+            Files.History = local;
+            UndoHost.Attach(this, () => new[] { local }, bottom: 80); // above the footer with Save
+            Closed += (s, e) => local.End();
+        }
+
+        private readonly UndoHistory local = new UndoHistory("project window");
+
+        // A change made in this window, said in its toast when it's a delete.
+        private void Did(string label, bool destructive, Action undo, Action redo)
+        {
+            LocalStep step = new LocalStep(label, destructive, undo, redo);
+            local.Push(step);
+            if (destructive)
+                UndoHost.Announce(step);
         }
 
         public static void OpenAtPage(Guid projectId, int page) => lastPageViewed[projectId] = page;
@@ -225,6 +242,31 @@ namespace TidyMind
         private void TaskCheck_Click(object sender, RoutedEventArgs e)
         {
             TaskItem task = (TaskItem)((FrameworkElement)sender).DataContext;
+            bool done = task.IsDone;
+            Did(Loc.F(done ? "Undo.Ticked" : "Undo.Unticked", task.Title), false,
+                () => SetDone(task, !done), () => SetDone(task, done));
+            MoveToGroup(task, sender);
+        }
+
+        // An undo or redo of a tick: the task's row is drawn again (TaskItem has no change notification) in its group.
+        private void SetDone(TaskItem task, bool done)
+        {
+            task.IsDone = done;
+            int at = TaskList.Items.IndexOf(task);
+            if (at < 0)
+                return;
+            bool selected = TaskList.SelectedItems.Contains(task);
+            TaskOrder.KeepView(TaskList, () =>
+            {
+                TaskList.Items.RemoveAt(at);
+                TaskList.Items.Insert(TaskOrder.OpenFirst(currentProject.Tasks, t => t.IsDone).IndexOf(task), task);
+                if (selected)
+                    TaskList.SelectedItems.Add(task);
+            });
+        }
+
+        private void MoveToGroup(TaskItem task, object sender)
+        {
             int from = TaskList.Items.IndexOf(task);
             int to = TaskOrder.OpenFirst(currentProject.Tasks, t => t.IsDone).IndexOf(task);
             if (from < 0 || from == to)
@@ -361,9 +403,18 @@ namespace TidyMind
             string newTitle = InputDialog.Prompt(this, Loc.T("ProjectWindow.RenameTask"), Loc.T("ProjectWindow.RenameTaskPrompt"),
                 task.Title, Loc.T("Common.Rename"));
             if (string.IsNullOrWhiteSpace(newTitle) || newTitle == task.Title) return;
-            task.Title = newTitle;
+            string oldTitle = task.Title;
+            Retitle(task, newTitle);
+            Did(Loc.F("Undo.RenamedTo", oldTitle, newTitle), false, () => Retitle(task, oldTitle), () => Retitle(task, newTitle));
+        }
+
+        private void Retitle(TaskItem task, string title)
+        {
+            task.Title = title;
             // TaskItem has no change notification: that one row is rebuilt (Refresh would rebuild every row).
             int index = TaskList.Items.IndexOf(task);
+            if (index < 0)
+                return;
             bool selected = TaskList.SelectedItem == task;
             TaskList.Items.RemoveAt(index);
             TaskList.Items.Insert(index, task);
@@ -371,11 +422,7 @@ namespace TidyMind
                 TaskList.SelectedIndex = index;
         }
 
-        private void DeleteTask(TaskItem task)
-        {
-            currentProject.Tasks.Remove(task);
-            TaskList.Items.Remove(task);
-        }
+        private void DeleteTask(TaskItem task) => Remove(new List<TaskItem> { task });
 
         // Several: one question for all of them, then each goes the way one does. The keyboard stays in the list, on
         // the task now where the first deleted one was.
@@ -386,14 +433,47 @@ namespace TidyMind
             if (tasks.Count > 1 && !BulkDelete.Confirm(this, "Bulk.Delete.Tasks", tasks.Select(t => t.Title).ToList()))
                 return;
             int first = tasks.Min(t => TaskList.Items.IndexOf(t));
-            foreach (TaskItem task in tasks)
-                DeleteTask(task);
+            Remove(tasks);
             if (TaskList.Items.Count > 0
                 && TaskList.ItemContainerGenerator.ContainerFromIndex(Math.Min(first, TaskList.Items.Count - 1)) is ListBoxItem row)
             {
                 row.IsSelected = true; // so a second Delete takes it
                 row.Focus();
             }
+        }
+
+        // One step in this window's history: undone, each task is back at its place (as stored, and in its group).
+        private void Remove(List<TaskItem> tasks)
+        {
+            List<(TaskItem Task, int At)> places = tasks.Select(t => (t, currentProject.Tasks.IndexOf(t))).Where(p => p.Item2 >= 0)
+                .OrderBy(p => p.Item2).ToList();
+            if (places.Count == 0)
+                return;
+            TakeOut(tasks);
+            Did(places.Count == 1 ? Loc.F("Undo.Deleted", places[0].Task.Title) : Loc.Plural("Undo.Deleted.Tasks", places.Count), true,
+                () => PutBack(places), () => TakeOut(places.Select(p => p.Task).ToList()));
+        }
+
+        private void TakeOut(List<TaskItem> tasks)
+        {
+            foreach (TaskItem task in tasks)
+            {
+                currentProject.Tasks.Remove(task);
+                TaskList.Items.Remove(task);
+            }
+        }
+
+        private void PutBack(List<(TaskItem Task, int At)> places)
+        {
+            foreach ((TaskItem task, int at) in places)
+                currentProject.Tasks.Insert(Math.Min(at, currentProject.Tasks.Count), task);
+            // In the order shown, each at its place there: the rows before it are all in the list by then.
+            List<TaskItem> order = TaskOrder.OpenFirst(currentProject.Tasks, t => t.IsDone).ToList();
+            TaskOrder.KeepView(TaskList, () =>
+            {
+                foreach (TaskItem task in places.Select(p => p.Task).OrderBy(order.IndexOf))
+                    TaskList.Items.Insert(Math.Min(order.IndexOf(task), TaskList.Items.Count), task);
+            });
         }
 
         // Delete: the selected tasks (one goes at once, like its ×; several ask first). Ctrl+C: their text, a line each.
@@ -599,8 +679,12 @@ namespace TidyMind
                     return false;
 
                 PageListPopup.IsOpen = false;
+                NotePage only = pages[0];
+                string text = pageBodies[0];
                 NotesBox.Document.Blocks.Clear();
                 NotesBox.Focus();
+                // A redo first keeps what was written on the page since the undo, for the next undo.
+                Did(Loc.T("Undo.PageCleared"), true, () => SetBody(only, text), () => text = SetBody(only, "") ?? text);
                 return true;
             }
 
@@ -615,12 +699,20 @@ namespace TidyMind
                 return false;
 
             // Where the current page is now, or the page that followed it.
+            int shown = currentPage;
             int showNext = Enumerable.Range(0, currentPage).Count(i => !indexes.Contains(i));
+            string label = indexes.Count == 1 ? Loc.F("Undo.Deleted", PageTitle(indexes[0])) : Loc.Plural("Undo.Deleted.Pages", indexes.Count);
+            NotePage first = pages[0];
+            string? firstBody = all ? pageBodies[0] : null;
             if (all)
             {
                 indexes.RemoveAt(0);
                 pageBodies[0] = "";
             }
+            // The pages and their text, kept for an undo; a redo takes their text again first (it may have been written on
+            // since the undo).
+            List<(NotePage Page, int At)> gone = indexes.Select(i => (pages[i], i)).ToList();
+            Dictionary<NotePage, string> texts = indexes.ToDictionary(i => pages[i], i => pageBodies[i]);
             for (int k = indexes.Count - 1; k >= 0; k--)
             {
                 pages.RemoveAt(indexes[k]);
@@ -631,7 +723,60 @@ namespace TidyMind
             pageSelection.ClearSelection();
             if (PageListPopup.IsOpen)
                 ShowPageList();
+
+            // Undone, the pages are back at their places (with what page 1 said, when all went), the page shown before shows.
+            Did(label, true, () =>
+            {
+                KeepCurrentPage();
+                foreach ((NotePage page, int at) in gone)
+                {
+                    pages.Insert(Math.Min(at, pages.Count), page);
+                    pageBodies.Insert(Math.Min(at, pageBodies.Count), texts[page]);
+                }
+                int firstAt = pages.IndexOf(first);
+                if (firstBody != null && firstAt >= 0)
+                    pageBodies[firstAt] = firstBody;
+                ShowPage(Math.Clamp(shown, 0, pages.Count - 1), 0);
+                if (PageListPopup.IsOpen)
+                    ShowPageList();
+            }, () =>
+            {
+                KeepCurrentPage();
+                foreach ((NotePage page, _) in gone)
+                {
+                    int at = pages.IndexOf(page);
+                    if (at >= 0 && pages.Count > 1)
+                    {
+                        texts[page] = pageBodies[at];
+                        pages.RemoveAt(at);
+                        pageBodies.RemoveAt(at);
+                    }
+                }
+                int firstAt = pages.IndexOf(first);
+                if (firstBody != null && firstAt >= 0)
+                {
+                    firstBody = pageBodies[firstAt];
+                    pageBodies[firstAt] = "";
+                }
+                ShowPage(Math.Clamp(showNext, 0, pages.Count - 1), 0);
+                if (PageListPopup.IsOpen)
+                    ShowPageList();
+            });
             return true;
+        }
+
+        // An undo or redo of emptying the only page: its text, and the page shown again from it. Returns what the page
+        // said before (null if it's gone).
+        private string? SetBody(NotePage page, string body)
+        {
+            KeepCurrentPage();
+            int at = pages.IndexOf(page);
+            if (at < 0)
+                return null;
+            string was = pageBodies[at];
+            pageBodies[at] = body;
+            ShowPage(at, 0);
+            return was;
         }
 
         private bool PageIsBlank(int index) => RichTextHelper.ToPlainText(pageBodies[index]).Trim().Length == 0;

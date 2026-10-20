@@ -10,6 +10,8 @@ namespace TidyMind
     {
         private static readonly string CalendarFile = AppPaths.Data("calendar.json");
 
+        public static string FilePath => CalendarFile;
+
         // For display: an unreadable file just shows as an empty calendar.
         public static List<CalendarDay> LoadDays()
         {
@@ -42,8 +44,11 @@ namespace TidyMind
                 days.Add(day);
             }
 
-            return AtomicFile.TryWriteAllText(CalendarFile, JsonSerializer.Serialize(days.OrderBy(d => d.Date).ToList()));
+            return TryWrite(days.OrderBy(d => d.Date).ToList());
         }
+
+        // The whole list, in the order given (an undo puts a day back). False if it couldn't be written.
+        public static bool TryWrite(List<CalendarDay> days) => AtomicFile.TryWriteAllText(CalendarFile, JsonSerializer.Serialize(days));
 
         // Removes the day's note (title and text) and keeps its colour, like emptying both in the day dialog.
         public static bool DeleteNote(DateTime date)
@@ -53,7 +58,8 @@ namespace TidyMind
             return SaveDay(date, GetDay(days, date)?.ColorHex, null, null);
         }
 
-        private static bool TryRead(out List<CalendarDay> days)
+        // False if the file exists but can't be read; `days` is then empty and the file must not be saved over.
+        public static bool TryRead(out List<CalendarDay> days)
         {
             days = new List<CalendarDay>();
             if (!File.Exists(CalendarFile))

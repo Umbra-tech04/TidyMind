@@ -74,13 +74,16 @@ namespace TidyMind
         // If it can't be written (locked, no access), says so and returns false; the file is then unchanged.
         public static bool SaveOrWarn(Profile memory, List<Entity> entities)
         {
-            string file = MemoryFiles.Items(memory);
-            if (AtomicFile.TryWriteAllText(file, JsonSerializer.Serialize(entities)))
+            if (TrySave(memory, entities))
                 return true;
 
-            Msg.Show(Loc.F("Collection.SaveFailed", memory.Name, file), Loc.T("Common.CouldntSave"), MessageBoxButton.OK,
+            Msg.Show(Loc.F("Collection.SaveFailed", memory.Name, MemoryFiles.Items(memory)), Loc.T("Common.CouldntSave"), MessageBoxButton.OK,
                 MessageBoxImage.Warning);
             return false;
         }
+
+        // The same without the message (an undo says it its own way).
+        public static bool TrySave(Profile memory, List<Entity> entities) =>
+            AtomicFile.TryWriteAllText(MemoryFiles.Items(memory), JsonSerializer.Serialize(entities));
     }
 }

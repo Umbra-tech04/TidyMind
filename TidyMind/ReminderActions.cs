@@ -18,14 +18,20 @@ namespace TidyMind
             return ShowOwned(owner, new AddReminderWindow(null, date));
         }
 
-        // Opens the reminder form filled in with the stored reminder (read fresh by Id, not from a stale copy).
-        public static bool Edit(DependencyObject owner, Guid id)
+        // Opens the reminder form filled in with the stored reminder (read fresh by Id, not from a stale copy). Saved, it is
+        // an undo step in `history` (name: what the reminder says).
+        public static bool Edit(DependencyObject owner, Guid id, UndoHistory history = null, string name = null)
         {
             Reminder reminder = ReminderManager.TryLoadReminders().Find(r => r.Id == id);
             if (reminder == null)
                 return false;
 
-            return ShowOwned(owner, new AddReminderWindow(reminder));
+            using UndoChange change = UndoChange.Begin(history, UndoParts.Reminders(new[] { id }));
+            bool saved = ShowOwned(owner, new AddReminderWindow(reminder));
+            // Only what the form saved: a reminder that fired while it was open, and the form cancelled, is no step.
+            if (saved)
+                change.Commit(Loc.F("Undo.Changed", name ?? reminder.Message ?? ""));
+            return saved;
         }
 
         private static bool ShowOwned(DependencyObject owner, Window window)
@@ -37,34 +43,39 @@ namespace TidyMind
         }
 
         // Several (a selection), asked once, each deleted the way one is (its entry and its scheduled task). One that
-        // can't be is kept and named afterwards. `names`: what the list shows for each. True if any went.
-        public static bool ConfirmDelete(Window owner, IReadOnlyList<Guid> ids, IReadOnlyList<string> names)
+        // can't be is kept and named afterwards. `names`: what the list shows for each. True if any went. The ones that
+        // went are one undo step in `history`: undone, each comes back with its task.
+        public static bool ConfirmDelete(Window owner, IReadOnlyList<Guid> ids, IReadOnlyList<string> names, UndoHistory history = null)
         {
             if (ids.Count == 1)
-                return ConfirmDelete(ids[0]);
+                return ConfirmDelete(ids[0], history, names[0]);
             if (!BulkDelete.Confirm(owner, "Bulk.Delete.Reminders", names))
                 return false;
 
-            List<string> kept = new List<string>();
+            using UndoChange change = UndoChange.Begin(history, UndoParts.Reminders(ids));
+            List<string> kept = new List<string>(), went = new List<string>();
             for (int i = 0; i < ids.Count; i++)
-            {
-                if (!TryDelete(ids[i]))
-                    kept.Add(names[i]);
-            }
+                (TryDelete(ids[i]) ? went : kept).Add(names[i]);
+            change.Commit(went.Count == 1 ? Loc.F("Undo.Deleted", went[0]) : Loc.Plural("Undo.Deleted.Reminders", went.Count),
+                destructive: true);
             if (kept.Count > 0)
                 BulkDelete.ReportKept(owner, kept, Loc.T("Reminder.DeleteManyFailed"));
             return kept.Count < ids.Count;
         }
 
-        public static bool ConfirmDelete(Guid id)
+        public static bool ConfirmDelete(Guid id, UndoHistory history = null, string name = null)
         {
             MessageBoxResult result = Msg.Show(Loc.T("Reminder.DeleteConfirm"), Loc.T("Common.ConfirmDelete"),
                 MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (result != MessageBoxResult.Yes)
                 return false;
 
+            using UndoChange change = UndoChange.Begin(history, UndoParts.Reminders(new[] { id }));
             if (TryDelete(id))
+            {
+                change.Commit(Loc.F("Undo.Deleted", name ?? ""), destructive: true);
                 return true;
+            }
             Msg.Show(Loc.T("Reminder.DeleteFailed"), Loc.T("Common.CouldntDelete"), MessageBoxButton.OK, MessageBoxImage.Warning);
             return false;
         }

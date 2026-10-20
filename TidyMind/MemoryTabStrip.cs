@@ -17,6 +17,7 @@ namespace TidyMind
         private readonly string movedKey;
         private readonly Func<Guid, int> countItemsInTab;
         private readonly Action<Guid, Guid> moveItems;
+        private readonly Func<UndoChange> record;
 
         private readonly List<MemoryTab> tabs;
         private Guid renamingTabId;
@@ -31,10 +32,12 @@ namespace TidyMind
         public event Action TabsChanged;
 
         // tabs: the memory's tabs as read by TabStore.TryLoadOrCreate (at least one, sorted). movedKey: the plural
-        // string that asks before a tab with items is deleted ({0} items, {1} the tab, {2} where they go).
+        // string that asks before a tab with items is deleted ({0} items, {1} the tab, {2} where they go). record: starts
+        // an undo step over the tabs and the items (a deleted tab's items move).
         public MemoryTabStrip(FrameworkElement view, StackPanel strip, Profile memory,
-            List<MemoryTab> tabs, string movedKey, Func<Guid, int> countItemsInTab, Action<Guid, Guid> moveItems)
+            List<MemoryTab> tabs, string movedKey, Func<Guid, int> countItemsInTab, Action<Guid, Guid> moveItems, Func<UndoChange> record)
         {
+            this.record = record;
             this.strip = strip;
             this.memory = memory;
             this.movedKey = movedKey;
@@ -58,6 +61,20 @@ namespace TidyMind
         public Guid FirstTabId => tabs.OrderBy(t => t.Order).First().Id;
 
         public bool Contains(Guid tabId) => tabs.Any(t => t.Id == tabId);
+
+        // The tabs as stored now (after an undo): the one shown stays if it is still there, else the first.
+        public void Reload(List<MemoryTab> stored)
+        {
+            commitPendingRename = null;
+            renamingTabId = Guid.Empty;
+            newTabId = Guid.Empty;
+            tabs.Clear();
+            tabs.AddRange(stored.OrderBy(t => t.Order));
+            if (!Contains(ActiveTabId))
+                ActiveTabId = FirstTabId;
+            Render();
+            TabsChanged?.Invoke();
+        }
 
         public void Select(Guid tabId)
         {
@@ -171,10 +188,15 @@ namespace TidyMind
 
                 string name = box.Text.Trim();
                 bool renamed = keep && name.Length > 0 && name != tab.Name;
-                if (renamed)
-                    tab.Name = name;
-                if (renamed || isNew)
-                    Save();
+                string oldName = tab.Name;
+                using (UndoChange? change = isNew ? null : record())
+                {
+                    if (renamed)
+                        tab.Name = name;
+                    if (renamed || isNew)
+                        Save();
+                    change?.Commit(Loc.F("Undo.RenamedTo", oldName, name));
+                }
 
                 Render();
             }
@@ -261,12 +283,14 @@ namespace TidyMind
         {
             commitPendingRename?.Invoke();
 
+            using UndoChange change = record();
             List<MemoryTab> ordered = tabs.OrderBy(t => t.Order).ToList();
             DragReorder<MemoryTab>.Move(ordered, dragged, target, after);
             for (int i = 0; i < ordered.Count; i++)
                 ordered[i].Order = i;
 
             Save();
+            change.Commit(Loc.F("Undo.Moved", dragged.Name));
             Render();
         }
 
@@ -283,12 +307,15 @@ namespace TidyMind
                 MessageBoxResult result = Msg.Show(Loc.Plural(movedKey, count, tab.Name, target.Name),
                     Loc.T("Tabs.Delete.Caption"), MessageBoxButton.YesNo, MessageBoxImage.Warning);
                 if (result != MessageBoxResult.Yes) return;
-
-                moveItems(tab.Id, target.Id);
             }
 
+            // One step: the items moved and the tab gone.
+            using UndoChange change = record();
+            if (count > 0)
+                moveItems(tab.Id, target.Id);
             tabs.Remove(tab);
             Save();
+            change.Commit(Loc.F("Undo.Deleted", tab.Name), destructive: true);
 
             if (ActiveTabId == tab.Id)
                 ActiveTabId = target.Id;

@@ -373,7 +373,7 @@ namespace TidyMind
                     TextTrimming = TextTrimming.CharacterEllipsis,
                     Background = Brushes.Transparent, // the whole line, not just the letters, answers a right-click
                     ContextMenu = AgendaMenus.ForNote(this, date,
-                        body.Length > 0 ? day.Heading() + Environment.NewLine + body : day.Heading(), AfterChange)
+                        body.Length > 0 ? day.Heading() + Environment.NewLine + body : day.Heading(), AfterChange, UndoService.App)
                 });
             }
             foreach (Reminder reminder in reminders)
@@ -384,7 +384,7 @@ namespace TidyMind
                     Orientation = Orientation.Horizontal,
                     Margin = new Thickness(0, 1, 0, 0),
                     Background = Brushes.Transparent,
-                    ContextMenu = AgendaMenus.ForReminder(this, reminder.Id, date, reminder.Message, AfterChange)
+                    ContextMenu = AgendaMenus.ForReminder(this, reminder.Id, date, reminder.Message, AfterChange, UndoService.App, reminder.Message)
                 };
                 line.Children.Add(new Ellipse { Width = 5, Height = 5, Fill = ReminderDot, Margin = new Thickness(0, 0, 6, 0), VerticalAlignment = VerticalAlignment.Center });
                 line.Children.Add(new TextBlock
@@ -419,11 +419,14 @@ namespace TidyMind
 
         private void EditDay(DateTime date)
         {
-            if (DayEditDialog.Edit(this, date))
+            if (AgendaMenus.EditDay(this, date, UndoService.App))
                 Render();
             if (open) // not when the dialog went on to the day plan, which closed the calendar
                 Sheet.Focus(); // so Esc closes the panel again
         }
+
+        // Shown again from the files (after an undo).
+        public void Refresh() => Render();
 
         // After a right-click action changed a day: redraw, and give the panel focus back so Esc closes it again.
         private void AfterChange()

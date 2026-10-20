@@ -54,6 +54,9 @@ namespace TidyMind
 
         public bool IsCopying => pending.Count > 0;
 
+        // The window's own undo history: a removal is a step in it (null: not undoable).
+        public UndoHistory? History { get; set; }
+
         public void Load(IEnumerable<Attachment> existing)
         {
             attachments.AddRange(existing ?? Enumerable.Empty<Attachment>());
@@ -512,8 +515,32 @@ namespace TidyMind
 
         private void RemoveEntry(Attachment attachment) => RemoveEntries(new[] { attachment });
 
-        // Out of the list now; their stored copies go once the project is saved without them (ProjectView).
+        // Out of the list now; their stored copies go once the project is saved without them (ProjectView). Undone, they
+        // are back where they were, and stay.
         private void RemoveEntries(IReadOnlyList<Attachment> gone)
+        {
+            List<(Attachment File, int At)> places = gone.Select(a => (a, attachments.IndexOf(a))).Where(p => p.Item2 >= 0).OrderBy(p => p.Item2).ToList();
+            TakeOut(gone);
+            if (History == null || places.Count == 0)
+                return;
+            LocalStep step = new LocalStep(
+                places.Count == 1 ? Loc.F("Undo.Removed", places[0].File.DisplayName) : Loc.Plural("Undo.Removed.Files", places.Count),
+                destructive: true,
+                undo: () =>
+                {
+                    foreach ((Attachment file, int at) in places)
+                    {
+                        removed.Remove(file);
+                        attachments.Insert(Math.Min(at, attachments.Count), file);
+                    }
+                    Render();
+                },
+                redo: () => TakeOut(places.Select(p => p.File)));
+            History.Push(step);
+            UndoHost.Announce(step);
+        }
+
+        private void TakeOut(IEnumerable<Attachment> gone)
         {
             foreach (Attachment attachment in gone)
             {

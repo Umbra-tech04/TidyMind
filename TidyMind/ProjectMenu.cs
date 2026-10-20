@@ -15,16 +15,20 @@ namespace TidyMind
         // remove: takes the project out of the owning list (saving follows through `save`).
         // reload: if a delete couldn't be saved, reads the owning list back from disk, so the project reappears and a
         // later save can't drop it without its card picture and attached files. Null if `redraw` already re-reads.
+        // record: starts an undo step over the owning list (a rename, a delete); null: not undoable.
         public static ContextMenu Build(DependencyObject owner, Project project, Func<bool> save, Action redraw, Action remove,
-            Action reload = null)
+            Action reload = null, Func<UndoChange> record = null)
         {
             ContextMenu menu = new ContextMenu();
 
             MenuItem rename = new MenuItem { Header = Loc.T("Common.Rename") };
             rename.Click += (s, e) =>
             {
+                string oldName = project.Name;
+                using UndoChange change = record?.Invoke();
                 if (!Rename(owner, project)) return;
                 save();
+                change?.Commit(Loc.F("Undo.RenamedTo", oldName, project.Name));
                 redraw();
             };
             MenuItem customize = new MenuItem { Header = Loc.T("Card.Customize") };
@@ -38,8 +42,12 @@ namespace TidyMind
             delete.Click += (s, e) =>
             {
                 if (!ConfirmDelete(project)) return;
-                if (!Delete(new[] { project }, _ => remove(), save))
-                    reload?.Invoke();
+                using (UndoChange change = record?.Invoke())
+                {
+                    if (!Delete(new[] { project }, _ => remove(), save))
+                        reload?.Invoke();
+                    change?.Commit(Deleted(new[] { project }), destructive: true);
+                }
                 redraw();
             };
             MenuItem reminder = new MenuItem { Header = Loc.T("Common.AddReminder") };
@@ -96,6 +104,10 @@ namespace TidyMind
             AttachmentStore.Delete(files);
             return true;
         }
+
+        // The undo step's words for deleting them.
+        internal static string Deleted(IReadOnlyList<Project> projects) =>
+            projects.Count == 1 ? Loc.F("Undo.Deleted", projects[0].Name) : Loc.Plural("Undo.Deleted.Projects", projects.Count);
 
         internal static bool ConfirmDelete(Project project)
         {

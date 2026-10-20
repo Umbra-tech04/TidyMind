@@ -100,7 +100,10 @@ namespace TidyMind
                 return false;
             if (!change(plan))
                 return nothingToDo;
-            return AtomicFile.TryWriteAllText(FilePath, JsonSerializer.Serialize(plan));
+            return TryWrite(plan);
         }
+
+        // The whole plan (an undo puts blocks back). False if it couldn't be written; the file is then unchanged.
+        public static bool TryWrite(DayPlanFile plan) => AtomicFile.TryWriteAllText(FilePath, JsonSerializer.Serialize(plan));
     }
 }

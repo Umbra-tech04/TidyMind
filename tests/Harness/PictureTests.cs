@@ -487,8 +487,10 @@ static partial class Program
         });
         Invoke(view, "EditEntity", Field<List<Entity>>(view, "entities").First(e => e.Name == "A"));
         await Wait(300);
-        Check(EntityImages.Names(Current("A")).SequenceEqual(new[] { p[0] }) && !Stored(p[1]) && Stored(p[2]) && Stored(p[0]),
-            "edit, remove two: the one nobody else holds is deleted, B's shared one stays");
+        Check(EntityImages.Names(Current("A")).SequenceEqual(new[] { p[0] }) && Stored(p[1]) && Stored(p[2]) && Stored(p[0]),
+            "edit, remove two: both kept while the edit can be undone");
+        UndoService.EndAll();
+        Check(!Stored(p[1]) && Stored(p[2]) && Stored(p[0]), "then the one nobody else holds is deleted, B's shared one stays");
         Check(EntityImages.Names(Current("B")).SequenceEqual(new[] { p[2], p[3] }), "B untouched");
 
         string[] fresh = OwnPictures(2, 30);
@@ -541,10 +543,13 @@ static partial class Program
         selection.DeleteSelected();
         await Wait(400);
         Check(EntityStore.Load(bulk).Select(x => x.Name).SequenceEqual(new[] { "F", "G" }), "both deleted");
-        Check(!Stored(q[0]) && !Stored(q[1]) && !Stored(q[2]) && !Stored(q[3]), "every picture of the deleted items is deleted");
+        Check(Stored(q[0]) && Stored(q[1]) && Stored(q[2]) && Stored(q[3]), "their pictures kept while the delete can be undone");
+        UndoService.EndAll();
+        Check(!Stored(q[0]) && !Stored(q[1]) && !Stored(q[2]) && !Stored(q[3]), "then every picture of the deleted items is deleted");
         Check(Stored(q[8]) && Stored(q[4]), "the one a remaining item holds stays, and the other items' own");
         Invoke(bulkView, "DeleteEntity", Field<List<Entity>>(bulkView, "entities").First(x => x.Name == "F"));
         await Wait(300);
+        UndoService.EndAll();
         Check(!Stored(q[8]) && Stored(q[4]), "deleting the last holder (one item): the shared picture goes too");
 
         // A whole memory.
@@ -555,9 +560,12 @@ static partial class Program
         EntityStore.SaveOrWarn(stays, new List<Entity> { PictureItem("I", 0, shared) });
         Invoke(main, "RemoveMemories", new List<Profile> { gone });
         await Wait(300);
-        Check(!Stored(own) && Stored(shared), "deleting a memory: its pictures go, the one another collection holds stays");
+        Check(Stored(own) && Stored(shared), "deleting a memory: its pictures kept while it can be undone");
+        UndoService.EndAll();
+        Check(!Stored(own) && Stored(shared), "then its pictures go, the one another collection holds stays");
         Invoke(main, "RemoveMemories", new List<Profile> { stays });
         await Wait(300);
+        UndoService.EndAll();
         Check(!Stored(shared), "...and goes with the last memory that held it");
         Invoke(main, "NavigateHome");
     }
@@ -623,6 +631,7 @@ static partial class Program
         });
         Invoke(view, "EditEntity", Field<List<Entity>>(view, "entities").First(e => e.Name == "Hármas"));
         await Wait(300);
+        UndoService.EndAll(); // the edit can't be undone any more: what it removed goes
         Check(EntityImages.Names(EntityStore.Load(memory).Single(e => e.Name == "Hármas")).SequenceEqual(new[] { p[2], p[0] }) && !Stored(p[1]),
             "the copy failed: the new cover and the removal are still saved, and the removed picture's file is gone");
         Check(selectBoxes.Skip(boxes).Any(b => b.Contains(Path.GetFileName(fleeting))), "the message names the file: " + selectBoxes.LastOrDefault());

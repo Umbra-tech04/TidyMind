@@ -96,12 +96,13 @@ namespace TidyMind
             return copied;
         }
 
-        // Removes copies nothing uses any more. Best effort: a file that can't be deleted now is just left behind.
+        // Removes copies nothing uses any more. Best effort: a file that can't be deleted now is just left behind. One that
+        // a delete which can still be undone needs is left for it (UndoService).
         public static void Delete(IEnumerable<Attachment> attachments)
         {
             foreach (Attachment attachment in attachments ?? Enumerable.Empty<Attachment>())
             {
-                if (string.IsNullOrEmpty(attachment?.StoredFileName))
+                if (string.IsNullOrEmpty(attachment?.StoredFileName) || UndoService.IsHeld(HeldKind.Attachment, attachment.StoredFileName))
                     continue;
 
                 string path = PathOf(attachment.StoredFileName);

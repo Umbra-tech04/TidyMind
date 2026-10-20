@@ -53,6 +53,25 @@ namespace TidyMind
             return true;
         }
 
+        // The tabs as stored (none for no file), nothing made or saved: false if the file can't be read.
+        public static bool TryRead(Profile memory, out List<MemoryTab> tabs)
+        {
+            string file = MemoryFiles.Tabs(memory);
+            tabs = new List<MemoryTab>();
+            if (!File.Exists(file))
+                return true;
+            try
+            {
+                tabs = JsonSerializer.Deserialize<List<MemoryTab>>(File.ReadAllText(file)) ?? new List<MemoryTab>();
+                return true;
+            }
+            catch (Exception e) when (e is JsonException || e is IOException || e is UnauthorizedAccessException)
+            {
+                tabs = null;
+                return false;
+            }
+        }
+
         // Written via a temporary file, like the memory's other files. False if it couldn't be written; the file is
         // then unchanged.
         public static bool TrySave(Profile memory, List<MemoryTab> tabs)

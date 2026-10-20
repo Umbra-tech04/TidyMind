@@ -199,9 +199,13 @@ static partial class Program
         ProfileManager.TryLoadProfiles(out List<Profile> stored, out _);
         Check(!stored.Any(p => p.Id == memories[0].Id || p.Id == memories[1].Id) && stored.Count(p => p.Name.StartsWith("Memory ")) == 6,
             "Delete key: both gone from profiles.json, the others kept");
+        // Kept while the delete can be undone (UndoService), gone once it can't.
+        Check(Directory.Exists(MemoryFiles.Folder(memories[0])) && Directory.Exists(MemoryFiles.Folder(memories[1]))
+              && File.Exists(attachment) && File.Exists(card), "their folders and files stay while the delete can be undone");
+        UndoService.EndAll();
         Check(!Directory.Exists(MemoryFiles.Folder(memories[0])) && !Directory.Exists(MemoryFiles.Folder(memories[1])),
-            "their folders deleted");
-        Check(!File.Exists(attachment) && !File.Exists(card), "their attached file and card picture deleted, as for one memory");
+            "their folders deleted once it can't be undone any more");
+        Check(!File.Exists(attachment) && !File.Exists(card), "their attached file and card picture deleted then, as for one memory");
         Check(Content(main) is HomeView && Field<string>(main, "selectedKey") == "__home__", "the open one was among them: Home is shown");
         Check(selection.Count == 0 && !((Border)main.FindName("NavSelectionBar")).IsVisible, "selection and bar gone");
 
@@ -284,7 +288,9 @@ static partial class Program
         await Wait(400);
         List<string> left = ProjectStore.Load(memory).Select(p => p.Name).ToList();
         Check(left.SequenceEqual(new[] { "Project 1", "Project 3", "Project 4", "Project 6" }), "Delete key: three gone (" + string.Join(", ", left) + ")");
-        Check(!File.Exists(attachment), "the deleted project's attached file deleted, as for one project");
+        Check(File.Exists(attachment), "the deleted project's attached file kept while the delete can be undone");
+        Invoke(main, "NavigateHome"); // the page's undo history ends
+        Check(!File.Exists(attachment), "and deleted once the page is left, as for one project");
         RemoveMemory(main, memory);
     }
 
@@ -313,7 +319,9 @@ static partial class Program
         await Wait(300);
         List<string> left = EntityStore.Load(memory).Select(x => x.Name).ToList();
         Check(left.SequenceEqual(new[] { "Shirt 1", "Shirt 5" }), "deleted together (" + string.Join(", ", left) + ")");
-        Check(!File.Exists(picture), "the item's picture deleted, as for one item");
+        Check(File.Exists(picture), "the item's picture kept while the delete can be undone");
+        Invoke(main, "NavigateHome"); // the page's undo history ends
+        Check(!File.Exists(picture), "and deleted once the page is left, as for one item");
         RemoveMemory(main, memory);
     }
 

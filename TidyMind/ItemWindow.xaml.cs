@@ -26,11 +26,13 @@ namespace TidyMind
     {
         // What the collection view does for it. Save: stores the edited copy, false if it couldn't (the user was told).
         // EditBasics: the item form for the name and pictures, the item as saved or null. Delete: true once it's gone.
+        // Reread: after an undo, the item as stored now (the view reads its items again), null if it's gone.
         public sealed class Host
         {
             public Func<Entity, bool> Save { get; init; } = _ => false;
             public Func<Entity, Entity?> EditBasics { get; init; } = _ => null;
             public Func<Entity, bool> Delete { get; init; } = _ => false;
+            public Func<Guid, Entity?> Reread { get; init; } = _ => null;
         }
 
         private const string OverviewKey = ItemSearch.OverviewTab;
@@ -73,6 +75,23 @@ namespace TidyMind
 
             Loc.Track(this, Redraw);
             Redraw();
+
+            // Ctrl+Z here undoes this item's own changes (each save is a step of the collection page), not while a section
+            // is being edited (its boxes have their own undo).
+            UndoHost.Attach(this, () => new[] { UndoService.Page }, (history, step) => AfterUndo(),
+                accepts: step => step.Target == this.item.Id, ready: () => editing == null || !editing.IsEditing);
+        }
+
+        // After an undo or redo: the item as stored now. If it is gone, so is the window.
+        private void AfterUndo()
+        {
+            if (host.Reread(item.Id) is Entity stored)
+            {
+                item = stored;
+                Redraw();
+            }
+            else
+                Close();
         }
 
         // ---- Pages ---------------------------------------------------------------------------------

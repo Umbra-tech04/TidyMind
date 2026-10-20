@@ -212,6 +212,8 @@ namespace TidyMind
                 Mouse.OverrideCursor = null;
             }
 
+            // The data folder is the backup's now: no undo may change it, nor delete a file in it on the way out.
+            UndoService.Forget();
             Msg.Show(this, Loc.F("Settings.Restore.Done", safetyCopy), Loc.T("Settings.Restore.Caption"), MessageBoxButton.OK,
                 MessageBoxImage.Information);
             DataBackup.Restart();
