@@ -13,6 +13,8 @@ namespace TidyMind
         public const string TourShown = "shown";
         public const string TourCompleted = "completed";
         public const string TourDismissed = "dismissed";
+        public const string ChecklistHidden = "hidden";
+        public const string ChecklistShown = "shown";
 
         private static string FilePath => AppPaths.Data("settings.json");
 
@@ -23,6 +25,11 @@ namespace TidyMind
         // The version that last ran ("1.4.0"), so "What's new" (WhatsNew) shows once after an update. Null until then.
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? LastVersion { get; set; }
+
+        // Home's "Getting started" list (GettingStarted): ChecklistHidden after Hide, ChecklistShown once brought back from
+        // ?; null shows it while something on it is left to do.
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? Checklist { get; set; }
 
         // Home's "What can TidyMind do?" tiles, folded away with Hide (true) until Show brings them back.
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

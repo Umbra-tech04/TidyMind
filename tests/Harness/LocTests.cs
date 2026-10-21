@@ -244,6 +244,11 @@ static partial class Program
         foreach (string action in new[] { "Add", "Edit" })
             foreach (string type in new[] { "Clothing", "Vehicle", "Item" })
                 dynamic.Add("Entity." + action + "." + type);
+        foreach (string step in GettingStarted.Steps)
+        {
+            dynamic.Add("Checklist." + step + ".Title");
+            dynamic.Add("Checklist." + step + ".Text");
+        }
         // Tips & shortcuts: each entry's keys and sentence, and its group's title.
         foreach (Tip tip in Tips.All)
         {

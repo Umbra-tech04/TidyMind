@@ -3835,4 +3835,34 @@ A ? gomb alatt a Tippek és billentyűparancsok oldal felsorolja a jobb gombos m
   <data name="Examples.DeleteNote" xml:space="preserve">
     <value>Ez a példamemória.</value>
   </data>
+  <data name="Checklist.Title" xml:space="preserve">
+    <value>Első lépések</value>
+  </data>
+  <data name="Checklist.Progress" xml:space="preserve">
+    <value>{0}/{1} kész</value>
+  </data>
+  <data name="Checklist.Project.Title" xml:space="preserve">
+    <value>Hozz létre egy projektet</value>
+  </data>
+  <data name="Checklist.Project.Text" xml:space="preserve">
+    <value>Az oldalsáv Új projekt gombja projektmemóriát készít; az oldalán a Projekt hozzáadása gomb projektet ad hozzá.</value>
+  </data>
+  <data name="Checklist.Task.Title" xml:space="preserve">
+    <value>Adj hozzá egy feladatot</value>
+  </data>
+  <data name="Checklist.Task.Text" xml:space="preserve">
+    <value>Nyiss meg egy projektet, és írd be a feladatot a Feladatok alá.</value>
+  </data>
+  <data name="Checklist.Reminder.Title" xml:space="preserve">
+    <value>Állíts be egy emlékeztetőt</value>
+  </data>
+  <data name="Checklist.Reminder.Text" xml:space="preserve">
+    <value>A sarokban lévő 🔔 gomb megnyitja az emlékeztetőidet, és sok jobb gombos menüben is van Emlékeztető hozzáadása. Windows-értesítésként érkezik.</value>
+  </data>
+  <data name="Checklist.Item.Title" xml:space="preserve">
+    <value>Adj hozzá egy elemet egy gyűjteményhez</value>
+  </data>
+  <data name="Checklist.Item.Text" xml:space="preserve">
+    <value>Kattints az oldalsáv Új gyűjtemény gombjára, majd a gyűjtemény oldalán az Új elem gombra.</value>
+  </data>
 </root>

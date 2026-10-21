@@ -3989,4 +3989,34 @@ Tips &amp; shortcuts under the ? button lists the right-click menus and keys, an
   <data name="Examples.DeleteNote" xml:space="preserve">
     <value>This is the example memory.</value>
   </data>
+  <data name="Checklist.Title" xml:space="preserve">
+    <value>Getting started</value>
+  </data>
+  <data name="Checklist.Progress" xml:space="preserve">
+    <value>{0} of {1} done</value>
+  </data>
+  <data name="Checklist.Project.Title" xml:space="preserve">
+    <value>Create a project</value>
+  </data>
+  <data name="Checklist.Project.Text" xml:space="preserve">
+    <value>New Project in the sidebar makes a project memory; Add Project on its page adds a project to it.</value>
+  </data>
+  <data name="Checklist.Task.Title" xml:space="preserve">
+    <value>Add a task</value>
+  </data>
+  <data name="Checklist.Task.Text" xml:space="preserve">
+    <value>Open a project and type the task under Tasks.</value>
+  </data>
+  <data name="Checklist.Reminder.Title" xml:space="preserve">
+    <value>Set a reminder</value>
+  </data>
+  <data name="Checklist.Reminder.Text" xml:space="preserve">
+    <value>The 🔔 button in the corner opens your reminders, and many right-click menus have Add Reminder. It arrives as a Windows notification.</value>
+  </data>
+  <data name="Checklist.Item.Title" xml:space="preserve">
+    <value>Add an item to a collection</value>
+  </data>
+  <data name="Checklist.Item.Text" xml:space="preserve">
+    <value>Click New Collection in the sidebar, then Add item on its page.</value>
+  </data>
 </root>

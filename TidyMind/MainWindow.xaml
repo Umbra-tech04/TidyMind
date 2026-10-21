@@ -194,6 +194,7 @@
                             </StackPanel.Resources>
                             <Button x:Name="TipsLink" Content="{local:Tr Tips.Title}" Click="Tips_Click"/>
                             <Button x:Name="TakeTourLink" Content="{local:Tr Tour.HelpEntry}" Click="TakeTour_Click"/>
+                            <Button x:Name="ChecklistLink" Content="{local:Tr Checklist.Title}" Click="Checklist_Click"/>
                             <Button x:Name="WhatsNewLink" Content="{local:Tr Help.WhatsNew}" Click="WhatsNew_Click"/>
                             <Button x:Name="AddExamplesLink" Content="{local:Tr Examples.Add}" Click="AddExamples_Click"/>
                         </StackPanel>

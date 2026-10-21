@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -90,6 +91,7 @@ namespace TidyMind
             ShowPlan(now);
             ShowDaybook(data, now.Date);
             ShowExpiries(data, now.Date);
+            ShowChecklist();
 
             // Before it's loaded the control loads itself.
             if (QuickTodos.IsLoaded)
@@ -116,6 +118,75 @@ namespace TidyMind
             double pageWidth = Math.Min(width - 2 * side, Page.MaxWidth);
             DiscoveryItems.Columns = Math.Clamp((int)((pageWidth + TileGap) / TileMinWidth), 2, 4);
         }
+
+        // ---- Getting started ----------------------------------------------
+
+        // Read again with the rest of Home (it's rebuilt on every visit and refreshed when the window comes back), so a
+        // step done elsewhere is ticked the next time Home is seen.
+        private void ShowChecklist()
+        {
+            bool[] done = GettingStarted.Done(profiles);
+            ChecklistSection.Visibility = GettingStarted.Shown(done) ? Visibility.Visible : Visibility.Collapsed;
+            if (ChecklistSection.Visibility != Visibility.Visible)
+                return;
+            ChecklistLede.Text = Loc.F("Checklist.Progress", done.Count(d => d), done.Length);
+            ChecklistRows.Children.Clear();
+            for (int i = 0; i < GettingStarted.Steps.Length; i++)
+                ChecklistRows.Children.Add(ChecklistRow(GettingStarted.Steps[i], done[i], first: i == 0));
+        }
+
+        // A tick (or an empty box), the step and how to do it.
+        private FrameworkElement ChecklistRow(string step, bool done, bool first)
+        {
+            Grid row = new Grid();
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(30) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            row.Children.Add(new TextBlock
+            {
+                Text = done ? "" : "", // CheckMark, Checkbox
+                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                FontSize = 14,
+                Foreground = (Brush)FindResource(done ? "Accent" : "TextSub"),
+                Margin = new Thickness(0, 2, 0, 0)
+            });
+            StackPanel words = new StackPanel();
+            words.Children.Add(new TextBlock
+            {
+                Text = Loc.T("Checklist." + step + ".Title"),
+                FontSize = 14,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = (Brush)FindResource(done ? "TextSub" : "TextMain"),
+                TextWrapping = TextWrapping.Wrap
+            });
+            words.Children.Add(new TextBlock
+            {
+                Text = Loc.T("Checklist." + step + ".Text"),
+                FontSize = 12,
+                Foreground = (Brush)FindResource("TextSub"),
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 2, 0, 0)
+            });
+            Grid.SetColumn(words, 1);
+            row.Children.Add(words);
+            AutomationProperties.SetName(row, Loc.T("Checklist." + step + ".Title"));
+            return new Border
+            {
+                BorderBrush = (Brush)FindResource("Hairline"),
+                BorderThickness = new Thickness(0, first ? 0 : 1, 0, 0),
+                Padding = new Thickness(0, 10, 0, 10),
+                Child = row
+            };
+        }
+
+        // Hidden until ? > Getting started brings it back; if settings.json can't be written, just for now.
+        private void ChecklistHide_Click(object sender, RoutedEventArgs e)
+        {
+            AppSettings.Update(s => s.Checklist = AppSettings.ChecklistHidden);
+            ChecklistSection.Visibility = Visibility.Collapsed;
+        }
+
+        // ? > Getting started: the list in view.
+        public void BringChecklistIntoView() => ChecklistSection.BringIntoView();
 
         // ---- What can TidyMind do? ----------------------------------------
 

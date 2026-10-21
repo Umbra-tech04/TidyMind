@@ -74,6 +74,21 @@
                 </StackPanel>
             </Grid>
 
+            <!-- Getting started (GettingStarted): four first things, ticked from the user's own data. Hide puts it away,
+                 ? > Getting started brings it back; it goes once all four are done. Below the day, so Home's top stays put. -->
+            <StackPanel x:Name="ChecklistSection" Margin="0,52,0,0" Visibility="Collapsed">
+                <DockPanel Margin="0,0,0,12" LastChildFill="False">
+                    <TextBlock Text="{local:Tr Checklist.Title}" Style="{StaticResource SectionTitleStyle}"/>
+                    <TextBox x:Name="ChecklistLede" Style="{StaticResource SectionLedeStyle}"/>
+                    <Button x:Name="ChecklistHide" DockPanel.Dock="Right" Style="{StaticResource LinkButtonStyle}"
+                            Foreground="{StaticResource TextSub}" VerticalAlignment="Bottom"
+                            Content="{local:Tr Home.Discovery.Hide}" Click="ChecklistHide_Click"/>
+                </DockPanel>
+                <Border Background="{StaticResource BgPanel}" CornerRadius="16" Padding="24,8,24,8">
+                    <StackPanel x:Name="ChecklistRows"/>
+                </Border>
+            </StackPanel>
+
             <!-- What can TidyMind do?: tiles to read (HomeView.Features); Hide/Show folds them (AppSettings.HideDiscovery) -->
             <StackPanel Margin="0,52,0,0">
                 <DockPanel Margin="0,0,0,12" LastChildFill="False">

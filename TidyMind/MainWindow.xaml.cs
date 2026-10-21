@@ -801,6 +801,16 @@ namespace TidyMind
             WhatsNew.Show(this);
         }
 
+        // Brings Home's Getting started list back (it stays until hidden again) and shows it.
+        private void Checklist_Click(object sender, RoutedEventArgs e)
+        {
+            HelpPopup.IsOpen = false;
+            AppSettings.Update(s => s.Checklist = AppSettings.ChecklistShown);
+            NavigateHome();
+            Dispatcher.BeginInvoke(new Action(() => (ContentArea.Content as HomeView)?.BringChecklistIntoView()),
+                System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+
         private void AddExamples_Click(object sender, RoutedEventArgs e)
         {
             HelpPopup.IsOpen = false;

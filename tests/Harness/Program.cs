@@ -318,6 +318,7 @@ static partial class Program
         await Wait(300);
 
         await Examples(main);
+        await Checklist(main);
         await TipsPage(main);
         await WhatsNewNote(main);
         await VisibleWaysIn(main);
@@ -340,6 +341,66 @@ static partial class Program
         await Wait(300);
         Check(!((Button)main.FindName("AddExamplesLink")).IsVisible, "the ? menu no longer offers them");
         help.IsOpen = false;
+    }
+
+    // Home's Getting started: ticked from the user's own data (not the examples'), hidden with Hide, back from ?.
+    static async Task Checklist(MainWindow main)
+    {
+        Console.WriteLine("Getting started");
+        HomeView Home() => (HomeView)Content(main);
+        FrameworkElement Section() => (FrameworkElement)Home().FindName("ChecklistSection");
+        string Lede() => ((TextBox)Home().FindName("ChecklistLede")).Text;
+        Invoke(main, "NavigateHome");
+        await Wait(500);
+        Check(Section().IsVisible && Lede() == Loc.F("Checklist.Progress", 0, 4) && ((Panel)Home().FindName("ChecklistRows")).Children.Count == 4,
+            "shown with four steps, none done: the example memories don't count (" + Lede() + ")");
+
+        Profile mine = AddMemory(main, "My plans", ProfileType.Project);
+        File.WriteAllText(MemoryFiles.Items(mine), JsonSerializer.Serialize(new List<Project>
+        {
+            new Project { Id = Guid.NewGuid(), Name = "Move house", Tasks = new List<TaskItem> { new TaskItem { Title = "Book a van" } } }
+        }));
+        Profile things = AddMemory(main, "My things", ProfileType.Collection);
+        File.WriteAllText(MemoryFiles.Items(things), JsonSerializer.Serialize(new List<Entity> { new Entity { Id = Guid.NewGuid(), Name = "Lamp" } }));
+        Invoke(main, "NavigateHome");
+        await Wait(500);
+        bool[] done = GettingStarted.Done(Profiles(main));
+        Check(done.SequenceEqual(new[] { true, true, false, true }) && Lede() == Loc.F("Checklist.Progress", 3, 4),
+            "a project, a task and an item of the user's own: ticked (" + Lede() + ")");
+        Home().BringChecklistIntoView();
+        await Wait(400);
+        RenderWindow(main, "09-getting-started");
+
+        // A reminder (straight from the file: one shown on Home would get a Task Scheduler task).
+        File.WriteAllText(AppPaths.Data("reminders.json"), JsonSerializer.Serialize(new List<Reminder>
+        {
+            new Reminder { Id = Guid.NewGuid(), Title = "", Message = "Checklist", NextFireTime = DateTime.Today.AddDays(3), RepeatType = RepeatType.Once }
+        }));
+        Check(GettingStarted.Done(Profiles(main))[2], "a reminder: ticked");
+        File.Delete(AppPaths.Data("reminders.json"));
+        bool[] all = { true, true, true, true };
+        AppSettings.Update(s => s.Checklist = null);
+        Check(!GettingStarted.Shown(all) && GettingStarted.Shown(done), "it goes once all four are done");
+
+        Click((Button)Home().FindName("ChecklistHide"));
+        await Wait(300);
+        Check(!Section().IsVisible && AppSettings.Load().Checklist == AppSettings.ChecklistHidden, "Hide puts it away");
+        Invoke(main, "NavigateHome");
+        await Wait(400);
+        Check(!Section().IsVisible, "and it stays away");
+
+        Popup help = (Popup)main.FindName("HelpPopup");
+        help.IsOpen = true;
+        await Wait(300);
+        Click((Button)main.FindName("ChecklistLink"));
+        await Wait(600);
+        Check(Content(main) is HomeView && Section().IsVisible && AppSettings.Load().Checklist == AppSettings.ChecklistShown,
+            "? > Getting started brings it back");
+        Check(GettingStarted.Shown(all), "brought back, it stays even with everything done");
+        RemoveMemory(main, mine);
+        RemoveMemory(main, things);
+        Invoke(main, "NavigateHome");
+        await Wait(300);
     }
 
     // Tips & shortcuts: grouped, every entry has its texts, every Ctrl+Shift key is a real shortcut, the filter, Esc.

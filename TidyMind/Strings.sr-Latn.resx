@@ -4143,4 +4143,34 @@ Saveti i prečice ispod dugmeta ? navode menije na desni klik i prečice, a svak
   <data name="Examples.DeleteNote" xml:space="preserve">
     <value>Ovo je primer memorije.</value>
   </data>
+  <data name="Checklist.Title" xml:space="preserve">
+    <value>Prvi koraci</value>
+  </data>
+  <data name="Checklist.Progress" xml:space="preserve">
+    <value>Urađeno {0} od {1}</value>
+  </data>
+  <data name="Checklist.Project.Title" xml:space="preserve">
+    <value>Napravi projekat</value>
+  </data>
+  <data name="Checklist.Project.Text" xml:space="preserve">
+    <value>Novi projekat u bočnoj traci pravi memoriju za projekte; Dodaj projekat na njenoj stranici dodaje projekat u nju.</value>
+  </data>
+  <data name="Checklist.Task.Title" xml:space="preserve">
+    <value>Dodaj zadatak</value>
+  </data>
+  <data name="Checklist.Task.Text" xml:space="preserve">
+    <value>Otvori projekat i upiši zadatak pod Zadaci.</value>
+  </data>
+  <data name="Checklist.Reminder.Title" xml:space="preserve">
+    <value>Podesi podsetnik</value>
+  </data>
+  <data name="Checklist.Reminder.Text" xml:space="preserve">
+    <value>Dugme 🔔 u uglu otvara tvoje podsetnike, a mnogi meniji na desni klik imaju Dodaj podsetnik. Stiže kao Windows obaveštenje.</value>
+  </data>
+  <data name="Checklist.Item.Title" xml:space="preserve">
+    <value>Dodaj stavku u kolekciju</value>
+  </data>
+  <data name="Checklist.Item.Text" xml:space="preserve">
+    <value>Klikni na Nova kolekcija u bočnoj traci, pa na Dodaj stavku na njenoj stranici.</value>
+  </data>
 </root>
