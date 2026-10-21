@@ -26,6 +26,41 @@ namespace TidyMind
             };
         }
 
+        // A small ⋯ button in the card's top right corner, shown while the pointer is over the card or the keyboard is in
+        // it: opens the card's menu (the same as a right-click on it) under the button. open: gets the button.
+        public static void AttachMenuButton(System.Windows.Controls.Grid card, Action<UIElement> open)
+        {
+            System.Windows.Controls.Button more = new System.Windows.Controls.Button
+            {
+                Style = (Style)Application.Current.FindResource("IconButtonStyle"),
+                Content = "",
+                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                FontSize = 12,
+                Width = 28,
+                Height = 28,
+                Margin = new Thickness(0, 8, 8, 0),
+                HorizontalAlignment = HorizontalAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Top,
+                Visibility = Visibility.Hidden
+            };
+            Loc.Track(more, () => Name(more));
+            Name(more);
+            more.Click += (s, e) => open(more);
+            card.Children.Add(more);
+
+            void Show() => more.Visibility = card.IsMouseOver || card.IsKeyboardFocusWithin
+                ? Visibility.Visible : Visibility.Hidden;
+            card.MouseEnter += (s, e) => Show();
+            card.MouseLeave += (s, e) => Show();
+            card.IsKeyboardFocusWithinChanged += (s, e) => Show();
+
+            static void Name(System.Windows.Controls.Button button)
+            {
+                button.ToolTip = Loc.T("Card.More");
+                System.Windows.Automation.AutomationProperties.SetName(button, Loc.T("Card.More"));
+            }
+        }
+
         // RenderTransform (not Margin) so the lift doesn't reflow neighbouring cards.
         public static void AttachHoverLift(FrameworkElement card, DropShadowEffect shadow, Action onEnter = null)
         {

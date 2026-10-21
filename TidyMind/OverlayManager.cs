@@ -159,11 +159,12 @@ namespace TidyMind
         // Win32 state: a message box disables its owner without WPF's IsEnabled knowing.
         private static bool IsDisabled(Window window) => !IsWindowEnabled(new WindowInteropHelper(window).Handle);
 
-        // Everything except the main window and the two overlay windows is opened with ShowDialog.
+        // Everything except the main window, the two overlay windows and the two read-only notes from ? (Tips & shortcuts,
+        // What's new, which are open beside the app rather than in its way) is opened with ShowDialog.
         private static List<Window> OpenDialogs()
         {
             return Application.Current.Windows.OfType<Window>()
-                .Where(w => w.IsVisible && !(w is MainWindow || w is QuickNotesWindow || w is RemindersWindow))
+                .Where(w => w.IsVisible && !(w is MainWindow || w is QuickNotesWindow || w is RemindersWindow || w is TipsWindow || w is WhatsNewWindow))
                 .ToList();
         }
     }

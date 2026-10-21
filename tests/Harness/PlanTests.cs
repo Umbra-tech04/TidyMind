@@ -57,7 +57,6 @@ static partial class Program
             await Interactions(main, studies);
             await CalendarAndHome(main);
             await Narrow(main);
-            await TourStep(main);
             BackupRestore();
         }
         finally
@@ -571,25 +570,6 @@ static partial class Program
         await Wait(500);
         Check(Content(main) is DayPlanView, "its link opens the plan");
         Render(main, "43-today-plan");
-    }
-
-    static async System.Threading.Tasks.Task TourStep(MainWindow main)
-    {
-        Console.WriteLine("Tour: Plan your day");
-        Invoke(main, "NavigateHome");
-        await Restart(main);
-        await ToStep("Plan your day");
-        CheckHoleOn(main, GuidedTour.Find(main, "NavDayPlan"), "spotlight on the Day Plan item");
-        Render(main, "50-tour-dayplan");
-        main.ShowDayPlan(Today); // what clicking the item does
-        await Wait(900);
-        Check(GuidedTour.Current != null && Step().Title == "Notes, reminders and calendar", "opening it moves the tour on");
-        Choose(TourChoice.Next);
-        await Wait(700);
-        CheckHoleOn(main, GuidedTour.Find(main, "HelpButton"), "the end step still points at the ? button");
-        Choose(TourChoice.Finish);
-        await Wait(500);
-        Check(GuidedTour.Current == null, "the tour finishes");
     }
 
     // A backup of today's data restores with its plan; one made before the Day Plan existed restores without one.

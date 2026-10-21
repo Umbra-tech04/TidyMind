@@ -28,8 +28,9 @@ namespace TidyMind
         // plate: drawn behind the page's header and tabs while a picture is the background, so their text stays
         // readable on it. emptyCard: the "nothing here yet" card. Both turn to frosted glass on a picture while Adaptive
         // card tint is on (CardTint); the header's text colors are set on the page, the card's on the card.
-        // excluded: parts of the page whose right-clicks aren't "empty space" (e.g. an open detail overlay).
-        public static void Attach(Grid page, Panel layer, Profile profile, Func<bool> saveProfiles, Border plate,
+        // excluded: parts of the page whose right-clicks aren't "empty space" (e.g. an open detail overlay). Returns Edit
+        // Background, for the page's own ⋯ menu.
+        public static Action Attach(Grid page, Panel layer, Profile profile, Func<bool> saveProfiles, Border plate,
             Border emptyCard, params FrameworkElement[] excluded)
         {
             PageTint tint = CardTint.Track(layer);
@@ -37,8 +38,9 @@ namespace TidyMind
             tint.Add(emptyCard, emptyCard, CardTint.EmptyCardColors, CardTint.Pick);
             Show(layer, profile, plate);
 
+            Action editBackground = () => Edit(page, layer, profile, saveProfiles, plate);
             MenuItem edit = new MenuItem { Header = Loc.T("Background.Edit") };
-            edit.Click += (s, e) => Edit(page, layer, profile, saveProfiles, plate);
+            edit.Click += (s, e) => editBackground();
             page.ContextMenu = new ContextMenu { Items = { edit } };
             page.ContextMenu.Opened += (s, e) => edit.Header = Loc.T("Background.Edit"); // in the language of the moment
 
@@ -55,6 +57,22 @@ namespace TidyMind
                     }
                 }
             };
+            return editBackground;
+        }
+
+        // The page's ⋯ button: the memory's own menu (memoryMenu: the same as its right-click in the sidebar), and Edit
+        // Background, which otherwise only a right-click on empty space opens.
+        public static void OpenPageMenu(UIElement button, Func<ContextMenu>? memoryMenu, Action editBackground)
+        {
+            ContextMenu menu = memoryMenu?.Invoke() ?? new ContextMenu();
+            MenuItem background = new MenuItem { Header = Loc.T("Background.Edit") };
+            background.Click += (s, e) => editBackground();
+            if (menu.Items.Count > 0)
+                menu.Items.Add(new Separator());
+            menu.Items.Add(background);
+            menu.PlacementTarget = button;
+            menu.Placement = PlacementMode.Bottom;
+            menu.IsOpen = true;
         }
 
         private static void Show(Panel layer, Profile profile, FrameworkElement plate)
@@ -81,7 +99,6 @@ namespace TidyMind
 
             if (!saved) return;
             Show(layer, profile, plate);
-            TourSignals.Raise(TourSignals.PageBackgroundChanged);
         }
 
         private static DependencyObject Parent(DependencyObject d)

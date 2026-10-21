@@ -1,0 +1,29 @@
+<Window x:Class="TidyMind.WhatsNewWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:TidyMind"
+        Width="480" SizeToContent="Height" ResizeMode="NoResize" ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource BgPanel}">
+    <!-- What's new (WhatsNew): the release's points as a short list, closed with OK or Esc -->
+    <StackPanel Margin="28,24,28,20">
+        <TextBlock x:Name="TitleText" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextMain}" TextWrapping="Wrap"/>
+        <ItemsControl x:Name="PointList" Margin="0,14,0,0">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="18"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="•" FontSize="13" Foreground="{StaticResource TextSub}"/>
+                        <TextBlock Grid.Column="1" Text="{Binding}" FontSize="13" LineHeight="19" TextWrapping="Wrap"
+                                   Foreground="{StaticResource TextBody}"/>
+                    </Grid>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <Button x:Name="OkButton" Content="{local:Tr Common.Ok}" IsDefault="True" IsCancel="True" HorizontalAlignment="Right"
+                MinWidth="96" Height="34" Padding="16,0" Margin="0,18,0,0" Click="OkButton_Click"/>
+    </StackPanel>
+</Window>

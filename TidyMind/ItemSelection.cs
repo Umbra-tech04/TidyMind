@@ -48,7 +48,29 @@ namespace TidyMind
 
         // ---- Items (registered on every render) -----------------------------
 
-        public virtual void BeginRender() => shown.Clear();
+        public virtual void BeginRender()
+        {
+            shown.Clear();
+            menuOpeners.Clear();
+        }
+
+        // Each element's menu, opened from a button instead of a right-click (OpenMenu).
+        private readonly Dictionary<FrameworkElement, Action<UIElement>> menuOpeners = new Dictionary<FrameworkElement, Action<UIElement>>();
+
+        // The element's menu under `placement` (a card's ⋯ button): the same one a right-click opens, the bulk menu when
+        // it is one of several selected.
+        public void OpenMenu(FrameworkElement element, UIElement placement)
+        {
+            if (menuOpeners.TryGetValue(element, out Action<UIElement>? open))
+                open(placement);
+        }
+
+        private void PickMenu(FrameworkElement element, T item, ref ContextMenu? own)
+        {
+            if (!(element.ContextMenu?.Tag is BulkMenuTag))
+                own = element.ContextMenu;
+            element.ContextMenu = selected.Contains(item) && selected.Count > 1 ? BulkMenu() : own;
+        }
 
         // What is on screen now, in order.
         protected IReadOnlyList<KeyValuePair<FrameworkElement, T>> Shown => shown;
@@ -77,11 +99,15 @@ namespace TidyMind
             };
 
             ContextMenu? own = null;
-            element.ContextMenuOpening += (s, e) =>
+            element.ContextMenuOpening += (s, e) => PickMenu(element, item, ref own);
+            menuOpeners[element] = placement =>
             {
-                if (!(element.ContextMenu?.Tag is BulkMenuTag))
-                    own = element.ContextMenu;
-                element.ContextMenu = selected.Contains(item) && selected.Count > 1 ? BulkMenu() : own;
+                PickMenu(element, item, ref own);
+                if (element.ContextMenu == null)
+                    return;
+                element.ContextMenu.PlacementTarget = placement;
+                element.ContextMenu.Placement = PlacementMode.Bottom;
+                element.ContextMenu.IsOpen = true;
             };
 
             if (selected.Contains(item))

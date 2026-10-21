@@ -658,7 +658,7 @@ namespace TidyMind
             memory.Name = UniqueName(package.Name,
                 profiles.Where(p => p.Type == ProfileType.Collection).Select(p => p.Name));
             memory.Order = profiles.Count == 0 ? 0 : profiles.Max(p => p.Order) + 1;
-            memory.IsSample = null; // the guided tour's example on the other PC is the user's own copy here
+            memory.IsSample = null; // an example memory on the other PC is the user's own copy here
             memory.TodoCollapsed = null;
             if (memory.Color == null || !HexColor.IsMatch(memory.Color))
                 memory.Color = color;

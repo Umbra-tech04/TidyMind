@@ -36,7 +36,6 @@ namespace TidyMind
             {
                 if (!Customize(owner, project, save)) return;
                 redraw();
-                TourSignals.Raise(TourSignals.CardCustomized);
             };
             MenuItem delete = new MenuItem { Header = Loc.T("Common.Delete") };
             delete.Click += (s, e) =>

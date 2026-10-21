@@ -223,7 +223,6 @@ namespace TidyMind
             pageBodies.Add("");
             ShowPage(pages.Count - 1, 1);
             NotesBox.Focus();
-            TourSignals.Raise(TourSignals.NotePageAdded);
         }
 
         private void PrevPage_Click(object sender, RoutedEventArgs e) => FlipTo(currentPage - 1);

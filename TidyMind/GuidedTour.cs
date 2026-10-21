@@ -14,48 +14,44 @@ using System.Windows.Threading;
 
 namespace TidyMind
 {
-    public enum TourChoice { Next, Finish, Dismiss, Begin }
+    public enum TourChoice { Next, Finish, Dismiss, Begin, Examples }
 
-    // How a tour ended. Begin: the welcome card's "Start the tour" (the caller then starts the real one).
-    public enum TourEnd { Finished, Skipped, Begin, Failed }
+    // How a tour ended. Begin: the welcome card's "Start the tour" (the caller then starts the real one). Examples: its
+    // "Add example memories".
+    public enum TourEnd { Finished, Skipped, Begin, Examples, Failed }
 
-    // One step of a tour (TourSteps): what to point at, what to say, and what ends it.
+    // One step of a tour (TourSteps): what to point at and what to say. Next moves on.
     public class TourStep
     {
         // Names the step and its texts: "Tour.<Key>.Title" and "Tour.<Key>.Text", in the current language.
         public string Key { get; init; } = "";
-        public Func<object?[]>? TextArgs { get; init; }
 
         public string Title => Loc.T("Tour." + Key + ".Title");
-        public string Text => TextArgs == null ? Loc.T("Tour." + Key + ".Text") : Loc.F("Tour." + Key + ".Text", TextArgs());
+        public string Text => Loc.T("Tour." + Key + ".Text");
 
-        // The element to spotlight, looked up again as the page changes. Null, or nothing found: the callout sits in
-        // the middle and Next moves on.
+        // The element to spotlight, looked up again as the window changes. A step with a target that isn't wholly on
+        // screen when its turn comes is left out (GuidedTour.OnScreen). Null: a card in the middle of the window.
         public Func<FrameworkElement?>? Target { get; init; }
 
-        // Puts the app where the step happens (opens the example memory, ...), as the step starts.
+        // Gets the window ready before the step is checked and shown (the main window: Home, nothing open over it), since
+        // a click through the spotlight may have changed it.
         public Action? Prepare { get; init; }
 
-        // Checked as the step starts: true skips it (e.g. "close the project" when it's already closed).
-        public Func<bool>? AlreadyDone { get; init; }
-
-        // The TourSignals name that completes the step; null: Next only.
-        public string? Signal { get; init; }
-
-        // A card (welcome, basics done, the end) has its own buttons instead of Skip tour / Next and no progress dots.
-        // Primary and Secondary are the buttons' string keys.
+        // A step with its own buttons instead of Skip tour / Next (the welcome card, the last step): string keys.
+        // Extra: a link above the buttons (the welcome card's "Add example memories").
         public string? Primary { get; init; }
         public TourChoice PrimaryChoice { get; init; } = TourChoice.Next;
         public string? Secondary { get; init; }
         public TourChoice SecondaryChoice { get; init; } = TourChoice.Finish;
+        public string? Extra { get; init; }
+        public TourChoice ExtraChoice { get; init; } = TourChoice.Next;
 
-        public bool IsCard => Primary != null;
+        public bool OwnButtons => Primary != null;
     }
 
-    // The guided tour: dims the window that holds the step's element, cuts a spotlight around it, and shows the step
-    // in a callout next to it. A step ends when TourSignals reports its action, or with Next. Clicks pass through
-    // only inside the spotlight. Anything that throws ends the tour with one line in error.log: it must never get in
-    // the way of the app.
+    // The guided tour: dims the main window, cuts a spotlight around the step's element, and shows the step in a
+    // callout next to it. Next (or Enter, or Right) moves on, Skip or Esc ends it. Clicks pass through only inside the
+    // spotlight. Anything that throws ends the tour with one line in error.log: it must never get in the way of the app.
     public sealed class GuidedTour
     {
         private const double HolePadding = 6;
@@ -64,14 +60,14 @@ namespace TidyMind
 
         private readonly IReadOnlyList<TourStep> steps;
         private readonly Action<TourEnd> ended;
-        // The page changes under the tour (a window opens, the view switches), so the target is looked up again often.
+        // The window changes under the tour (it's resized, the sidebar scrolls), so the target is looked up again often.
         private readonly DispatcherTimer follow = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
         private int index;
         private Window? host;
         private TourAdorner? adorner;
         private FrameworkElement? callout;
         private FrameworkElement? target;
-        private bool scrolledTo;
+        private bool anyShown;
 
         private GuidedTour(IReadOnlyList<TourStep> steps, Action<TourEnd> ended)
         {
@@ -86,7 +82,6 @@ namespace TidyMind
             Current?.Close();
             GuidedTour tour = new GuidedTour(steps, ended);
             Current = tour;
-            TourSignals.Raised += tour.OnSignal;
             Loc.LanguageChanged += tour.OnLanguageChanged;
             tour.follow.Start();
             tour.Guard(() => tour.Show(0));
@@ -112,7 +107,6 @@ namespace TidyMind
         {
             Current = null;
             follow.Stop();
-            TourSignals.Raised -= OnSignal;
             Loc.LanguageChanged -= OnLanguageChanged;
             try
             {
@@ -144,25 +138,48 @@ namespace TidyMind
 
         private TourStep Step => steps[index];
 
+        // A step whose element is missing, hidden or not wholly on screen (a small window, a long sidebar) is skipped,
+        // so the tour never points at nothing or at half a thing.
         private void Show(int at)
         {
             for (index = at; index < steps.Count; index++)
             {
-                if (Step.AlreadyDone?.Invoke() != true)
+                Step.Prepare?.Invoke();
+                if (Shown(Step))
                     break;
             }
+            // Past the last step: finished, unless not one step could be shown (then it was never really taken).
             if (index >= steps.Count)
             {
-                Stop(TourEnd.Finished);
+                Stop(anyShown ? TourEnd.Finished : TourEnd.Skipped);
                 return;
             }
+            anyShown = true;
 
-            Step.Prepare?.Invoke();
             target = null;
-            scrolledTo = false;
             callout = BuildCallout(Step);
             adorner?.SetCallout(callout);
             Refresh();
+        }
+
+        private static bool Shown(TourStep step) => step.Target == null || OnScreen(step.Target());
+
+        // Whether the element is laid out, visible and wholly inside its window and every scrolling area around it.
+        public static bool OnScreen(FrameworkElement? element)
+        {
+            if (element == null || !element.IsVisible || element.ActualWidth <= 0 || element.ActualHeight <= 0
+                || PresentationSource.FromVisual(element) == null || !(Window.GetWindow(element)?.Content is UIElement page)
+                || !page.IsAncestorOf(element))
+                return false;
+            Rect bounds = element.TransformToAncestor(page).TransformBounds(new Rect(element.RenderSize));
+            Rect seen = bounds;
+            seen.Intersect(new Rect(page.RenderSize));
+            for (DependencyObject d = VisualTreeHelper.GetParent(element); d != null && d != page && !seen.IsEmpty; d = VisualTreeHelper.GetParent(d))
+            {
+                if (d is ScrollViewer viewer)
+                    seen.Intersect(viewer.TransformToAncestor(page).TransformBounds(new Rect(viewer.RenderSize)));
+            }
+            return !seen.IsEmpty && seen.Width >= bounds.Width - 1 && seen.Height >= bounds.Height - 1;
         }
 
         private void Choose(TourChoice choice)
@@ -173,24 +190,12 @@ namespace TidyMind
                 case TourChoice.Finish: Stop(TourEnd.Finished); break;
                 case TourChoice.Dismiss: Stop(TourEnd.Skipped); break;
                 case TourChoice.Begin: Stop(TourEnd.Begin); break;
+                case TourChoice.Examples: Stop(TourEnd.Examples); break;
             }
         }
 
-        // After the action has run its course (a window opening, a list redrawing), not in the middle of it.
-        private void OnSignal(string signal)
-        {
-            if (Step.Signal != signal)
-                return;
-            int at = index;
-            Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() => Guard(() =>
-            {
-                if (Current == this && index == at)
-                    Show(index + 1);
-            })), DispatcherPriority.Background);
-        }
-
-        // The same step again in the new language, without running its Prepare a second time. The spotlight follows
-        // the target as the page relays out in the new language (OnLayout).
+        // The same step again in the new language. The spotlight follows the target as the window relays out in the new
+        // language (OnLayout).
         private void OnLanguageChanged() => Guard(() =>
         {
             callout = BuildCallout(Step);
@@ -202,17 +207,9 @@ namespace TidyMind
 
         private void Refresh()
         {
-            FrameworkElement? found = Resolve();
-            Window? want = found != null ? Window.GetWindow(found) : DefaultHost();
-            if (want != host || adorner == null)
-                Attach(want);
-
-            if (found != null && !scrolledTo)
-            {
-                found.BringIntoView();
-                scrolledTo = true;
-            }
-            target = found;
+            target = Resolve();
+            if (host != Application.Current.MainWindow || adorner == null)
+                Attach(Application.Current.MainWindow);
             UpdateHole();
         }
 
@@ -224,8 +221,6 @@ namespace TidyMind
                 : null;
         }
 
-        // An open project window is in front of everything else; otherwise the main window.
-        private static Window? DefaultHost() => Open<ProjectWindow>() ?? Application.Current.MainWindow;
 
         private void Attach(Window? window)
         {
@@ -288,7 +283,7 @@ namespace TidyMind
 
         // ---- Keys ---------------------------------------------------------
 
-        // Esc skips, except while typing in a box (it cancels an edit there). Enter and Right belong to whatever control
+        // Esc skips, except in a box with text in it (it empties the box first). Enter and Right belong to whatever control
         // has the focus (a box, the spotlighted button, a list); they mean Next (or a card's main button) only with the
         // focus on nothing in particular, and Right also from the callout, where Enter presses the focused button.
         private void OnKey(object sender, KeyEventArgs e) => Guard(() =>
@@ -300,8 +295,8 @@ namespace TidyMind
 
             if (e.Key == Key.Escape)
             {
-                if (!inCallout && (focused is TextBoxBase || focused is PasswordBox))
-                    return;
+                if (!inCallout && focused is TextBox box && box.Text.Length > 0)
+                    return; // it empties the box first
                 e.Handled = true;
                 Stop(TourEnd.Skipped);
                 return;
@@ -309,18 +304,20 @@ namespace TidyMind
             if (inCallout ? e.Key == Key.Enter : focused is Control && !(focused is Window))
                 return;
             e.Handled = true;
-            Choose(Step.IsCard ? Step.PrimaryChoice : TourChoice.Next);
+            Choose(Step.OwnButtons ? Step.PrimaryChoice : TourChoice.Next);
         });
 
         // ---- Callout ------------------------------------------------------
 
         private FrameworkElement BuildCallout(TourStep step)
         {
-            List<TourStep> counted = steps.Where(s => !s.IsCard).ToList();
+            // The dots count the steps that point at something and are on screen now: a skipped one isn't counted.
+            List<TourStep> counted = steps.Where(s => s.Target != null && Shown(s)).ToList();
             int position = counted.IndexOf(step);
+            bool dotted = position >= 0;
 
             StackPanel body = new StackPanel();
-            if (!step.IsCard)
+            if (dotted)
                 body.Children.Add(Dots(position, counted.Count));
 
             body.Children.Add(new TextBlock
@@ -330,7 +327,7 @@ namespace TidyMind
                 FontWeight = FontWeights.SemiBold,
                 Foreground = Res("TextMain"),
                 TextWrapping = TextWrapping.Wrap,
-                Margin = new Thickness(0, step.IsCard ? 0 : 12, 0, 0)
+                Margin = new Thickness(0, dotted ? 12 : 0, 0, 0)
             });
             TextBlock text = new TextBlock
             {
@@ -342,14 +339,24 @@ namespace TidyMind
                 Margin = new Thickness(0, 6, 0, 0)
             };
             // Read out by screen readers as the step appears: where it is, its title and its sentence.
-            AutomationProperties.SetName(text, (step.IsCard ? "" : Loc.F("Tour.StepOf", position + 1, counted.Count) + " ")
+            AutomationProperties.SetName(text, (dotted ? Loc.F("Tour.StepOf", position + 1, counted.Count) + " " : "")
                 + step.Title + ". " + step.Text);
             AutomationProperties.SetLiveSetting(text, AutomationLiveSetting.Assertive);
             text.Loaded += (s, e) => UIElementAutomationPeer.CreatePeerForElement(text)?.RaiseAutomationEvent(AutomationEvents.LiveRegionChanged);
             body.Children.Add(text);
 
+            if (step.Extra != null)
+            {
+                Button extra = CalloutButton(Loc.T(step.Extra), step.ExtraChoice, "LinkButtonStyle");
+                extra.Foreground = Res("BtnHover");
+                extra.FontSize = 13;
+                extra.HorizontalAlignment = HorizontalAlignment.Left;
+                extra.Margin = new Thickness(0, 12, 0, 0);
+                body.Children.Add(extra);
+            }
+
             DockPanel buttons = new DockPanel { Margin = new Thickness(0, 16, 0, 0), LastChildFill = false };
-            if (step.IsCard)
+            if (step.OwnButtons)
             {
                 Button main = CalloutButton(Loc.T(step.Primary!), step.PrimaryChoice, null);
                 main.Style = StrongButtonStyle();
@@ -445,13 +452,9 @@ namespace TidyMind
 
         // ---- Lookups for TourSteps ----------------------------------------
 
-        // The element called `name` in that window (names repeat across windows, e.g. SaveButton). Null without one.
+        // The element called `name` in that window, or null.
         public static FrameworkElement? Find(Window? window, string name) =>
             window != null && window.IsVisible ? FindIn(window, name) : null;
-
-        // The open window of that kind, if any.
-        public static T? Open<T>() where T : Window =>
-            Application.Current.Windows.OfType<T>().FirstOrDefault(w => w.IsVisible);
 
         private static FrameworkElement? FindIn(DependencyObject parent, string name)
         {

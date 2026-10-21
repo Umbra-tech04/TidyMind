@@ -1,0 +1,35 @@
+<Window x:Class="TidyMind.TipsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:TidyMind"
+        Title="{local:Tr Tips.Title}" Width="680" Height="700" MinWidth="480" MinHeight="420"
+        ResizeMode="CanResize" ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource BgMain}">
+    <!-- Tips & shortcuts (Tips.All): every gesture and key the app has, by where it works, with a filter -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1"
+                Padding="32,14">
+            <DockPanel>
+                <TextBox x:Name="FilterBox" DockPanel.Dock="Right" Style="{StaticResource SearchBoxStyle}" Width="220"
+                         Tag="{local:Tr Tips.Filter}" AutomationProperties.Name="{local:Tr Tips.Filter}"
+                         TextChanged="FilterBox_TextChanged"/>
+                <TextBlock Text="{local:Tr Tips.Title}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextMain}"
+                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,16,0"/>
+            </DockPanel>
+        </Border>
+
+        <ScrollViewer x:Name="ListScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="32,8,32,28">
+                <StackPanel x:Name="Groups"/>
+                <TextBlock x:Name="NothingFound" Text="{local:Tr Tips.NothingFound}" FontSize="13" Foreground="{StaticResource TextSub}"
+                           Margin="2,24,0,0" Visibility="Collapsed"/>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>

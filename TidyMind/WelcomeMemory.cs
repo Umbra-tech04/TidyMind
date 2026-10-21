@@ -8,8 +8,8 @@ using System.Windows.Media.Imaging;
 
 namespace TidyMind
 {
-    // The guided tour's example data: a project memory and a small collection, both called "Welcome" (in the language
-    // shown when they're made) and marked Profile.IsSample. Written through the normal stores, so search, export, backup and delete treat them like any
+    // The example memories (? > Add example memories, or the first-run card): a project memory and a small collection,
+    // both called "Welcome" (in the language shown when they're made) and marked Profile.IsSample. Written through the normal stores, so search, export, backup and delete treat them like any
     // other memory. They are written in the language shown when they are created and are the user's data from then
     // on: a later language switch doesn't translate them. Choice values (Material, Season, the vehicle's Kind) are
     // stored in English like every item's, and shown in the current language.
@@ -20,10 +20,6 @@ namespace TidyMind
 
         public static bool Exists(IEnumerable<Profile> profiles) =>
             Find(profiles, ProfileType.Project) != null && Find(profiles, ProfileType.Collection) != null;
-
-        // The example project with notes on two pages (the tour's notebook step), or null if it's gone.
-        public static Guid? NotebookProject(Profile memory) =>
-            ProjectStore.LoadOrEmpty(memory).FirstOrDefault(p => p.NotePages != null && p.NotePages.Count > 1)?.Id;
 
         // Adds whichever of the two is missing. Each memory's files are written first and profiles.json last; if that
         // fails, the new folders and picture are removed again and the list of memories is as it was.
@@ -147,7 +143,6 @@ namespace TidyMind
                     CreatedDate = now, Color = Loc.T("Welcome.Sweater.Color"), Material = "Wool", Season = "Winter",
                     Sizes = new List<SizeQuantity> { new SizeQuantity { Size = "L", Quantity = 2 } }
                 },
-                // The last item: the tour's search step suggests the last word of its name (MainWindow.SampleSearchWord).
                 new Entity
                 {
                     Id = Guid.NewGuid(), EntityType = EntityTypes.Vehicle, Name = Loc.T("Welcome.Bike.Item"), TabId = things.Id, Order = 2,

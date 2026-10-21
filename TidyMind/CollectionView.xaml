@@ -12,10 +12,11 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- The memory's own background (Edit Background), behind everything -->
-        <Grid x:Name="BackgroundLayer" Grid.RowSpan="3" IsHitTestVisible="False" ClipToBounds="True"/>
+        <Grid x:Name="BackgroundLayer" Grid.RowSpan="4" IsHitTestVisible="False" ClipToBounds="True"/>
 
         <!-- On a background picture: a light plate behind the header and tabs, so their text reads on any photo
              (MemoryPageBackground shows it). Its own element, so the shadow doesn't fall on the text. -->
@@ -49,6 +50,10 @@
                     <Button Height="36" Padding="16,0" Click="AddEntityButton_Click">
                         <TextBlock><Run Text="+  "/><Run Text="{local:Tr Collection.AddItem}"/></TextBlock>
                     </Button>
+                    <Button x:Name="MoreButton" Style="{StaticResource IconButtonStyle}" Width="36" Height="36" Margin="10,0,0,0"
+                            ToolTip="{local:Tr Memory.More}" AutomationProperties.Name="{local:Tr Memory.More}" Click="MoreButton_Click">
+                        <TextBlock Text="&#xE712;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
@@ -75,5 +80,12 @@
                 <Canvas x:Name="MarqueeCanvas" IsHitTestVisible="False"/>
             </Grid>
         </ScrollViewer>
+
+        <!-- What a right-click and Ctrl/Shift do here, shown while there are cards. A light plate, so it reads on a
+             background picture too; clear of the corner buttons on the right. -->
+        <Border x:Name="CardHint" Grid.Row="3" HorizontalAlignment="Left" Margin="28,0,280,16" Padding="10,4"
+                CornerRadius="8" Background="{StaticResource BgPanel}" Opacity="0.92" Visibility="Collapsed">
+            <TextBlock Text="{local:Tr Hint.Cards}" FontSize="12" Foreground="{StaticResource TextSub}" TextWrapping="Wrap"/>
+        </Border>
     </Grid>
 </UserControl>

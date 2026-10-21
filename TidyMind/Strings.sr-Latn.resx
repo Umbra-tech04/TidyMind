@@ -2330,12 +2330,6 @@ Tvoja poslednja izmena nije sačuvana.</value>
   <data name="Todo.Unreadable" xml:space="preserve">
     <value>Čuvanje nije uspelo: quicktodos.json ne može da se pročita.</value>
   </data>
-  <data name="Tour.BasicsDone.Text" xml:space="preserve">
-    <value>To su bile svakodnevne stvari, a trikovi traju još otprilike minut.</value>
-  </data>
-  <data name="Tour.BasicsDone.Title" xml:space="preserve">
-    <value>Osnove su savladane</value>
-  </data>
   <data name="Tour.Button.Finish" xml:space="preserve">
     <value>Završi</value>
   </data>
@@ -2351,110 +2345,17 @@ Tvoja poslednja izmena nije sačuvana.</value>
   <data name="Tour.Button.Start" xml:space="preserve">
     <value>Kreni u obilazak</value>
   </data>
-  <data name="Tour.Button.Tricks" xml:space="preserve">
-    <value>Nastavi sa trikovima</value>
-  </data>
-  <data name="Tour.CardLook.Text" xml:space="preserve">
-    <value>Klikni desnim tasterom na ovu karticu i izaberi Prilagodi karticu da joj daš boju ili sliku.</value>
-  </data>
-  <data name="Tour.CardLook.Title" xml:space="preserve">
-    <value>Promeni izgled kartice</value>
-  </data>
-  <data name="Tour.CloseProject.Text" xml:space="preserve">
-    <value>Klikni na Sačuvaj da zatvoriš projekat i zadržiš izmene.</value>
-  </data>
-  <data name="Tour.CloseProject.Title" xml:space="preserve">
-    <value>Zatvori projekat</value>
-  </data>
-  <data name="Tour.Collections.Text" xml:space="preserve">
-    <value>Otvori ovu kolekciju u bočnoj traci da vidiš spisak stvari koje poseduješ.</value>
-  </data>
-  <data name="Tour.Collections.Title" xml:space="preserve">
-    <value>Kolekcije</value>
-  </data>
-  <data name="Tour.Confirm.Text" xml:space="preserve">
-    <value>Ovim se dodaje primer memorije. Tvoji podaci se ne menjaju.</value>
-  </data>
-  <data name="Tour.Confirm.Title" xml:space="preserve">
-    <value>Kreni u obilazak</value>
-  </data>
-  <data name="Tour.Confirm.WriteFailed" xml:space="preserve">
-    <value>Primer memorije nije mogao da se upiše u
-{0}
-
-Ništa nije promenjeno.</value>
-  </data>
-  <data name="Tour.Corner.Text" xml:space="preserve">
-    <value>Ovi dugmići sa bilo koje stranice otvaraju brze beleške, tvoje podsetnike i kalendar.</value>
-  </data>
   <data name="Tour.Corner.Title" xml:space="preserve">
     <value>Beleške, podsetnici i kalendar</value>
-  </data>
-  <data name="Tour.DayPlan.Text" xml:space="preserve">
-    <value>Otvori Dnevni plan i podeli dan na vremenske blokove, na primer Teretana 17:00–18:30.</value>
-  </data>
-  <data name="Tour.DayPlan.Title" xml:space="preserve">
-    <value>Isplaniraj dan</value>
-  </data>
-  <data name="Tour.DeleteNote" xml:space="preserve">
-    <value>Ovo je primer memorije.</value>
-  </data>
-  <data name="Tour.End.Text" xml:space="preserve">
-    <value>Pomoć i prečice su iza dugmeta ?, a primere memorija možeš bilo kada da obrišeš iz bočne trake.</value>
-  </data>
-  <data name="Tour.End.Title" xml:space="preserve">
-    <value>To je sve od obilaska</value>
   </data>
   <data name="Tour.HelpEntry" xml:space="preserve">
     <value>Kreni u obilazak</value>
   </data>
-  <data name="Tour.OpenProject.Text" xml:space="preserve">
-    <value>Klikni na ovu karticu da otvoriš projekat.</value>
-  </data>
-  <data name="Tour.OpenProject.Title" xml:space="preserve">
-    <value>Otvori projekat</value>
-  </data>
-  <data name="Tour.PageBackground.Text" xml:space="preserve">
-    <value>Klikni desnim tasterom na prazan deo stranice i izaberi Uredi pozadinu.</value>
-  </data>
-  <data name="Tour.PageBackground.Title" xml:space="preserve">
-    <value>Promeni pozadinu stranice</value>
-  </data>
-  <data name="Tour.Search.Example" xml:space="preserve">
-    <value>bicikl</value>
-  </data>
-  <data name="Tour.Search.Text" xml:space="preserve">
-    <value>Pritisni Ctrl+Shift+F i upiši neku reč, na primer {0}.</value>
-  </data>
   <data name="Tour.Search.Title" xml:space="preserve">
     <value>Pretraži sve</value>
   </data>
-  <data name="Tour.SelectCards.Text" xml:space="preserve">
-    <value>Prevuci pravougaonik preko praznog prostora oko kartica da izabereš više njih odjednom.</value>
-  </data>
-  <data name="Tour.SelectCards.Title" xml:space="preserve">
-    <value>Izaberi više kartica</value>
-  </data>
   <data name="Tour.StepOf" xml:space="preserve">
     <value>Korak {0} od {1}.</value>
-  </data>
-  <data name="Tour.TodoList.Text" xml:space="preserve">
-    <value>Upiši obavezu i pritisni Enter, pa klikni na njen tekst da ga izmeniš.</value>
-  </data>
-  <data name="Tour.TodoList.Title" xml:space="preserve">
-    <value>Vodi listu obaveza</value>
-  </data>
-  <data name="Tour.TurnPage.Text" xml:space="preserve">
-    <value>Klikni na strelicu nadesno da pređeš na drugu stranicu, pa klikni ponovo da započneš novu.</value>
-  </data>
-  <data name="Tour.TurnPage.Title" xml:space="preserve">
-    <value>Okreni stranicu</value>
-  </data>
-  <data name="Tour.Welcome.Text" xml:space="preserve">
-    <value>Memorija je jedna oblast tvog života, a sve memorije su u bočnoj traci. Memorija za projekte sadrži projekte, svaki sa svojim zadacima, beleškama i datotekama. Memorija za kolekcije čuva spisak stvari koje poseduješ, poput odeće ili bicikla.</value>
-  </data>
-  <data name="Tour.Welcome.Title" xml:space="preserve">
-    <value>TidyMind ti želi dobrodošlicu</value>
   </data>
   <data name="Transfer.Count.Files.Few" xml:space="preserve">
     <value>{0} datoteke</value>
@@ -3863,5 +3764,383 @@ Ipak je zatvoriti i odbaciti izmene?</value>
   </data>
   <data name="Transfer.Import.CollectionNotebookCounts" xml:space="preserve">
     <value>{0}, {1}, {2}</value>
+  </data>
+  <data name="Tour.Welcome.Title" xml:space="preserve">
+    <value>Kratak obilazak</value>
+  </data>
+  <data name="Tour.Welcome.Text" xml:space="preserve">
+    <value>Nekoliko kratkih koraka kroz glavni prozor: gde su tvoje memorije, kako da započneš novu i gde je sve ostalo. Ili prvo dodaj dva primera memorija i razgledaj ih.</value>
+  </data>
+  <data name="Tour.Memories.Title" xml:space="preserve">
+    <value>Tvoje memorije</value>
+  </data>
+  <data name="Tour.Memories.Text" xml:space="preserve">
+    <value>Svaka oblast tvog života dobija svoju memoriju, pa je sve o njoj na jednom mestu. Kolekcije prate stvari koje poseduješ, poput odeće ili automobila; memorije za projekte sadrže projekte sa zadacima, beleškama i datotekama.</value>
+  </data>
+  <data name="Tour.NewMemory.Title" xml:space="preserve">
+    <value>Nova memorija</value>
+  </data>
+  <data name="Tour.NewMemory.Text" xml:space="preserve">
+    <value>Memorija za projekte je za planove i posao, a kolekcija za stvari o kojima želiš da vodiš evidenciju. Kasnije možeš da preimenuješ ili obrišeš bilo koju desnim klikom na nju u bočnoj traci.</value>
+  </data>
+  <data name="Tour.Todos.Title" xml:space="preserve">
+    <value>Današnje obaveze</value>
+  </data>
+  <data name="Tour.Todos.Text" xml:space="preserve">
+    <value>Zapiši šta treba da se uradi i štikliraj kako napreduješ. Na Početnoj je i nedelja sa tvojim podsetnicima i beleškama iz kalendara.</value>
+  </data>
+  <data name="Tour.Corner.Text" xml:space="preserve">
+    <value>Zapiši nešto bez napuštanja stranice, zakaži Windows obaveštenje za pravo vreme (stiže i kada je TidyMind zatvoren) ili otvori kalendar. Sve to radi sa svake stranice.</value>
+  </data>
+  <data name="Tour.Search.Text" xml:space="preserve">
+    <value>Pretražuje sve memorije odjednom: projekte, stavke, datoteke, stranice beležnica i dnevne planove. Ctrl+Shift+F je otvara sa bilo koje stranice.</value>
+  </data>
+  <data name="Tour.End.Title" xml:space="preserve">
+    <value>Desni klik za više</value>
+  </data>
+  <data name="Tour.End.Text" xml:space="preserve">
+    <value>Memorije, kartice, odeljci, zadaci, datoteke i dani u kalendaru imaju meni na desni klik. Saveti i prečice ispod dugmeta ? navode ih sve, a odatle možeš i ponovo da pokreneš obilazak.</value>
+  </data>
+  <data name="Examples.Add" xml:space="preserve">
+    <value>Dodaj primere memorija</value>
+  </data>
+  <data name="Examples.Title" xml:space="preserve">
+    <value>Primeri memorija</value>
+  </data>
+  <data name="Examples.WriteFailed" xml:space="preserve">
+    <value>Primeri memorija nisu mogli da se upišu u
+{0}
+
+Ništa nije promenjeno.</value>
+  </data>
+  <data name="Help.WhatsNew" xml:space="preserve">
+    <value>Šta je novo</value>
+  </data>
+  <data name="Nav.Search" xml:space="preserve">
+    <value>Pretraga</value>
+  </data>
+  <data name="Nav.SearchTip" xml:space="preserve">
+    <value>Pretraga svih memorija (Ctrl+Shift+F)</value>
+  </data>
+  <data name="Memory.More" xml:space="preserve">
+    <value>Još opcija za ovu memoriju</value>
+  </data>
+  <data name="Card.More" xml:space="preserve">
+    <value>Još opcija</value>
+  </data>
+  <data name="Hint.Cards" xml:space="preserve">
+    <value>Desni klik na karticu ili prazan prostor nudi još opcija. Ctrl+klik, Shift+klik ili prevlačenje preko praznog prostora bira više kartica.</value>
+  </data>
+  <data name="Hint.Files" xml:space="preserve">
+    <value>Desnim klikom na datoteku možeš da je preimenuješ, prikažeš u fascikli ili sačuvaš kopiju.</value>
+  </data>
+  <data name="Hint.Notebook" xml:space="preserve">
+    <value>Ctrl+PageUp i Ctrl+PageDown okreću stranicu. U spisku ☰, Ctrl+klik ili Shift+klik bira više stranica.</value>
+  </data>
+  <data name="Settings.BackgroundImage.Where" xml:space="preserve">
+    <value>Samu sliku biraš na stranici memorije: ⋯ na vrhu, pa Uredi pozadinu.</value>
+  </data>
+  <data name="WhatsNew.Title" xml:space="preserve">
+    <value>Novo u TidyMind-u {0}</value>
+  </data>
+  <data name="WhatsNew.Points" xml:space="preserve">
+    <value>Vozila dobijaju svoj prozor: dokumenta sa podsetnicima, servisnu knjižicu sa troškovima, komplete točkova i delove.
+Poništavanje i ponavljanje sa Ctrl+Z i Ctrl+Y: obrisane stavke, projekti i memorije vraćaju se sa svojim slikama i datotekama.
+Svaka memorija ima svoju beležnicu, za beleške o celoj memoriji.
+Saveti i prečice ispod dugmeta ? navode menije na desni klik i prečice, a svaka kartica ima dugme ⋯ za svoj meni.</value>
+  </data>
+  <data name="Tips.Title" xml:space="preserve">
+    <value>Saveti i prečice</value>
+  </data>
+  <data name="Tips.Filter" xml:space="preserve">
+    <value>Pronađi savet…</value>
+  </data>
+  <data name="Tips.NothingFound" xml:space="preserve">
+    <value>Nijedan savet ne odgovara.</value>
+  </data>
+  <data name="Tips.Group.Everywhere" xml:space="preserve">
+    <value>Glavni prozor</value>
+  </data>
+  <data name="Tips.Group.Sidebar" xml:space="preserve">
+    <value>Bočna traka</value>
+  </data>
+  <data name="Tips.Group.Pages" xml:space="preserve">
+    <value>Stranice projekata i kolekcija</value>
+  </data>
+  <data name="Tips.Group.Projects" xml:space="preserve">
+    <value>Detalji projekta</value>
+  </data>
+  <data name="Tips.Group.Notebook" xml:space="preserve">
+    <value>Beleške i beležnice</value>
+  </data>
+  <data name="Tips.Group.Todos" xml:space="preserve">
+    <value>Početna i obaveze</value>
+  </data>
+  <data name="Tips.Group.Plan" xml:space="preserve">
+    <value>Kalendar i Dnevni plan</value>
+  </data>
+  <data name="Tips.Group.Items" xml:space="preserve">
+    <value>Stavke kolekcija</value>
+  </data>
+  <data name="Tips.Search.Keys" xml:space="preserve">
+    <value>Ctrl+Shift+F</value>
+  </data>
+  <data name="Tips.Search.Text" xml:space="preserve">
+    <value>Pretražuje sve memorije: projekte, stavke, datoteke, stranice beležnica i dnevne planove.</value>
+  </data>
+  <data name="Tips.QuickNote.Keys" xml:space="preserve">
+    <value>Ctrl+Shift+N</value>
+  </data>
+  <data name="Tips.QuickNote.Text" xml:space="preserve">
+    <value>Otvara Brze beleške, blok za beleške koji čuva upisani tekst kada ga zatvoriš.</value>
+  </data>
+  <data name="Tips.Reminders.Keys" xml:space="preserve">
+    <value>Ctrl+Shift+R</value>
+  </data>
+  <data name="Tips.Reminders.Text" xml:space="preserve">
+    <value>Otvara spisak podsetnika.</value>
+  </data>
+  <data name="Tips.Calendar.Keys" xml:space="preserve">
+    <value>Ctrl+Shift+C</value>
+  </data>
+  <data name="Tips.Calendar.Text" xml:space="preserve">
+    <value>Otvara kalendar.</value>
+  </data>
+  <data name="Tips.Undo.Keys" xml:space="preserve">
+    <value>Ctrl+Z</value>
+  </data>
+  <data name="Tips.Undo.Text" xml:space="preserve">
+    <value>Poništava poslednju izmenu na stranici: brisanje, štikliranje, preimenovanje, premeštanje ili sačuvanu izmenu. U polju za tekst poništava kucanje.</value>
+  </data>
+  <data name="Tips.Redo.Keys" xml:space="preserve">
+    <value>Ctrl+Y, Ctrl+Shift+Z</value>
+  </data>
+  <data name="Tips.Redo.Text" xml:space="preserve">
+    <value>Ponavlja ono što je poništeno.</value>
+  </data>
+  <data name="Tips.RightClick.Keys" xml:space="preserve">
+    <value>Desni klik</value>
+  </data>
+  <data name="Tips.RightClick.Text" xml:space="preserve">
+    <value>Otvara meni na memorijama, karticama, odeljcima, zadacima, datotekama, obavezama, danima u kalendaru, blokovima plana i podsetnicima.</value>
+  </data>
+  <data name="Tips.Escape.Keys" xml:space="preserve">
+    <value>Esc</value>
+  </data>
+  <data name="Tips.Escape.Text" xml:space="preserve">
+    <value>Zatvara pretragu, kalendar, Brze beleške i prozore kao što su Detalji projekta. Dok menjaš tekst na licu mesta, vraća stari tekst.</value>
+  </data>
+  <data name="Tips.MemoryMenu.Keys" xml:space="preserve">
+    <value>Desni klik na memoriju</value>
+  </data>
+  <data name="Tips.MemoryMenu.Text" xml:space="preserve">
+    <value>Preimenuj je, obriši ili izvezi, dodaj podsetnik ili izvezi kolekciju za prenos na drugi računar. Dugme ⋯ na vrhu njene stranice ima isti meni.</value>
+  </data>
+  <data name="Tips.MemoryDrag.Keys" xml:space="preserve">
+    <value>Prevlačenje memorije</value>
+  </data>
+  <data name="Tips.MemoryDrag.Text" xml:space="preserve">
+    <value>Pomera je gore ili dole unutar svoje grupe.</value>
+  </data>
+  <data name="Tips.MemorySelect.Keys" xml:space="preserve">
+    <value>Ctrl+klik, Shift+klik</value>
+  </data>
+  <data name="Tips.MemorySelect.Text" xml:space="preserve">
+    <value>Bira više memorija. Delete ih briše posle jednog pitanja, a Esc poništava izbor.</value>
+  </data>
+  <data name="Tips.CardMenu.Keys" xml:space="preserve">
+    <value>Desni klik na karticu ili njeno ⋯</value>
+  </data>
+  <data name="Tips.CardMenu.Text" xml:space="preserve">
+    <value>Meni kartice: preimenovanje ili izmena, brisanje, podsetnik, izvoz (i za prenos), kopiranje imena. Kartica projekta može da dobije i svoju boju ili sliku.</value>
+  </data>
+  <data name="Tips.CardSelect.Keys" xml:space="preserve">
+    <value>Ctrl+klik, Shift+klik</value>
+  </data>
+  <data name="Tips.CardSelect.Text" xml:space="preserve">
+    <value>Bira više kartica. Zatim Ctrl+A bira sve u odeljku, a Delete ih briše posle jednog pitanja.</value>
+  </data>
+  <data name="Tips.Marquee.Keys" xml:space="preserve">
+    <value>Prevlačenje preko praznog prostora</value>
+  </data>
+  <data name="Tips.Marquee.Text" xml:space="preserve">
+    <value>Bira svaku karticu koju okvir dodirne. Uz pritisnut Ctrl dodaje u postojeći izbor.</value>
+  </data>
+  <data name="Tips.CardDrag.Keys" xml:space="preserve">
+    <value>Prevlačenje kartice</value>
+  </data>
+  <data name="Tips.CardDrag.Text" xml:space="preserve">
+    <value>Pomera je na drugo mesto u odeljku.</value>
+  </data>
+  <data name="Tips.Background.Keys" xml:space="preserve">
+    <value>Desni klik na prazan prostor</value>
+  </data>
+  <data name="Tips.Background.Text" xml:space="preserve">
+    <value>Uredi pozadinu: boja ili slika iza stranice. Ima je i u meniju ⋯ na vrhu stranice.</value>
+  </data>
+  <data name="Tips.TabRename.Keys" xml:space="preserve">
+    <value>Dvoklik na odeljak</value>
+  </data>
+  <data name="Tips.TabRename.Text" xml:space="preserve">
+    <value>Preimenuje ga.</value>
+  </data>
+  <data name="Tips.TabMenu.Keys" xml:space="preserve">
+    <value>Desni klik na odeljak</value>
+  </data>
+  <data name="Tips.TabMenu.Text" xml:space="preserve">
+    <value>Preimenuj ga ili obriši. Kada obrišeš odeljak, njegove kartice prelaze u drugi odeljak; ništa se ne gubi.</value>
+  </data>
+  <data name="Tips.TabDrag.Keys" xml:space="preserve">
+    <value>Prevlačenje odeljka</value>
+  </data>
+  <data name="Tips.TabDrag.Text" xml:space="preserve">
+    <value>Menja redosled odeljaka.</value>
+  </data>
+  <data name="Tips.TodoFold.Keys" xml:space="preserve">
+    <value>Klik na OBAVEZE na stranici memorije za projekte</value>
+  </data>
+  <data name="Tips.TodoFold.Text" xml:space="preserve">
+    <value>Skuplja spisak obaveza u jedan red koji pokazuje sledeću obavezu.</value>
+  </data>
+  <data name="Tips.TaskSelect.Keys" xml:space="preserve">
+    <value>Ctrl+klik, Shift+klik</value>
+  </data>
+  <data name="Tips.TaskSelect.Text" xml:space="preserve">
+    <value>Bira više zadataka ili datoteka. Delete ih uklanja, a Ctrl+C kopira tekst zadataka.</value>
+  </data>
+  <data name="Tips.TaskMenu.Keys" xml:space="preserve">
+    <value>Desni klik na zadatak</value>
+  </data>
+  <data name="Tips.TaskMenu.Text" xml:space="preserve">
+    <value>Preimenuj ga, obriši ili kopiraj.</value>
+  </data>
+  <data name="Tips.FileMenu.Keys" xml:space="preserve">
+    <value>Desni klik na datoteku</value>
+  </data>
+  <data name="Tips.FileMenu.Text" xml:space="preserve">
+    <value>Otvori je, prikaži u fascikli, sačuvaj kopiju, preimenuj ili ukloni.</value>
+  </data>
+  <data name="Tips.FileDrop.Keys" xml:space="preserve">
+    <value>Prevuci datoteke na Datoteke</value>
+  </data>
+  <data name="Tips.FileDrop.Text" xml:space="preserve">
+    <value>Prilaže ih projektu. Kopiraju se u fasciklu sa podacima TidyMind-a.</value>
+  </data>
+  <data name="Tips.ProjectEscape.Keys" xml:space="preserve">
+    <value>Esc</value>
+  </data>
+  <data name="Tips.ProjectEscape.Text" xml:space="preserve">
+    <value>Čuva i zatvara Detalje projekta, kao dugme Sačuvaj. Otvoren spisak stranica se prvo zatvara.</value>
+  </data>
+  <data name="Tips.PageTurn.Keys" xml:space="preserve">
+    <value>Ctrl+PageUp, Ctrl+PageDown</value>
+  </data>
+  <data name="Tips.PageTurn.Text" xml:space="preserve">
+    <value>Prelazi na prethodnu ili sledeću stranicu. Posle poslednje počinje nova, osim ako je poslednja još prazna.</value>
+  </data>
+  <data name="Tips.PageSelect.Keys" xml:space="preserve">
+    <value>☰, pa Ctrl+klik ili Shift+klik</value>
+  </data>
+  <data name="Tips.PageSelect.Text" xml:space="preserve">
+    <value>Bira više stranica u spisku stranica da ih obrišeš zajedno. Ako obrišeš sve, ostaje prva stranica, prazna.</value>
+  </data>
+  <data name="Tips.Format.Keys" xml:space="preserve">
+    <value>Ctrl+B, Ctrl+I, Ctrl+U</value>
+  </data>
+  <data name="Tips.Format.Text" xml:space="preserve">
+    <value>Podebljano, kurziv i podvučeno u opisu ili na stranici beležnice. Boja teksta je na traci sa alatkama i u meniju na desni klik.</value>
+  </data>
+  <data name="Tips.Paste.Keys" xml:space="preserve">
+    <value>Ctrl+V</value>
+  </data>
+  <data name="Tips.Paste.Text" xml:space="preserve">
+    <value>Tekst kopiran iz drugog programa lepi se bez formatiranja; formatiranje kopirano unutar TidyMind-a se zadržava.</value>
+  </data>
+  <data name="Tips.TodoAdd.Keys" xml:space="preserve">
+    <value>Enter</value>
+  </data>
+  <data name="Tips.TodoAdd.Text" xml:space="preserve">
+    <value>Dodaje upisanu obavezu. Esc prazni polje.</value>
+  </data>
+  <data name="Tips.TodoSelect.Keys" xml:space="preserve">
+    <value>Ctrl+klik, Shift+klik</value>
+  </data>
+  <data name="Tips.TodoSelect.Text" xml:space="preserve">
+    <value>Bira više obaveza. Delete ih briše.</value>
+  </data>
+  <data name="Tips.WeekDay.Keys" xml:space="preserve">
+    <value>Klik na datum u nedelji na Početnoj</value>
+  </data>
+  <data name="Tips.WeekDay.Text" xml:space="preserve">
+    <value>Otvara taj dan u kalendaru. Desnim klikom na podsetnik ili belešku u nedelji možeš da ih izmeniš ili obrišeš.</value>
+  </data>
+  <data name="Tips.CalendarDay.Keys" xml:space="preserve">
+    <value>Desni klik na dan u kalendaru</value>
+  </data>
+  <data name="Tips.CalendarDay.Text" xml:space="preserve">
+    <value>Dodaje podsetnik za taj dan (od danas nadalje). Klik otvara boju, belešku i plan dana.</value>
+  </data>
+  <data name="Tips.DialogSave.Keys" xml:space="preserve">
+    <value>Ctrl+Enter</value>
+  </data>
+  <data name="Tips.DialogSave.Text" xml:space="preserve">
+    <value>Čuva dan u kalendaru ili blok plana u njegovom prozoru.</value>
+  </data>
+  <data name="Tips.PlanCreate.Keys" xml:space="preserve">
+    <value>Prevlačenje po vremenskoj liniji</value>
+  </data>
+  <data name="Tips.PlanCreate.Text" xml:space="preserve">
+    <value>Planira novi blok za to vreme.</value>
+  </data>
+  <data name="Tips.PlanMove.Keys" xml:space="preserve">
+    <value>Prevlačenje bloka ili njegove gornje ili donje ivice</value>
+  </data>
+  <data name="Tips.PlanMove.Text" xml:space="preserve">
+    <value>Pomera ga ili menja kada počinje ili se završava, u koracima od 15 minuta.</value>
+  </data>
+  <data name="Tips.PlanEdit.Keys" xml:space="preserve">
+    <value>Dvoklik na blok ili Enter</value>
+  </data>
+  <data name="Tips.PlanEdit.Text" xml:space="preserve">
+    <value>Menja ga. Delete ga briše.</value>
+  </data>
+  <data name="Tips.PlanTodo.Keys" xml:space="preserve">
+    <value>Prevlačenje obaveze na vremensku liniju</value>
+  </data>
+  <data name="Tips.PlanTodo.Text" xml:space="preserve">
+    <value>Planira je kao blok.</value>
+  </data>
+  <data name="Tips.PlanSelect.Keys" xml:space="preserve">
+    <value>Ctrl+klik, Shift+klik</value>
+  </data>
+  <data name="Tips.PlanSelect.Text" xml:space="preserve">
+    <value>Bira više blokova. Delete ih briše.</value>
+  </data>
+  <data name="Tips.ItemSearch.Keys" xml:space="preserve">
+    <value>Ctrl+F</value>
+  </data>
+  <data name="Tips.ItemSearch.Text" xml:space="preserve">
+    <value>U prozoru vozila pronalazi bilo koje polje, zapis ili stavku dnevnika.</value>
+  </data>
+  <data name="Tips.ItemPictures.Keys" xml:space="preserve">
+    <value>Strelica levo, strelica desno</value>
+  </data>
+  <data name="Tips.ItemPictures.Text" xml:space="preserve">
+    <value>Prelistava slike stavke u njenom prozoru.</value>
+  </data>
+  <data name="Tips.ItemEscape.Keys" xml:space="preserve">
+    <value>Esc</value>
+  </data>
+  <data name="Tips.ItemEscape.Text" xml:space="preserve">
+    <value>U prozoru stavke: prazni pretragu, prekida izmenu (pita ako je nešto promenjeno) ili zatvara prozor.</value>
+  </data>
+  <data name="Tips.PictureDrag.Keys" xml:space="preserve">
+    <value>Prevlačenje slike u obrascu stavke</value>
+  </data>
+  <data name="Tips.PictureDrag.Text" xml:space="preserve">
+    <value>Menja redosled slika. Prva je naslovna.</value>
+  </data>
+  <data name="Examples.DeleteNote" xml:space="preserve">
+    <value>Ovo je primer memorije.</value>
   </data>
 </root>

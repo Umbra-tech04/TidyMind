@@ -33,7 +33,7 @@ namespace TidyMind
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? TodoCollapsed { get; set; }
 
-        // One of the guided tour's example memories (WelcomeMemory). Left out of the file for the user's own memories.
+        // One of the example memories (WelcomeMemory). Left out of the file for the user's own memories.
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? IsSample { get; set; }
 

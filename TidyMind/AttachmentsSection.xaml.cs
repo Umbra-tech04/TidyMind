@@ -205,6 +205,7 @@ namespace TidyMind
                 FileRows.Children.Add(PendingRow(copy));
 
             FileRows.Visibility = FileRows.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            FilesHint.Visibility = attachments.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private FrameworkElement FileRow(Attachment attachment)

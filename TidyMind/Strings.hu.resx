@@ -2142,12 +2142,6 @@ Az utolsó módosításod nem lett mentve.</value>
   <data name="Todo.Unreadable" xml:space="preserve">
     <value>Nem sikerült menteni: a quicktodos.json nem olvasható.</value>
   </data>
-  <data name="Tour.BasicsDone.Text" xml:space="preserve">
-    <value>Ezzel a mindennapi dolgokat végignézted, a trükkök még nagyjából egy percet vesznek igénybe.</value>
-  </data>
-  <data name="Tour.BasicsDone.Title" xml:space="preserve">
-    <value>Megvannak az alapok</value>
-  </data>
   <data name="Tour.Button.Finish" xml:space="preserve">
     <value>Befejezés</value>
   </data>
@@ -2163,110 +2157,14 @@ Az utolsó módosításod nem lett mentve.</value>
   <data name="Tour.Button.Start" xml:space="preserve">
     <value>Bemutató indítása</value>
   </data>
-  <data name="Tour.Button.Tricks" xml:space="preserve">
-    <value>Tovább a trükkökhöz</value>
-  </data>
-  <data name="Tour.CardLook.Text" xml:space="preserve">
-    <value>Kattints jobb gombbal erre a kártyára, és válaszd a Kártya testreszabása lehetőséget, hogy színt vagy képet adj neki.</value>
-  </data>
-  <data name="Tour.CardLook.Title" xml:space="preserve">
-    <value>Szabd testre a kártyát</value>
-  </data>
-  <data name="Tour.CloseProject.Text" xml:space="preserve">
-    <value>Kattints a Mentés gombra: a projekt bezárul, és a változtatásaid megmaradnak.</value>
-  </data>
-  <data name="Tour.CloseProject.Title" xml:space="preserve">
-    <value>Zárd be a projektet</value>
-  </data>
-  <data name="Tour.Collections.Text" xml:space="preserve">
-    <value>Nyisd meg ezt a gyűjteményt az oldalsávban, és meglátod a tárgyaid listáját.</value>
-  </data>
-  <data name="Tour.Collections.Title" xml:space="preserve">
-    <value>Gyűjtemények</value>
-  </data>
-  <data name="Tour.Confirm.Text" xml:space="preserve">
-    <value>Ez hozzáad egy példamemóriát. A saját adataid nem változnak.</value>
-  </data>
-  <data name="Tour.Confirm.Title" xml:space="preserve">
-    <value>Bemutató indítása</value>
-  </data>
-  <data name="Tour.Confirm.WriteFailed" xml:space="preserve">
-    <value>A példamemóriát nem sikerült ide írni:
-{0}
-
-Semmi sem változott.</value>
-  </data>
-  <data name="Tour.Corner.Text" xml:space="preserve">
-    <value>Ezekkel a gombokkal bármelyik oldalról megnyithatod a gyorsjegyzeteket, az emlékeztetőidet és a naptárat.</value>
-  </data>
   <data name="Tour.Corner.Title" xml:space="preserve">
     <value>Jegyzetek, emlékeztetők és naptár</value>
-  </data>
-  <data name="Tour.DayPlan.Text" xml:space="preserve">
-    <value>Nyisd meg a Napi tervet, és oszd idősávokra a napot, például: Edzés 17:00–18:30.</value>
-  </data>
-  <data name="Tour.DayPlan.Title" xml:space="preserve">
-    <value>Tervezd meg a napodat</value>
-  </data>
-  <data name="Tour.DeleteNote" xml:space="preserve">
-    <value>Ez a példamemória.</value>
-  </data>
-  <data name="Tour.End.Text" xml:space="preserve">
-    <value>A súgót és a billentyűparancsokat a ? gomb mögött találod, a példamemóriákat pedig bármikor törölheted az oldalsávból.</value>
-  </data>
-  <data name="Tour.End.Title" xml:space="preserve">
-    <value>Ennyi volt a bemutató</value>
   </data>
   <data name="Tour.HelpEntry" xml:space="preserve">
     <value>Bemutató indítása</value>
   </data>
-  <data name="Tour.OpenProject.Text" xml:space="preserve">
-    <value>Kattints erre a kártyára, és megnyílik a projekt.</value>
-  </data>
-  <data name="Tour.OpenProject.Title" xml:space="preserve">
-    <value>Nyiss meg egy projektet</value>
-  </data>
-  <data name="Tour.PageBackground.Text" xml:space="preserve">
-    <value>Kattints jobb gombbal az oldal egy üres részére, és válaszd a Háttér szerkesztése lehetőséget.</value>
-  </data>
-  <data name="Tour.PageBackground.Title" xml:space="preserve">
-    <value>Változtasd meg az oldal hátterét</value>
-  </data>
-  <data name="Tour.Search.Example" xml:space="preserve">
-    <value>bicikli</value>
-  </data>
-  <data name="Tour.Search.Text" xml:space="preserve">
-    <value>Nyomd meg a Ctrl+Shift+F billentyűket, és írj be egy szót, például: {0}.</value>
-  </data>
-  <data name="Tour.Search.Title" xml:space="preserve">
-    <value>Keress mindenben</value>
-  </data>
-  <data name="Tour.SelectCards.Text" xml:space="preserve">
-    <value>Húzz egy téglalapot a kártyák körüli üres részen, így egyszerre többet is kijelölhetsz.</value>
-  </data>
-  <data name="Tour.SelectCards.Title" xml:space="preserve">
-    <value>Jelölj ki több kártyát</value>
-  </data>
   <data name="Tour.StepOf" xml:space="preserve">
     <value>{0}/{1}. lépés.</value>
-  </data>
-  <data name="Tour.TodoList.Text" xml:space="preserve">
-    <value>Írj be egy teendőt, és nyomj Entert, majd kattints a szövegére, ha módosítani szeretnéd.</value>
-  </data>
-  <data name="Tour.TodoList.Title" xml:space="preserve">
-    <value>Vezess teendőlistát</value>
-  </data>
-  <data name="Tour.TurnPage.Text" xml:space="preserve">
-    <value>Kattints a jobbra mutató nyílra, hogy a második oldalra lapozz, majd kattints rá újra, és új oldal kezdődik.</value>
-  </data>
-  <data name="Tour.TurnPage.Title" xml:space="preserve">
-    <value>Lapozz</value>
-  </data>
-  <data name="Tour.Welcome.Text" xml:space="preserve">
-    <value>Egy memória az életed egy területe, ezeket az oldalsávban találod. A projektmemóriában projektek vannak, mindegyikben feladatok, jegyzetek és fájlok. A gyűjteménymemória a tárgyaidat tartja számon, például a ruháidat vagy a biciklidet.</value>
-  </data>
-  <data name="Tour.Welcome.Title" xml:space="preserve">
-    <value>Üdvözöl a TidyMind</value>
   </data>
   <data name="Transfer.Count.Files.Other" xml:space="preserve">
     <value>{0} fájl</value>
@@ -3555,5 +3453,386 @@ Mégis bezárod, és elveted a módosításokat?</value>
   </data>
   <data name="Transfer.Import.CollectionNotebookCounts" xml:space="preserve">
     <value>{0}, {1}, {2}</value>
+  </data>
+  <data name="Tour.Welcome.Title" xml:space="preserve">
+    <value>Rövid körbevezetés</value>
+  </data>
+  <data name="Tour.Welcome.Text" xml:space="preserve">
+    <value>Néhány rövid lépés a főablakban: hol vannak a memóriáid, hogyan kezdhetsz újat, és hol találod a többit. Vagy előbb adj hozzá két példamemóriát, és nézz körül egyedül.</value>
+  </data>
+  <data name="Tour.Memories.Title" xml:space="preserve">
+    <value>A memóriáid</value>
+  </data>
+  <data name="Tour.Memories.Text" xml:space="preserve">
+    <value>Az életed minden területe saját memóriát kap, így ami hozzá tartozik, egy helyen marad. A gyűjtemények a tárgyaidat tartják számon, például a ruháidat vagy az autódat; a projektmemóriákban projektek vannak feladatokkal, jegyzetekkel és fájlokkal.</value>
+  </data>
+  <data name="Tour.NewMemory.Title" xml:space="preserve">
+    <value>Új memória</value>
+  </data>
+  <data name="Tour.NewMemory.Text" xml:space="preserve">
+    <value>A projektmemória a tervekhez és a munkához való, a gyűjtemény azokhoz a dolgokhoz, amelyekről nyilvántartást vezetnél. Később bármelyiket átnevezheted vagy törölheted, ha jobb gombbal rákattintasz az oldalsávban.</value>
+  </data>
+  <data name="Tour.Todos.Title" xml:space="preserve">
+    <value>A mai teendők</value>
+  </data>
+  <data name="Tour.Todos.Text" xml:space="preserve">
+    <value>Írd fel, mit kell elintézni, és pipáld ki, ahogy haladsz. A Kezdőlapon a hét is látszik az emlékeztetőiddel és a naptárjegyzeteiddel.</value>
+  </data>
+  <data name="Tour.Corner.Text" xml:space="preserve">
+    <value>Feljegyezhetsz valamit az oldal elhagyása nélkül, Windows-értesítést kaphatsz a megfelelő időben, akkor is, ha a TidyMind be van zárva, vagy megnyithatod a naptárat. Mindegyik bármelyik oldalról működik.</value>
+  </data>
+  <data name="Tour.Search.Text" xml:space="preserve">
+    <value>Minden memóriában egyszerre keres: a projektekben, elemekben, fájlokban, jegyzetfüzet-oldalakon és napi tervekben. A Ctrl+Shift+F bármelyik oldalról megnyitja.</value>
+  </data>
+  <data name="Tour.End.Title" xml:space="preserve">
+    <value>Jobb gombbal még több</value>
+  </data>
+  <data name="Tour.End.Text" xml:space="preserve">
+    <value>A memóriáknak, kártyáknak, füleknek, feladatoknak, fájloknak és a naptár napjainak van jobb gombos menüje. A ? gomb alatt a Tippek és billentyűparancsok oldal mindet felsorolja, és innen a bemutatót is újra elindíthatod.</value>
+  </data>
+  <data name="Examples.Add" xml:space="preserve">
+    <value>Példamemóriák hozzáadása</value>
+  </data>
+  <data name="Examples.Title" xml:space="preserve">
+    <value>Példamemóriák</value>
+  </data>
+  <data name="Examples.WriteFailed" xml:space="preserve">
+    <value>A példamemóriákat nem sikerült ide írni:
+{0}
+
+Semmi sem változott.</value>
+  </data>
+  <data name="Help.WhatsNew" xml:space="preserve">
+    <value>Újdonságok</value>
+  </data>
+  <data name="Nav.Search" xml:space="preserve">
+    <value>Keresés</value>
+  </data>
+  <data name="Nav.SearchTip" xml:space="preserve">
+    <value>Keresés minden memóriában (Ctrl+Shift+F)</value>
+  </data>
+  <data name="Memory.More" xml:space="preserve">
+    <value>További lehetőségek ehhez a memóriához</value>
+  </data>
+  <data name="Card.More" xml:space="preserve">
+    <value>További lehetőségek</value>
+  </data>
+  <data name="Hint.Cards" xml:space="preserve">
+    <value>Egy kártyán vagy üres helyen jobb gombbal kattintva több lehetőséget kapsz. Ctrl+kattintással, Shift+kattintással vagy üres részen húzva több kártyát is kijelölhetsz.</value>
+  </data>
+  <data name="Hint.Files" xml:space="preserve">
+    <value>Egy fájlon jobb gombbal kattintva átnevezheted, megjelenítheted a mappájában, vagy másolatot menthetsz róla.</value>
+  </data>
+  <data name="Hint.Notebook" xml:space="preserve">
+    <value>A Ctrl+PageUp és a Ctrl+PageDown lapoz. A ☰ listában Ctrl+kattintással vagy Shift+kattintással több oldalt is kijelölhetsz.</value>
+  </data>
+  <data name="Settings.BackgroundImage.Where" xml:space="preserve">
+    <value>Magát a képet a memória oldalán választod ki: fent a ⋯, majd Háttér szerkesztése.</value>
+  </data>
+  <data name="WhatsNew.Title" xml:space="preserve">
+    <value>A TidyMind {0} újdonságai</value>
+  </data>
+  <data name="WhatsNew.Points" xml:space="preserve">
+    <value>A járművek saját ablakot kapnak: dokumentumok emlékeztetőkkel, szerviznapló költségekkel, kerékszettek és alkatrészek.
+Visszavonás és ismétlés Ctrl+Z-vel és Ctrl+Y-nal: a törölt elemek, projektek és memóriák a képeikkel és fájljaikkal együtt visszajönnek.
+Minden memóriának saját jegyzetfüzete van az egész memóriára vonatkozó jegyzetekhez.
+A ? gomb alatt a Tippek és billentyűparancsok oldal felsorolja a jobb gombos menüket és a billentyűket, és minden kártyán egy ⋯ gomb nyitja a menüjét.</value>
+  </data>
+  <data name="Tips.Title" xml:space="preserve">
+    <value>Tippek és billentyűparancsok</value>
+  </data>
+  <data name="Tips.Filter" xml:space="preserve">
+    <value>Tipp keresése…</value>
+  </data>
+  <data name="Tips.NothingFound" xml:space="preserve">
+    <value>Nincs ilyen tipp.</value>
+  </data>
+  <data name="Tips.Group.Everywhere" xml:space="preserve">
+    <value>Főablak</value>
+  </data>
+  <data name="Tips.Group.Sidebar" xml:space="preserve">
+    <value>Oldalsáv</value>
+  </data>
+  <data name="Tips.Group.Pages" xml:space="preserve">
+    <value>Projekt- és gyűjteményoldalak</value>
+  </data>
+  <data name="Tips.Group.Projects" xml:space="preserve">
+    <value>Projekt részletei</value>
+  </data>
+  <data name="Tips.Group.Notebook" xml:space="preserve">
+    <value>Jegyzetek és jegyzetfüzetek</value>
+  </data>
+  <data name="Tips.Group.Todos" xml:space="preserve">
+    <value>Kezdőlap és teendők</value>
+  </data>
+  <data name="Tips.Group.Plan" xml:space="preserve">
+    <value>Naptár és Napi terv</value>
+  </data>
+  <data name="Tips.Group.Items" xml:space="preserve">
+    <value>Gyűjtemények elemei</value>
+  </data>
+  <data name="Tips.Search.Keys" xml:space="preserve">
+    <value>Ctrl+Shift+F</value>
+  </data>
+  <data name="Tips.Search.Text" xml:space="preserve">
+    <value>Minden memóriában keres: projektekben, elemekben, fájlokban, jegyzetfüzet-oldalakon és napi tervekben.</value>
+  </data>
+  <data name="Tips.QuickNote.Keys" xml:space="preserve">
+    <value>Ctrl+Shift+N</value>
+  </data>
+  <data name="Tips.QuickNote.Text" xml:space="preserve">
+    <value>Megnyitja a Gyorsjegyzeteket: egy jegyzettömböt, amely bezáráskor elmenti, amit beírtál.</value>
+  </data>
+  <data name="Tips.Reminders.Keys" xml:space="preserve">
+    <value>Ctrl+Shift+R</value>
+  </data>
+  <data name="Tips.Reminders.Text" xml:space="preserve">
+    <value>Megnyitja az emlékeztetők listáját.</value>
+  </data>
+  <data name="Tips.Calendar.Keys" xml:space="preserve">
+    <value>Ctrl+Shift+C</value>
+  </data>
+  <data name="Tips.Calendar.Text" xml:space="preserve">
+    <value>Megnyitja a naptárat.</value>
+  </data>
+  <data name="Tips.Undo.Keys" xml:space="preserve">
+    <value>Ctrl+Z</value>
+  </data>
+  <data name="Tips.Undo.Text" xml:space="preserve">
+    <value>Visszavonja az oldal utolsó módosítását: törlést, kipipálást, átnevezést, áthelyezést vagy mentett szerkesztést. Szövegmezőben a gépelést vonja vissza.</value>
+  </data>
+  <data name="Tips.Redo.Keys" xml:space="preserve">
+    <value>Ctrl+Y, Ctrl+Shift+Z</value>
+  </data>
+  <data name="Tips.Redo.Text" xml:space="preserve">
+    <value>Újra végrehajtja, amit visszavontál.</value>
+  </data>
+  <data name="Tips.RightClick.Keys" xml:space="preserve">
+    <value>Jobb kattintás</value>
+  </data>
+  <data name="Tips.RightClick.Text" xml:space="preserve">
+    <value>Menüt nyit a memóriákon, kártyákon, füleken, feladatokon, fájlokon, teendőkön, a naptár napjain, a terv idősávjain és az emlékeztetőkön.</value>
+  </data>
+  <data name="Tips.Escape.Keys" xml:space="preserve">
+    <value>Esc</value>
+  </data>
+  <data name="Tips.Escape.Text" xml:space="preserve">
+    <value>Bezárja a keresést, a naptárat, a Gyorsjegyzeteket és az olyan ablakokat, mint a Projekt részletei. Helyben szerkesztés közben visszaállítja a régi szöveget.</value>
+  </data>
+  <data name="Tips.MemoryMenu.Keys" xml:space="preserve">
+    <value>Jobb kattintás egy memórián</value>
+  </data>
+  <data name="Tips.MemoryMenu.Text" xml:space="preserve">
+    <value>Átnevezés, törlés, exportálás, emlékeztető hozzáadása, gyűjteménynél exportálás átvitelhez egy másik gépre. Az oldala tetején lévő ⋯ gombnak ugyanez a menüje.</value>
+  </data>
+  <data name="Tips.MemoryDrag.Keys" xml:space="preserve">
+    <value>Memória húzása</value>
+  </data>
+  <data name="Tips.MemoryDrag.Text" xml:space="preserve">
+    <value>Feljebb vagy lejjebb viszi a csoportján belül.</value>
+  </data>
+  <data name="Tips.MemorySelect.Keys" xml:space="preserve">
+    <value>Ctrl+kattintás, Shift+kattintás</value>
+  </data>
+  <data name="Tips.MemorySelect.Text" xml:space="preserve">
+    <value>Több memóriát jelöl ki. A Delete egyetlen kérdés után törli őket, az Esc megszünteti a kijelölést.</value>
+  </data>
+  <data name="Tips.CardMenu.Keys" xml:space="preserve">
+    <value>Jobb kattintás egy kártyán, vagy a ⋯ gombja</value>
+  </data>
+  <data name="Tips.CardMenu.Text" xml:space="preserve">
+    <value>A kártya menüje: átnevezés vagy szerkesztés, törlés, emlékeztető, exportálás (átvitelhez is), a név másolása. A projektkártya saját színt vagy képet is kaphat.</value>
+  </data>
+  <data name="Tips.CardSelect.Keys" xml:space="preserve">
+    <value>Ctrl+kattintás, Shift+kattintás</value>
+  </data>
+  <data name="Tips.CardSelect.Text" xml:space="preserve">
+    <value>Több kártyát jelöl ki. Ezután a Ctrl+A a fül összes kártyáját kijelöli, a Delete pedig egyetlen kérdés után törli őket.</value>
+  </data>
+  <data name="Tips.Marquee.Keys" xml:space="preserve">
+    <value>Húzás üres részen</value>
+  </data>
+  <data name="Tips.Marquee.Text" xml:space="preserve">
+    <value>Kijelöl minden kártyát, amelyet a keret érint. A Ctrl lenyomva tartásával a kijelöléshez ad.</value>
+  </data>
+  <data name="Tips.CardDrag.Keys" xml:space="preserve">
+    <value>Kártya húzása</value>
+  </data>
+  <data name="Tips.CardDrag.Text" xml:space="preserve">
+    <value>Máshová helyezi a fülön.</value>
+  </data>
+  <data name="Tips.Background.Keys" xml:space="preserve">
+    <value>Jobb kattintás üres részen</value>
+  </data>
+  <data name="Tips.Background.Text" xml:space="preserve">
+    <value>Háttér szerkesztése: szín vagy kép az oldal mögött. Az oldal tetején lévő ⋯ menüben is megtalálod.</value>
+  </data>
+  <data name="Tips.TabRename.Keys" xml:space="preserve">
+    <value>Dupla kattintás egy fülön</value>
+  </data>
+  <data name="Tips.TabRename.Text" xml:space="preserve">
+    <value>Átnevezi.</value>
+  </data>
+  <data name="Tips.TabMenu.Keys" xml:space="preserve">
+    <value>Jobb kattintás egy fülön</value>
+  </data>
+  <data name="Tips.TabMenu.Text" xml:space="preserve">
+    <value>Átnevezés vagy törlés. Ha törölsz egy fület, a kártyái egy másik fülre kerülnek, semmi sem vész el.</value>
+  </data>
+  <data name="Tips.TabDrag.Keys" xml:space="preserve">
+    <value>Fül húzása</value>
+  </data>
+  <data name="Tips.TabDrag.Text" xml:space="preserve">
+    <value>Megváltoztatja a fülek sorrendjét.</value>
+  </data>
+  <data name="Tips.TodoFold.Keys" xml:space="preserve">
+    <value>Kattintás a TEENDŐK feliratra egy projektmemória oldalán</value>
+  </data>
+  <data name="Tips.TodoFold.Text" xml:space="preserve">
+    <value>Egyetlen sorrá csukja össze a teendőlistát; ilyenkor a következő teendő látszik.</value>
+  </data>
+  <data name="Tips.TaskSelect.Keys" xml:space="preserve">
+    <value>Ctrl+kattintás, Shift+kattintás</value>
+  </data>
+  <data name="Tips.TaskSelect.Text" xml:space="preserve">
+    <value>Több feladatot vagy fájlt jelöl ki. A Delete eltávolítja őket, a Ctrl+C a feladatok szövegét másolja.</value>
+  </data>
+  <data name="Tips.TaskMenu.Keys" xml:space="preserve">
+    <value>Jobb kattintás egy feladaton</value>
+  </data>
+  <data name="Tips.TaskMenu.Text" xml:space="preserve">
+    <value>Átnevezés, törlés vagy másolás.</value>
+  </data>
+  <data name="Tips.FileMenu.Keys" xml:space="preserve">
+    <value>Jobb kattintás egy fájlon</value>
+  </data>
+  <data name="Tips.FileMenu.Text" xml:space="preserve">
+    <value>Megnyitás, megjelenítés a mappában, másolat mentése, átnevezés vagy eltávolítás.</value>
+  </data>
+  <data name="Tips.FileDrop.Keys" xml:space="preserve">
+    <value>Fájlok ráhúzása a Fájlok részre</value>
+  </data>
+  <data name="Tips.FileDrop.Text" xml:space="preserve">
+    <value>Hozzácsatolja őket a projekthez. A TidyMind adatmappájába másolódnak.</value>
+  </data>
+  <data name="Tips.ProjectEscape.Keys" xml:space="preserve">
+    <value>Esc</value>
+  </data>
+  <data name="Tips.ProjectEscape.Text" xml:space="preserve">
+    <value>Menti és bezárja a Projekt részletei ablakot, ugyanúgy, mint a Mentés gomb. Ha nyitva van az oldallista, előbb azt zárja be.</value>
+  </data>
+  <data name="Tips.PageTurn.Keys" xml:space="preserve">
+    <value>Ctrl+PageUp, Ctrl+PageDown</value>
+  </data>
+  <data name="Tips.PageTurn.Text" xml:space="preserve">
+    <value>Az előző vagy a következő oldalra lapoz. Az utolsó oldalon túl új oldal kezdődik, hacsak az utolsó még üres.</value>
+  </data>
+  <data name="Tips.PageSelect.Keys" xml:space="preserve">
+    <value>☰, majd Ctrl+kattintás vagy Shift+kattintás</value>
+  </data>
+  <data name="Tips.PageSelect.Text" xml:space="preserve">
+    <value>Több oldalt jelöl ki az oldallistában, hogy együtt töröld őket. Ha minden oldalt törölsz, az 1. oldal üresen megmarad.</value>
+  </data>
+  <data name="Tips.Format.Keys" xml:space="preserve">
+    <value>Ctrl+B, Ctrl+I, Ctrl+U</value>
+  </data>
+  <data name="Tips.Format.Text" xml:space="preserve">
+    <value>Félkövér, dőlt és aláhúzott szöveg leírásban vagy jegyzetfüzet-oldalon. A szövegszín az eszköztáron és a jobb gombos menüben van.</value>
+  </data>
+  <data name="Tips.Paste.Keys" xml:space="preserve">
+    <value>Ctrl+V</value>
+  </data>
+  <data name="Tips.Paste.Text" xml:space="preserve">
+    <value>A más programból másolt szöveg formázás nélkül kerül be; a TidyMindon belül másolt formázás megmarad.</value>
+  </data>
+  <data name="Tips.TodoAdd.Keys" xml:space="preserve">
+    <value>Enter</value>
+  </data>
+  <data name="Tips.TodoAdd.Text" xml:space="preserve">
+    <value>Hozzáadja a beírt teendőt. Az Esc kiüríti a mezőt.</value>
+  </data>
+  <data name="Tips.TodoSelect.Keys" xml:space="preserve">
+    <value>Ctrl+kattintás, Shift+kattintás</value>
+  </data>
+  <data name="Tips.TodoSelect.Text" xml:space="preserve">
+    <value>Több teendőt jelöl ki. A Delete törli őket.</value>
+  </data>
+  <data name="Tips.WeekDay.Keys" xml:space="preserve">
+    <value>Kattintás egy dátumra a Kezdőlap hetében</value>
+  </data>
+  <data name="Tips.WeekDay.Text" xml:space="preserve">
+    <value>Megnyitja azt a napot a naptárban. A héten egy emlékeztetőn vagy jegyzeten jobb gombbal kattintva szerkesztheted vagy törölheted.</value>
+  </data>
+  <data name="Tips.CalendarDay.Keys" xml:space="preserve">
+    <value>Jobb kattintás egy napon a naptárban</value>
+  </data>
+  <data name="Tips.CalendarDay.Text" xml:space="preserve">
+    <value>Emlékeztetőt ad hozzá arra a napra (mától kezdve). Kattintásra a nap színe, jegyzete és terve nyílik meg.</value>
+  </data>
+  <data name="Tips.DialogSave.Keys" xml:space="preserve">
+    <value>Ctrl+Enter</value>
+  </data>
+  <data name="Tips.DialogSave.Text" xml:space="preserve">
+    <value>Elmenti a naptári napot vagy a terv idősávját az ablakában.</value>
+  </data>
+  <data name="Tips.PlanCreate.Keys" xml:space="preserve">
+    <value>Húzás az idővonalon</value>
+  </data>
+  <data name="Tips.PlanCreate.Text" xml:space="preserve">
+    <value>Új idősávot tervez arra az időre.</value>
+  </data>
+  <data name="Tips.PlanMove.Keys" xml:space="preserve">
+    <value>Idősáv vagy a felső, illetve alsó szélének húzása</value>
+  </data>
+  <data name="Tips.PlanMove.Text" xml:space="preserve">
+    <value>Áthelyezi, vagy 15 perces lépésekben módosítja a kezdetét vagy a végét.</value>
+  </data>
+  <data name="Tips.PlanEdit.Keys" xml:space="preserve">
+    <value>Dupla kattintás egy idősávon, vagy Enter</value>
+  </data>
+  <data name="Tips.PlanEdit.Text" xml:space="preserve">
+    <value>Szerkeszti. A Delete törli.</value>
+  </data>
+  <data name="Tips.PlanTodo.Keys" xml:space="preserve">
+    <value>Teendő húzása az idővonalra</value>
+  </data>
+  <data name="Tips.PlanTodo.Text" xml:space="preserve">
+    <value>Idősávként felveszi a tervbe.</value>
+  </data>
+  <data name="Tips.PlanSelect.Keys" xml:space="preserve">
+    <value>Ctrl+kattintás, Shift+kattintás</value>
+  </data>
+  <data name="Tips.PlanSelect.Text" xml:space="preserve">
+    <value>Több idősávot jelöl ki. A Delete törli őket.</value>
+  </data>
+  <data name="Tips.ItemSearch.Keys" xml:space="preserve">
+    <value>Ctrl+F</value>
+  </data>
+  <data name="Tips.ItemSearch.Text" xml:space="preserve">
+    <value>Egy jármű ablakában megtalál bármilyen mezőt, bejegyzést vagy naplósort.</value>
+  </data>
+  <data name="Tips.ItemPictures.Keys" xml:space="preserve">
+    <value>Bal nyíl, Jobb nyíl</value>
+  </data>
+  <data name="Tips.ItemPictures.Text" xml:space="preserve">
+    <value>Lapozza az elem képeit az ablakában.</value>
+  </data>
+  <data name="Tips.ItemEscape.Keys" xml:space="preserve">
+    <value>Esc</value>
+  </data>
+  <data name="Tips.ItemEscape.Text" xml:space="preserve">
+    <value>Egy elem ablakában: kiüríti a keresést, megszakítja a szerkesztést (rákérdez, ha valami változott), vagy bezárja az ablakot.</value>
+  </data>
+  <data name="Tips.PictureDrag.Keys" xml:space="preserve">
+    <value>Kép húzása az elem űrlapján</value>
+  </data>
+  <data name="Tips.PictureDrag.Text" xml:space="preserve">
+    <value>Megváltoztatja a képek sorrendjét. Az első a borító.</value>
+  </data>
+  <data name="Tour.Search.Title" xml:space="preserve">
+    <value>Keresés mindenben</value>
+  </data>
+  <data name="Examples.DeleteNote" xml:space="preserve">
+    <value>Ez a példamemória.</value>
   </data>
 </root>

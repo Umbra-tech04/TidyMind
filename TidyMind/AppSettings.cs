@@ -20,6 +20,10 @@ namespace TidyMind
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Tour { get; set; }
 
+        // The version that last ran ("1.4.0"), so "What's new" (WhatsNew) shows once after an update. Null until then.
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? LastVersion { get; set; }
+
         // Home's "What can TidyMind do?" tiles, folded away with Hide (true) until Show brings them back.
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? HideDiscovery { get; set; }

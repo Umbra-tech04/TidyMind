@@ -56,10 +56,8 @@ static partial class Program
 
         // Data to show: the examples (made in English here) and a few things of our own with every special letter.
         Check(Loc.Current == Loc.English, "the harness starts in English (settings.json)");
-        Invoke(main, "StartTour", true);
-        await Wait(1500);
-        GuidedTour.Current?.Stop(TourEnd.Skipped);
-        await Wait(500);
+        Invoke(main, "AddExamples");
+        await Wait(800);
         SeedData(main);
 
         foreach (string code in Codes)
@@ -99,10 +97,8 @@ static partial class Program
         await Wait(1200);
         GuidedTour.Current?.Stop(TourEnd.Skipped);
         StartBoxWatcher();
-        Invoke(main, "StartTour", true);
-        await Wait(1500);
-        GuidedTour.Current?.Stop(TourEnd.Skipped);
-        await Wait(300);
+        Invoke(main, "AddExamples");
+        await Wait(800);
         SeedData(main);
         Guid blockId = SeedReminderBlock();
 
@@ -248,6 +244,13 @@ static partial class Program
         foreach (string action in new[] { "Add", "Edit" })
             foreach (string type in new[] { "Clothing", "Vehicle", "Item" })
                 dynamic.Add("Entity." + action + "." + type);
+        // Tips & shortcuts: each entry's keys and sentence, and its group's title.
+        foreach (Tip tip in Tips.All)
+        {
+            dynamic.Add("Tips." + tip.Id + ".Keys");
+            dynamic.Add("Tips." + tip.Id + ".Text");
+            dynamic.Add("Tips.Group." + tip.Group);
+        }
 
         List<string> prefixes = literals.Where(l => l.EndsWith(".") && l.Count(c => c == '.') >= 2).ToList();
         List<string> unused = en.Keys.Where(k =>
@@ -533,8 +536,8 @@ static partial class Program
 
         main.ShowSample(ProfileType.Project);
         await Wait(300);
-        main.OpenSampleNotebook();
-        ProjectWindow project = await WaitFor(() => GuidedTour.Open<ProjectWindow>());
+        OpenSampleNotebook(main);
+        ProjectWindow project = await WaitFor(() => OpenWindow<ProjectWindow>());
         if (project != null)
         {
             await Page("Project Details", () => Task.CompletedTask, project, "11-project-details");
@@ -583,7 +586,7 @@ static partial class Program
         }
 
         // The tour: every step's callout, and one with its spotlight for the screenshot.
-        Invoke(main, "StartTour", true);
+        Invoke(main, "StartTour");
         await Wait(1200);
         List<string> tourProblems = new List<string>();
         for (int i = 0; i < Steps().Count; i++)
@@ -593,7 +596,7 @@ static partial class Program
                 tourProblems.Add(step.Key);
         }
         Check(tourProblems.Count == 0, code + ": every tour step reads in " + code + (tourProblems.Count > 0 ? " (not: " + string.Join(", ", tourProblems) + ")" : ""));
-        await ToStepKey("SelectCards");
+        await ToStepKey("Memories");
         await Wait(800);
         InspectTexts(main, "Tour step (" + code + ")", keys, englishOnly);
         RenderWindow(main, tag + "-12-tour");
@@ -722,9 +725,9 @@ static partial class Program
         Loc.Switch(Loc.English);
         Invoke(main, "NavigateHome");
         await Wait(300);
-        Invoke(main, "StartTour", true);
+        Invoke(main, "StartTour");
         await Wait(1200);
-        await ToStepKey("OpenProject");
+        await ToStepKey("Memories");
         await Wait(800);
         OverlayManager.Route(Overlay.Reminders);
         await Wait(400);
@@ -743,10 +746,8 @@ static partial class Program
             Loc.Switch(code);
             await Wait(900);
             string title = CalloutTexts().FirstOrDefault() ?? "";
-            Check(title == Loc.T("Tour.OpenProject.Title"), code + ": the tour's current step shows in the new language: '" + title + "'");
-            FrameworkElement card = (GuidedTour.Find(main, "ProjectPanel") as Panel)?.Children.OfType<FrameworkElement>().FirstOrDefault();
-            if (card != null)
-                CheckHoleOn(main, card, code + ": the spotlight is still on the first card");
+            Check(title == Loc.T("Tour.Memories.Title"), code + ": the tour's current step shows in the new language: '" + title + "'");
+            CheckHoleOn(main, GuidedTour.Find(main, "NavScroll"), code + ": the spotlight is still on the memories");
             Check(reminders.Title == Loc.T("Main.Help.Reminders"), code + ": Reminders window title " + reminders.Title);
             Check(Texts(reminders).Contains(Loc.T("Common.AddReminder")), code + ": Reminders window's button follows");
             Check(notes.Title == Loc.T("Main.Help.QuickNotes"), code + ": Quick Notes title " + notes.Title);
@@ -961,8 +962,8 @@ static partial class Program
         // A project opened and closed without a change (notes and description are compared as stored text).
         main.ShowSample(ProfileType.Project);
         await Wait(300);
-        main.OpenSampleNotebook();
-        ProjectWindow project = await WaitFor(() => GuidedTour.Open<ProjectWindow>());
+        OpenSampleNotebook(main);
+        ProjectWindow project = await WaitFor(() => OpenWindow<ProjectWindow>());
         Check(project != null, "the example project opened (" + Loc.Current + ")");
         await Wait(400);
         project?.Close();

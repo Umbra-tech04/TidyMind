@@ -292,7 +292,6 @@ namespace TidyMind
             if (Save())
             {
                 change.Commit(Loc.F("Undo.RenamedTo", previous, text));
-                TourSignals.Raise(TourSignals.TodoEdited);
                 return true;
             }
             entry.Text = previous;

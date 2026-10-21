@@ -46,6 +46,13 @@ $notesFile = Join-Path $PSScriptRoot "release-notes\$version.md"
 if (-not (Test-Path $notesFile)) { Fail "No release notes: write them in $notesFile (plain sentences; TidyMind shows them as plain text)." }
 if (-not "$(Get-Content $notesFile -Raw)".Trim()) { Fail "The release notes are empty: $notesFile" }
 
+# The in-app "What's new" note describes one version (WhatsNew.NotesVersion); for any other it isn't shown.
+$whatsNew = Join-Path $root 'TidyMind\WhatsNew.cs'
+$notesVersion = [regex]::Match((Get-Content $whatsNew -Raw), 'NotesVersion\s*=\s*"([^"]+)"').Groups[1].Value
+if ($notesVersion -ne $version) {
+    Write-Host "Note: WhatsNew.NotesVersion is '$notesVersion', so this release shows no ""What's new"". To show one, write WhatsNew.Points in the three Strings files and set NotesVersion to $version." -ForegroundColor Yellow
+}
+
 # A release is built from committed source, so it's known what went into it.
 if (Get-Command git -ErrorAction SilentlyContinue) {
     $changes = "$(& git -C $root status --porcelain)".Trim()

@@ -45,7 +45,7 @@ namespace TidyMind
             };
             memory = profile;
             this.saveProfiles = saveProfiles;
-            MemoryPageBackground.Attach(Page, BackgroundLayer, profile, saveProfiles, HeaderPlate, EmptyCard);
+            editBackground = MemoryPageBackground.Attach(Page, BackgroundLayer, profile, saveProfiles, HeaderPlate, EmptyCard);
             TitleText.Text = profile.Name;
 
             // Counts, cards and the reason a file couldn't be read, in the new language; names are the user's own.
@@ -111,7 +111,7 @@ namespace TidyMind
         }
 
         // The page without its projects: the reason in place of the cards, and no toolbar or tabs to change anything
-        // with. The memory's to-do list and page background have their own files and keep working.
+        // with. The memory's to-do list, notebook, menu and page background have their own files and keep working.
         private void ShowUnreadable(string file, string problem)
         {
             unreadable = true;
@@ -119,7 +119,11 @@ namespace TidyMind
             unreadableProblem = problem;
             selection?.ClearSelection();
             ProjectPanel.Children.Clear();
-            Toolbar.Visibility = Visibility.Collapsed;
+            // The memory's menu (rename, delete, export) still works.
+            foreach (UIElement tool in Toolbar.Children)
+                if (tool != MoreButton)
+                    tool.Visibility = Visibility.Collapsed;
+            CardHint.Visibility = Visibility.Collapsed;
             SelectionBar.Visibility = Visibility.Collapsed;
             TabStrip.Visibility = Visibility.Collapsed;
             SubtitleText.Text = Loc.T("Project.Kind");
@@ -144,6 +148,15 @@ namespace TidyMind
         private UndoChange Record() => UndoChange.Begin(unreadable ? null : UndoService.Page, UndoParts.Projects(memory));
 
         public void OpenNotebook() => NotebookButton.Open();
+
+        // The memory's menu, the same as its right-click in the sidebar (set by the main window).
+        public Func<ContextMenu>? MemoryMenu { get; set; }
+
+        // Edit Background for this page (MemoryPageBackground), also in the ⋯ menu.
+        private readonly Action editBackground;
+
+        private void MoreButton_Click(object sender, RoutedEventArgs e) =>
+            MemoryPageBackground.OpenPageMenu(MoreButton, MemoryMenu, editBackground);
 
         // After an undo or redo: the projects, tabs and to-do list as stored now.
         public void ReloadAfterUndo()
@@ -207,6 +220,7 @@ namespace TidyMind
 
             SubtitleText.Text = Loc.Plural("Project.Subtitle", inTab.Count);
             EmptyState.Visibility = shown == 0 ? Visibility.Visible : Visibility.Collapsed;
+            CardHint.Visibility = shown == 0 ? Visibility.Collapsed : Visibility.Visible;
             EmptyState.Text = Loc.T(inTab.Count == 0 ? "Project.Empty" : "Project.NoMatch");
             selection.EndRender(); // what's no longer on screen (other tab, filtered out) drops out of the selection
         }
@@ -220,8 +234,6 @@ namespace TidyMind
             SelectionBar.Show(selection.Count);
             SelectionBar.Visibility = any ? Visibility.Visible : Visibility.Collapsed;
             Toolbar.Visibility = any ? Visibility.Collapsed : Visibility.Visible;
-            if (selection.Count > 1)
-                TourSignals.Raise(TourSignals.CardsSelected);
         }
 
         // One confirmation for the lot (for one, the question its menu asks), then the same delete as a single
@@ -299,6 +311,7 @@ namespace TidyMind
                 },
                 reload: ReloadProjects,
                 record: Record);
+            CardEffects.AttachMenuButton(card, button => selection.OpenMenu(card, button));
 
             return card;
         }
@@ -363,9 +376,7 @@ namespace TidyMind
             string before = JsonSerializer.Serialize(project);
 
             ProjectWindow window = new ProjectWindow(project);
-            TourSignals.Raise(TourSignals.ProjectOpened);
             window.ShowDialog();
-            TourSignals.Raise(TourSignals.ProjectClosed);
 
             // Anything changed in the window (name, description, tasks, files, notes) counts as an edit.
             if (JsonSerializer.Serialize(project) != before)

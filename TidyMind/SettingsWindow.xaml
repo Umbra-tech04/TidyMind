@@ -153,6 +153,8 @@
                                 <StackPanel VerticalAlignment="Center">
                                     <TextBlock Text="{local:Tr Settings.BackgroundImage.Title}" Style="{StaticResource RowTitleStyle}"/>
                                     <TextBlock Text="{local:Tr Settings.BackgroundImage.Note}" Style="{StaticResource RowNoteStyle}"/>
+                                    <!-- The picture itself is chosen on the memory's page -->
+                                    <TextBlock Text="{local:Tr Settings.BackgroundImage.Where}" Style="{StaticResource RowNoteStyle}"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
                                     <Slider x:Name="BackgroundVisibilitySlider" Width="150" Minimum="20" Maximum="100" SmallChange="5"

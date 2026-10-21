@@ -149,5 +149,8 @@
                 </Grid>
             </Grid>
         </Border>
+        <!-- The page keys and the page list's selection, in the line the task list has under it -->
+        <TextBlock Text="{local:Tr Hint.Notebook}" FontSize="12" Foreground="{StaticResource TextSub}" Margin="2,8,0,0"
+                   TextWrapping="Wrap"/>
     </StackPanel>
 </UserControl>

@@ -112,8 +112,6 @@ namespace TidyMind
             ResultsScroller.ScrollToTop();
             if (results.Count > 0)
                 Highlight(0);
-            if (query.Length > 0)
-                TourSignals.Raise(TourSignals.Searched);
         }
 
         private Border CreateRow(SearchResult result, string query, int position)

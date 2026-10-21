@@ -2236,12 +2236,6 @@ Your last change wasn't saved.</value>
   <data name="Todo.Unreadable" xml:space="preserve">
     <value>Couldn't save: quicktodos.json can't be read.</value>
   </data>
-  <data name="Tour.BasicsDone.Text" xml:space="preserve">
-    <value>That covers the everyday things, and the tricks take about another minute.</value>
-  </data>
-  <data name="Tour.BasicsDone.Title" xml:space="preserve">
-    <value>Basics done</value>
-  </data>
   <data name="Tour.Button.Finish" xml:space="preserve">
     <value>Finish</value>
   </data>
@@ -2257,110 +2251,17 @@ Your last change wasn't saved.</value>
   <data name="Tour.Button.Start" xml:space="preserve">
     <value>Start the tour</value>
   </data>
-  <data name="Tour.Button.Tricks" xml:space="preserve">
-    <value>Continue with tricks</value>
-  </data>
-  <data name="Tour.CardLook.Text" xml:space="preserve">
-    <value>Right-click this card and choose Customize Card to give it a color or a picture.</value>
-  </data>
-  <data name="Tour.CardLook.Title" xml:space="preserve">
-    <value>Change a card's look</value>
-  </data>
-  <data name="Tour.CloseProject.Text" xml:space="preserve">
-    <value>Click Save to close the project and keep your changes.</value>
-  </data>
-  <data name="Tour.CloseProject.Title" xml:space="preserve">
-    <value>Close the project</value>
-  </data>
-  <data name="Tour.Collections.Text" xml:space="preserve">
-    <value>Open this collection in the sidebar to see a list of things you own.</value>
-  </data>
-  <data name="Tour.Collections.Title" xml:space="preserve">
-    <value>Collections</value>
-  </data>
-  <data name="Tour.Confirm.Text" xml:space="preserve">
-    <value>This adds an example memory. Your own data is not changed.</value>
-  </data>
-  <data name="Tour.Confirm.Title" xml:space="preserve">
-    <value>Take the tour</value>
-  </data>
-  <data name="Tour.Confirm.WriteFailed" xml:space="preserve">
-    <value>The example memory couldn't be written to
-{0}
-
-Nothing was changed.</value>
-  </data>
-  <data name="Tour.Corner.Text" xml:space="preserve">
-    <value>These buttons open quick notes, your reminders and the calendar from any page.</value>
-  </data>
   <data name="Tour.Corner.Title" xml:space="preserve">
     <value>Notes, reminders and calendar</value>
-  </data>
-  <data name="Tour.DayPlan.Text" xml:space="preserve">
-    <value>Open Day Plan to divide a day into time blocks, like Gym 17:00–18:30.</value>
-  </data>
-  <data name="Tour.DayPlan.Title" xml:space="preserve">
-    <value>Plan your day</value>
-  </data>
-  <data name="Tour.DeleteNote" xml:space="preserve">
-    <value>This is the example memory.</value>
-  </data>
-  <data name="Tour.End.Text" xml:space="preserve">
-    <value>Help and shortcuts are behind the ? button, and you can delete the example memories from the sidebar any time.</value>
-  </data>
-  <data name="Tour.End.Title" xml:space="preserve">
-    <value>That's the tour</value>
   </data>
   <data name="Tour.HelpEntry" xml:space="preserve">
     <value>Take the tour</value>
   </data>
-  <data name="Tour.OpenProject.Text" xml:space="preserve">
-    <value>Click this card to open the project.</value>
-  </data>
-  <data name="Tour.OpenProject.Title" xml:space="preserve">
-    <value>Open a project</value>
-  </data>
-  <data name="Tour.PageBackground.Text" xml:space="preserve">
-    <value>Right-click an empty part of the page and choose Edit Background.</value>
-  </data>
-  <data name="Tour.PageBackground.Title" xml:space="preserve">
-    <value>Change the page background</value>
-  </data>
-  <data name="Tour.Search.Example" xml:space="preserve">
-    <value>bike</value>
-  </data>
-  <data name="Tour.Search.Text" xml:space="preserve">
-    <value>Press Ctrl+Shift+F and type a word, for example {0}.</value>
-  </data>
   <data name="Tour.Search.Title" xml:space="preserve">
     <value>Search everything</value>
   </data>
-  <data name="Tour.SelectCards.Text" xml:space="preserve">
-    <value>Drag a rectangle across the empty space around the cards to select more than one.</value>
-  </data>
-  <data name="Tour.SelectCards.Title" xml:space="preserve">
-    <value>Select several cards</value>
-  </data>
   <data name="Tour.StepOf" xml:space="preserve">
     <value>Step {0} of {1}.</value>
-  </data>
-  <data name="Tour.TodoList.Text" xml:space="preserve">
-    <value>Type a to-do and press Enter, then click its text to change it.</value>
-  </data>
-  <data name="Tour.TodoList.Title" xml:space="preserve">
-    <value>Keep a to-do list</value>
-  </data>
-  <data name="Tour.TurnPage.Text" xml:space="preserve">
-    <value>Click the right arrow to go to page two, then click it again to start a new page.</value>
-  </data>
-  <data name="Tour.TurnPage.Title" xml:space="preserve">
-    <value>Turn the page</value>
-  </data>
-  <data name="Tour.Welcome.Text" xml:space="preserve">
-    <value>A memory is one area of your life, listed in the sidebar. A project memory holds projects, each with its tasks, notes and files. A collection memory keeps a list of things you own, like clothes or a bike.</value>
-  </data>
-  <data name="Tour.Welcome.Title" xml:space="preserve">
-    <value>Welcome to TidyMind</value>
   </data>
   <data name="Transfer.Count.Files.One" xml:space="preserve">
     <value>{0} file</value>
@@ -3709,5 +3610,383 @@ Close it anyway and give up the changes?</value>
   </data>
   <data name="Transfer.Import.CollectionNotebookCounts" xml:space="preserve">
     <value>{0}, {1}, {2}</value>
+  </data>
+  <data name="Tour.Welcome.Title" xml:space="preserve">
+    <value>A quick look around</value>
+  </data>
+  <data name="Tour.Welcome.Text" xml:space="preserve">
+    <value>A few short steps through the main window: where your memories are, how to start one, and where to find the rest. Or add two example memories first and look around on your own.</value>
+  </data>
+  <data name="Tour.Memories.Title" xml:space="preserve">
+    <value>Your memories</value>
+  </data>
+  <data name="Tour.Memories.Text" xml:space="preserve">
+    <value>Each area of your life gets a memory of its own, so everything about it stays in one place. Collections keep track of things you own, such as clothes or a car; project memories hold projects with tasks, notes and files.</value>
+  </data>
+  <data name="Tour.NewMemory.Title" xml:space="preserve">
+    <value>Start a memory</value>
+  </data>
+  <data name="Tour.NewMemory.Text" xml:space="preserve">
+    <value>A project memory is for plans and work, a collection for things you want to keep a record of. You can rename or delete either later with a right-click on it in the sidebar.</value>
+  </data>
+  <data name="Tour.Todos.Title" xml:space="preserve">
+    <value>Today's to-dos</value>
+  </data>
+  <data name="Tour.Todos.Text" xml:space="preserve">
+    <value>Write down what needs doing and tick it off as you go. Home also shows the week with your reminders and calendar notes.</value>
+  </data>
+  <data name="Tour.Corner.Text" xml:space="preserve">
+    <value>Jot something down without leaving the page, get a Windows notification at the right time, even with TidyMind closed, or open the calendar. They work from every page.</value>
+  </data>
+  <data name="Tour.Search.Text" xml:space="preserve">
+    <value>Looks through every memory at once: projects, items, files, notebook pages and day plans. Ctrl+Shift+F opens it from any page.</value>
+  </data>
+  <data name="Tour.End.Title" xml:space="preserve">
+    <value>Right-click for more</value>
+  </data>
+  <data name="Tour.End.Text" xml:space="preserve">
+    <value>Memories, cards, tabs, tasks, files and calendar days have a right-click menu. Tips &amp; shortcuts under the ? button lists them all, and the tour can be taken again from there.</value>
+  </data>
+  <data name="Examples.Add" xml:space="preserve">
+    <value>Add example memories</value>
+  </data>
+  <data name="Examples.Title" xml:space="preserve">
+    <value>Example memories</value>
+  </data>
+  <data name="Examples.WriteFailed" xml:space="preserve">
+    <value>The example memories couldn't be written to
+{0}
+
+Nothing was changed.</value>
+  </data>
+  <data name="Help.WhatsNew" xml:space="preserve">
+    <value>What's new</value>
+  </data>
+  <data name="Nav.Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="Nav.SearchTip" xml:space="preserve">
+    <value>Search every memory (Ctrl+Shift+F)</value>
+  </data>
+  <data name="Memory.More" xml:space="preserve">
+    <value>More for this memory</value>
+  </data>
+  <data name="Card.More" xml:space="preserve">
+    <value>More</value>
+  </data>
+  <data name="Hint.Cards" xml:space="preserve">
+    <value>Right-click a card or an empty spot for more. Ctrl+click, Shift+click or dragging across empty space selects several cards.</value>
+  </data>
+  <data name="Hint.Files" xml:space="preserve">
+    <value>Right-click a file to rename it, show it in its folder or save a copy.</value>
+  </data>
+  <data name="Hint.Notebook" xml:space="preserve">
+    <value>Ctrl+PageUp and Ctrl+PageDown turn the page. In the ☰ list, Ctrl+click or Shift+click selects several pages.</value>
+  </data>
+  <data name="Settings.BackgroundImage.Where" xml:space="preserve">
+    <value>The picture itself is chosen on the memory's page: ⋯ at the top, then Edit Background.</value>
+  </data>
+  <data name="WhatsNew.Title" xml:space="preserve">
+    <value>New in TidyMind {0}</value>
+  </data>
+  <data name="WhatsNew.Points" xml:space="preserve">
+    <value>Vehicles have a window of their own: documents with reminders, a service log with costs, wheel sets and parts.
+Undo and redo with Ctrl+Z and Ctrl+Y: deleted items, projects and memories come back with their pictures and files.
+Every memory has a notebook of its own, for notes about the whole memory.
+Tips &amp; shortcuts under the ? button lists the right-click menus and keys, and each card has a ⋯ button for its menu.</value>
+  </data>
+  <data name="Tips.Title" xml:space="preserve">
+    <value>Tips &amp; shortcuts</value>
+  </data>
+  <data name="Tips.Filter" xml:space="preserve">
+    <value>Find a tip…</value>
+  </data>
+  <data name="Tips.NothingFound" xml:space="preserve">
+    <value>No tip matches that.</value>
+  </data>
+  <data name="Tips.Group.Everywhere" xml:space="preserve">
+    <value>Main window</value>
+  </data>
+  <data name="Tips.Group.Sidebar" xml:space="preserve">
+    <value>Sidebar</value>
+  </data>
+  <data name="Tips.Group.Pages" xml:space="preserve">
+    <value>Project and collection pages</value>
+  </data>
+  <data name="Tips.Group.Projects" xml:space="preserve">
+    <value>Project details</value>
+  </data>
+  <data name="Tips.Group.Notebook" xml:space="preserve">
+    <value>Notes and notebooks</value>
+  </data>
+  <data name="Tips.Group.Todos" xml:space="preserve">
+    <value>Home and to-dos</value>
+  </data>
+  <data name="Tips.Group.Plan" xml:space="preserve">
+    <value>Calendar and Day Plan</value>
+  </data>
+  <data name="Tips.Group.Items" xml:space="preserve">
+    <value>Collection items</value>
+  </data>
+  <data name="Tips.Search.Keys" xml:space="preserve">
+    <value>Ctrl+Shift+F</value>
+  </data>
+  <data name="Tips.Search.Text" xml:space="preserve">
+    <value>Searches every memory: projects, items, files, notebook pages and day plans.</value>
+  </data>
+  <data name="Tips.QuickNote.Keys" xml:space="preserve">
+    <value>Ctrl+Shift+N</value>
+  </data>
+  <data name="Tips.QuickNote.Text" xml:space="preserve">
+    <value>Opens Quick Notes, a scratch pad that saves what you typed when you close it.</value>
+  </data>
+  <data name="Tips.Reminders.Keys" xml:space="preserve">
+    <value>Ctrl+Shift+R</value>
+  </data>
+  <data name="Tips.Reminders.Text" xml:space="preserve">
+    <value>Opens the list of reminders.</value>
+  </data>
+  <data name="Tips.Calendar.Keys" xml:space="preserve">
+    <value>Ctrl+Shift+C</value>
+  </data>
+  <data name="Tips.Calendar.Text" xml:space="preserve">
+    <value>Opens the calendar.</value>
+  </data>
+  <data name="Tips.Undo.Keys" xml:space="preserve">
+    <value>Ctrl+Z</value>
+  </data>
+  <data name="Tips.Undo.Text" xml:space="preserve">
+    <value>Undoes the last change on the page: a delete, a tick, a rename, a move or a saved edit. In a text box it undoes your typing instead.</value>
+  </data>
+  <data name="Tips.Redo.Keys" xml:space="preserve">
+    <value>Ctrl+Y, Ctrl+Shift+Z</value>
+  </data>
+  <data name="Tips.Redo.Text" xml:space="preserve">
+    <value>Redoes what was undone.</value>
+  </data>
+  <data name="Tips.RightClick.Keys" xml:space="preserve">
+    <value>Right-click</value>
+  </data>
+  <data name="Tips.RightClick.Text" xml:space="preserve">
+    <value>Opens a menu on memories, cards, tabs, tasks, files, to-dos, calendar days, plan blocks and reminders.</value>
+  </data>
+  <data name="Tips.Escape.Keys" xml:space="preserve">
+    <value>Esc</value>
+  </data>
+  <data name="Tips.Escape.Text" xml:space="preserve">
+    <value>Closes search, the calendar, Quick Notes and windows such as Project details. While you edit a text in place, it puts the old text back.</value>
+  </data>
+  <data name="Tips.MemoryMenu.Keys" xml:space="preserve">
+    <value>Right-click a memory</value>
+  </data>
+  <data name="Tips.MemoryMenu.Text" xml:space="preserve">
+    <value>Rename, delete or export it, add a reminder, or export a collection for transfer to another PC. The ⋯ button at the top of its page has the same menu.</value>
+  </data>
+  <data name="Tips.MemoryDrag.Keys" xml:space="preserve">
+    <value>Drag a memory</value>
+  </data>
+  <data name="Tips.MemoryDrag.Text" xml:space="preserve">
+    <value>Moves it up or down within its group.</value>
+  </data>
+  <data name="Tips.MemorySelect.Keys" xml:space="preserve">
+    <value>Ctrl+click, Shift+click</value>
+  </data>
+  <data name="Tips.MemorySelect.Text" xml:space="preserve">
+    <value>Selects several memories. Delete deletes them after one question; Esc clears the selection.</value>
+  </data>
+  <data name="Tips.CardMenu.Keys" xml:space="preserve">
+    <value>Right-click a card, or its ⋯</value>
+  </data>
+  <data name="Tips.CardMenu.Text" xml:space="preserve">
+    <value>The card's menu: rename or edit, delete, add a reminder, export (also for transfer), copy the name. A project card can also get a color or picture of its own.</value>
+  </data>
+  <data name="Tips.CardSelect.Keys" xml:space="preserve">
+    <value>Ctrl+click, Shift+click</value>
+  </data>
+  <data name="Tips.CardSelect.Text" xml:space="preserve">
+    <value>Selects several cards. Then Ctrl+A selects all of them on the tab, and Delete deletes them after one question.</value>
+  </data>
+  <data name="Tips.Marquee.Keys" xml:space="preserve">
+    <value>Drag across empty space</value>
+  </data>
+  <data name="Tips.Marquee.Text" xml:space="preserve">
+    <value>Selects every card the frame touches. Hold Ctrl to add to the selection.</value>
+  </data>
+  <data name="Tips.CardDrag.Keys" xml:space="preserve">
+    <value>Drag a card</value>
+  </data>
+  <data name="Tips.CardDrag.Text" xml:space="preserve">
+    <value>Moves it to another place on the tab.</value>
+  </data>
+  <data name="Tips.Background.Keys" xml:space="preserve">
+    <value>Right-click empty space</value>
+  </data>
+  <data name="Tips.Background.Text" xml:space="preserve">
+    <value>Edit Background: a color or a picture behind the page. Also in the ⋯ menu at the top of the page.</value>
+  </data>
+  <data name="Tips.TabRename.Keys" xml:space="preserve">
+    <value>Double-click a tab</value>
+  </data>
+  <data name="Tips.TabRename.Text" xml:space="preserve">
+    <value>Renames it.</value>
+  </data>
+  <data name="Tips.TabMenu.Keys" xml:space="preserve">
+    <value>Right-click a tab</value>
+  </data>
+  <data name="Tips.TabMenu.Text" xml:space="preserve">
+    <value>Rename or delete it. When a tab is deleted, its cards move to another tab; nothing is lost.</value>
+  </data>
+  <data name="Tips.TabDrag.Keys" xml:space="preserve">
+    <value>Drag a tab</value>
+  </data>
+  <data name="Tips.TabDrag.Text" xml:space="preserve">
+    <value>Changes the order of the tabs.</value>
+  </data>
+  <data name="Tips.TodoFold.Keys" xml:space="preserve">
+    <value>Click TO-DO on a project memory's page</value>
+  </data>
+  <data name="Tips.TodoFold.Text" xml:space="preserve">
+    <value>Folds the to-do list to one line that shows the next to-do.</value>
+  </data>
+  <data name="Tips.TaskSelect.Keys" xml:space="preserve">
+    <value>Ctrl+click, Shift+click</value>
+  </data>
+  <data name="Tips.TaskSelect.Text" xml:space="preserve">
+    <value>Selects several tasks or files. Delete removes them; Ctrl+C copies the tasks' text.</value>
+  </data>
+  <data name="Tips.TaskMenu.Keys" xml:space="preserve">
+    <value>Right-click a task</value>
+  </data>
+  <data name="Tips.TaskMenu.Text" xml:space="preserve">
+    <value>Rename, delete or copy it.</value>
+  </data>
+  <data name="Tips.FileMenu.Keys" xml:space="preserve">
+    <value>Right-click a file</value>
+  </data>
+  <data name="Tips.FileMenu.Text" xml:space="preserve">
+    <value>Open it, show it in its folder, save a copy, rename or remove it.</value>
+  </data>
+  <data name="Tips.FileDrop.Keys" xml:space="preserve">
+    <value>Drop files on Files</value>
+  </data>
+  <data name="Tips.FileDrop.Text" xml:space="preserve">
+    <value>Attaches them to the project. They are copied into TidyMind's data folder.</value>
+  </data>
+  <data name="Tips.ProjectEscape.Keys" xml:space="preserve">
+    <value>Esc</value>
+  </data>
+  <data name="Tips.ProjectEscape.Text" xml:space="preserve">
+    <value>Saves and closes Project details, as Save does. An open page list closes first.</value>
+  </data>
+  <data name="Tips.PageTurn.Keys" xml:space="preserve">
+    <value>Ctrl+PageUp, Ctrl+PageDown</value>
+  </data>
+  <data name="Tips.PageTurn.Text" xml:space="preserve">
+    <value>Turns to the previous or next page. Past the last page a new one starts, unless the last one is still empty.</value>
+  </data>
+  <data name="Tips.PageSelect.Keys" xml:space="preserve">
+    <value>☰, then Ctrl+click or Shift+click</value>
+  </data>
+  <data name="Tips.PageSelect.Text" xml:space="preserve">
+    <value>Selects several pages in the page list to delete them together. Deleting every page leaves page 1, emptied.</value>
+  </data>
+  <data name="Tips.Format.Keys" xml:space="preserve">
+    <value>Ctrl+B, Ctrl+I, Ctrl+U</value>
+  </data>
+  <data name="Tips.Format.Text" xml:space="preserve">
+    <value>Bold, italic and underline in a description or a notebook page. Text color is on the toolbar and in the right-click menu.</value>
+  </data>
+  <data name="Tips.Paste.Keys" xml:space="preserve">
+    <value>Ctrl+V</value>
+  </data>
+  <data name="Tips.Paste.Text" xml:space="preserve">
+    <value>Text copied from another program comes in as plain text; formatting copied inside TidyMind is kept.</value>
+  </data>
+  <data name="Tips.TodoAdd.Keys" xml:space="preserve">
+    <value>Enter</value>
+  </data>
+  <data name="Tips.TodoAdd.Text" xml:space="preserve">
+    <value>Adds the to-do you typed. Esc empties the box.</value>
+  </data>
+  <data name="Tips.TodoSelect.Keys" xml:space="preserve">
+    <value>Ctrl+click, Shift+click</value>
+  </data>
+  <data name="Tips.TodoSelect.Text" xml:space="preserve">
+    <value>Selects several to-dos. Delete deletes them.</value>
+  </data>
+  <data name="Tips.WeekDay.Keys" xml:space="preserve">
+    <value>Click a date in Home's week</value>
+  </data>
+  <data name="Tips.WeekDay.Text" xml:space="preserve">
+    <value>Opens that day in the calendar. Right-click a reminder or a note in the week to edit or delete it.</value>
+  </data>
+  <data name="Tips.CalendarDay.Keys" xml:space="preserve">
+    <value>Right-click a day in the calendar</value>
+  </data>
+  <data name="Tips.CalendarDay.Text" xml:space="preserve">
+    <value>Adds a reminder for that day (today or later). A click opens the day for its color, note and plan.</value>
+  </data>
+  <data name="Tips.DialogSave.Keys" xml:space="preserve">
+    <value>Ctrl+Enter</value>
+  </data>
+  <data name="Tips.DialogSave.Text" xml:space="preserve">
+    <value>Saves a calendar day or a plan block in its window.</value>
+  </data>
+  <data name="Tips.PlanCreate.Keys" xml:space="preserve">
+    <value>Drag on the timeline</value>
+  </data>
+  <data name="Tips.PlanCreate.Text" xml:space="preserve">
+    <value>Plans a new block for those times.</value>
+  </data>
+  <data name="Tips.PlanMove.Keys" xml:space="preserve">
+    <value>Drag a block, or its top or bottom edge</value>
+  </data>
+  <data name="Tips.PlanMove.Text" xml:space="preserve">
+    <value>Moves it, or changes when it starts or ends, in steps of 15 minutes.</value>
+  </data>
+  <data name="Tips.PlanEdit.Keys" xml:space="preserve">
+    <value>Double-click a block, or Enter</value>
+  </data>
+  <data name="Tips.PlanEdit.Text" xml:space="preserve">
+    <value>Edits it. Delete deletes it.</value>
+  </data>
+  <data name="Tips.PlanTodo.Keys" xml:space="preserve">
+    <value>Drag a to-do onto the timeline</value>
+  </data>
+  <data name="Tips.PlanTodo.Text" xml:space="preserve">
+    <value>Plans it as a block.</value>
+  </data>
+  <data name="Tips.PlanSelect.Keys" xml:space="preserve">
+    <value>Ctrl+click, Shift+click</value>
+  </data>
+  <data name="Tips.PlanSelect.Text" xml:space="preserve">
+    <value>Selects several blocks. Delete deletes them.</value>
+  </data>
+  <data name="Tips.ItemSearch.Keys" xml:space="preserve">
+    <value>Ctrl+F</value>
+  </data>
+  <data name="Tips.ItemSearch.Text" xml:space="preserve">
+    <value>In a vehicle's window, finds any field, record or log entry.</value>
+  </data>
+  <data name="Tips.ItemPictures.Keys" xml:space="preserve">
+    <value>Left arrow, Right arrow</value>
+  </data>
+  <data name="Tips.ItemPictures.Text" xml:space="preserve">
+    <value>Browses an item's pictures in its window.</value>
+  </data>
+  <data name="Tips.ItemEscape.Keys" xml:space="preserve">
+    <value>Esc</value>
+  </data>
+  <data name="Tips.ItemEscape.Text" xml:space="preserve">
+    <value>In an item's window: empties the search, stops an edit (asking if something changed), or closes the window.</value>
+  </data>
+  <data name="Tips.PictureDrag.Keys" xml:space="preserve">
+    <value>Drag a picture in the item form</value>
+  </data>
+  <data name="Tips.PictureDrag.Text" xml:space="preserve">
+    <value>Changes the order of the pictures. The first one is the cover.</value>
+  </data>
+  <data name="Examples.DeleteNote" xml:space="preserve">
+    <value>This is the example memory.</value>
   </data>
 </root>

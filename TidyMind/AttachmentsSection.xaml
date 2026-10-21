@@ -28,5 +28,8 @@
              Ctrl+A select several (ItemSelection); Delete removes them. -->
         <StackPanel x:Name="FileRows" Margin="0,8,0,0" Visibility="Collapsed" Focusable="True" FocusVisualStyle="{x:Null}"
                     Background="Transparent"/>
+        <!-- What a right-click on a file offers, while there are files (as the task list's line under it) -->
+        <TextBlock x:Name="FilesHint" Text="{local:Tr Hint.Files}" FontSize="12" Foreground="{StaticResource TextSub}"
+                   Margin="2,8,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
     </StackPanel>
 </UserControl>

@@ -59,9 +59,15 @@ namespace TidyMind
 
             NavigateHome();
 
-            // A fresh install (no memories, the tour never offered): the welcome card, once the window is up.
-            if (profiles.Count == 0 && AppSettings.Load().Tour == null)
-                Loaded += (s, e) => GuidedTour.Run(new[] { TourSteps.Welcome }, TourEnded);
+            // A fresh install (no memories, the tour never offered): the welcome card, once the window is up. Otherwise,
+            // after an update, "What's new" once (WhatsNew notes the version either way).
+            bool fresh = profiles.Count == 0 && AppSettings.Load().Tour == null;
+            Loaded += (s, e) =>
+            {
+                if (fresh)
+                    GuidedTour.Run(new[] { TourSteps.Welcome }, TourEnded);
+                Dispatcher.BeginInvoke(new Action(() => WhatsNew.ShowIfNew(this, profiles.Count > 0)), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+            };
         }
 
         // Native title bar is drawn by the OS, not our XAML — recolor it via DWM
@@ -177,7 +183,6 @@ namespace TidyMind
             UndoService.ShowPage(selectedKey);
             ContentArea.Content = new DayPlanView(profiles, date, select);
             BuildNav();
-            TourSignals.Raise(TourSignals.DayPlanOpened);
         }
 
         private void NavigateTo(Profile profile)
@@ -185,14 +190,13 @@ namespace TidyMind
             selectedKey = KeyOf(profile);
             UndoService.ShowPage(selectedKey);
 
+            // The page's ⋯ button opens the same menu as the memory's right-click in the sidebar.
             if (profile.Type == ProfileType.Collection)
-                ContentArea.Content = new CollectionView(profile, () => ProfileManager.TrySaveProfiles(profiles));
+                ContentArea.Content = new CollectionView(profile, () => ProfileManager.TrySaveProfiles(profiles)) { MemoryMenu = () => MemoryMenu(profile) };
             else
-                ContentArea.Content = new ProjectView(profile, () => ProfileManager.TrySaveProfiles(profiles));
+                ContentArea.Content = new ProjectView(profile, () => ProfileManager.TrySaveProfiles(profiles)) { MemoryMenu = () => MemoryMenu(profile) };
 
             BuildNav();
-            if (profile.Type == ProfileType.Collection)
-                TourSignals.Raise(TourSignals.CollectionOpened);
         }
 
         private void BuildNav()
@@ -205,8 +209,13 @@ namespace TidyMind
                 () => NavigateHome(), null, false));
             Border dayPlan = CreateNavItem("🗓", Loc.T("Nav.DayPlan"), selectedKey == DayPlanKey,
                 () => ShowDayPlan(DateTime.Today), null, false);
-            dayPlan.Name = "NavDayPlan"; // the guided tour points at it
             NavPanel.Children.Add(dayPlan);
+            // Search has its shortcut (Ctrl+Shift+F); this is where it can be seen. The guided tour points at it.
+            Border search = CreateNavItem("🔍", Loc.T("Nav.Search"), false, () => OverlayManager.Route(Overlay.Search), null, false);
+            search.Name = "NavSearch";
+            search.ToolTip = Loc.T("Nav.SearchTip");
+            AutomationProperties.SetName(search, Loc.T("Nav.Search"));
+            NavPanel.Children.Add(search);
 
             List<Profile> collections = profiles.Where(p => p.Type == ProfileType.Collection).ToList();
             List<Profile> projectMemories = profiles.Where(p => p.Type == ProfileType.Project).ToList();
@@ -267,6 +276,17 @@ namespace TidyMind
 
         private Border CreateMemoryItem(Profile profile)
         {
+            Border item = CreateNavItem("📁", profile.Name, selectedKey == KeyOf(profile),
+                () => NavigateTo(profile), MemoryMenu(profile), true);
+            item.Name = "Nav" + KeyOf(profile);
+            memorySelection.Attach(item, profile); // before the drag: a Ctrl or Shift click selects, and neither opens nor drags
+            memoryDrag.Attach(item, profile);
+            return item;
+        }
+
+        // A memory's menu: its right-click in the sidebar and the ⋯ button on its page.
+        private ContextMenu MemoryMenu(Profile profile)
+        {
             ContextMenu menu = new ContextMenu();
 
             MenuItem rename = new MenuItem { Header = Loc.T("Common.Rename") };
@@ -286,13 +306,7 @@ namespace TidyMind
                 menu.Items.Add(TransferUI.MenuEntry(() => TransferUI.ExportCollection(this, profile)));
             menu.Items.Add(new Separator());
             menu.Items.Add(TextCopy.CopyItem(() => profile.Name, Loc.T("Common.CopyName")));
-
-            Border item = CreateNavItem("📁", profile.Name, selectedKey == KeyOf(profile),
-                () => NavigateTo(profile), menu, true);
-            item.Name = "Nav" + KeyOf(profile); // the guided tour points at it (SampleNavItem)
-            memorySelection.Attach(item, profile); // before the drag: a Ctrl or Shift click selects, and neither opens nor drags
-            memoryDrag.Attach(item, profile);
-            return item;
+            return menu;
         }
 
         // Drag-and-drop in the sidebar. The whole list is renumbered 0..n; the other group's relative order is untouched.
@@ -484,7 +498,7 @@ namespace TidyMind
         {
             MessageBoxResult result = Msg.Show(
                 Loc.F("Memory.Delete.Confirm", profile.Name)
-                + (profile.IsSample == true ? "\n\n" + Loc.T("Tour.DeleteNote") : ""),
+                + (profile.IsSample == true ? "\n\n" + Loc.T("Examples.DeleteNote") : ""),
                 Loc.T("Common.ConfirmDelete"), MessageBoxButton.YesNo, MessageBoxImage.Warning);
 
             if (result == MessageBoxResult.Yes)
@@ -769,7 +783,29 @@ namespace TidyMind
 
         private void HelpButton_Click(object sender, RoutedEventArgs e) => HelpPopup.IsOpen = !HelpPopup.IsOpen;
 
-        // ---- Guided tour --------------------------------------------------
+        // ---- Help: tips, the tour, what's new, examples ------------------------
+
+        // The ? menu's last entry only while there are no example memories to add.
+        private void HelpPopup_Opened(object sender, EventArgs e) =>
+            AddExamplesLink.Visibility = WelcomeMemory.Exists(profiles) ? Visibility.Collapsed : Visibility.Visible;
+
+        private void Tips_Click(object sender, RoutedEventArgs e)
+        {
+            HelpPopup.IsOpen = false;
+            TipsWindow.ShowFor(this);
+        }
+
+        private void WhatsNew_Click(object sender, RoutedEventArgs e)
+        {
+            HelpPopup.IsOpen = false;
+            WhatsNew.Show(this);
+        }
+
+        private void AddExamples_Click(object sender, RoutedEventArgs e)
+        {
+            HelpPopup.IsOpen = false;
+            AddExamples();
+        }
 
         private void TakeTour_Click(object sender, RoutedEventArgs e)
         {
@@ -777,36 +813,29 @@ namespace TidyMind
             StartTour();
         }
 
-        // Makes sure the example memories exist (asking first, unless the welcome card's Start already did), then runs
-        // the tour. The user's own memories are never touched.
-        private void StartTour(bool confirmed = false)
+        private void StartTour()
         {
-            if (!WelcomeMemory.Exists(profiles))
-            {
-                if (!confirmed && Msg.Show(this, Loc.T("Tour.Confirm.Text"), Loc.T("Tour.Confirm.Title"),
-                        MessageBoxButton.OKCancel, MessageBoxImage.Information) != MessageBoxResult.OK)
-                    return;
-                bool added = WelcomeMemory.TryCreate(profiles, NextColor);
-                BuildNav();
-                if (!added)
-                {
-                    Msg.Show(this, Loc.F("Tour.Confirm.WriteFailed", AppPaths.DataFolder), Loc.T("Tour.Confirm.Title"),
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-            }
-
             if (AppSettings.Load().Tour == null)
                 AppSettings.Update(s => s.Tour = AppSettings.TourShown);
             GuidedTour.Run(TourSteps.Build(this), TourEnded);
         }
 
+        // Before every tour step (TourStep.Prepare): Home shown, the sidebar at its top, nothing open over the window (a
+        // click through the spotlight may have opened something). A step whose element is still not wholly on screen
+        // is skipped (GuidedTour.OnScreen).
+        public void ReadyForTour()
+        {
+            OverlayManager.CloseAll();
+            foreach (Window note in Application.Current.Windows.OfType<Window>().Where(w => w is TipsWindow || w is WhatsNewWindow).ToList())
+                note.Close();
+            if (!(ContentArea.Content is HomeView))
+                NavigateHome();
+            NavScroll.ScrollToTop();
+            UpdateLayout();
+        }
+
         private void TourEnded(TourEnd end)
         {
-            // Every end but Begin (which only swaps the welcome card for the tour): nothing is left open.
-            if (end != TourEnd.Begin)
-                TourSteps.CloseOpened();
-
             switch (end)
             {
                 case TourEnd.Finished:
@@ -816,44 +845,37 @@ namespace TidyMind
                     AppSettings.Update(s => s.Tour = s.Tour == AppSettings.TourCompleted ? s.Tour : AppSettings.TourDismissed);
                     break;
                 case TourEnd.Begin:
-                    StartTour(confirmed: true);
+                    StartTour();
+                    break;
+                case TourEnd.Examples:
+                    AppSettings.Update(s => s.Tour = AppSettings.TourDismissed);
+                    AddExamples();
                     break;
             }
         }
 
-        // For TourSteps: shows that example memory unless it's already the open page.
+        // The example project memory and collection (WelcomeMemory), added next to the user's own memories, which are
+        // never touched; then the project one is shown.
+        private void AddExamples()
+        {
+            if (!WelcomeMemory.Exists(profiles) && !WelcomeMemory.TryCreate(profiles, NextColor))
+            {
+                BuildNav();
+                Msg.Show(this, Loc.F("Examples.WriteFailed", AppPaths.DataFolder), Loc.T("Examples.Title"),
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            ShowSample(ProfileType.Project);
+        }
+
+        // Shows that example memory unless it's already the open page.
         public void ShowSample(ProfileType type)
         {
             Profile? sample = WelcomeMemory.Find(profiles, type);
             if (sample != null && selectedKey != KeyOf(sample))
                 NavigateTo(sample);
-        }
-
-        public bool ShowsSample => profiles.Any(p => p.IsSample == true && KeyOf(p) == selectedKey);
-
-        // Opens the example project with notes on two pages, the way a search result opens a project.
-        public void OpenSampleNotebook()
-        {
-            Profile? sample = WelcomeMemory.Find(profiles, ProfileType.Project);
-            Guid? notebook = sample == null ? null : WelcomeMemory.NotebookProject(sample);
-            if (notebook != null)
-                GoToSearchResult(new SearchResult { Kind = SearchResultKind.Project, Profile = sample, ItemId = notebook.Value });
-        }
-
-        // A word the tour's search step suggests: the last word of the example collection's last item ("bike" from
-        // "City bike"), so it finds something in whichever language the examples were written.
-        public string SampleSearchWord()
-        {
-            Profile? sample = WelcomeMemory.Find(profiles, ProfileType.Collection);
-            string? name = sample == null ? null : EntityStore.LoadOrEmpty(sample).OrderBy(e => e.Order).LastOrDefault()?.Name;
-            string? word = name?.Split(' ', StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
-            return word?.ToLower(Loc.Culture) ?? Loc.T("Tour.Search.Example");
-        }
-
-        public FrameworkElement? SampleNavItem(ProfileType type)
-        {
-            Profile? sample = WelcomeMemory.Find(profiles, type);
-            return sample == null ? null : GuidedTour.Find(this, "Nav" + KeyOf(sample));
+            else
+                BuildNav();
         }
 
         private static SolidColorBrush B(string hex)

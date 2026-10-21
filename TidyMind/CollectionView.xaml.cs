@@ -41,7 +41,7 @@ namespace TidyMind
                 RenderEntities();
             };
             memory = profile;
-            MemoryPageBackground.Attach(Page, BackgroundLayer, profile, saveProfiles, HeaderPlate, EmptyCard);
+            editBackground = MemoryPageBackground.Attach(Page, BackgroundLayer, profile, saveProfiles, HeaderPlate, EmptyCard);
             TitleText.Text = profile.Name;
             NotebookButton.Load(profile);
 
@@ -161,10 +161,11 @@ namespace TidyMind
             unreadableProblem = problem;
             selection?.ClearSelection();
             EntityPanel.Children.Clear();
-            // The notebook has a file of its own and keeps working.
+            // The notebook has a file of its own and keeps working, and so does the memory's menu.
             foreach (UIElement tool in Toolbar.Children)
-                if (tool != NotebookButton)
+                if (tool != NotebookButton && tool != MoreButton)
                     tool.Visibility = Visibility.Collapsed;
+            CardHint.Visibility = Visibility.Collapsed;
             SelectionBar.Visibility = Visibility.Collapsed;
             TabStrip.Visibility = Visibility.Collapsed;
             SubtitleText.Text = Loc.T("Collection.Kind");
@@ -189,6 +190,15 @@ namespace TidyMind
         private UndoChange Record() => UndoChange.Begin(unreadable ? null : UndoService.Page, UndoParts.Entities(memory), UndoParts.Reminders());
 
         public void OpenNotebook() => NotebookButton.Open();
+
+        // The memory's menu, the same as its right-click in the sidebar (set by the main window).
+        public Func<ContextMenu>? MemoryMenu { get; set; }
+
+        // Edit Background for this page (MemoryPageBackground), also in the ⋯ menu.
+        private readonly Action editBackground;
+
+        private void MoreButton_Click(object sender, RoutedEventArgs e) =>
+            MemoryPageBackground.OpenPageMenu(MoreButton, MemoryMenu, editBackground);
 
         // After an undo or redo: the items and tabs as stored now.
         public void ReloadAfterUndo()
@@ -243,6 +253,7 @@ namespace TidyMind
 
             SubtitleText.Text = Loc.Plural("Collection.Subtitle", inTab.Count);
             EmptyState.Visibility = shown == 0 ? Visibility.Visible : Visibility.Collapsed;
+            CardHint.Visibility = shown == 0 ? Visibility.Collapsed : Visibility.Visible;
             EmptyState.Text = Loc.T(inTab.Count == 0 ? "Collection.Empty" : "Collection.NoMatch");
             selection.EndRender(); // what's no longer on screen (other tab, filtered out) drops out of the selection
         }
@@ -387,6 +398,7 @@ namespace TidyMind
             menu.Items.Add(new Separator());
             menu.Items.Add(TextCopy.CopyItem(() => entity.Name, Loc.T("Common.CopyName")));
             card.ContextMenu = menu;
+            CardEffects.AttachMenuButton(card, button => selection.OpenMenu(card, button));
 
             return card;
         }
