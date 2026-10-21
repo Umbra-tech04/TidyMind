@@ -5,3 +5,4 @@
 - Undo and redo (Ctrl+Z, Ctrl+Y): deletes, ticks, renames, moves and saved edits can be taken back, with an Undo button right after a delete; deleted items, projects and memories come back with their pictures, files and reminders.
 - Every memory has its own notebook for notes about the whole memory (the Notebook button on its page): the same pages and formatting as a project's notes, included in exports, backups and a collection's transfer, and found by search.
 - Easier to find: a short tour of the main window, Tips & shortcuts under the ? button (the right-click menus, keys and gestures), a ⋯ button on cards and memory pages for their menus, Search in the sidebar, a Getting started list on Home, and a "What's new" note after an update.
+- A new app icon, in the program, the taskbar, the Start menu and the installer.
