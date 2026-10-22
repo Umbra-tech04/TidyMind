@@ -4019,4 +4019,115 @@ Tips &amp; shortcuts under the ? button lists the right-click menus and keys, an
   <data name="Checklist.Item.Text" xml:space="preserve">
     <value>Click New Collection in the sidebar, then Add item on its page.</value>
   </data>
+  <data name="Collection.Kind.Title" xml:space="preserve">
+    <value>What will this collection hold?</value>
+  </data>
+  <data name="Collection.Kind.Standard" xml:space="preserve">
+    <value>Clothing and vehicles</value>
+  </data>
+  <data name="Collection.Kind.Standard.Text" xml:space="preserve">
+    <value>Ready-made items with their own fields.</value>
+  </data>
+  <data name="Collection.Kind.Custom" xml:space="preserve">
+    <value>Your own layout</value>
+  </data>
+  <data name="Collection.Kind.Custom.Text" xml:space="preserve">
+    <value>Build the item page from blocks: fields, pictures, notes, checklists, documents, a log and quantities.</value>
+  </data>
+  <data name="Custom.Block.Fields" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Custom.Block.Gallery" xml:space="preserve">
+    <value>Pictures</value>
+  </data>
+  <data name="Custom.Block.Notes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="Custom.Block.Checklist" xml:space="preserve">
+    <value>Checklist</value>
+  </data>
+  <data name="Custom.Block.Documents" xml:space="preserve">
+    <value>Documents</value>
+  </data>
+  <data name="Custom.Block.Log" xml:space="preserve">
+    <value>Log</value>
+  </data>
+  <data name="Custom.Block.Quantities" xml:space="preserve">
+    <value>Quantities</value>
+  </data>
+  <data name="Custom.Starter.Details" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Custom.Field.Untitled" xml:space="preserve">
+    <value>Untitled field</value>
+  </data>
+  <data name="Custom.Layout.Empty" xml:space="preserve">
+    <value>The layout file is empty.</value>
+  </data>
+  <data name="Custom.Layout.NotCreated" xml:space="preserve">
+    <value>The collection's layout couldn't be saved to {0}. The collection wasn't added.</value>
+  </data>
+  <data name="Custom.Checklist.DoneLine" xml:space="preserve">
+    <value>Done: {0}</value>
+  </data>
+  <data name="Entity.Field.Text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="Entity.Field.Done" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="Entity.Field.Entry" xml:space="preserve">
+    <value>Entry</value>
+  </data>
+  <data name="Entity.Field.Amount" xml:space="preserve">
+    <value>Amount</value>
+  </data>
+  <data name="Entity.Field.Unit" xml:space="preserve">
+    <value>Unit</value>
+  </data>
+  <data name="Entity.Records.CustomChecklist.Untitled" xml:space="preserve">
+    <value>Untitled</value>
+  </data>
+  <data name="Entity.Records.CustomChecklist.Add" xml:space="preserve">
+    <value>Add a line</value>
+  </data>
+  <data name="Entity.Records.CustomChecklist.Empty" xml:space="preserve">
+    <value>Nothing on the list yet.</value>
+  </data>
+  <data name="Entity.Records.CustomDocuments.Untitled" xml:space="preserve">
+    <value>Document</value>
+  </data>
+  <data name="Entity.Records.CustomDocuments.Add" xml:space="preserve">
+    <value>Add document</value>
+  </data>
+  <data name="Entity.Records.CustomDocuments.Empty" xml:space="preserve">
+    <value>No documents yet. Add one with the date it runs out: it shows on the card and on Home, and you can be reminded in time.</value>
+  </data>
+  <data name="Entity.Records.CustomLog.Untitled" xml:space="preserve">
+    <value>No date</value>
+  </data>
+  <data name="Entity.Records.CustomLog.Add" xml:space="preserve">
+    <value>Add entry</value>
+  </data>
+  <data name="Entity.Records.CustomLog.Empty" xml:space="preserve">
+    <value>Nothing written down yet.</value>
+  </data>
+  <data name="Entity.Records.CustomQuantities.Untitled" xml:space="preserve">
+    <value>Untitled</value>
+  </data>
+  <data name="Entity.Records.CustomQuantities.Add" xml:space="preserve">
+    <value>Add line</value>
+  </data>
+  <data name="Entity.Records.CustomQuantities.Empty" xml:space="preserve">
+    <value>Nothing listed yet. Add what there is and how much.</value>
+  </data>
+  <data name="Entity.Records.CustomQuantities.Count" xml:space="preserve">
+    <value>Quantity</value>
+  </data>
+  <data name="Entity.Records.CustomQuantities.Fewer" xml:space="preserve">
+    <value>One less</value>
+  </data>
+  <data name="Entity.Records.CustomQuantities.More" xml:space="preserve">
+    <value>One more</value>
+  </data>
 </root>

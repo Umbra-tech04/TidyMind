@@ -550,10 +550,10 @@ namespace TidyMind
             if (list.Count == 0)
             {
                 StackPanel empty = new StackPanel { Margin = new Thickness(ItemLook.Gap, titled ? 0 : 16, ItemLook.Gap, 12) };
-                empty.Children.Add(ItemLook.Muted(Loc.T("Entity.Records." + records.Key + ".Empty")));
+                empty.Children.Add(ItemLook.Muted(records.Text("Empty")));
                 if (records.Nested)
                 {
-                    Button template = new Button { Content = Loc.T("Entity.Records." + records.Key + ".Template"), Height = 36, Padding = new Thickness(16, 0, 16, 0),
+                    Button template = new Button { Content = records.Text("Template"), Height = 36, Padding = new Thickness(16, 0, 16, 0),
                         HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 16, 0, 0) };
                     template.Click += (s, e) => AddTemplate(records);
                     empty.Children.Add(template);
@@ -598,14 +598,14 @@ namespace TidyMind
             if (records.CurrentKey != null)
             {
                 if (records.IsCurrent(item, record))
-                    status = StatusBadge(Loc.T("Entity.Records." + records.Key + ".Current"));
+                    status = StatusBadge(records.Text("Current"));
                 else
-                    actions.Add(ItemLook.Link(Loc.T("Entity.Records." + records.Key + ".MakeCurrent"), () => Commit(v => records.SetCurrent(v, record.Id))));
+                    actions.Add(ItemLook.Link(records.Text("MakeCurrent"), () => Commit(v => records.SetCurrent(v, record.Id))));
             }
             UIElement? extra = null;
             if (records.Nested)
             {
-                actions.Add(ItemLook.Link(Loc.T("Entity.Records." + records.Key + ".AddUnder"), () => OpenRecord(records, null, record.Id)));
+                actions.Add(ItemLook.Link(records.Text("AddUnder"), () => OpenRecord(records, null, record.Id)));
                 actions.AddRange(Moves(records, list, record, depth));
                 extra = History(records, record);
             }
@@ -687,9 +687,9 @@ namespace TidyMind
                     IsEnabled = can,
                     Opacity = can ? 1 : 0.35,
                     Margin = new Thickness(8, 0, 0, 0),
-                    ToolTip = Loc.T("Entity.Records." + records.Key + "." + key)
+                    ToolTip = records.Text(key)
                 };
-                AutomationProperties.SetName(button, Loc.T("Entity.Records." + records.Key + "." + key));
+                AutomationProperties.SetName(button, records.Text(key));
                 button.Click += (s, e) => Commit(v =>
                 {
                     List<EntityRecord> stored = records.Read(v);
@@ -716,7 +716,7 @@ namespace TidyMind
             if (linked.Count == 0)
                 return null;
             StackPanel history = new StackPanel { Margin = new Thickness(0, 16, 0, 0) };
-            history.Children.Add(new TextBlock { Text = Loc.T("Entity.Records." + records.Key + ".History"), FontSize = 12, Foreground = ItemLook.Res("TextSub"), Margin = new Thickness(0, 0, 0, 4) });
+            history.Children.Add(new TextBlock { Text = records.Text("History"), FontSize = 12, Foreground = ItemLook.Res("TextSub"), Margin = new Thickness(0, 0, 0, 4) });
             foreach ((RecordDefinition kind, EntityRecord entry) in linked)
             {
                 string subtitle = kind.Subtitle?.Invoke(entry, item) ?? "";

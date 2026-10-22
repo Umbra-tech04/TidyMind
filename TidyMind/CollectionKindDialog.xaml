@@ -1,0 +1,35 @@
+<Window x:Class="TidyMind.CollectionKindDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:TidyMind"
+        Title="{local:Tr Main.NewCollection}" Width="460" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False"
+        Background="{StaticResource BgMain}">
+    <StackPanel>
+        <Border Background="{StaticResource BgPanel}" BorderBrush="{StaticResource Border}"
+                BorderThickness="0,0,0,1" Padding="20,16">
+            <TextBlock Text="{local:Tr Collection.Kind.Title}" FontSize="16" FontWeight="Bold"
+                       Foreground="{StaticResource TextMain}" TextWrapping="Wrap"/>
+        </Border>
+        <StackPanel Margin="20,16,20,20">
+            <Button x:Name="StandardButton" Style="{StaticResource GhostButtonStyle}" Height="Auto" Padding="16,12"
+                    HorizontalContentAlignment="Stretch" Click="Standard_Click" Margin="0,0,0,8">
+                <StackPanel>
+                    <TextBlock Text="{local:Tr Collection.Kind.Standard}" FontSize="14" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextMain}" TextWrapping="Wrap"/>
+                    <TextBlock Text="{local:Tr Collection.Kind.Standard.Text}" FontSize="12" Margin="0,2,0,0"
+                               Foreground="{StaticResource TextSub}" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Button>
+            <Button x:Name="CustomButton" Style="{StaticResource GhostButtonStyle}" Height="Auto" Padding="16,12"
+                    HorizontalContentAlignment="Stretch" Click="Custom_Click">
+                <StackPanel>
+                    <TextBlock Text="{local:Tr Collection.Kind.Custom}" FontSize="14" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextMain}" TextWrapping="Wrap"/>
+                    <TextBlock Text="{local:Tr Collection.Kind.Custom.Text}" FontSize="12" Margin="0,2,0,0"
+                               Foreground="{StaticResource TextSub}" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+    </StackPanel>
+</Window>

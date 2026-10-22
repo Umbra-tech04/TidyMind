@@ -25,6 +25,9 @@ namespace TidyMind
 
         // Its items or tabs file couldn't be read: shown read-only (ShowUnreadable), and never saved over.
         private bool unreadable;
+
+        // A custom collection (it has a layout, CustomLayout): Add makes an item of its layout, no type to pick.
+        private bool custom;
         private string unreadableFile, unreadableProblem;
 
         // The search box rebuilds the cards after a short pause in typing, not on every key: rebuilding a big grid per
@@ -64,6 +67,14 @@ namespace TidyMind
                 ShowUnreadable(MemoryFiles.Items(memory), problem);
                 return;
             }
+            // A custom collection's items are laid out by its layout file. One that can't be read leaves the page read-only,
+            // as an unreadable items file does: without it the items' blocks can't be shown or changed.
+            if (!CustomLayoutStore.TryLoad(memory, out CustomLayout? layout, out problem))
+            {
+                ShowUnreadable(MemoryFiles.Layout(memory), problem);
+                return;
+            }
+            custom = layout != null;
             if (!TabStore.TryLoadOrCreate(memory, entities.Select(e => e.TabId), out List<MemoryTab> tabs, out problem))
             {
                 ShowUnreadable(MemoryFiles.Tabs(memory), problem);
@@ -515,10 +526,15 @@ namespace TidyMind
         // A new item opens in its window straight away, for everything the short form doesn't ask.
         private void AddEntityButton_Click(object sender, RoutedEventArgs e)
         {
-            EntityTypeSelector selector = new EntityTypeSelector();
-            if (selector.ShowDialog() != true)
-                return;
-            EntityForm form = new EntityForm(selector.SelectedType);
+            string type = CustomTypes.TypeOf(memory.Id);
+            if (!custom)
+            {
+                EntityTypeSelector selector = new EntityTypeSelector();
+                if (selector.ShowDialog() != true)
+                    return;
+                type = selector.SelectedType;
+            }
+            EntityForm form = new EntityForm(type);
             if (form.ShowDialog() != true)
                 return;
 

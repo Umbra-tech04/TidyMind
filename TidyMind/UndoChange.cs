@@ -616,6 +616,12 @@ namespace TidyMind
                 : File.Exists(MemoryFiles.Notebook(memory)) ? new List<MemoryNotebook> { notebook } : new List<MemoryNotebook>(),
             list => MemoryNotebookStore.TrySave(memory, list.Count > 0 ? list[0] : new MemoryNotebook()), n => "notebook");
 
+        // A custom collection's layout as one item (no file: not custom), so a change to it goes back whole.
+        public static ListPart<CustomLayout> Layout(Profile memory) => new ListPart<CustomLayout>(MemoryFiles.Layout(memory),
+            () => !CustomLayoutStore.TryLoad(memory, out CustomLayout? layout, out _) ? null
+                : layout == null ? new List<CustomLayout>() : new List<CustomLayout> { layout },
+            list => list.Count > 0 ? CustomLayoutStore.TrySave(memory, list[0]) : CustomLayoutStore.TryDelete(memory.Id), l => "layout");
+
         public static ListPart<QuickTodo> QuickTodos() => new ListPart<QuickTodo>(QuickTodoService.FilePath,
             () => QuickTodoService.TryRead(out List<QuickTodo> todos) ? todos : null,
             QuickTodoService.TryWrite, t => t.Id.ToString());

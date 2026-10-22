@@ -169,6 +169,7 @@ namespace TidyMind
 
                 // The safety copy holds the previous data; the folder it came from isn't needed any more.
                 try { Directory.Delete(replaced, recursive: true); } catch (Exception) { /* best effort: it's only a leftover */ }
+                CustomTypes.ForgetAll(); // the layouts read so far were the old data's
             }
             finally
             {
@@ -219,6 +220,7 @@ namespace TidyMind
                 ReadIfThere<List<MemoryTab>>(folder, Path.Combine(memoryFolder, "tabs.json"));
                 ReadIfThere<List<TodoEntry>>(folder, Path.Combine(memoryFolder, "todos.json"));
                 ReadIfThere<MemoryNotebook>(folder, Path.Combine(memoryFolder, "notebook.json"));
+                ReadIfThere<CustomLayout>(folder, Path.Combine(memoryFolder, "layout.json"));
             }
 
             // The one-time copy from the old version's folder is done for this data; never again over it.

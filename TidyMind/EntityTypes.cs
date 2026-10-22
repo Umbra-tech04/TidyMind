@@ -18,8 +18,11 @@ namespace TidyMind
     public class FieldDefinition
     {
         public string Key { get; init; } = "";
-        public string Label => Loc.T("Entity.Field." + Key);
+        public string Label => Name ?? Loc.T("Entity.Field." + Key);
         public ValueKind Kind { get; init; }
+
+        // What the user called it (a custom collection's field), shown as it is in every language; null: Label by Key.
+        public string? Name { get; init; }
 
         // Choice and CheckList: stored as written here, in English, whatever the language; on screen through
         // ChoiceLabel (by default the "Choice.<value>" text).
@@ -121,10 +124,17 @@ namespace TidyMind
         public const string Km = "km";
         public const string Mi = "mi";
 
+        // A unit the user typed (a custom collection's "kg", "pcs"), shown as written in every language.
+        private const string OwnPrefix = "own:";
+
+        public static string Own(string text) => OwnPrefix + text;
+
         public static string DistanceOf(Entity? owner) => owner?.Details?.GetValueOrDefault(VehicleSchema.OdometerUnitKey) == Mi ? Mi : Km;
 
         public static string Label(string unit, Entity? owner) =>
-            unit == Money ? Currency.Symbol : Loc.T("Entity.Unit." + (unit == Distance ? DistanceOf(owner) : unit));
+            unit == Money ? Currency.Symbol
+            : unit.StartsWith(OwnPrefix, StringComparison.Ordinal) ? unit.Substring(OwnPrefix.Length)
+            : Loc.T("Entity.Unit." + (unit == Distance ? DistanceOf(owner) : unit));
 
         // "152 300 km", "6,5 l/100 km", "12 500 Ft": a quantity written the current language's way, grouped. A plain
         // number (a year, a count) is not grouped: 2017, not 2,017.
@@ -173,7 +183,8 @@ namespace TidyMind
     public class SectionDefinition
     {
         public string Key { get; init; } = "";
-        public string Label => Loc.T("Entity.Section." + Key);
+        public string Label => Name ?? Loc.T("Entity.Section." + Key);
+        public string? Name { get; init; } // the user's own (a custom collection's block), as FieldDefinition.Name
         public FieldDefinition[] Fields { get; init; } = Array.Empty<FieldDefinition>();
     }
 
@@ -185,8 +196,16 @@ namespace TidyMind
     public class RecordDefinition
     {
         public string Key { get; init; } = "";
-        public string Label => Loc.T("Entity.Records." + Key);
-        public string AddLabel => Loc.T("Entity.Records." + Key + ".Add");
+        public string Label => Name ?? Text("");
+        public string AddLabel => Text("Add");
+
+        // A custom collection's block: its name is the user's (Name), and its texts ("Add document", what an empty one
+        // says) are those of its kind (TextKey, "CustomDocuments"), not of its Key (the block's Id).
+        public string? Name { get; init; }
+        public string? TextKey { get; init; }
+
+        // "Entity.Records.<key>.<suffix>" in the current language ("" for the list's own name).
+        public string Text(string suffix) => Loc.T("Entity.Records." + (TextKey ?? Key) + (suffix.Length == 0 ? "" : "." + suffix));
         public FieldDefinition[] Fields { get; init; } = Array.Empty<FieldDefinition>();
         public string[] TitleKeys { get; init; } = Array.Empty<string>();
         public Func<EntityRecord, string> Title { get; init; } = _ => "";
@@ -304,7 +323,8 @@ namespace TidyMind
     public class TabDefinition
     {
         public string Key { get; init; } = "";
-        public string Label => Loc.T("Entity.Tab." + Key);
+        public string Label => Name ?? Loc.T("Entity.Tab." + Key);
+        public string? Name { get; init; } // a custom collection's one page (never shown with a title of its own)
         public SectionDefinition[] Sections { get; init; } = Array.Empty<SectionDefinition>();
         public RecordDefinition[] Records { get; init; } = Array.Empty<RecordDefinition>();
         public LogDefinition[] Logs { get; init; } = Array.Empty<LogDefinition>();
@@ -362,8 +382,11 @@ namespace TidyMind
         public const string Clothing = "Clothing";
         public const string Vehicle = "Vehicle";
 
+        // A custom collection's items are of the type CustomTypes names after the collection ("Custom:<its Id>"): their
+        // definitions are made from its layout.
         public static IReadOnlyList<TabDefinition> Tabs(string? type) =>
-            type == Vehicle ? VehicleSchema.Tabs : type == Clothing ? ClothingSchema.Tabs : Array.Empty<TabDefinition>();
+            type == Vehicle ? VehicleSchema.Tabs : type == Clothing ? ClothingSchema.Tabs
+            : CustomTypes.Of(type) is CustomType custom ? custom.Tabs : Array.Empty<TabDefinition>();
 
         public static ItemHeadline Headline(string? type) =>
             type == Vehicle ? VehicleSchema.Headline : type == Clothing ? ClothingSchema.Headline : new ItemHeadline(Array.Empty<string>(), Array.Empty<string>());
@@ -415,6 +438,8 @@ namespace TidyMind
         // language (export, search).
         public static List<(string Label, string Value)> Describe(Entity entity)
         {
+            if (CustomTypes.Of(entity.EntityType) is CustomType custom)
+                return custom.Describe(entity); // its blocks in the layout's order
             List<(string, string)> lines = new List<(string, string)>();
             foreach (FieldDefinition field in Fields(entity.EntityType))
             {

@@ -96,14 +96,14 @@ namespace TidyMind
         }
 
         private string Heading(FieldDefinition field) =>
-            field == step ? Loc.T("Entity.Records." + records.Key + ".Count") : field.Label;
+            field == step ? records.Text("Count") : field.Label;
 
         private void Render((Guid Record, bool Plus)? focus)
         {
             body.Children.Clear();
             if (list.Count == 0 && editors == null)
             {
-                body.Children.Add(new StackPanel { Margin = new Thickness(ItemLook.Gap, 0, ItemLook.Gap, 12), Children = { ItemLook.Muted(Loc.T("Entity.Records." + records.Key + ".Empty")) } });
+                body.Children.Add(new StackPanel { Margin = new Thickness(ItemLook.Gap, 0, ItemLook.Gap, 12), Children = { ItemLook.Muted(records.Text("Empty")) } });
                 return;
             }
 
@@ -190,10 +190,10 @@ namespace TidyMind
         // - count +: each press is saved at once. Never below none.
         private FrameworkElement Stepper(EntityRecord record, (Guid Record, bool Plus)? focus)
         {
-            int count = Values.ToInt(record.Get(step.Key)) ?? 0;
+            double count = Values.Number(record.Get(step.Key)) ?? 0; // a whole count (a garment's pieces) or an amount (2.5 kg)
             string title = records.Title(record);
-            Button less = ItemLook.RowAction("", Loc.T("Entity.Records." + records.Key + ".Fewer"), () => Step(record, -1));
-            Button more = ItemLook.RowAction("", Loc.T("Entity.Records." + records.Key + ".More"), () => Step(record, +1));
+            Button less = ItemLook.RowAction("", records.Text("Fewer"), () => Step(record, -1));
+            Button more = ItemLook.RowAction("", records.Text("More"), () => Step(record, +1));
             less.IsEnabled = count > 0;
             more.IsEnabled = count < MaxPieces;
             less.Opacity = less.IsEnabled ? 1 : 0.35; // the button style has no look of its own for a disabled one
@@ -204,14 +204,14 @@ namespace TidyMind
 
             TextBlock shown = new TextBlock
             {
-                Text = count.ToString(Loc.Culture),
+                Text = count.ToString("0.###", Loc.Culture),
                 FontSize = 14,
                 FontWeight = FontWeights.SemiBold,
                 Foreground = ItemLook.Res("TextMain"),
                 MinWidth = 36,
                 TextAlignment = TextAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
-                ToolTip = Units.Format(count, step.Unit!, owner)
+                ToolTip = Units.Format(count, step.Unit, owner)
             };
             StackPanel stepper = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(4, 0, 0, 0) };
             stepper.Children.Add(less);
@@ -236,8 +236,8 @@ namespace TidyMind
             change(stored =>
             {
                 EntityRecord target = stored.First(r => r.Id == record.Id);
-                int now = Values.ToInt(target.Get(step.Key)) ?? 0;
-                target.Set(step.Key, Math.Clamp(now + by, 0, (int)MaxPieces).ToString(CultureInfo.InvariantCulture));
+                double now = Values.Number(target.Get(step.Key)) ?? 0;
+                target.Set(step.Key, Math.Clamp(now + by, 0, MaxPieces).ToString("0.###", CultureInfo.InvariantCulture));
             });
         }
 

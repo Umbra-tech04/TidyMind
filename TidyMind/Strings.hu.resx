@@ -3865,4 +3865,115 @@ A ? gomb alatt a Tippek és billentyűparancsok oldal felsorolja a jobb gombos m
   <data name="Checklist.Item.Text" xml:space="preserve">
     <value>Kattints az oldalsáv Új gyűjtemény gombjára, majd a gyűjtemény oldalán az Új elem gombra.</value>
   </data>
+  <data name="Collection.Kind.Title" xml:space="preserve">
+    <value>Mit tartalmaz majd ez a gyűjtemény?</value>
+  </data>
+  <data name="Collection.Kind.Standard" xml:space="preserve">
+    <value>Ruhák és járművek</value>
+  </data>
+  <data name="Collection.Kind.Standard.Text" xml:space="preserve">
+    <value>Kész elemtípusok, saját mezőkkel.</value>
+  </data>
+  <data name="Collection.Kind.Custom" xml:space="preserve">
+    <value>Saját elrendezés</value>
+  </data>
+  <data name="Collection.Kind.Custom.Text" xml:space="preserve">
+    <value>Az elem oldalát blokkokból rakod össze: mezők, képek, jegyzetek, ellenőrzőlisták, dokumentumok, napló és mennyiségek.</value>
+  </data>
+  <data name="Custom.Block.Fields" xml:space="preserve">
+    <value>Adatok</value>
+  </data>
+  <data name="Custom.Block.Gallery" xml:space="preserve">
+    <value>Képek</value>
+  </data>
+  <data name="Custom.Block.Notes" xml:space="preserve">
+    <value>Jegyzetek</value>
+  </data>
+  <data name="Custom.Block.Checklist" xml:space="preserve">
+    <value>Ellenőrzőlista</value>
+  </data>
+  <data name="Custom.Block.Documents" xml:space="preserve">
+    <value>Dokumentumok</value>
+  </data>
+  <data name="Custom.Block.Log" xml:space="preserve">
+    <value>Napló</value>
+  </data>
+  <data name="Custom.Block.Quantities" xml:space="preserve">
+    <value>Mennyiségek</value>
+  </data>
+  <data name="Custom.Starter.Details" xml:space="preserve">
+    <value>Adatok</value>
+  </data>
+  <data name="Custom.Field.Untitled" xml:space="preserve">
+    <value>Névtelen mező</value>
+  </data>
+  <data name="Custom.Layout.Empty" xml:space="preserve">
+    <value>Az elrendezés fájlja üres.</value>
+  </data>
+  <data name="Custom.Layout.NotCreated" xml:space="preserve">
+    <value>A gyűjtemény elrendezését nem sikerült ide menteni: {0}. A gyűjtemény nem jött létre.</value>
+  </data>
+  <data name="Custom.Checklist.DoneLine" xml:space="preserve">
+    <value>Kész: {0}</value>
+  </data>
+  <data name="Entity.Field.Text" xml:space="preserve">
+    <value>Szöveg</value>
+  </data>
+  <data name="Entity.Field.Done" xml:space="preserve">
+    <value>Kész</value>
+  </data>
+  <data name="Entity.Field.Entry" xml:space="preserve">
+    <value>Bejegyzés</value>
+  </data>
+  <data name="Entity.Field.Amount" xml:space="preserve">
+    <value>Összeg</value>
+  </data>
+  <data name="Entity.Field.Unit" xml:space="preserve">
+    <value>Mértékegység</value>
+  </data>
+  <data name="Entity.Records.CustomChecklist.Untitled" xml:space="preserve">
+    <value>Névtelen</value>
+  </data>
+  <data name="Entity.Records.CustomChecklist.Add" xml:space="preserve">
+    <value>Új sor</value>
+  </data>
+  <data name="Entity.Records.CustomChecklist.Empty" xml:space="preserve">
+    <value>Még üres a lista.</value>
+  </data>
+  <data name="Entity.Records.CustomDocuments.Untitled" xml:space="preserve">
+    <value>Dokumentum</value>
+  </data>
+  <data name="Entity.Records.CustomDocuments.Add" xml:space="preserve">
+    <value>Dokumentum hozzáadása</value>
+  </data>
+  <data name="Entity.Records.CustomDocuments.Empty" xml:space="preserve">
+    <value>Még nincs dokumentum. Add hozzá a lejárat dátumával: megjelenik a kártyán és a Kezdőlapon, és időben emlékeztetőt is kaphatsz.</value>
+  </data>
+  <data name="Entity.Records.CustomLog.Untitled" xml:space="preserve">
+    <value>Nincs dátum</value>
+  </data>
+  <data name="Entity.Records.CustomLog.Add" xml:space="preserve">
+    <value>Bejegyzés hozzáadása</value>
+  </data>
+  <data name="Entity.Records.CustomLog.Empty" xml:space="preserve">
+    <value>Még nincs bejegyzés.</value>
+  </data>
+  <data name="Entity.Records.CustomQuantities.Untitled" xml:space="preserve">
+    <value>Névtelen</value>
+  </data>
+  <data name="Entity.Records.CustomQuantities.Add" xml:space="preserve">
+    <value>Új sor</value>
+  </data>
+  <data name="Entity.Records.CustomQuantities.Empty" xml:space="preserve">
+    <value>Még nincs tétel. Vedd fel, miből mennyi van.</value>
+  </data>
+  <data name="Entity.Records.CustomQuantities.Count" xml:space="preserve">
+    <value>Mennyiség</value>
+  </data>
+  <data name="Entity.Records.CustomQuantities.Fewer" xml:space="preserve">
+    <value>Eggyel kevesebb</value>
+  </data>
+  <data name="Entity.Records.CustomQuantities.More" xml:space="preserve">
+    <value>Eggyel több</value>
+  </data>
 </root>

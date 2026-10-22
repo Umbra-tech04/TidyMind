@@ -445,6 +445,16 @@ namespace TidyMind
                 return;
             }
 
+            // A collection holds the ready-made types, or items laid out the user's own way (a custom collection).
+            bool custom = false;
+            if (collection)
+            {
+                CollectionKindDialog kind = new CollectionKindDialog { Owner = this };
+                if (kind.ShowDialog() != true)
+                    return;
+                custom = kind.Custom;
+            }
+
             Profile profile = new Profile
             {
                 Id = Guid.NewGuid(),
@@ -453,10 +463,20 @@ namespace TidyMind
                 Type = type,
                 Order = profiles.Count == 0 ? 0 : profiles.Max(p => p.Order) + 1
             };
+            // A custom collection's layout is written first: a collection without it would be an ordinary one.
+            if (custom && !CustomLayoutStore.TrySave(profile, CustomLayout.Starter()))
+            {
+                Msg.Show(Loc.F("Custom.Layout.NotCreated", MemoryFiles.Layout(profile)), Loc.T("Common.CouldntSave"),
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                MemoryFiles.DeleteFolder(profile);
+                return;
+            }
             profiles.Add(profile);
             if (!ProfileManager.TrySaveProfiles(profiles))
             {
                 profiles.Remove(profile);
+                if (custom)
+                    MemoryFiles.DeleteFolder(profile);
                 WarnProfilesNotSaved(Loc.T(collection ? "Memory.NotSaved.CollectionNotAdded" : "Memory.NotSaved.ProjectNotAdded"));
                 return;
             }
