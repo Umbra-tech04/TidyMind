@@ -333,11 +333,13 @@ namespace TidyMind
                 Effect = shadow
             });
 
+            // A custom item shows the fields its layout puts on cards under its name; its picture makes room for them.
+            List<FrameworkElement> facts = CustomTypes.Of(entity.EntityType) is CustomType customType ? CardFacts(entity, customType) : new List<FrameworkElement>();
             if (hasImage)
             {
                 card.Children.Add(new Border
                 {
-                    Height = 100,
+                    Height = facts.Count > 0 ? CardFactsPicture : 100,
                     VerticalAlignment = VerticalAlignment.Top,
                     Margin = new Thickness(12, 12, 12, 0),
                     Background = B("#F5F5F3"),
@@ -383,6 +385,12 @@ namespace TidyMind
             card.Children.Add(subtitle);
             if (entity.EntityType == EntityTypes.Vehicle)
                 ShowVehicleOnCard(entity, title, subtitle);
+            else if (CustomTypes.IsCustom(entity.EntityType))
+            {
+                ShowDueOnCard(entity, subtitle);
+                if (facts.Count > 0)
+                    ShowFactsOnCard(card, title, facts, hasImage);
+            }
             if (subtitle.Text.Length > 0)
                 subtitle.ToolTip = subtitle.Text; // the whole line, when a longer translation is cut short
 
@@ -452,8 +460,7 @@ namespace TidyMind
             return badge;
         }
 
-        // A vehicle's card: the plate under the make and model (one line each), and what comes due first in the subtitle's
-        // place ("Inspection in 12 days", "Service in 800 km"), highlighted when it's close or past (Expiry).
+        // A vehicle's card: the plate under the make and model (one line each), and what comes due first (ShowDueOnCard).
         private static void ShowVehicleOnCard(Entity entity, TextBlock title, TextBlock subtitle)
         {
             if (!string.IsNullOrWhiteSpace(entity.Plate))
@@ -468,6 +475,13 @@ namespace TidyMind
                 });
             }
 
+            ShowDueOnCard(entity, subtitle);
+        }
+
+        // What comes due first in the subtitle's place ("Inspection in 12 days", "Service in 800 km"), highlighted when it's
+        // close or past (Expiry); nothing when nothing comes due.
+        private static void ShowDueOnCard(Entity entity, TextBlock subtitle)
+        {
             // A reading that is close or passed (a service due at so many km) when it is at least as urgent as the date.
             Deadline? nearest = EntityTypes.NearestExpiry(entity);
             DistanceDue? reading = EntityTypes.DistanceDues(entity).FirstOrDefault();
@@ -483,6 +497,58 @@ namespace TidyMind
                 : Loc.F("Entity.ExpiryLine", nearest!.Name, Expiry.Describe(nearest.Date, DateTime.Today));
             subtitle.Foreground = Expiry.Brush(level);
             subtitle.FontWeight = Expiry.Weight(level);
+        }
+
+        // The picture's height on a card that shows fields under the name (100 on the others).
+        private const double CardFactsPicture = 64;
+
+        // The fields a custom layout puts on cards (CustomLayout.CardFields) that this item has filled: "Brand  Acme", a
+        // line each, the name muted.
+        private static List<FrameworkElement> CardFacts(Entity entity, CustomType custom)
+        {
+            List<FrameworkElement> facts = new List<FrameworkElement>();
+            foreach (FieldDefinition field in custom.CardFields)
+            {
+                string shown = field.Show(field.Read(entity), entity).Replace('\n', ' ');
+                if (shown.Length == 0)
+                    continue;
+                TextBlock line = new TextBlock
+                {
+                    FontSize = 12,
+                    TextTrimming = TextTrimming.CharacterEllipsis,
+                    TextAlignment = TextAlignment.Center,
+                    Margin = new Thickness(0, 1, 0, 1),
+                    ToolTip = field.Label + ": " + shown
+                };
+                line.Inlines.Add(new Run(field.Label + "  ") { FontSize = 11, Foreground = (Brush)Application.Current.FindResource("TextSub") });
+                line.Inlines.Add(new Run(shown) { Foreground = (Brush)Application.Current.FindResource("TextBody") });
+                facts.Add(line);
+            }
+            return facts;
+        }
+
+        // The name on one line with the facts under it, below the (smaller) picture, or in the middle of a card without one.
+        private static void ShowFactsOnCard(Grid card, TextBlock title, List<FrameworkElement> facts, bool hasImage)
+        {
+            card.Children.Remove(title);
+            title.Margin = new Thickness(0, 0, 0, 4);
+            title.VerticalAlignment = VerticalAlignment.Top;
+            if (hasImage)
+            {
+                title.TextWrapping = TextWrapping.NoWrap;
+                title.MaxHeight = double.PositiveInfinity;
+            }
+            else
+                title.MaxHeight = 46; // two lines at most, the facts under it
+            StackPanel text = new StackPanel
+            {
+                VerticalAlignment = hasImage ? VerticalAlignment.Top : VerticalAlignment.Center,
+                Margin = hasImage ? new Thickness(16, 12 + CardFactsPicture + 8, 16, 30) : new Thickness(16, 16, 16, 30)
+            };
+            text.Children.Add(title);
+            foreach (FrameworkElement fact in facts)
+                text.Children.Add(fact);
+            card.Children.Insert(card.Children.Count - 1, text); // under the subtitle, which stays last
         }
 
         private string GetCardSubtitle(Entity e)

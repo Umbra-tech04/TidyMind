@@ -4130,4 +4130,19 @@ Tips &amp; shortcuts under the ? button lists the right-click menus and keys, an
   <data name="Entity.Records.CustomQuantities.More" xml:space="preserve">
     <value>One more</value>
   </data>
+  <data name="Custom.Item.NoBlocks" xml:space="preserve">
+    <value>This layout has no blocks yet. Add some with Edit layout.</value>
+  </data>
+  <data name="Custom.Fields.None" xml:space="preserve">
+    <value>No fields yet</value>
+  </data>
+  <data name="Custom.Gallery.Empty" xml:space="preserve">
+    <value>No pictures yet</value>
+  </data>
+  <data name="Bulk.Delete.Lines.One" xml:space="preserve">
+    <value>Delete {0} line?</value>
+  </data>
+  <data name="Bulk.Delete.Lines.Other" xml:space="preserve">
+    <value>Delete {0} lines?</value>
+  </data>
 </root>

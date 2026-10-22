@@ -13,7 +13,10 @@ using TidyMind;
 // Harness custom <data> <shots>: custom collections. M1: the layout file (round trip, fields of other versions and
 // unknown kinds kept, what a file from elsewhere may hold cleaned), the definitions made from it (sections, lists,
 // cached until saved), item data in Details and Records, an unreadable layout leaving the page read-only, creating a
-// custom collection through New Collection, a layout change undone and redone.
+// custom collection through New Collection, a layout change undone and redone. M2: the item window draws every block
+// (half blocks side by side, stacked when narrow), edits in place, the checklist (ticks, order, add, delete, undo), the
+// quantities stepper with decimals, the gallery in place of the pictures on top, nothing cut off at three widths; the
+// card's key fields and due line; the item form asking for the card fields.
 static partial class Program
 {
     static async Task CustomScenarios(MainWindow main)
@@ -33,6 +36,8 @@ static partial class Program
             await CustomUnreadable(main);
             await CustomCreate(main);
             await CustomLayoutUndo(main);
+            await CustomWindow(main);
+            await CustomCardsAndForm(main);
         }
         finally
         {

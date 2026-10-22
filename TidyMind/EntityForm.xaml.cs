@@ -96,7 +96,10 @@ namespace TidyMind
             AddImagePicker();
             AddTextBox(Loc.T("Entity.Field.Name"), ref nameBox);
             BuildDefinedFields();
-            AddTextBoxMultiline(Loc.T("Entity.Field.Notes"), ref notesBox);
+            // A custom item's notes are its layout's Notes blocks; its own notes field only shows when something (from
+            // elsewhere) is in it.
+            if (!CustomTypes.IsCustom(entityType) || !string.IsNullOrEmpty(existing?.Notes))
+                AddTextBoxMultiline(Loc.T("Entity.Field.Notes"), ref notesBox);
         }
 
         // ---- The type's fields (EntityTypes) -------------------------------

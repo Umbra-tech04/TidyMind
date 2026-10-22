@@ -3976,4 +3976,16 @@ A ? gomb alatt a Tippek és billentyűparancsok oldal felsorolja a jobb gombos m
   <data name="Entity.Records.CustomQuantities.More" xml:space="preserve">
     <value>Eggyel több</value>
   </data>
+  <data name="Custom.Item.NoBlocks" xml:space="preserve">
+    <value>Ebben az elrendezésben még nincs blokk. Az Elrendezés szerkesztése gombbal adhatsz hozzá.</value>
+  </data>
+  <data name="Custom.Fields.None" xml:space="preserve">
+    <value>Még nincs mező</value>
+  </data>
+  <data name="Custom.Gallery.Empty" xml:space="preserve">
+    <value>Még nincs kép</value>
+  </data>
+  <data name="Bulk.Delete.Lines.Other" xml:space="preserve">
+    <value>Törölsz {0} sort?</value>
+  </data>
 </root>

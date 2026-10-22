@@ -4284,4 +4284,22 @@ Saveti i prečice ispod dugmeta ? navode menije na desni klik i prečice, a svak
   <data name="Entity.Records.CustomQuantities.More" xml:space="preserve">
     <value>Jedan više</value>
   </data>
+  <data name="Custom.Item.NoBlocks" xml:space="preserve">
+    <value>Ovaj raspored još nema blokova. Dodaj ih preko Uredi raspored.</value>
+  </data>
+  <data name="Custom.Fields.None" xml:space="preserve">
+    <value>Još nema polja</value>
+  </data>
+  <data name="Custom.Gallery.Empty" xml:space="preserve">
+    <value>Još nema slika</value>
+  </data>
+  <data name="Bulk.Delete.Lines.One" xml:space="preserve">
+    <value>Obrisati {0} stavku?</value>
+  </data>
+  <data name="Bulk.Delete.Lines.Few" xml:space="preserve">
+    <value>Obrisati {0} stavke?</value>
+  </data>
+  <data name="Bulk.Delete.Lines.Other" xml:space="preserve">
+    <value>Obrisati {0} stavki?</value>
+  </data>
 </root>

@@ -59,6 +59,14 @@ namespace TidyMind
         private readonly Dictionary<string, string> filters = new Dictionary<string, string>();
         private readonly HashSet<Guid> openParts = new HashSet<Guid>();
 
+        // A custom item: the line of a checklist block (or, Guid.Empty, its add box) that had the keyboard when the page
+        // was drawn again; and the gallery block's pictures, which Left and Right browse in place of the ones on top.
+        private (string Block, Guid Line)? keepLine;
+        private PictureBrowser? gallery;
+        private int galleryIndex;
+
+        private CustomType? Custom => CustomTypes.Of(item.EntityType);
+
         public ItemWindow(Entity item, Host host)
         {
             InitializeComponent();
@@ -296,11 +304,14 @@ namespace TidyMind
             return chip;
         }
 
-        // The cover first, then whichever is picked (arrows, keys, thumbnails); none: no picture area at all.
+        // The cover first, then whichever is picked (arrows, keys, thumbnails); none: no picture area at all. A custom item
+        // whose layout has a gallery block shows them there instead.
         private void ShowPictures(int index)
         {
             List<string> names = EntityImages.Names(item);
-            Hero.Visibility = names.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+            Hero.Visibility = names.Count == 0 || Custom?.Layout.HasGallery == true ? Visibility.Collapsed : Visibility.Visible;
+            if (Hero.Visibility == Visibility.Collapsed)
+                return;
             Entity shown = item;
             hero.Show(names, index, () => item == shown && IsVisible);
         }
@@ -332,7 +343,9 @@ namespace TidyMind
             Page.Children.Clear();
             string query = SearchBox.Text.Trim();
             titleAction = null;
+            gallery = null;
             List<UIElement> blocks = query.Length > 0 ? SearchBlocks(query)
+                : Custom is CustomType custom ? CustomBlocks(custom)
                 : page == OverviewKey ? OverviewBlocks()
                 : TabBlocks(EntityTypes.Tabs(item.EntityType).First(t => t.Key == page));
             if (!SinglePage)
@@ -388,12 +401,100 @@ namespace TidyMind
             return blocks;
         }
 
-        private FieldsSection Section(SectionDefinition section) =>
+        // A custom item (CustomType): its blocks in the layout's order, two half blocks side by side (HalfRow), each in the
+        // look of the sections and lists every type has; the checklist and the gallery are blocks of their own. The item's
+        // own notes, if it has any from elsewhere, last.
+        private List<UIElement> CustomBlocks(CustomType custom)
+        {
+            List<(UIElement Element, bool Half)> blocks = new List<(UIElement, bool)>();
+            foreach (CustomBlock block in custom.Blocks)
+            {
+                UIElement? element = block.Kind switch
+                {
+                    BlockKinds.Fields when block.Section!.Fields.Length == 0 => NoFields(block),
+                    BlockKinds.Fields or BlockKinds.Notes => Section(block.Section!, beside: block.Half),
+                    BlockKinds.Gallery => GalleryBlock(block),
+                    BlockKinds.Checklist => ChecklistBlock(block.Records!),
+                    _ => block.Records == null ? null : RecordsBlock(block.Records, titled: true)
+                };
+                if (element != null)
+                    blocks.Add((element, block.Half));
+            }
+            List<UIElement> rows = HalfRow.Rows(blocks);
+            if (!string.IsNullOrWhiteSpace(item.Notes))
+                rows.Add(Section(EntityTypes.Notes));
+            if (rows.Count == 0)
+            {
+                // Every block removed: what the window shows and where blocks are added.
+                StackPanel empty = new StackPanel { Margin = new Thickness(ItemLook.Gap, 32, ItemLook.Gap, 32) };
+                empty.Children.Add(ItemLook.Muted(Loc.T("Custom.Item.NoBlocks"), 14));
+                rows.Add(empty);
+            }
+            return rows;
+        }
+
+        // A Fields block without fields yet: its name, and where fields are added.
+        private UIElement NoFields(CustomBlock block)
+        {
+            StackPanel section = new StackPanel();
+            section.Children.Add(ItemLook.Heading(block.Section!.Label, out StackPanel actions, compact: !block.Half));
+            actions.Children.Add(ItemLook.Muted(Loc.T("Custom.Fields.None")));
+            return section;
+        }
+
+        // The item's own pictures (cover and further ones) where the layout puts them: the selected one large with arrows,
+        // the strip under it; Left and Right browse them. Changed in the item form, as on every item.
+        private UIElement GalleryBlock(CustomBlock block)
+        {
+            List<string> names = EntityImages.Names(item);
+            StackPanel section = new StackPanel();
+            section.Children.Add(ItemLook.Heading(block.Name, out StackPanel actions, compact: names.Count == 0 && !block.Half));
+            if (names.Count == 0)
+            {
+                actions.Children.Add(ItemLook.Muted(Loc.T("Custom.Gallery.Empty")));
+                actions.Children.Add(ItemLook.Link(Loc.T("Vehicle.AddPictures"), EditBasics));
+                return section;
+            }
+            actions.Children.Add(ItemLook.Link(Loc.T("Common.Edit"), EditBasics));
+            galleryIndex = Math.Clamp(galleryIndex, 0, names.Count - 1);
+            PictureBrowser browser = new PictureBrowser(block.Half ? 220 : 300, PictureBrowser.ThumbSize + 10, canReorder: false, stripForOne: false)
+            {
+                Margin = ItemLook.FieldsMargin
+            };
+            Entity shown = item;
+            browser.Picked += index =>
+            {
+                galleryIndex = index;
+                browser.ShowStored(names, index, () => item == shown && browser.IsVisible);
+            };
+            browser.ShowStored(names, galleryIndex, () => item == shown && browser.IsVisible);
+            AutomationProperties.SetName(browser, block.Name);
+            section.Children.Add(browser);
+            gallery = browser;
+            return section;
+        }
+
+        // A checklist block: ticks and lines saved at once; the keyboard goes back to the line it was on once the page is
+        // drawn again (keepLine).
+        private UIElement ChecklistBlock(RecordDefinition records)
+        {
+            Guid? focus = keepLine is (string block, Guid line) && block == records.Key ? line : null;
+            if (focus != null)
+                keepLine = null;
+            return new ChecklistSection(records, item, edit => Commit(v =>
+            {
+                List<EntityRecord> stored = records.Read(v);
+                edit(stored);
+                records.Write(v, stored);
+            }), line => keepLine = line == null ? null : (records.Key, line.Value), focus);
+        }
+
+        private FieldsSection Section(SectionDefinition section, bool beside = false) =>
             new FieldsSection(section, item, Gate, editors => Commit(v =>
             {
                 foreach (FieldEditor editor in editors)
                     editor.Field.Write(v, editor.Value);
-            }));
+            }), keepHeadingLine: beside);
 
         // ---- Overview: what there is, nothing else ---------------------------------------------------
 
@@ -1093,7 +1194,7 @@ namespace TidyMind
             base.OnPreviewKeyDown(e);
             if ((e.Key == Key.Left || e.Key == Key.Right) && Keyboard.Modifiers == ModifierKeys.None
                 && !(e.OriginalSource is TextBoxBase) && !InList(e.OriginalSource as DependencyObject)
-                && hero.Browse(e.Key == Key.Left ? -1 : +1))
+                && (gallery?.Browse(e.Key == Key.Left ? -1 : +1) ?? hero.Browse(e.Key == Key.Left ? -1 : +1)))
                 e.Handled = true;
         }
 

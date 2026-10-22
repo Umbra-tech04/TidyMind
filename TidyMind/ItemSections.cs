@@ -260,12 +260,18 @@ namespace TidyMind
         private readonly StackPanel body = new StackPanel();
         private List<FieldEditor>? editors;
 
-        public FieldsSection(SectionDefinition section, Entity owner, EditGate gate, Func<IReadOnlyList<FieldEditor>, bool> save)
+        // Beside another block (a custom item's half blocks): an empty one keeps the heading where a filled one has it, so
+        // the two headings stay in line.
+        private readonly bool keepHeadingLine;
+
+        public FieldsSection(SectionDefinition section, Entity owner, EditGate gate, Func<IReadOnlyList<FieldEditor>, bool> save,
+            bool keepHeadingLine = false)
         {
             this.section = section;
             this.owner = owner;
             this.gate = gate;
             this.save = save;
+            this.keepHeadingLine = keepHeadingLine;
             heading = ItemLook.Heading(section.Label, out actions);
             Children.Add(heading);
             Children.Add(body);
@@ -312,6 +318,7 @@ namespace TidyMind
         // Read with nothing in it: one line. Otherwise the heading over its fields.
         private void Spacing(bool compact)
         {
+            compact &= !keepHeadingLine;
             heading.Margin = ItemLook.HeadingMargin(compact);
             body.Margin = compact ? new Thickness(0) : ItemLook.FieldsMargin;
         }
