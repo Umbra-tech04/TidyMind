@@ -4285,7 +4285,7 @@ Saveti i prečice ispod dugmeta ? navode menije na desni klik i prečice, a svak
     <value>Jedan više</value>
   </data>
   <data name="Custom.Item.NoBlocks" xml:space="preserve">
-    <value>Ovaj raspored još nema blokova. Dodaj ih preko Uredi raspored.</value>
+    <value>Ovaj raspored još nema blokova.</value>
   </data>
   <data name="Custom.Fields.None" xml:space="preserve">
     <value>Još nema polja</value>
@@ -4301,5 +4301,188 @@ Saveti i prečice ispod dugmeta ? navode menije na desni klik i prečice, a svak
   </data>
   <data name="Bulk.Delete.Lines.Other" xml:space="preserve">
     <value>Obrisati {0} stavki?</value>
+  </data>
+  <data name="Custom.EditLayout" xml:space="preserve">
+    <value>Uredi raspored</value>
+  </data>
+  <data name="Custom.Menu.EditLayout" xml:space="preserve">
+    <value>Uredi raspored…</value>
+  </data>
+  <data name="Custom.Layout.Title" xml:space="preserve">
+    <value>Raspored: {0}</value>
+  </data>
+  <data name="Custom.Layout.Done" xml:space="preserve">
+    <value>Gotovo</value>
+  </data>
+  <data name="Custom.Layout.Hint" xml:space="preserve">
+    <value>Izmene se odmah čuvaju i važe za sve stavke ove kolekcije. Ctrl+Z ih poništava.</value>
+  </data>
+  <data name="Custom.Layout.AddBlock" xml:space="preserve">
+    <value>Dodaj blok</value>
+  </data>
+  <data name="Custom.Layout.Full" xml:space="preserve">
+    <value>Puna</value>
+  </data>
+  <data name="Custom.Layout.Half" xml:space="preserve">
+    <value>Pola</value>
+  </data>
+  <data name="Custom.Layout.FullTip" xml:space="preserve">
+    <value>Puna širina</value>
+  </data>
+  <data name="Custom.Layout.HalfTip" xml:space="preserve">
+    <value>Pola širine: pored polovičnog bloka pre ili posle njega</value>
+  </data>
+  <data name="Custom.Layout.Up" xml:space="preserve">
+    <value>Pomeri gore</value>
+  </data>
+  <data name="Custom.Layout.Down" xml:space="preserve">
+    <value>Pomeri dole</value>
+  </data>
+  <data name="Custom.Layout.EditBlock" xml:space="preserve">
+    <value>Uredi blok</value>
+  </data>
+  <data name="Custom.Layout.RemoveBlock" xml:space="preserve">
+    <value>Ukloni blok</value>
+  </data>
+  <data name="Custom.Layout.AddField" xml:space="preserve">
+    <value>Dodaj polje</value>
+  </data>
+  <data name="Custom.Layout.EditField" xml:space="preserve">
+    <value>Uredi polje</value>
+  </data>
+  <data name="Custom.Layout.RemoveField" xml:space="preserve">
+    <value>Ukloni polje</value>
+  </data>
+  <data name="Custom.Layout.OnCard" xml:space="preserve">
+    <value>Na kartici</value>
+  </data>
+  <data name="Custom.Layout.NoFields" xml:space="preserve">
+    <value>Još nema polja.</value>
+  </data>
+  <data name="Custom.Layout.FieldCount.One" xml:space="preserve">
+    <value>{0} polje</value>
+  </data>
+  <data name="Custom.Layout.FieldCount.Few" xml:space="preserve">
+    <value>{0} polja</value>
+  </data>
+  <data name="Custom.Layout.FieldCount.Other" xml:space="preserve">
+    <value>{0} polja</value>
+  </data>
+  <data name="Custom.Layout.LogMoney" xml:space="preserve">
+    <value>Iznosi: novac</value>
+  </data>
+  <data name="Custom.Layout.LogUnit" xml:space="preserve">
+    <value>Iznosi: {0}</value>
+  </data>
+  <data name="Custom.Layout.LogPlain" xml:space="preserve">
+    <value>Iznosi: brojevi</value>
+  </data>
+  <data name="Custom.Layout.SaveFailed" xml:space="preserve">
+    <value>Raspored nije mogao da se sačuva u {0}. Ostao je kakav je bio.</value>
+  </data>
+  <data name="Custom.Layout.RemoveData.One" xml:space="preserve">
+    <value>Ukloniti „{1}”? {0} stavka ima nešto u tome i to će biti obrisano. Može se poništiti.</value>
+  </data>
+  <data name="Custom.Layout.RemoveData.Few" xml:space="preserve">
+    <value>Ukloniti „{1}”? {0} stavke imaju nešto u tome i to će biti obrisano. Može se poništiti.</value>
+  </data>
+  <data name="Custom.Layout.RemoveData.Other" xml:space="preserve">
+    <value>Ukloniti „{1}”? {0} stavki ima nešto u tome i to će biti obrisano. Može se poništiti.</value>
+  </data>
+  <data name="Custom.Undo.Layout" xml:space="preserve">
+    <value>Raspored izmenjen</value>
+  </data>
+  <data name="Custom.Kind.Fields" xml:space="preserve">
+    <value>Polja</value>
+  </data>
+  <data name="Custom.Kind.Gallery" xml:space="preserve">
+    <value>Galerija</value>
+  </data>
+  <data name="Custom.Kind.Notes" xml:space="preserve">
+    <value>Beleška</value>
+  </data>
+  <data name="Custom.Kind.Checklist" xml:space="preserve">
+    <value>Kontrolna lista</value>
+  </data>
+  <data name="Custom.Kind.Documents" xml:space="preserve">
+    <value>Dokumenti</value>
+  </data>
+  <data name="Custom.Kind.Log" xml:space="preserve">
+    <value>Dnevnik</value>
+  </data>
+  <data name="Custom.Kind.Quantities" xml:space="preserve">
+    <value>Količine</value>
+  </data>
+  <data name="Custom.Kind.Fields.Text" xml:space="preserve">
+    <value>Imenovane vrednosti: tekst, broj, datum, da/ne, izbor</value>
+  </data>
+  <data name="Custom.Kind.Gallery.Text" xml:space="preserve">
+    <value>Slike stavke, do 20</value>
+  </data>
+  <data name="Custom.Kind.Notes.Text" xml:space="preserve">
+    <value>Slobodan tekst</value>
+  </data>
+  <data name="Custom.Kind.Checklist.Text" xml:space="preserve">
+    <value>Stavke za štikliranje</value>
+  </data>
+  <data name="Custom.Kind.Documents.Text" xml:space="preserve">
+    <value>Dokumenti sa datumom isteka i podsetnikom</value>
+  </data>
+  <data name="Custom.Kind.Log.Text" xml:space="preserve">
+    <value>Datirani unosi sa iznosom</value>
+  </data>
+  <data name="Custom.Kind.Quantities.Text" xml:space="preserve">
+    <value>Šta ima i koliko</value>
+  </data>
+  <data name="Custom.FieldKind.Text" xml:space="preserve">
+    <value>Tekst</value>
+  </data>
+  <data name="Custom.FieldKind.Number" xml:space="preserve">
+    <value>Broj</value>
+  </data>
+  <data name="Custom.FieldKind.Date" xml:space="preserve">
+    <value>Datum</value>
+  </data>
+  <data name="Custom.FieldKind.Flag" xml:space="preserve">
+    <value>Da/ne</value>
+  </data>
+  <data name="Custom.FieldKind.Choice" xml:space="preserve">
+    <value>Izbor</value>
+  </data>
+  <data name="Custom.Field.Name" xml:space="preserve">
+    <value>Naziv</value>
+  </data>
+  <data name="Custom.Field.Kind" xml:space="preserve">
+    <value>Vrsta</value>
+  </data>
+  <data name="Custom.Field.Choices" xml:space="preserve">
+    <value>Izbori, jedan po redu</value>
+  </data>
+  <data name="Custom.Field.Unit" xml:space="preserve">
+    <value>Jedinica (nije obavezno)</value>
+  </data>
+  <data name="Custom.Field.ShowOnCard" xml:space="preserve">
+    <value>Prikaži na kartici</value>
+  </data>
+  <data name="Custom.Field.CardFull" xml:space="preserve">
+    <value>Kartica prikazuje najviše 3 polja.</value>
+  </data>
+  <data name="Custom.Field.NeedsName" xml:space="preserve">
+    <value>Daj naziv polju.</value>
+  </data>
+  <data name="Custom.Field.NeedsChoices" xml:space="preserve">
+    <value>Upiši bar jedan izbor.</value>
+  </data>
+  <data name="Custom.Block.Name" xml:space="preserve">
+    <value>Naziv</value>
+  </data>
+  <data name="Custom.Block.Money" xml:space="preserve">
+    <value>Iznosi su novac</value>
+  </data>
+  <data name="Custom.Block.Unit" xml:space="preserve">
+    <value>Jedinica iznosa</value>
+  </data>
+  <data name="Custom.Block.NeedsName" xml:space="preserve">
+    <value>Daj naziv bloku.</value>
   </data>
 </root>

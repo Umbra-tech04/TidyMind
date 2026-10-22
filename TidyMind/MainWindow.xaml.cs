@@ -304,6 +304,12 @@ namespace TidyMind
             menu.Items.Add(export);
             if (profile.Type == ProfileType.Collection)
                 menu.Items.Add(TransferUI.MenuEntry(() => TransferUI.ExportCollection(this, profile)));
+            if (profile.Type == ProfileType.Collection && System.IO.File.Exists(MemoryFiles.Layout(profile)))
+            {
+                MenuItem layout = new MenuItem { Header = Loc.T("Custom.Menu.EditLayout") };
+                layout.Click += (s, e) => EditLayout(profile);
+                menu.Items.Add(layout);
+            }
             menu.Items.Add(new Separator());
             menu.Items.Add(TextCopy.CopyItem(() => profile.Name, Loc.T("Common.CopyName")));
             return menu;
@@ -482,6 +488,16 @@ namespace TidyMind
             }
 
             NavigateTo(profile); // the view creates the memory's folder and first tab
+            if (custom)
+                EditLayout(profile); // a new custom collection starts with its layout
+        }
+
+        // A custom collection's layout editor, over its page (shown first).
+        private void EditLayout(Profile profile)
+        {
+            if (selectedKey != KeyOf(profile))
+                NavigateTo(profile);
+            (ContentArea.Content as CollectionView)?.EditLayout();
         }
 
         private string NextColor() => MemoryColors[profiles.Count % MemoryColors.Length];

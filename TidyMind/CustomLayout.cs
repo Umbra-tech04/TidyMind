@@ -166,6 +166,8 @@ namespace TidyMind
 
         [JsonExtensionData]
         public Dictionary<string, JsonElement>? ExtensionData { get; set; }
+
+        public LayoutField Copy() => JsonSerializer.Deserialize<LayoutField>(JsonSerializer.Serialize(this))!;
     }
 
     // A custom collection's layout file. No file: the collection isn't custom.

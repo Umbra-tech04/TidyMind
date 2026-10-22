@@ -580,11 +580,92 @@ namespace TidyMind
                 Save = Replace,
                 EditBasics = EditEntity,
                 Delete = DeleteEntity,
-                Reread = Reread
+                Reread = Reread,
+                ChangeLayout = ChangeLayout,
+                ItemsHolding = ItemsHolding
             })
             { Owner = Window.GetWindow(this) };
             window.ShowDialog();
             RenderEntities();
+        }
+
+        // ---- A custom collection's layout ---------------------------------------------------------
+
+        // The layout editor on its own (the memory's menu, a new custom collection): the item window on an empty item that
+        // is never stored, in its editor; it closes when that is done.
+        public void EditLayout()
+        {
+            if (unreadable || !custom)
+                return;
+            Entity preview = new Entity { Id = Guid.Empty, EntityType = CustomTypes.TypeOf(memory.Id), Name = memory.Name };
+            ItemWindow window = new ItemWindow(preview, new ItemWindow.Host
+            {
+                Reread = id => preview,
+                ChangeLayout = ChangeLayout,
+                ItemsHolding = ItemsHolding,
+                Preview = true
+            })
+            { Owner = Window.GetWindow(this) };
+            window.EditLayout();
+            window.ShowDialog();
+            RenderEntities();
+        }
+
+        // How many items hold something under any of the keys (a block's or a field's data, Entity.Details or Records).
+        private int ItemsHolding(IReadOnlyCollection<string> keys) => entities.Count(e => keys.Any(key => Holds(e, key)));
+
+        private static bool Holds(Entity entity, string key) =>
+            entity.Details?.ContainsKey(key) == true || entity.Records?.GetValueOrDefault(key)?.Count > 0;
+
+        // A layout change, saved for every item as one undo step: the layout, then the items without the data of the blocks
+        // and fields it removed, their files (once nothing uses them and no step can bring them back) and their documents'
+        // reminders. If the items can't be saved, the layout is put back. False if it couldn't be saved (said).
+        private bool ChangeLayout(ItemWindow.LayoutChange change)
+        {
+            if (unreadable)
+                return false;
+            using UndoChange step = UndoChange.Begin(UndoService.Page, UndoParts.Layout(memory), UndoParts.Entities(memory), UndoParts.Reminders());
+            CustomLayout? before = CustomTypes.OfMemory(memory)?.Layout;
+            if (!CustomLayoutStore.TrySave(memory, change.Layout))
+            {
+                Msg.Show(Loc.F("Custom.Layout.SaveFailed", MemoryFiles.Layout(memory)), Loc.T("Common.CouldntSave"), MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            List<(Entity Before, Entity After)> stripped = new List<(Entity, Entity)>();
+            for (int i = 0; i < entities.Count; i++)
+            {
+                if (!change.Removed.Any(key => Holds(entities[i], key)))
+                    continue;
+                Entity after = JsonSerializer.Deserialize<Entity>(JsonSerializer.Serialize(entities[i]))!;
+                foreach (string key in change.Removed)
+                {
+                    FieldDefinition.WriteDetail(after, key, null);
+                    if (after.Records != null && after.Records.Remove(key) && after.Records.Count == 0)
+                        after.Records = null;
+                }
+                stripped.Add((entities[i], after));
+                entities[i] = after;
+            }
+            if (stripped.Count > 0 && !SaveEntities())
+            {
+                foreach ((Entity was, Entity after) in stripped)
+                    entities[entities.IndexOf(after)] = was;
+                if (before != null)
+                    CustomLayoutStore.TrySave(memory, before);
+                return false;
+            }
+            if (stripped.Count > 0)
+            {
+                EntityFiles.DeleteUnreferenced(stripped.Select(x => x.Before), entities);
+                // The removed lists' records are no longer in the layout, so their reminders go by their Ids.
+                WarnReminders(VehicleReminders.Remove(stripped.SelectMany(x => change.Removed
+                    .SelectMany(key => RecordTree.Walk(x.Before.Records?.GetValueOrDefault(key) ?? new List<EntityRecord>()))
+                    .Select(r => r.Record.Id))));
+            }
+            step.Commit(change.Label, change.Destructive, change.Target);
+            RenderEntities();
+            return true;
         }
 
         // ---- CRUD ---------------------------------------------------------

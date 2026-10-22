@@ -81,6 +81,25 @@ namespace TidyMind
             }
         }
 
+        // The reminders of records that went without their item being saved through Follow (a custom collection's block
+        // removed with its data): by the records' Ids. Returns what the user should be told, or null.
+        public static string? Remove(IEnumerable<Guid> recordIds)
+        {
+            HashSet<Guid> ids = recordIds.ToHashSet();
+            if (ids.Count == 0)
+                return null;
+            try
+            {
+                foreach (Reminder reminder in ReminderManager.LoadReminders().Where(r => ids.Contains(r.Id)).ToList())
+                    ReminderManager.DeleteReminder(reminder.Id);
+                return null;
+            }
+            catch (Exception e) when (e is IOException || e is UnauthorizedAccessException || e is JsonException || e is COMException)
+            {
+                return Loc.T("Entity.Reminder.Failed");
+            }
+        }
+
         private static (DateTime, int?) Timing(Deadline deadline) => (deadline.Date, deadline.RemindDays);
 
         private static Dictionary<Guid, Deadline> Dated(Entity? vehicle) =>

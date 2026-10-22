@@ -33,6 +33,13 @@ namespace TidyMind
             public Func<Entity, Entity?> EditBasics { get; init; } = _ => null;
             public Func<Entity, bool> Delete { get; init; } = _ => false;
             public Func<Guid, Entity?> Reread { get; init; } = _ => null;
+
+            // A custom collection's layout (the layout editor): ChangeLayout saves a change for every item (false if it
+            // couldn't, said), ItemsHolding counts the items with something under any of the keys. Preview: the window is
+            // opened on the layout alone (an empty item that is never stored), in the editor, and closes when that is done.
+            public Func<LayoutChange, bool> ChangeLayout { get; init; } = _ => false;
+            public Func<IReadOnlyCollection<string>, int> ItemsHolding { get; init; } = _ => 0;
+            public bool Preview { get; init; }
         }
 
         private const string OverviewKey = ItemSearch.OverviewTab;
@@ -117,7 +124,7 @@ namespace TidyMind
 
         private void Redraw()
         {
-            Title = item.Name;
+            Title = host.Preview ? Loc.F("Custom.Layout.Title", item.Name) : item.Name;
             ShowHeader();
             ShowNav();
             ShowPage();
@@ -241,6 +248,8 @@ namespace TidyMind
 
             string type = Loc.Find("Entity.Type." + item.EntityType) ?? "";
             EyebrowText.Text = string.Join(" · ", new[] { type, headline.Eyebrow == null ? "" : Shown(headline.Eyebrow) }.Where(t => t.Length > 0)).ToUpper(Loc.Culture);
+            if (layoutMode)
+                EyebrowText.Text = Loc.T("Custom.EditLayout").ToUpper(Loc.Culture);
             EyebrowText.Visibility = EyebrowText.Text.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
             NameText.Text = item.Name;
             SubtitleText.Text = string.Join(" ", headline.Subtitle.Select(Shown).Where(t => t.Length > 0));
@@ -255,12 +264,24 @@ namespace TidyMind
                     Chips.Children.Add(Chip(fact));
             foreach (Due due in Dues().Where(d => d.Level != ExpiryLevel.Later).Take(3))
                 Chips.Children.Add(DueChip(due));
-            Chips.Visibility = Chips.Children.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+            Chips.Visibility = Chips.Children.Count == 0 || layoutMode ? Visibility.Collapsed : Visibility.Visible;
 
             Actions.Children.Clear();
+            if (layoutMode)
+            {
+                // The layout editor: Done goes back to the item (or closes a window opened on the layout alone).
+                Button done = HeaderButton(Loc.T("Custom.Layout.Done"), LeaveLayout);
+                done.Style = (Style)Application.Current.FindResource(typeof(Button));
+                done.Padding = new Thickness(20, 0, 20, 0);
+                Actions.Children.Add(done);
+                Hero.Visibility = Visibility.Collapsed;
+                return;
+            }
             Actions.Children.Add(HeaderButton(Loc.T(EntityImages.Count(item) == 0 ? "Vehicle.AddPictures" : "Vehicle.EditBasics"), EditBasics));
             if (item.EntityType == EntityTypes.Vehicle)
                 Actions.Children.Add(HeaderButton(Loc.T("Vehicle.Odometer.Update"), UpdateOdometer));
+            if (Custom != null)
+                Actions.Children.Add(HeaderButton(Loc.T("Custom.EditLayout"), EditLayout));
             Button delete = HeaderButton(Loc.T("Common.Delete"), Delete);
             delete.Foreground = ItemLook.Res("Danger");
             Actions.Children.Add(delete);
@@ -345,7 +366,7 @@ namespace TidyMind
             titleAction = null;
             gallery = null;
             List<UIElement> blocks = query.Length > 0 ? SearchBlocks(query)
-                : Custom is CustomType custom ? CustomBlocks(custom)
+                : Custom is CustomType custom ? (layoutMode ? LayoutBlocks(custom) : CustomBlocks(custom))
                 : page == OverviewKey ? OverviewBlocks()
                 : TabBlocks(EntityTypes.Tabs(item.EntityType).First(t => t.Key == page));
             if (!SinglePage)
@@ -428,6 +449,10 @@ namespace TidyMind
                 // Every block removed: what the window shows and where blocks are added.
                 StackPanel empty = new StackPanel { Margin = new Thickness(ItemLook.Gap, 32, ItemLook.Gap, 32) };
                 empty.Children.Add(ItemLook.Muted(Loc.T("Custom.Item.NoBlocks"), 14));
+                Button edit = ItemLook.Link(Loc.T("Custom.EditLayout"), EditLayout);
+                edit.Margin = new Thickness(0, 8, 0, 0);
+                edit.HorizontalAlignment = HorizontalAlignment.Left;
+                empty.Children.Add(edit);
                 rows.Add(empty);
             }
             return rows;
@@ -439,6 +464,12 @@ namespace TidyMind
             StackPanel section = new StackPanel();
             section.Children.Add(ItemLook.Heading(block.Section!.Label, out StackPanel actions, compact: !block.Half));
             actions.Children.Add(ItemLook.Muted(Loc.T("Custom.Fields.None")));
+            actions.Children.Add(ItemLook.Link(Loc.T("Custom.Layout.AddField"), () =>
+            {
+                EditLayout();
+                if (layoutMode)
+                    OpenField(block.Id, null);
+            }));
             return section;
         }
 
@@ -1224,6 +1255,8 @@ namespace TidyMind
                 SearchBox.Clear();
             else if (editing != null && editing.IsEditing)
                 LeaveEdit();
+            else if (layoutMode)
+                LeaveLayout();
             else
                 Close();
         }

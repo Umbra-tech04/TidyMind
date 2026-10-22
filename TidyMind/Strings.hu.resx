@@ -3977,7 +3977,7 @@ A ? gomb alatt a Tippek és billentyűparancsok oldal felsorolja a jobb gombos m
     <value>Eggyel több</value>
   </data>
   <data name="Custom.Item.NoBlocks" xml:space="preserve">
-    <value>Ebben az elrendezésben még nincs blokk. Az Elrendezés szerkesztése gombbal adhatsz hozzá.</value>
+    <value>Ebben az elrendezésben még nincs blokk.</value>
   </data>
   <data name="Custom.Fields.None" xml:space="preserve">
     <value>Még nincs mező</value>
@@ -3987,5 +3987,176 @@ A ? gomb alatt a Tippek és billentyűparancsok oldal felsorolja a jobb gombos m
   </data>
   <data name="Bulk.Delete.Lines.Other" xml:space="preserve">
     <value>Törölsz {0} sort?</value>
+  </data>
+  <data name="Custom.EditLayout" xml:space="preserve">
+    <value>Elrendezés szerkesztése</value>
+  </data>
+  <data name="Custom.Menu.EditLayout" xml:space="preserve">
+    <value>Elrendezés szerkesztése…</value>
+  </data>
+  <data name="Custom.Layout.Title" xml:space="preserve">
+    <value>{0} – elrendezés</value>
+  </data>
+  <data name="Custom.Layout.Done" xml:space="preserve">
+    <value>Kész</value>
+  </data>
+  <data name="Custom.Layout.Hint" xml:space="preserve">
+    <value>A változások azonnal mentődnek, és a gyűjtemény minden elemére vonatkoznak. A Ctrl+Z visszavonja őket.</value>
+  </data>
+  <data name="Custom.Layout.AddBlock" xml:space="preserve">
+    <value>Blokk hozzáadása</value>
+  </data>
+  <data name="Custom.Layout.Full" xml:space="preserve">
+    <value>Teljes</value>
+  </data>
+  <data name="Custom.Layout.Half" xml:space="preserve">
+    <value>Fél</value>
+  </data>
+  <data name="Custom.Layout.FullTip" xml:space="preserve">
+    <value>Teljes szélesség</value>
+  </data>
+  <data name="Custom.Layout.HalfTip" xml:space="preserve">
+    <value>Fél szélesség: az előtte vagy utána álló fél blokk mellett</value>
+  </data>
+  <data name="Custom.Layout.Up" xml:space="preserve">
+    <value>Feljebb</value>
+  </data>
+  <data name="Custom.Layout.Down" xml:space="preserve">
+    <value>Lejjebb</value>
+  </data>
+  <data name="Custom.Layout.EditBlock" xml:space="preserve">
+    <value>Blokk szerkesztése</value>
+  </data>
+  <data name="Custom.Layout.RemoveBlock" xml:space="preserve">
+    <value>Blokk eltávolítása</value>
+  </data>
+  <data name="Custom.Layout.AddField" xml:space="preserve">
+    <value>Mező hozzáadása</value>
+  </data>
+  <data name="Custom.Layout.EditField" xml:space="preserve">
+    <value>Mező szerkesztése</value>
+  </data>
+  <data name="Custom.Layout.RemoveField" xml:space="preserve">
+    <value>Mező eltávolítása</value>
+  </data>
+  <data name="Custom.Layout.OnCard" xml:space="preserve">
+    <value>A kártyán</value>
+  </data>
+  <data name="Custom.Layout.NoFields" xml:space="preserve">
+    <value>Még nincs mező.</value>
+  </data>
+  <data name="Custom.Layout.FieldCount.Other" xml:space="preserve">
+    <value>{0} mező</value>
+  </data>
+  <data name="Custom.Layout.LogMoney" xml:space="preserve">
+    <value>Összegek: pénz</value>
+  </data>
+  <data name="Custom.Layout.LogUnit" xml:space="preserve">
+    <value>Összegek: {0}</value>
+  </data>
+  <data name="Custom.Layout.LogPlain" xml:space="preserve">
+    <value>Összegek: számok</value>
+  </data>
+  <data name="Custom.Layout.SaveFailed" xml:space="preserve">
+    <value>Az elrendezést nem sikerült ide menteni: {0}. Változatlan maradt.</value>
+  </data>
+  <data name="Custom.Layout.RemoveData.Other" xml:space="preserve">
+    <value>Eltávolítod: „{1}”? {0} elemben van benne valami, ez is törlődik vele. Visszavonható.</value>
+  </data>
+  <data name="Custom.Undo.Layout" xml:space="preserve">
+    <value>Elrendezés módosítva</value>
+  </data>
+  <data name="Custom.Kind.Fields" xml:space="preserve">
+    <value>Mezők</value>
+  </data>
+  <data name="Custom.Kind.Gallery" xml:space="preserve">
+    <value>Galéria</value>
+  </data>
+  <data name="Custom.Kind.Notes" xml:space="preserve">
+    <value>Jegyzet</value>
+  </data>
+  <data name="Custom.Kind.Checklist" xml:space="preserve">
+    <value>Ellenőrzőlista</value>
+  </data>
+  <data name="Custom.Kind.Documents" xml:space="preserve">
+    <value>Dokumentumok</value>
+  </data>
+  <data name="Custom.Kind.Log" xml:space="preserve">
+    <value>Napló</value>
+  </data>
+  <data name="Custom.Kind.Quantities" xml:space="preserve">
+    <value>Mennyiségek</value>
+  </data>
+  <data name="Custom.Kind.Fields.Text" xml:space="preserve">
+    <value>Megnevezett értékek: szöveg, szám, dátum, igen/nem, választás</value>
+  </data>
+  <data name="Custom.Kind.Gallery.Text" xml:space="preserve">
+    <value>Az elem képei, legfeljebb 20</value>
+  </data>
+  <data name="Custom.Kind.Notes.Text" xml:space="preserve">
+    <value>Szabad szöveg</value>
+  </data>
+  <data name="Custom.Kind.Checklist.Text" xml:space="preserve">
+    <value>Kipipálható sorok</value>
+  </data>
+  <data name="Custom.Kind.Documents.Text" xml:space="preserve">
+    <value>Dokumentumok lejárati dátummal és emlékeztetővel</value>
+  </data>
+  <data name="Custom.Kind.Log.Text" xml:space="preserve">
+    <value>Dátumozott bejegyzések összeggel</value>
+  </data>
+  <data name="Custom.Kind.Quantities.Text" xml:space="preserve">
+    <value>Miből mennyi van</value>
+  </data>
+  <data name="Custom.FieldKind.Text" xml:space="preserve">
+    <value>Szöveg</value>
+  </data>
+  <data name="Custom.FieldKind.Number" xml:space="preserve">
+    <value>Szám</value>
+  </data>
+  <data name="Custom.FieldKind.Date" xml:space="preserve">
+    <value>Dátum</value>
+  </data>
+  <data name="Custom.FieldKind.Flag" xml:space="preserve">
+    <value>Igen/nem</value>
+  </data>
+  <data name="Custom.FieldKind.Choice" xml:space="preserve">
+    <value>Választás</value>
+  </data>
+  <data name="Custom.Field.Name" xml:space="preserve">
+    <value>Név</value>
+  </data>
+  <data name="Custom.Field.Kind" xml:space="preserve">
+    <value>Típus</value>
+  </data>
+  <data name="Custom.Field.Choices" xml:space="preserve">
+    <value>Választási lehetőségek, soronként egy</value>
+  </data>
+  <data name="Custom.Field.Unit" xml:space="preserve">
+    <value>Mértékegység (nem kötelező)</value>
+  </data>
+  <data name="Custom.Field.ShowOnCard" xml:space="preserve">
+    <value>Megjelenik a kártyán</value>
+  </data>
+  <data name="Custom.Field.CardFull" xml:space="preserve">
+    <value>Egy kártyán legfeljebb 3 mező fér el.</value>
+  </data>
+  <data name="Custom.Field.NeedsName" xml:space="preserve">
+    <value>Adj nevet a mezőnek.</value>
+  </data>
+  <data name="Custom.Field.NeedsChoices" xml:space="preserve">
+    <value>Írj be legalább egy választási lehetőséget.</value>
+  </data>
+  <data name="Custom.Block.Name" xml:space="preserve">
+    <value>Név</value>
+  </data>
+  <data name="Custom.Block.Money" xml:space="preserve">
+    <value>Az összegek pénzben</value>
+  </data>
+  <data name="Custom.Block.Unit" xml:space="preserve">
+    <value>Az összegek mértékegysége</value>
+  </data>
+  <data name="Custom.Block.NeedsName" xml:space="preserve">
+    <value>Adj nevet a blokknak.</value>
   </data>
 </root>

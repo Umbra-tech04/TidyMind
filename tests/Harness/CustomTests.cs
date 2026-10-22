@@ -38,6 +38,7 @@ static partial class Program
             await CustomLayoutUndo(main);
             await CustomWindow(main);
             await CustomCardsAndForm(main);
+            await CustomBuilder(main);
         }
         finally
         {
@@ -271,10 +272,13 @@ static partial class Program
 
         AnswerPrompt(main, "Bird book");
         AnswerKind(main, custom: true);
-        Invoke(main, "AddProfile", ProfileType.Collection);
+        DriveItem(main, async w =>
+        {
+            Check(Field<bool>(w, "layoutMode") && w.Title == Loc.F("Custom.Layout.Title", "Bird book"), "a new custom collection opens its layout editor: " + w.Title);
+            await Task.CompletedTask;
+        });
+        Invoke(main, "AddProfile", ProfileType.Collection); // returns once the editor is closed
         await Wait(600);
-        foreach (ItemWindow open in Application.Current.Windows.OfType<ItemWindow>().ToList())
-            open.Close(); // the layout editor a new custom collection opens with (M3)
         Profile birds = Profiles(main).FirstOrDefault(p => p.Name == "Bird book");
         Check(birds != null && CustomLayoutStore.TryLoad(birds, out CustomLayout starter, out _) && starter != null, "a custom collection has a layout");
         CustomLayoutStore.TryLoad(birds, out starter, out _);

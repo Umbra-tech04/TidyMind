@@ -4131,7 +4131,7 @@ Tips &amp; shortcuts under the ? button lists the right-click menus and keys, an
     <value>One more</value>
   </data>
   <data name="Custom.Item.NoBlocks" xml:space="preserve">
-    <value>This layout has no blocks yet. Add some with Edit layout.</value>
+    <value>This layout has no blocks yet.</value>
   </data>
   <data name="Custom.Fields.None" xml:space="preserve">
     <value>No fields yet</value>
@@ -4144,5 +4144,182 @@ Tips &amp; shortcuts under the ? button lists the right-click menus and keys, an
   </data>
   <data name="Bulk.Delete.Lines.Other" xml:space="preserve">
     <value>Delete {0} lines?</value>
+  </data>
+  <data name="Custom.EditLayout" xml:space="preserve">
+    <value>Edit layout</value>
+  </data>
+  <data name="Custom.Menu.EditLayout" xml:space="preserve">
+    <value>Edit layout…</value>
+  </data>
+  <data name="Custom.Layout.Title" xml:space="preserve">
+    <value>Layout of {0}</value>
+  </data>
+  <data name="Custom.Layout.Done" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="Custom.Layout.Hint" xml:space="preserve">
+    <value>Changes are saved at once and apply to every item in this collection. Ctrl+Z undoes them.</value>
+  </data>
+  <data name="Custom.Layout.AddBlock" xml:space="preserve">
+    <value>Add block</value>
+  </data>
+  <data name="Custom.Layout.Full" xml:space="preserve">
+    <value>Full</value>
+  </data>
+  <data name="Custom.Layout.Half" xml:space="preserve">
+    <value>Half</value>
+  </data>
+  <data name="Custom.Layout.FullTip" xml:space="preserve">
+    <value>Full width</value>
+  </data>
+  <data name="Custom.Layout.HalfTip" xml:space="preserve">
+    <value>Half width: beside the half block before or after it</value>
+  </data>
+  <data name="Custom.Layout.Up" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="Custom.Layout.Down" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="Custom.Layout.EditBlock" xml:space="preserve">
+    <value>Edit block</value>
+  </data>
+  <data name="Custom.Layout.RemoveBlock" xml:space="preserve">
+    <value>Remove block</value>
+  </data>
+  <data name="Custom.Layout.AddField" xml:space="preserve">
+    <value>Add field</value>
+  </data>
+  <data name="Custom.Layout.EditField" xml:space="preserve">
+    <value>Edit field</value>
+  </data>
+  <data name="Custom.Layout.RemoveField" xml:space="preserve">
+    <value>Remove field</value>
+  </data>
+  <data name="Custom.Layout.OnCard" xml:space="preserve">
+    <value>On card</value>
+  </data>
+  <data name="Custom.Layout.NoFields" xml:space="preserve">
+    <value>No fields yet.</value>
+  </data>
+  <data name="Custom.Layout.FieldCount.One" xml:space="preserve">
+    <value>{0} field</value>
+  </data>
+  <data name="Custom.Layout.FieldCount.Other" xml:space="preserve">
+    <value>{0} fields</value>
+  </data>
+  <data name="Custom.Layout.LogMoney" xml:space="preserve">
+    <value>Amounts: money</value>
+  </data>
+  <data name="Custom.Layout.LogUnit" xml:space="preserve">
+    <value>Amounts: {0}</value>
+  </data>
+  <data name="Custom.Layout.LogPlain" xml:space="preserve">
+    <value>Amounts: plain numbers</value>
+  </data>
+  <data name="Custom.Layout.SaveFailed" xml:space="preserve">
+    <value>The layout couldn't be saved to {0}. It is as it was.</value>
+  </data>
+  <data name="Custom.Layout.RemoveData.One" xml:space="preserve">
+    <value>Remove “{1}”? {0} item has something in it, which will be deleted with it. You can undo this.</value>
+  </data>
+  <data name="Custom.Layout.RemoveData.Other" xml:space="preserve">
+    <value>Remove “{1}”? {0} items have something in it, which will be deleted with it. You can undo this.</value>
+  </data>
+  <data name="Custom.Undo.Layout" xml:space="preserve">
+    <value>Layout changed</value>
+  </data>
+  <data name="Custom.Kind.Fields" xml:space="preserve">
+    <value>Fields</value>
+  </data>
+  <data name="Custom.Kind.Gallery" xml:space="preserve">
+    <value>Gallery</value>
+  </data>
+  <data name="Custom.Kind.Notes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="Custom.Kind.Checklist" xml:space="preserve">
+    <value>Checklist</value>
+  </data>
+  <data name="Custom.Kind.Documents" xml:space="preserve">
+    <value>Documents</value>
+  </data>
+  <data name="Custom.Kind.Log" xml:space="preserve">
+    <value>Log</value>
+  </data>
+  <data name="Custom.Kind.Quantities" xml:space="preserve">
+    <value>Quantities</value>
+  </data>
+  <data name="Custom.Kind.Fields.Text" xml:space="preserve">
+    <value>Labelled values: text, numbers, dates, yes/no, choices</value>
+  </data>
+  <data name="Custom.Kind.Gallery.Text" xml:space="preserve">
+    <value>The item's pictures, up to 20</value>
+  </data>
+  <data name="Custom.Kind.Notes.Text" xml:space="preserve">
+    <value>Free text</value>
+  </data>
+  <data name="Custom.Kind.Checklist.Text" xml:space="preserve">
+    <value>Lines to tick off</value>
+  </data>
+  <data name="Custom.Kind.Documents.Text" xml:space="preserve">
+    <value>Documents with the date they run out, and a reminder</value>
+  </data>
+  <data name="Custom.Kind.Log.Text" xml:space="preserve">
+    <value>Dated entries with an amount</value>
+  </data>
+  <data name="Custom.Kind.Quantities.Text" xml:space="preserve">
+    <value>What there is and how much</value>
+  </data>
+  <data name="Custom.FieldKind.Text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="Custom.FieldKind.Number" xml:space="preserve">
+    <value>Number</value>
+  </data>
+  <data name="Custom.FieldKind.Date" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="Custom.FieldKind.Flag" xml:space="preserve">
+    <value>Yes/No</value>
+  </data>
+  <data name="Custom.FieldKind.Choice" xml:space="preserve">
+    <value>Choice</value>
+  </data>
+  <data name="Custom.Field.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Custom.Field.Kind" xml:space="preserve">
+    <value>Kind</value>
+  </data>
+  <data name="Custom.Field.Choices" xml:space="preserve">
+    <value>Choices, one per line</value>
+  </data>
+  <data name="Custom.Field.Unit" xml:space="preserve">
+    <value>Unit (optional)</value>
+  </data>
+  <data name="Custom.Field.ShowOnCard" xml:space="preserve">
+    <value>Show on the card</value>
+  </data>
+  <data name="Custom.Field.CardFull" xml:space="preserve">
+    <value>A card shows at most 3 fields.</value>
+  </data>
+  <data name="Custom.Field.NeedsName" xml:space="preserve">
+    <value>Give the field a name.</value>
+  </data>
+  <data name="Custom.Field.NeedsChoices" xml:space="preserve">
+    <value>Write at least one choice.</value>
+  </data>
+  <data name="Custom.Block.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Custom.Block.Money" xml:space="preserve">
+    <value>Amounts are money</value>
+  </data>
+  <data name="Custom.Block.Unit" xml:space="preserve">
+    <value>Unit of the amounts</value>
+  </data>
+  <data name="Custom.Block.NeedsName" xml:space="preserve">
+    <value>Give the block a name.</value>
   </data>
 </root>
