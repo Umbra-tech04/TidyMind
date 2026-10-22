@@ -181,7 +181,7 @@ namespace TidyMind
             CloseCalendar();
             selectedKey = DayPlanKey;
             UndoService.ShowPage(selectedKey);
-            ContentArea.Content = new DayPlanView(profiles, date, select);
+            ContentArea.Content = new DayPlanView(profiles, date, select) { Navigate = GoToSearchResult };
             BuildNav();
         }
 
@@ -704,6 +704,8 @@ namespace TidyMind
                 EntityFiles.DeleteUnreferenced(items);
                 foreach (Entity item in items)
                     VehicleReminders.Follow(item, null);
+                // A custom collection's documents by their Ids too: its layout may already be unreadable or gone.
+                VehicleReminders.Remove(items.Where(i => CustomTypes.IsCustom(i.EntityType)).SelectMany(EntityFiles.Records).Select(r => r.Id));
                 return;
             }
 

@@ -39,6 +39,7 @@ static partial class Program
             await CustomWindow(main);
             await CustomCardsAndForm(main);
             await CustomBuilder(main);
+            await CustomIntegration(main);
         }
         finally
         {
@@ -272,9 +273,9 @@ static partial class Program
 
         AnswerPrompt(main, "Bird book");
         AnswerKind(main, custom: true);
-        DriveItem(main, async w =>
+        DriveTitled(main, Loc.F("Custom.Layout.Title", "Bird book"), async w =>
         {
-            Check(Field<bool>(w, "layoutMode") && w.Title == Loc.F("Custom.Layout.Title", "Bird book"), "a new custom collection opens its layout editor: " + w.Title);
+            Check(Field<bool>(w, "layoutMode"), "a new custom collection opens its layout editor");
             await Task.CompletedTask;
         });
         Invoke(main, "AddProfile", ProfileType.Collection); // returns once the editor is closed

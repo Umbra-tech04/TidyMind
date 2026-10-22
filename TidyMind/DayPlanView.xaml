@@ -98,6 +98,14 @@
 
             <!-- To-dos not on this day's plan yet. The bottom margin clears the corner buttons. -->
             <DockPanel Grid.Column="2" Margin="0,0,0,56">
+                <!-- Custom collections' items with a date on this day (CustomDates): a click opens the item -->
+                <StackPanel x:Name="DatesSection" DockPanel.Dock="Top" Visibility="Collapsed" Margin="0,0,0,18">
+                    <TextBlock Text="{local:Tr Plan.ItemDates}" FontSize="15" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextMain}"/>
+                    <TextBlock FontSize="12" Foreground="{StaticResource TextSub}" TextWrapping="Wrap" Margin="0,4,0,6"
+                               Text="{local:Tr Plan.ItemDatesHint}"/>
+                    <StackPanel x:Name="DatesPanel"/>
+                </StackPanel>
                 <TextBlock DockPanel.Dock="Top" Text="{local:Tr Plan.Todos}" FontSize="15" FontWeight="SemiBold"
                            Foreground="{StaticResource TextMain}"/>
                 <TextBlock DockPanel.Dock="Top" FontSize="12" Foreground="{StaticResource TextSub}" TextWrapping="Wrap"

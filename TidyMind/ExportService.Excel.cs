@@ -238,11 +238,18 @@ namespace TidyMind
                 yield break;
             }
 
+            // A custom collection's fields are named by the user: a name used twice (or the Name or Notes column's) gets
+            // its block's name before it, so no column takes two fields' values.
+            HashSet<string> used = new HashSet<string>(StringComparer.CurrentCultureIgnoreCase) { Loc.T("Export.Column.Name"), Loc.T("Entity.Field.Notes") };
+            Dictionary<FieldDefinition, string> labels = CustomTypes.Of(entity.EntityType) is CustomType custom
+                ? custom.Tabs[0].Sections.SelectMany(s => s.Fields.Select(f => (Section: s, Field: f))).ToDictionary(x => x.Field,
+                    x => used.Add(XlLabel(x.Field, entity)) ? XlLabel(x.Field, entity) : x.Section.Label + " › " + XlLabel(x.Field, entity))
+                : new Dictionary<FieldDefinition, string>();
             foreach (FieldDefinition field in definitions)
             {
                 string? value = field.Read(entity);
                 if (!string.IsNullOrWhiteSpace(value))
-                    yield return (XlLabel(field, entity), XlValue(field, value, entity));
+                    yield return (labels.GetValueOrDefault(field) ?? XlLabel(field, entity), XlValue(field, value, entity));
             }
             yield return (Loc.T("Entity.Field.Notes"), entity.Notes ?? "");
         }

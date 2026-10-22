@@ -134,6 +134,10 @@ namespace TidyMind
             {
                 string file = MemoryFiles.Items(profile);
                 DateTime written = File.Exists(file) ? File.GetLastWriteTimeUtc(file) : DateTime.MinValue;
+                // A custom collection's dates are named by its layout (a block renamed): read again when either changes.
+                string layout = MemoryFiles.Layout(profile);
+                if (File.Exists(layout) && File.GetLastWriteTimeUtc(layout) > written)
+                    written = File.GetLastWriteTimeUtc(layout);
                 if (!expiryCache.TryGetValue(profile.Id, out var cached) || cached.Written != written)
                 {
                     // A missing or unreadable file contributes nothing (the collection view says why).

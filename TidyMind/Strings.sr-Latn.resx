@@ -3844,10 +3844,8 @@ Ništa nije promenjeno.</value>
     <value>Novo u TidyMind-u {0}</value>
   </data>
   <data name="WhatsNew.Points" xml:space="preserve">
-    <value>Vozila dobijaju svoj prozor: dokumenta sa podsetnicima, servisnu knjižicu sa troškovima, komplete točkova i delove.
-Poništavanje i ponavljanje sa Ctrl+Z i Ctrl+Y: obrisane stavke, projekti i memorije vraćaju se sa svojim slikama i datotekama.
-Svaka memorija ima svoju beležnicu, za beleške o celoj memoriji.
-Saveti i prečice ispod dugmeta ? navode menije na desni klik i prečice, a svaka kartica ima dugme ⋯ za svoj meni.</value>
+    <value>Kolekcije sa sopstvenim rasporedom: stranu stavke slažeš od blokova, kao što su polja, slike, beleške, kontrolne liste, dokumenti sa podsetnikom, dnevnik i količine.
+Uredi raspored slaže blokove jedan pored drugog ili jedan ispod drugog i bira do tri polja za kartice. Dnevni plan prikazuje datume stavki.</value>
   </data>
   <data name="Tips.Title" xml:space="preserve">
     <value>Saveti i prečice</value>
@@ -4245,9 +4243,6 @@ Saveti i prečice ispod dugmeta ? navode menije na desni klik i prečice, a svak
   <data name="Entity.Records.CustomChecklist.Add" xml:space="preserve">
     <value>Nova stavka</value>
   </data>
-  <data name="Entity.Records.CustomChecklist.Empty" xml:space="preserve">
-    <value>Lista je još prazna.</value>
-  </data>
   <data name="Entity.Records.CustomDocuments.Untitled" xml:space="preserve">
     <value>Dokument</value>
   </data>
@@ -4484,5 +4479,35 @@ Saveti i prečice ispod dugmeta ? navode menije na desni klik i prečice, a svak
   </data>
   <data name="Custom.Block.NeedsName" xml:space="preserve">
     <value>Daj naziv bloku.</value>
+  </data>
+  <data name="Transfer.Error.NotCustom" xml:space="preserve">
+    <value>„{0}” nije kolekcija sa sopstvenim rasporedom, pa ova stavka ne može u nju.</value>
+  </data>
+  <data name="Transfer.Import.AddsBlocks" xml:space="preserve">
+    <value>Blokovi koje koristi, a „{0}” ih još nema, dodaju se rasporedu te kolekcije.</value>
+  </data>
+  <data name="Plan.ItemDates" xml:space="preserve">
+    <value>Datumi iz tvojih kolekcija</value>
+  </data>
+  <data name="Plan.ItemDatesHint" xml:space="preserve">
+    <value>Za ovaj dan. Klikni da otvoriš stavku.</value>
+  </data>
+  <data name="Plan.ItemDates.Open" xml:space="preserve">
+    <value>Otvori stavku</value>
+  </data>
+  <data name="Custom.Plan.RunsOut" xml:space="preserve">
+    <value>{0} ističe</value>
+  </data>
+  <data name="Tips.CustomLayout.Keys" xml:space="preserve">
+    <value>⋯ &gt; Uredi raspored…</value>
+  </data>
+  <data name="Tips.CustomLayout.Text" xml:space="preserve">
+    <value>Menja raspored stavki kolekcije sa sopstvenim rasporedom: dodaj, pomeri ili ukloni blokove i polja, pola ili puna širina.</value>
+  </data>
+  <data name="Tips.ChecklistSelect.Keys" xml:space="preserve">
+    <value>Ctrl+klik, Shift+klik</value>
+  </data>
+  <data name="Tips.ChecklistSelect.Text" xml:space="preserve">
+    <value>Bira više stavki kontrolne liste. Delete ih briše.</value>
   </data>
 </root>

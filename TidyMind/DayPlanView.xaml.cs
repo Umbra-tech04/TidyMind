@@ -43,6 +43,11 @@ namespace TidyMind
         private List<PlanTodo> todos = new List<PlanTodo>();
         private List<string> unusableTodos = new List<string>();
         private HashSet<Guid> reminders = new HashSet<Guid>();
+        private List<CustomDates.ItemDate> itemDates = new List<CustomDates.ItemDate>();
+
+        // Opens a search result's place (the main window's): an item with a date on this day.
+        public Action<SearchResult>? Navigate { get; set; }
+
         private readonly ItemSelection<Guid> selection;
 
         public DayPlanView(IList<Profile> memories, DateTime date, Guid? select = null)
@@ -75,10 +80,12 @@ namespace TidyMind
             blocks = DayPlanStore.BlocksOn(plan, date);
             todos = DayPlanTodos.All(memories, out unusableTodos);
             reminders = ReminderManager.TryLoadReminders().Select(r => r.Id).ToHashSet();
+            itemDates = CustomDates.On(memories, date);
 
             ShowHeader();
             ShowBlocks();
             ShowTodos();
+            ShowItemDates();
             ShowMode();
         }
 
@@ -1103,6 +1110,31 @@ namespace TidyMind
                 TodoPanel.Children.Add(Hint(Loc.T("Plan.Todos.None")));
             foreach (string list in unusableTodos)
                 TodoPanel.Children.Add(Hint(Loc.F("Plan.Todos.Unusable", list)));
+        }
+
+        // Custom items with a date on this day (CustomDates): the item's name over what the date is and where; a click opens it.
+        private void ShowItemDates()
+        {
+            DatesPanel.Children.Clear();
+            DatesSection.Visibility = itemDates.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+            foreach (CustomDates.ItemDate itemDate in itemDates)
+            {
+                StackPanel words = new StackPanel();
+                words.Children.Add(new TextBlock { Text = itemDate.Item.Name ?? "", FontSize = 13, Foreground = Res("TextMain"), TextTrimming = TextTrimming.CharacterEllipsis });
+                words.Children.Add(new TextBlock { Text = itemDate.What + "  ·  " + itemDate.Memory.Name, FontSize = 11, Foreground = Res("TextSub"),
+                    TextTrimming = TextTrimming.CharacterEllipsis });
+                Border look = new Border { CornerRadius = new CornerRadius(8), Padding = new Thickness(8, 6, 8, 6), Background = Brushes.Transparent, Child = words };
+                Button row = new Button { Template = PictureBrowser.FlatTemplate, Cursor = Cursors.Hand, Content = look, HorizontalContentAlignment = HorizontalAlignment.Stretch,
+                    ToolTip = Loc.T("Plan.ItemDates.Open") };
+                AutomationProperties.SetName(row, itemDate.Item.Name + ", " + itemDate.What);
+                row.MouseEnter += (s, e) => look.Background = Res("BgSubtle");
+                row.MouseLeave += (s, e) => look.Background = Brushes.Transparent;
+                row.Click += (s, e) => Navigate?.Invoke(new SearchResult
+                {
+                    Kind = SearchResultKind.Entity, Title = itemDate.Item.Name, Profile = itemDate.Memory, ItemId = itemDate.Item.Id
+                });
+                DatesPanel.Children.Add(row);
+            }
         }
 
         private TextBlock Hint(string text) => new TextBlock

@@ -105,6 +105,40 @@ namespace TidyMind
 
         public CustomLayout Copy() => JsonSerializer.Deserialize<CustomLayout>(JsonSerializer.Serialize(this))!;
 
+        // This layout with what an item from another copy of the collection holds data in and this one lacks, by Id: such
+        // blocks at the end, such fields at the end of their Fields block (null: nothing to add). Blocks are matched by Id,
+        // so an item from a copy of this very collection adds nothing; a second gallery is never added (the item's pictures
+        // show on top then).
+        public CustomLayout? Merged(CustomLayout other, Entity item)
+        {
+            bool Holds(string key) => item.Details?.ContainsKey(key) == true || item.Records?.GetValueOrDefault(key)?.Count > 0;
+            CustomLayout merged = Copy();
+            bool added = false;
+            foreach (LayoutBlock block in other.Blocks)
+            {
+                LayoutBlock? mine = merged.Block(block.Id);
+                List<LayoutField> fields = (block.Fields ?? new List<LayoutField>()).Where(f => Holds(f.Id)).ToList();
+                if (mine == null)
+                {
+                    bool holds = block.Kind == BlockKinds.Fields ? fields.Count > 0 : block.Kind != BlockKinds.Gallery && Holds(block.Id);
+                    if (!holds)
+                        continue;
+                    LayoutBlock copy = JsonSerializer.Deserialize<LayoutBlock>(JsonSerializer.Serialize(block))!;
+                    if (copy.Kind == BlockKinds.Fields)
+                        copy.Fields = copy.Fields!.Where(f => Holds(f.Id)).ToList();
+                    merged.Blocks.Add(copy);
+                    added = true;
+                }
+                else if (mine.Kind == BlockKinds.Fields)
+                    foreach (LayoutField field in fields.Where(f => (mine.Fields ?? new List<LayoutField>()).All(m => m.Id != f.Id)))
+                    {
+                        (mine.Fields ??= new List<LayoutField>()).Add(field.Copy());
+                        added = true;
+                    }
+            }
+            return added ? merged.Clean() : null;
+        }
+
         public static string NewId() => Guid.NewGuid().ToString("N");
 
         // What a new custom collection starts with: its pictures, a block for its details and one for notes, named in the

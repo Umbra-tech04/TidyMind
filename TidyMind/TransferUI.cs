@@ -50,10 +50,14 @@ namespace TidyMind
                 readable = false;
                 problem = e.Message;
             }
-            // Its own notebook goes along (a notebook file that can't be read stops the export like the others).
+            // Its own notebook and a custom collection's layout go along (a file that can't be read stops the export like the
+            // others).
             MemoryNotebook notebook = new MemoryNotebook();
             if (readable)
                 readable = MemoryNotebookStore.TryLoad(memory, out notebook, out problem);
+            CustomLayout? layout = null;
+            if (readable)
+                readable = CustomLayoutStore.TryLoad(memory, out layout, out problem);
             if (!readable)
             {
                 Msg.Show(owner, Loc.F("Transfer.Export.Unreadable", memory.Name, problem), Loc.T("Transfer.Export.Caption"),
@@ -66,15 +70,17 @@ namespace TidyMind
                 return;
             int writtenPages = notebook.WrittenPages(); // here: it reads formatted pages (UI thread)
             Export(owner, memory.Name, path, (progress, cancel) =>
-                TransferPackage.ExportCollection(memory, tabs, entities, notebook, writtenPages, path, progress, cancel));
+                TransferPackage.ExportCollection(memory, tabs, entities, notebook, writtenPages, path, progress, cancel, layout));
         }
 
-        // One item of a collection, as its card shows it (items are saved as soon as they change).
+        // One item of a collection, as its card shows it (items are saved as soon as they change). A custom item takes its
+        // collection's layout along.
         public static void ExportItem(Window? owner, Entity entity)
         {
+            CustomLayout? layout = CustomTypes.Of(entity.EntityType)?.Layout;
             string? path = AskWhere(owner, entity.Name);
             if (path != null)
-                Export(owner, entity.Name, path, (progress, cancel) => TransferPackage.ExportItem(entity, path, progress, cancel));
+                Export(owner, entity.Name, path, (progress, cancel) => TransferPackage.ExportItem(entity, path, progress, cancel, layout));
         }
 
         private static string? AskWhere(Window? owner, string name)

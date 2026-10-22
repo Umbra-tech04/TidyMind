@@ -23,6 +23,39 @@ static partial class Program
 
     static LayoutBlock GearBlock(Profile memory, string kind) => GearLayout(memory).Blocks.First(b => b.Kind == kind);
 
+    // Like DriveItem, but for the item window about to open whose title is `title` (one closing meanwhile isn't taken for
+    // it); whatever happens it is closed afterwards, so the caller's ShowDialog always returns.
+    static void DriveTitled(MainWindow main, string title, Func<ItemWindow, Task> act)
+    {
+        _ = main.Dispatcher.BeginInvoke(new Action(async () =>
+        {
+            ItemWindow window = null;
+            for (int i = 0; i < 80 && window == null; i++)
+            {
+                await Wait(100);
+                window = Application.Current.Windows.OfType<ItemWindow>().FirstOrDefault(w => w.IsVisible && w.Title == title);
+            }
+            if (window == null)
+            {
+                Check(false, "a window titled " + title + " opened: " + string.Join(", ", Application.Current.Windows.OfType<ItemWindow>().Select(w => w.Title)));
+                foreach (ItemWindow other in Application.Current.Windows.OfType<ItemWindow>().ToList())
+                    other.Close();
+                return;
+            }
+            try
+            {
+                await Wait(300);
+                await act(window);
+            }
+            catch (Exception e)
+            {
+                Check(false, "the window driver threw: " + e);
+            }
+            if (window.IsVisible)
+                window.Close();
+        }), DispatcherPriority.Background);
+    }
+
     // Fills the next block or field dialog (an EditDialog) with `fill`, then presses its Save.
     static void AnswerLayoutDialog(MainWindow main, Func<EditDialog, Task> fill) => AnswerRecord(main, fill);
 
@@ -201,9 +234,9 @@ static partial class Program
             .Invoke(main, new object[] { shoes });
         Check(!plainMenu.Items.OfType<MenuItem>().Any(i => (string)i.Header == Loc.T("Custom.Menu.EditLayout")), "not in a standard collection's");
         RemoveMemory(main, shoes);
-        DriveItem(main, async w =>
+        DriveTitled(main, Loc.F("Custom.Layout.Title", "Gear"), async w =>
         {
-            Check(Field<bool>(w, "layoutMode") && w.Title == Loc.F("Custom.Layout.Title", "Gear"), "opened on the layout: " + w.Title);
+            Check(Field<bool>(w, "layoutMode"), "opened on the layout, in the editor");
             Invoke(w, "MoveBlock", ids["log"], -1);
             await Wait(300);
             Check(UndoHost.Of(w).Undo() && w.IsVisible && Field<bool>(w, "layoutMode"), "its own Ctrl+Z, and it stays open");

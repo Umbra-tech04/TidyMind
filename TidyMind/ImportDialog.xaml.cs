@@ -14,6 +14,7 @@ namespace TidyMind
         private readonly OpenedPackage package;
         private readonly List<Profile> profiles;
         private readonly bool hasTarget; // a project or an item: it goes into a memory picked here
+        private readonly bool customItem; // an item of a custom collection, with its layout
 
         public ImportDialog(OpenedPackage package, List<Profile> profiles, Profile? current)
         {
@@ -23,7 +24,11 @@ namespace TidyMind
             hasTarget = !package.IsCollection;
 
             ProfileType kind = package.IsItem ? ProfileType.Collection : ProfileType.Project;
-            List<Profile> memories = hasTarget ? profiles.Where(p => p.Type == kind).OrderBy(p => p.Order).ToList() : new List<Profile>();
+            // A custom item goes only into a custom collection (or a new one, with its layout).
+            customItem = package.IsItem && package.Layout != null && CustomTypes.IsCustom(package.Entities.FirstOrDefault()?.EntityType);
+            List<Profile> memories = hasTarget
+                ? profiles.Where(p => p.Type == kind && (!customItem || System.IO.File.Exists(MemoryFiles.Layout(p)))).OrderBy(p => p.Order).ToList()
+                : new List<Profile>();
             // Items of their own (the app's ComboBox look shows an item's content, not DisplayMemberPath), by name.
             foreach (Profile memory in memories)
                 TargetBox.Items.Add(new ComboBoxItem { Content = memory.Name, Tag = memory });
@@ -117,9 +122,15 @@ namespace TidyMind
             string name = TransferPackage.UniqueName(package.Name, names);
             bool renamed = name != package.Name;
             WhereText.Text = package.IsItem
-                ? (renamed ? Loc.F("Transfer.Import.NewItemRenamed", name) : Loc.T("Transfer.Import.NewItem"))
+                ? (renamed ? Loc.F("Transfer.Import.NewItemRenamed", name) : Loc.T("Transfer.Import.NewItem")) + AddsBlocks(target)
                 : (renamed ? Loc.F("Transfer.Import.NewProjectRenamed", name) : Loc.T("Transfer.Import.NewProject"));
         }
+
+        // A custom item into a custom collection whose layout lacks blocks or fields it holds something in: those are added
+        // to that layout (TransferPackage.CommitItem), said here first.
+        private string AddsBlocks(Profile target) =>
+            customItem && CustomLayoutStore.TryLoad(target, out CustomLayout? layout, out _) && layout?.Merged(package.Layout!, package.Entities[0]) != null
+                ? " " + Loc.F("Transfer.Import.AddsBlocks", target.Name) : "";
 
         private string UniqueCollectionName(string name) =>
             TransferPackage.UniqueName(name, profiles.Where(p => p.Type == ProfileType.Collection).Select(p => p.Name));

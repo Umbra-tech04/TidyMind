@@ -56,6 +56,32 @@ namespace TidyMind
         }
     }
 
+    // The dates custom items have on a day, for the Day Plan: their Fields blocks' date fields and the dates their documents
+    // run out. Read only; a collection whose items or layout can't be read has none.
+    public static class CustomDates
+    {
+        public sealed record ItemDate(Profile Memory, Entity Item, string What);
+
+        public static List<ItemDate> On(IEnumerable<Profile> memories, DateTime day)
+        {
+            List<ItemDate> dates = new List<ItemDate>();
+            foreach (Profile memory in memories.Where(m => m.Type == ProfileType.Collection))
+            {
+                if (CustomTypes.OfMemory(memory) is not CustomType custom)
+                    continue;
+                List<FieldDefinition> dateFields = custom.Tabs[0].Sections.SelectMany(s => s.Fields).Where(f => f.Kind == ValueKind.Date).ToList();
+                foreach (Entity item in EntityStore.LoadOrEmpty(memory).Where(e => e.EntityType == custom.Type))
+                {
+                    foreach (FieldDefinition field in dateFields.Where(f => Values.ParseDate(f.Read(item)) == day.Date))
+                        dates.Add(new ItemDate(memory, item, field.Label));
+                    foreach (Deadline deadline in EntityTypes.Expiries(item).Where(d => d.Date == day.Date))
+                        dates.Add(new ItemDate(memory, item, Loc.F("Custom.Plan.RunsOut", deadline.Name)));
+                }
+            }
+            return dates;
+        }
+    }
+
     // A block as the item window draws it: its layout entry and its definition. Fields and Notes are a section of the
     // item's Details; Checklist, Documents, Log and Quantities a list of its Records; the Gallery is its own pictures.
     public sealed record CustomBlock(LayoutBlock Layout, SectionDefinition? Section, RecordDefinition? Records)

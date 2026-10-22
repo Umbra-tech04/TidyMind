@@ -3533,10 +3533,8 @@ Semmi sem változott.</value>
     <value>A TidyMind {0} újdonságai</value>
   </data>
   <data name="WhatsNew.Points" xml:space="preserve">
-    <value>A járművek saját ablakot kapnak: dokumentumok emlékeztetőkkel, szerviznapló költségekkel, kerékszettek és alkatrészek.
-Visszavonás és ismétlés Ctrl+Z-vel és Ctrl+Y-nal: a törölt elemek, projektek és memóriák a képeikkel és fájljaikkal együtt visszajönnek.
-Minden memóriának saját jegyzetfüzete van az egész memóriára vonatkozó jegyzetekhez.
-A ? gomb alatt a Tippek és billentyűparancsok oldal felsorolja a jobb gombos menüket és a billentyűket, és minden kártyán egy ⋯ gomb nyitja a menüjét.</value>
+    <value>Saját elrendezésű gyűjtemények: az elem oldalát blokkokból rakod össze, például mezőkből, képekből, jegyzetekből, ellenőrzőlistákból, emlékeztetős dokumentumokból, naplóból és mennyiségekből.
+Az Elrendezés szerkesztése egymás mellé vagy egymás alá rendezi a blokkokat, és legfeljebb három mezőt tesz a kártyákra. A Napi terv megmutatja az elemek dátumait.</value>
   </data>
   <data name="Tips.Title" xml:space="preserve">
     <value>Tippek és billentyűparancsok</value>
@@ -3937,9 +3935,6 @@ A ? gomb alatt a Tippek és billentyűparancsok oldal felsorolja a jobb gombos m
   <data name="Entity.Records.CustomChecklist.Add" xml:space="preserve">
     <value>Új sor</value>
   </data>
-  <data name="Entity.Records.CustomChecklist.Empty" xml:space="preserve">
-    <value>Még üres a lista.</value>
-  </data>
   <data name="Entity.Records.CustomDocuments.Untitled" xml:space="preserve">
     <value>Dokumentum</value>
   </data>
@@ -4158,5 +4153,35 @@ A ? gomb alatt a Tippek és billentyűparancsok oldal felsorolja a jobb gombos m
   </data>
   <data name="Custom.Block.NeedsName" xml:space="preserve">
     <value>Adj nevet a blokknak.</value>
+  </data>
+  <data name="Transfer.Error.NotCustom" xml:space="preserve">
+    <value>A(z) „{0}” nem saját elrendezésű gyűjtemény, ezért ez az elem nem kerülhet bele.</value>
+  </data>
+  <data name="Transfer.Import.AddsBlocks" xml:space="preserve">
+    <value>Azok a blokkok, amelyeket használ, de a(z) „{0}” még nem tartalmaz, bekerülnek a gyűjtemény elrendezésébe.</value>
+  </data>
+  <data name="Plan.ItemDates" xml:space="preserve">
+    <value>Dátumok a gyűjteményeidből</value>
+  </data>
+  <data name="Plan.ItemDatesHint" xml:space="preserve">
+    <value>Erre a napra. Kattints rá az elem megnyitásához.</value>
+  </data>
+  <data name="Plan.ItemDates.Open" xml:space="preserve">
+    <value>Az elem megnyitása</value>
+  </data>
+  <data name="Custom.Plan.RunsOut" xml:space="preserve">
+    <value>{0} lejár</value>
+  </data>
+  <data name="Tips.CustomLayout.Keys" xml:space="preserve">
+    <value>⋯ &gt; Elrendezés szerkesztése…</value>
+  </data>
+  <data name="Tips.CustomLayout.Text" xml:space="preserve">
+    <value>Módosítja egy saját elrendezésű gyűjtemény elemeinek elrendezését: blokkok és mezők hozzáadása, mozgatása, törlése, fél vagy teljes szélesség.</value>
+  </data>
+  <data name="Tips.ChecklistSelect.Keys" xml:space="preserve">
+    <value>Ctrl+kattintás, Shift+kattintás</value>
+  </data>
+  <data name="Tips.ChecklistSelect.Text" xml:space="preserve">
+    <value>Egy elem ellenőrzőlistájának több sorát jelöli ki. A Delete törli őket.</value>
   </data>
 </root>

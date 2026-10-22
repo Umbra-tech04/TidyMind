@@ -12,7 +12,8 @@ namespace TidyMind
     // the same Task Scheduler task, listed in Reminders like any other) with the record's Id, at 09:00 that many days
     // before the date. It follows the record: set when the date or the days change, gone when they are cleared, the
     // record or the vehicle is deleted, the date has passed, or (a service's) a newer entry of its kind is written down.
-    // Once it has fired it is gone like every one-off, and saving the vehicle again doesn't bring it back.
+    // Once it has fired it is gone like every one-off, and saving the vehicle again doesn't bring it back. A custom
+    // collection's Documents blocks (CustomType) come due the same way, so their reminders work alike.
     //
     // Its stored title is the vehicle's name (the user's own) and its message empty: what it says ("Insurance runs out
     // on …") is made in the current language whenever it is shown (ShownMessage). A message the user types in
@@ -103,7 +104,7 @@ namespace TidyMind
         private static (DateTime, int?) Timing(Deadline deadline) => (deadline.Date, deadline.RemindDays);
 
         private static Dictionary<Guid, Deadline> Dated(Entity? vehicle) =>
-            vehicle?.EntityType != EntityTypes.Vehicle ? new Dictionary<Guid, Deadline>()
+            vehicle?.EntityType != EntityTypes.Vehicle && !CustomTypes.IsCustom(vehicle?.EntityType) ? new Dictionary<Guid, Deadline>()
                 : EntityTypes.Expiries(vehicle).GroupBy(d => d.Record.Id).ToDictionary(g => g.Key, g => g.First());
 
         // ---- What a reminder says -----------------------------------------------------------
@@ -116,7 +117,7 @@ namespace TidyMind
                 return null;
             return profiles.Where(p => p.Type == ProfileType.Collection)
                 .SelectMany(EntityStore.LoadOrEmpty)
-                .Where(e => e.EntityType == EntityTypes.Vehicle)
+                .Where(e => e.EntityType == EntityTypes.Vehicle || CustomTypes.IsCustom(e.EntityType))
                 .SelectMany(EntityTypes.Expiries)
                 .GroupBy(d => d.Record.Id).ToDictionary(g => g.Key, g => g.First());
         }

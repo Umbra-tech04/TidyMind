@@ -3690,10 +3690,8 @@ Nothing was changed.</value>
     <value>New in TidyMind {0}</value>
   </data>
   <data name="WhatsNew.Points" xml:space="preserve">
-    <value>Vehicles have a window of their own: documents with reminders, a service log with costs, wheel sets and parts.
-Undo and redo with Ctrl+Z and Ctrl+Y: deleted items, projects and memories come back with their pictures and files.
-Every memory has a notebook of its own, for notes about the whole memory.
-Tips &amp; shortcuts under the ? button lists the right-click menus and keys, and each card has a ⋯ button for its menu.</value>
+    <value>Custom collections: build your own item page from blocks, such as fields, pictures, notes, checklists, documents with reminders, a log and quantities.
+Edit layout arranges the blocks side by side or one under the other and picks up to three fields for the cards. The Day Plan shows the items' dates.</value>
   </data>
   <data name="Tips.Title" xml:space="preserve">
     <value>Tips &amp; shortcuts</value>
@@ -4091,9 +4089,6 @@ Tips &amp; shortcuts under the ? button lists the right-click menus and keys, an
   <data name="Entity.Records.CustomChecklist.Add" xml:space="preserve">
     <value>Add a line</value>
   </data>
-  <data name="Entity.Records.CustomChecklist.Empty" xml:space="preserve">
-    <value>Nothing on the list yet.</value>
-  </data>
   <data name="Entity.Records.CustomDocuments.Untitled" xml:space="preserve">
     <value>Document</value>
   </data>
@@ -4321,5 +4316,35 @@ Tips &amp; shortcuts under the ? button lists the right-click menus and keys, an
   </data>
   <data name="Custom.Block.NeedsName" xml:space="preserve">
     <value>Give the block a name.</value>
+  </data>
+  <data name="Transfer.Error.NotCustom" xml:space="preserve">
+    <value>“{0}” isn't a custom collection, so this item can't go into it.</value>
+  </data>
+  <data name="Transfer.Import.AddsBlocks" xml:space="preserve">
+    <value>The blocks it uses that “{0}” doesn't have yet are added to that collection's layout.</value>
+  </data>
+  <data name="Plan.ItemDates" xml:space="preserve">
+    <value>Dates in your collections</value>
+  </data>
+  <data name="Plan.ItemDatesHint" xml:space="preserve">
+    <value>On this day. Click one to open its item.</value>
+  </data>
+  <data name="Plan.ItemDates.Open" xml:space="preserve">
+    <value>Open the item</value>
+  </data>
+  <data name="Custom.Plan.RunsOut" xml:space="preserve">
+    <value>{0} runs out</value>
+  </data>
+  <data name="Tips.CustomLayout.Keys" xml:space="preserve">
+    <value>⋯ &gt; Edit layout…</value>
+  </data>
+  <data name="Tips.CustomLayout.Text" xml:space="preserve">
+    <value>Changes a custom collection's item layout: blocks and fields added, moved or removed, half or full width.</value>
+  </data>
+  <data name="Tips.ChecklistSelect.Keys" xml:space="preserve">
+    <value>Ctrl+click, Shift+click</value>
+  </data>
+  <data name="Tips.ChecklistSelect.Text" xml:space="preserve">
+    <value>Selects several lines of an item's checklist. Delete deletes them.</value>
   </data>
 </root>

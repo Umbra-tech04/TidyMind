@@ -23,6 +23,7 @@ namespace TidyMind
     //   tabs.json, entities.json            its tabs and items, as stored
     //   files/items/, files/background/     its item pictures and page background
     //   notebook.json                       a collection's own notebook, as stored (only when something is in it)
+    //   layout.json                         a custom collection's item layout (with a collection, or a custom item)
     //   item.json, files/items/             one item, as entities.json stores it, and its pictures (cover first)
     // Files go in under their stored names only, never a path from this PC. Reminders, Day Plan blocks and the
     // memory to-do list belong to no project or collection, so none are in a package.
@@ -41,9 +42,11 @@ namespace TidyMind
         // of several pictures (they would drop the further ones). An item with records (a vehicle's documents: Ids of
         // their own, a reminder each, files in files/documents/) is format 3, alone or in a collection: older versions
         // would import it half (the files left behind, the same document Ids in every copy).
-        // A collection with its own notebook is format 4: older versions would import the collection without it.
-        public const int FormatVersion = 4;
-        private const int ProjectFormat = 1, CollectionFormat = 1, ItemFormat = 2, RecordsFormat = 3, NotebookFormat = 4;
+        // A collection with its own notebook is format 4: older versions would import the collection without it. A custom
+        // collection, or a custom item, carries its layout (layout.json) and is format 5: older versions would import the
+        // items without it, showing none of their blocks.
+        public const int FormatVersion = 5;
+        private const int ProjectFormat = 1, CollectionFormat = 1, ItemFormat = 2, RecordsFormat = 3, NotebookFormat = 4, CustomFormat = 5;
 
         public const string ProjectType = "project";
         public const string CollectionType = "collection";
@@ -56,6 +59,7 @@ namespace TidyMind
         private const string TabsEntry = "tabs.json";
         private const string EntitiesEntry = "entities.json";
         private const string NotebookEntry = "notebook.json";
+        private const string LayoutEntry = "layout.json";
         private const string ItemEntry = "item.json";
         private const string FilesDir = "files/";
         internal const string AttachmentsDir = "files/attachments/";
@@ -103,7 +107,7 @@ namespace TidyMind
         // A notebook with nothing in it isn't packed; writtenPages is counted on the UI thread first (WrittenPages reads
         // the formatted pages), as for a project.
         public static void ExportCollection(Profile memory, List<MemoryTab> tabs, List<Entity> entities, MemoryNotebook? notebook,
-            int writtenPages, string zipPath, IProgress<double>? progress, CancellationToken cancel)
+            int writtenPages, string zipPath, IProgress<double>? progress, CancellationToken cancel, CustomLayout? layout = null)
         {
             List<Entity> items = Clone(entities);
             List<(string Entry, string Source)> files = PicturesOf(items);
@@ -117,7 +121,7 @@ namespace TidyMind
             // format, which they refuse as a whole.
             if (notebook?.IsBlank() == true)
                 notebook = null;
-            int format = notebook != null ? NotebookFormat
+            int format = layout != null ? CustomFormat : notebook != null ? NotebookFormat
                 : items.Any(HasRecords) ? RecordsFormat : items.Any(i => EntityImages.Count(i) > 1) ? ItemFormat : CollectionFormat;
             TransferManifest manifest = NewManifest(CollectionType, format, memory.Name);
             manifest.Counts = new TransferCounts { Items = items.Count, Pictures = pictures, NotePages = notebook == null ? null : writtenPages };
@@ -129,18 +133,24 @@ namespace TidyMind
             };
             if (notebook != null)
                 data.Add((NotebookEntry, JsonSerializer.Serialize(notebook)));
+            if (layout != null)
+                data.Add((LayoutEntry, JsonSerializer.Serialize(layout)));
             WriteAtomically(zipPath, manifest, data, files, progress, cancel);
         }
 
-        // One item of a collection, with its picture; its tab, Id and place are new where it is imported.
-        public static void ExportItem(Entity entity, string zipPath, IProgress<double>? progress, CancellationToken cancel)
+        // One item of a collection, with its picture; its tab, Id and place are new where it is imported. A custom item
+        // takes its collection's layout along (`layout`), so wherever it goes its blocks go too.
+        public static void ExportItem(Entity entity, string zipPath, IProgress<double>? progress, CancellationToken cancel, CustomLayout? layout = null)
         {
             Entity item = Clone(new List<Entity> { entity })[0];
             List<(string Entry, string Source)> files = PicturesOf(new List<Entity> { item });
-            TransferManifest manifest = NewManifest(ItemType, HasRecords(item) ? RecordsFormat : ItemFormat, item.Name);
+            TransferManifest manifest = NewManifest(ItemType, layout != null ? CustomFormat : HasRecords(item) ? RecordsFormat : ItemFormat, item.Name);
             manifest.Counts = new TransferCounts { Pictures = files.Count };
             files.AddRange(DocumentsOf(new List<Entity> { item }));
-            WriteAtomically(zipPath, manifest, new[] { (ItemEntry, JsonSerializer.Serialize(item)) }, files, progress, cancel);
+            List<(string Entry, string Json)> data = new List<(string, string)> { (ItemEntry, JsonSerializer.Serialize(item)) };
+            if (layout != null)
+                data.Add((LayoutEntry, JsonSerializer.Serialize(layout)));
+            WriteAtomically(zipPath, manifest, data, files, progress, cancel);
         }
 
         // The items' pictures to pack (the items are copies, changed here): a missing one is dropped from its item
@@ -346,6 +356,11 @@ namespace TidyMind
             }
             else
                 throw new TransferException(Loc.T("Transfer.Error.NotPackage"));
+
+            // A custom collection's layout (with the collection, or with one of its items): what a file from elsewhere may
+            // hold that the views don't expect is dropped (CustomLayout.Clean). Names and Ids are data, never paths.
+            if ((package.IsCollection || package.IsItem) && zip.GetEntry(LayoutEntry) is ZipArchiveEntry layoutEntry)
+                package.Layout = (ReadJson<CustomLayout>(layoutEntry, out _) ?? throw Damaged(LayoutEntry)).Clean();
 
             package.FileBytes = zip.Entries.Where(e => e.FullName.StartsWith(FilesDir)).Sum(e => e.Length);
             package.FileEntries = zip.Entries.Where(e => e.FullName.StartsWith(FilesDir) && !e.FullName.EndsWith("/"))
@@ -687,11 +702,17 @@ namespace TidyMind
                 item.TabId = tabId;
                 TakePicture(staged, item, moves);
                 TakeRecords(staged, item, moves);
+                // A custom item's type names its collection: now the new one, whose layout came along.
+                if (package.Layout != null && CustomTypes.IsCustom(item.EntityType))
+                    item.EntityType = CustomTypes.TypeOf(memory.Id);
             }
 
             bool added = false;
             try
             {
+                // The layout first: without it the items would be of a type nobody knows.
+                if (package.Layout != null && !CustomLayoutStore.TrySave(memory, package.Layout))
+                    throw new TransferException(Loc.F("Transfer.Error.CantWrite", MemoryFiles.Layout(memory)));
                 if (tabs.Count > 0 && !TabStore.TrySave(memory, tabs))
                     throw new TransferException(Loc.F("Transfer.Error.CantWrite", MemoryFiles.Tabs(memory)));
                 if (!AtomicFile.TryWriteAllText(MemoryFiles.Items(memory), JsonSerializer.Serialize(items)))
@@ -752,9 +773,30 @@ namespace TidyMind
             TakePicture(staged, item, moves);
             TakeRecords(staged, item, moves);
 
+            // A custom item goes into a custom collection: that layout gains the blocks and fields the item holds something in
+            // and it lacks (CustomLayout.Merged, by Id: a copy of the same collection gains none), or a new collection gets
+            // the item's whole layout. The target's layout is written first and put back if anything after it fails.
+            CustomLayout? layout = null;
+            string? layoutBefore = null;
+            bool custom = package.Layout != null && CustomTypes.IsCustom(item.EntityType);
+            if (custom)
+            {
+                if (created)
+                    layout = package.Layout!;
+                else if (!CustomLayoutStore.TryLoad(memory, out layout, out problem))
+                    throw new TransferException(Loc.F("Transfer.Error.TargetUnreadable", memory.Name, problem));
+                else if (layout == null)
+                    throw new TransferException(Loc.F("Transfer.Error.NotCustom", memory.Name));
+                else if ((layout = layout.Merged(package.Layout!, item)) != null)
+                    layoutBefore = File.ReadAllText(MemoryFiles.Layout(memory));
+                item.EntityType = CustomTypes.TypeOf(memory.Id);
+            }
+
             bool added = false;
             try
             {
+                if (layout != null && !CustomLayoutStore.TrySave(memory, layout))
+                    throw new TransferException(Loc.F("Transfer.Error.CantWrite", MemoryFiles.Layout(memory)));
                 MoveInto(moves);
                 items.Add(item);
                 if (!AtomicFile.TryWriteAllText(MemoryFiles.Items(memory), JsonSerializer.Serialize(items)))
@@ -779,6 +821,8 @@ namespace TidyMind
                     Undo(moves);
                     if (created)
                         MemoryFiles.DeleteFolder(memory);
+                    else if (layoutBefore != null && AtomicFile.TryWriteAllText(MemoryFiles.Layout(memory), layoutBefore))
+                        CustomTypes.Forget(memory.Id); // the definitions made from the merged layout
                 }
             }
         }
@@ -1031,6 +1075,7 @@ namespace TidyMind
         public List<MemoryTab> Tabs { get; internal set; } = new List<MemoryTab>();
         public List<Entity> Entities { get; internal set; } = new List<Entity>();
         public MemoryNotebook? Notebook { get; internal set; } // a collection's own notebook, if it came with one
+        public CustomLayout? Layout { get; internal set; }     // a custom collection's item layout, if it came with one
 
         // The JSON as read, deserialized again on commit for a copy of its own.
         internal string ProjectJson = "", CollectionJson = "", EntitiesJson = "";
