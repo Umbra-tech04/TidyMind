@@ -3690,9 +3690,8 @@ Nothing was changed.</value>
     <value>New in TidyMind {0}</value>
   </data>
   <data name="WhatsNew.Points" xml:space="preserve">
-    <value>Custom collections: in an empty collection, choose Custom when you add the first item, then build your own item page from blocks, such as fields, pictures, notes, checklists, documents with reminders, a log and quantities.
-Customize, on the item's page itself, adds, moves and renames blocks and fields, puts blocks side by side and picks up to three fields for the cards. The Day Plan shows the items' dates.
-Fixed: the first page of a new custom collection is now a real item, so pictures, checklist lines and everything else can be added right away.</value>
+    <value>Fixed: Add item now always lets you choose the type, and one collection can hold clothing, vehicles and custom items together.
+Custom can be chosen in any collection, even one that already has items. The first time, you build the item page on the spot. A custom item can also be imported into any collection.</value>
   </data>
   <data name="Tips.Title" xml:space="preserve">
     <value>Tips &amp; shortcuts</value>

@@ -1,1 +1,0 @@
-- Add item always asks what to add, so one collection can hold clothing, vehicles and custom items side by side.
