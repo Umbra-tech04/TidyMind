@@ -13,7 +13,7 @@ using TidyMind;
 // Harness custom <data> <shots>: custom collections. M1: the layout file (round trip, fields of other versions and
 // unknown kinds kept, what a file from elsewhere may hold cleaned), the definitions made from it (sections, lists,
 // cached until saved), item data in Details and Records, an unreadable layout leaving the page read-only, creating a
-// custom collection through New Collection, a layout change undone and redone. M2: the item window draws every block
+// custom collection by choosing Custom in the item picker (New Collection asks only a name), a layout change undone and redone. M2: the item window draws every block
 // (half blocks side by side, stacked when narrow), edits in place, the checklist (ticks, order, add, delete, undo), the
 // quantities stepper with decimals, the gallery in place of the pictures on top, nothing cut off at three widths; the
 // card's key fields and due line; the item form asking for the card fields.
@@ -258,60 +258,116 @@ static partial class Program
 
     static async Task CustomCreate(MainWindow main)
     {
-        Console.WriteLine("New Collection: standard or custom");
+        Console.WriteLine("New Collection is as it was; Custom is a choice in the item picker");
         int count = Profiles(main).Count;
         AnswerPrompt(main, "Bird book");
-        AnswerKind(main, custom: null);
         Invoke(main, "AddProfile", ProfileType.Collection);
-        await Wait(300);
-        Check(Profiles(main).Count == count, "closing the choice adds nothing");
+        await Wait(500);
+        Profile birds = Profiles(main).FirstOrDefault(p => p.Name == "Bird book");
+        Check(Profiles(main).Count == count + 1 && birds != null && !File.Exists(MemoryFiles.Layout(birds)),
+            "New Collection asks only for a name: an ordinary collection, no second question");
+        Check(!Application.Current.Windows.OfType<EntityTypeSelector>().Any(), "no picker opens with it");
+        CollectionView view = (CollectionView)Content(main);
 
-        AnswerPrompt(main, "Shoe box");
-        AnswerKind(main, custom: false);
-        Invoke(main, "AddProfile", ProfileType.Collection);
-        await Wait(400);
-        Profile standard = Profiles(main).FirstOrDefault(p => p.Name == "Shoe box");
-        Check(standard != null && !File.Exists(MemoryFiles.Layout(standard)), "a standard collection has no layout");
-
-        AnswerPrompt(main, "Bird book");
-        AnswerKind(main, custom: true);
-        DriveTitled(main, Loc.F("Custom.Layout.Title", "Bird book"), async w =>
+        // The picker: three choices, Custom enabled in an empty collection; closing it changes nothing.
+        AnswerPicker(main, async picker =>
         {
-            Check(Field<bool>(w, "layoutMode"), "a new custom collection opens its layout editor");
+            Button custom = (Button)picker.FindName("CustomButton");
+            List<string> texts = Descendants(picker).OfType<TextBlock>().Select(t => t.Text).ToList();
+            Check(new[] { Loc.T("Entity.Type.Clothing"), Loc.T("Entity.Type.Vehicle"), Loc.T("Entity.Type.Custom") }.All(texts.Contains), "Clothing, Vehicle and Custom, side by side");
+            Check(texts.Contains(Loc.T("Entity.Type.Custom.Text")) && custom.IsEnabled, "Custom with its line, enabled in an empty collection");
+            Check(texts.Contains(Loc.T("Entity.Picker.Soon")), "and the \"more entities coming soon\" line under them");
+            List<string> cut = CutOff(picker).Concat(Clipped(picker)).ToList();
+            Check(cut.Count == 0, "nothing cut off" + (cut.Count > 0 ? ": " + string.Join("; ", cut) : ""));
+            RenderWindow(picker, "custom-picker");
+            picker.Close();
             await Task.CompletedTask;
         });
-        Invoke(main, "AddProfile", ProfileType.Collection); // returns once the editor is closed
+        Invoke(view, "AddEntityButton_Click", null, null);
+        await Wait(300);
+        Check(!File.Exists(MemoryFiles.Layout(birds)), "closing the picker adds no layout");
+
+        // Custom: the layout is written, the editor opens on the blank starter, the collection is custom from then on.
+        AnswerPicker(main, async picker =>
+        {
+            ClickNow((Button)picker.FindName("CustomButton"));
+            await Task.CompletedTask;
+        });
+        DriveTitled(main, Loc.F("Custom.Layout.Title", "Bird book"), async w =>
+        {
+            Check(Field<bool>(w, "layoutMode"), "choosing Custom opens the layout editor straight away");
+            await Task.CompletedTask;
+        });
+        Invoke(view, "AddEntityButton_Click", null, null); // returns once the editor is closed
         await Wait(600);
-        Profile birds = Profiles(main).FirstOrDefault(p => p.Name == "Bird book");
-        Check(birds != null && CustomLayoutStore.TryLoad(birds, out CustomLayout starter, out _) && starter != null, "a custom collection has a layout");
-        CustomLayoutStore.TryLoad(birds, out starter, out _);
+        Check(CustomLayoutStore.TryLoad(birds, out CustomLayout starter, out _) && starter != null, "the collection has a layout");
         Check(starter.Blocks.Select(b => b.Kind).SequenceEqual(new[] { BlockKinds.Gallery, BlockKinds.Fields, BlockKinds.Notes }), "it starts with pictures, details and notes");
         Check(starter.Blocks.All(b => b.Name.Length > 0), "named in the current language");
         Check(Content(main) is CollectionView, "its page is shown");
-        RemoveMemory(main, standard);
+        ContextMenu sidebar = NavItem(main, birds).ContextMenu;
+        Check(sidebar.Items.OfType<MenuItem>().Any(i => (string)i.Header == Loc.T("Custom.Menu.EditLayout")), "its sidebar menu has Edit layout…");
+
+        // Now Add makes an item of the layout: no picker.
+        DriveEntityForm(main, form =>
+        {
+            Check(!Application.Current.Windows.OfType<EntityTypeSelector>().Any(), "a custom collection's Add goes straight to the item form");
+            Field<TextBox>(form, "nameBox").Text = "Sparrow";
+            return Task.CompletedTask;
+        });
+        DriveTitled(main, "Sparrow", w => Task.CompletedTask);
+        Invoke(view, "AddEntityButton_Click", null, null);
+        await Wait(500);
+        Entity sparrow = EntityStore.Load(birds).FirstOrDefault(e => e.Name == "Sparrow");
+        Check(sparrow != null && sparrow.EntityType == CustomTypes.TypeOf(birds.Id), "an item of the custom layout");
+
+        // A collection that already has items: Custom isn't offered, nothing in it is turned into something else.
+        Profile shoes = AddMemory(main, "Shoe box", ProfileType.Collection);
+        File.WriteAllText(MemoryFiles.Items(shoes), JsonSerializer.Serialize(new List<Entity> { new Entity { Id = Guid.NewGuid(), EntityType = EntityTypes.Clothing, Name = "Boot" } }));
+        CollectionView shoeView = OpenCollectionView(main, shoes);
+        await Wait(400);
+        string itemsBefore = File.ReadAllText(MemoryFiles.Items(shoes)); // after the page's own first-open tidying
+        AnswerPicker(main, async picker =>
+        {
+            Button custom = (Button)picker.FindName("CustomButton");
+            Check(!custom.IsEnabled && Descendants(picker).OfType<TextBlock>().Any(t => t.Text == Loc.T("Entity.Type.Custom.NeedsEmpty")),
+                "with items in the collection Custom is disabled, and says why");
+            Check(((Button)Descendants(picker).OfType<Button>().First(b => (string)b.Tag == "Clothing")).IsEnabled, "Clothing and Vehicle stay");
+            picker.Close();
+            await Task.CompletedTask;
+        });
+        Invoke(shoeView, "AddEntityButton_Click", null, null);
+        await Wait(300);
+        Check(!File.Exists(MemoryFiles.Layout(shoes)) && File.ReadAllText(MemoryFiles.Items(shoes)) == itemsBefore, "no layout made, its items untouched");
+        RemoveMemory(main, shoes);
+        Invoke(main, "NavigateHome");
     }
 
-    // Picks the kind in the next "What will this collection hold?" (null: closes it).
-    static void AnswerKind(MainWindow main, bool? custom)
+    // Drives the next item picker (EntityTypeSelector) that opens.
+    static void AnswerPicker(MainWindow main, Func<EntityTypeSelector, Task> act)
     {
         _ = main.Dispatcher.BeginInvoke(new Action(async () =>
         {
-            CollectionKindDialog dialog = null;
-            for (int i = 0; i < 80 && dialog == null; i++)
+            EntityTypeSelector picker = null;
+            for (int i = 0; i < 80 && picker == null; i++)
             {
                 await Wait(100);
-                dialog = Application.Current.Windows.OfType<CollectionKindDialog>().FirstOrDefault();
+                picker = Application.Current.Windows.OfType<EntityTypeSelector>().FirstOrDefault();
             }
-            if (dialog == null)
+            if (picker == null)
             {
-                Check(false, "the kind dialog opened");
+                Check(false, "the item picker opened");
                 return;
             }
-            await Wait(200);
-            if (custom == null)
-                dialog.Close();
-            else
-                ClickNow((Button)dialog.FindName(custom == true ? "CustomButton" : "StandardButton"));
+            try
+            {
+                await Wait(200);
+                await act(picker);
+            }
+            catch (Exception e)
+            {
+                Check(false, "the picker driver threw: " + e);
+                picker.Close();
+            }
         }), DispatcherPriority.Background);
     }
 

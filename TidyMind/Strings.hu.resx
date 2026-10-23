@@ -3863,21 +3863,6 @@ Az Elrendezés szerkesztése egymás mellé vagy egymás alá rendezi a blokkoka
   <data name="Checklist.Item.Text" xml:space="preserve">
     <value>Kattints az oldalsáv Új gyűjtemény gombjára, majd a gyűjtemény oldalán az Új elem gombra.</value>
   </data>
-  <data name="Collection.Kind.Title" xml:space="preserve">
-    <value>Mit tartalmaz majd ez a gyűjtemény?</value>
-  </data>
-  <data name="Collection.Kind.Standard" xml:space="preserve">
-    <value>Ruhák és járművek</value>
-  </data>
-  <data name="Collection.Kind.Standard.Text" xml:space="preserve">
-    <value>Kész elemtípusok, saját mezőkkel.</value>
-  </data>
-  <data name="Collection.Kind.Custom" xml:space="preserve">
-    <value>Saját elrendezés</value>
-  </data>
-  <data name="Collection.Kind.Custom.Text" xml:space="preserve">
-    <value>Az elem oldalát blokkokból rakod össze: mezők, képek, jegyzetek, ellenőrzőlisták, dokumentumok, napló és mennyiségek.</value>
-  </data>
   <data name="Custom.Block.Fields" xml:space="preserve">
     <value>Adatok</value>
   </data>
@@ -4192,5 +4177,23 @@ Az Elrendezés szerkesztése egymás mellé vagy egymás alá rendezi a blokkoka
   </data>
   <data name="Custom.Layout.KindUnfit.Other" xml:space="preserve">
     <value>Módosítod a(z) „{1}” típusát erre: {2}? {0} elemben az értéke így nem olvasható, ezért törlődik. Visszavonható.</value>
+  </data>
+  <data name="Entity.Type.Custom" xml:space="preserve">
+    <value>Egyedi</value>
+  </data>
+  <data name="Entity.Type.Custom.Text" xml:space="preserve">
+    <value>Saját elrendezés felépítése blokkokból.</value>
+  </data>
+  <data name="Entity.Type.Custom.NeedsEmpty" xml:space="preserve">
+    <value>Csak olyan gyűjteményben, amelyben még nincs elem.</value>
+  </data>
+  <data name="Entity.Type.Clothing.Text" xml:space="preserve">
+    <value>Ruhadarabok mérettel, anyaggal és évszakkal.</value>
+  </data>
+  <data name="Entity.Type.Vehicle.Text" xml:space="preserve">
+    <value>Dokumentumok, szerviznapló, kerekek és alkatrészek.</value>
+  </data>
+  <data name="Entity.Picker.Soon" xml:space="preserve">
+    <value>Hamarosan további entitások</value>
   </data>
 </root>

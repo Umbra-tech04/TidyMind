@@ -192,7 +192,7 @@ namespace TidyMind
 
             // The page's ⋯ button opens the same menu as the memory's right-click in the sidebar.
             if (profile.Type == ProfileType.Collection)
-                ContentArea.Content = new CollectionView(profile, () => ProfileManager.TrySaveProfiles(profiles)) { MemoryMenu = () => MemoryMenu(profile) };
+                ContentArea.Content = new CollectionView(profile, () => ProfileManager.TrySaveProfiles(profiles)) { MemoryMenu = () => MemoryMenu(profile), LayoutCreated = () => BuildNav() };
             else
                 ContentArea.Content = new ProjectView(profile, () => ProfileManager.TrySaveProfiles(profiles)) { MemoryMenu = () => MemoryMenu(profile) };
 
@@ -451,16 +451,6 @@ namespace TidyMind
                 return;
             }
 
-            // A collection holds the ready-made types, or items laid out the user's own way (a custom collection).
-            bool custom = false;
-            if (collection)
-            {
-                CollectionKindDialog kind = new CollectionKindDialog { Owner = this };
-                if (kind.ShowDialog() != true)
-                    return;
-                custom = kind.Custom;
-            }
-
             Profile profile = new Profile
             {
                 Id = Guid.NewGuid(),
@@ -469,27 +459,15 @@ namespace TidyMind
                 Type = type,
                 Order = profiles.Count == 0 ? 0 : profiles.Max(p => p.Order) + 1
             };
-            // A custom collection's layout is written first: a collection without it would be an ordinary one.
-            if (custom && !CustomLayoutStore.TrySave(profile, CustomLayout.Starter()))
-            {
-                Msg.Show(Loc.F("Custom.Layout.NotCreated", MemoryFiles.Layout(profile)), Loc.T("Common.CouldntSave"),
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                MemoryFiles.DeleteFolder(profile);
-                return;
-            }
             profiles.Add(profile);
             if (!ProfileManager.TrySaveProfiles(profiles))
             {
                 profiles.Remove(profile);
-                if (custom)
-                    MemoryFiles.DeleteFolder(profile);
                 WarnProfilesNotSaved(Loc.T(collection ? "Memory.NotSaved.CollectionNotAdded" : "Memory.NotSaved.ProjectNotAdded"));
                 return;
             }
 
             NavigateTo(profile); // the view creates the memory's folder and first tab
-            if (custom)
-                EditLayout(profile); // a new custom collection starts with its layout
         }
 
         // A custom collection's layout editor, over its page (shown first).

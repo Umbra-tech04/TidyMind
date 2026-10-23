@@ -4171,21 +4171,6 @@ Uredi raspored slaže blokove jedan pored drugog ili jedan ispod drugog i bira d
   <data name="Checklist.Item.Text" xml:space="preserve">
     <value>Klikni na Nova kolekcija u bočnoj traci, pa na Dodaj stavku na njenoj stranici.</value>
   </data>
-  <data name="Collection.Kind.Title" xml:space="preserve">
-    <value>Šta će ova kolekcija sadržati?</value>
-  </data>
-  <data name="Collection.Kind.Standard" xml:space="preserve">
-    <value>Odeća i vozila</value>
-  </data>
-  <data name="Collection.Kind.Standard.Text" xml:space="preserve">
-    <value>Gotove vrste stavki sa sopstvenim poljima.</value>
-  </data>
-  <data name="Collection.Kind.Custom" xml:space="preserve">
-    <value>Sopstveni raspored</value>
-  </data>
-  <data name="Collection.Kind.Custom.Text" xml:space="preserve">
-    <value>Stranu stavke slažeš od blokova: polja, slike, beleške, kontrolne liste, dokumenti, dnevnik i količine.</value>
-  </data>
   <data name="Custom.Block.Fields" xml:space="preserve">
     <value>Podaci</value>
   </data>
@@ -4524,5 +4509,23 @@ Uredi raspored slaže blokove jedan pored drugog ili jedan ispod drugog i bira d
   </data>
   <data name="Custom.Layout.KindUnfit.Other" xml:space="preserve">
     <value>Promeniti „{1}” u {2}? U {0} stavki njegova vrednost ne može da se pročita tako i biće uklonjena. Može se poništiti.</value>
+  </data>
+  <data name="Entity.Type.Custom" xml:space="preserve">
+    <value>Prilagođeno</value>
+  </data>
+  <data name="Entity.Type.Custom.Text" xml:space="preserve">
+    <value>Sam složi raspored od blokova.</value>
+  </data>
+  <data name="Entity.Type.Custom.NeedsEmpty" xml:space="preserve">
+    <value>Samo u kolekciji koja još nema stavki.</value>
+  </data>
+  <data name="Entity.Type.Clothing.Text" xml:space="preserve">
+    <value>Odeća sa veličinama, materijalom i sezonom.</value>
+  </data>
+  <data name="Entity.Type.Vehicle.Text" xml:space="preserve">
+    <value>Dokumenti, servisna knjižica, točkovi i delovi.</value>
+  </data>
+  <data name="Entity.Picker.Soon" xml:space="preserve">
+    <value>Uskoro još vrsta stavki</value>
   </data>
 </root>

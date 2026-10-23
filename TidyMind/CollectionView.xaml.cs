@@ -691,16 +691,24 @@ namespace TidyMind
 
         // ---- CRUD ---------------------------------------------------------
 
-        // A new item opens in its window straight away, for everything the short form doesn't ask.
+        // A new item opens in its window straight away, for everything the short form doesn't ask. A custom collection's
+        // items are all of its layout; any other collection asks which kind (EntityTypeSelector), and "Custom" there turns an
+        // empty collection into a custom one: its layout is written and its editor opens (the collection then adds items of
+        // that layout). A collection that has items never offers it, so nothing in it is turned into something else.
         private void AddEntityButton_Click(object sender, RoutedEventArgs e)
         {
             string type = CustomTypes.TypeOf(memory.Id);
             if (!custom)
             {
-                EntityTypeSelector selector = new EntityTypeSelector();
+                EntityTypeSelector selector = new EntityTypeSelector(customAllowed: entities.Count == 0);
                 if (selector.ShowDialog() != true)
                     return;
                 type = selector.SelectedType;
+                if (type == "Custom")
+                {
+                    MakeCustom();
+                    return;
+                }
             }
             EntityForm form = new EntityForm(type);
             if (form.ShowDialog() != true)
@@ -724,6 +732,24 @@ namespace TidyMind
             RenderEntities();
             OpenItem(added);
         }
+
+        // The picker's "Custom": this empty collection gets the starter layout (blocks for pictures, details and notes) and
+        // its editor opens. No layout, no change: it stays an ordinary collection.
+        private void MakeCustom()
+        {
+            if (entities.Count > 0 || !CustomLayoutStore.TrySave(memory, CustomLayout.Starter()))
+            {
+                if (entities.Count == 0)
+                    Msg.Show(Loc.F("Custom.Layout.NotCreated", MemoryFiles.Layout(memory)), Loc.T("Common.CouldntSave"), MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            custom = true;
+            LayoutCreated?.Invoke(); // the sidebar's menu for it gets Edit layout…
+            EditLayout();
+        }
+
+        // Set by the main window: the memory is a custom collection now.
+        public Action? LayoutCreated { get; set; }
 
         // The form edits a copy (Id, tab, place and fields it doesn't show come along). Newly picked pictures are
         // copied in; if the item can't be saved, it stays as it was and the new copies go again. Returns the item as

@@ -4017,21 +4017,6 @@ Edit layout arranges the blocks side by side or one under the other and picks up
   <data name="Checklist.Item.Text" xml:space="preserve">
     <value>Click New Collection in the sidebar, then Add item on its page.</value>
   </data>
-  <data name="Collection.Kind.Title" xml:space="preserve">
-    <value>What will this collection hold?</value>
-  </data>
-  <data name="Collection.Kind.Standard" xml:space="preserve">
-    <value>Clothing and vehicles</value>
-  </data>
-  <data name="Collection.Kind.Standard.Text" xml:space="preserve">
-    <value>Ready-made items with their own fields.</value>
-  </data>
-  <data name="Collection.Kind.Custom" xml:space="preserve">
-    <value>Your own layout</value>
-  </data>
-  <data name="Collection.Kind.Custom.Text" xml:space="preserve">
-    <value>Build the item page from blocks: fields, pictures, notes, checklists, documents, a log and quantities.</value>
-  </data>
   <data name="Custom.Block.Fields" xml:space="preserve">
     <value>Details</value>
   </data>
@@ -4358,5 +4343,23 @@ Edit layout arranges the blocks side by side or one under the other and picks up
   </data>
   <data name="Custom.Layout.KindUnfit.Other" xml:space="preserve">
     <value>Change “{1}” to {2}? In {0} items its value can't be read as that and will be removed. You can undo this.</value>
+  </data>
+  <data name="Entity.Type.Custom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
+  <data name="Entity.Type.Custom.Text" xml:space="preserve">
+    <value>Build your own layout from blocks.</value>
+  </data>
+  <data name="Entity.Type.Custom.NeedsEmpty" xml:space="preserve">
+    <value>Only in a collection that has no items yet.</value>
+  </data>
+  <data name="Entity.Type.Clothing.Text" xml:space="preserve">
+    <value>Garments with sizes, material and season.</value>
+  </data>
+  <data name="Entity.Type.Vehicle.Text" xml:space="preserve">
+    <value>Documents, service log, wheels and parts.</value>
+  </data>
+  <data name="Entity.Picker.Soon" xml:space="preserve">
+    <value>More entities coming soon</value>
   </data>
 </root>
