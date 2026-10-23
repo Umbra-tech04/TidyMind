@@ -3844,7 +3844,7 @@ Ništa nije promenjeno.</value>
     <value>Novo u TidyMind-u {0}</value>
   </data>
   <data name="WhatsNew.Points" xml:space="preserve">
-    <value>Kolekcije sa sopstvenim rasporedom: stranu stavke slažeš od blokova, kao što su polja, slike, beleške, kontrolne liste, dokumenti sa podsetnikom, dnevnik i količine.
+    <value>Kolekcije sa sopstvenim rasporedom: u praznoj kolekciji pri dodavanju prve stavke izaberi Prilagođeno, pa stranu stavke slažeš od blokova, kao što su polja, slike, beleške, kontrolne liste, dokumenti sa podsetnikom, dnevnik i količine.
 Prilagodi, na samoj strani stavke, dodaje, pomera i preimenuje blokove i polja, stavlja blokove jedan pored drugog i bira do tri polja za kartice. Dnevni plan prikazuje datume stavki.</value>
   </data>
   <data name="Tips.Title" xml:space="preserve">

@@ -22,7 +22,7 @@ namespace TidyMind
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Tour { get; set; }
 
-        // The version that last ran ("1.4.0"), so "What's new" (WhatsNew) shows once after an update. Null until then.
+        // The version that last ran ("1.5.0"), so "What's new" (WhatsNew) shows once after an update. Null until then.
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? LastVersion { get; set; }
 

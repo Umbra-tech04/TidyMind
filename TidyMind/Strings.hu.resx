@@ -3533,7 +3533,7 @@ Semmi sem változott.</value>
     <value>A TidyMind {0} újdonságai</value>
   </data>
   <data name="WhatsNew.Points" xml:space="preserve">
-    <value>Saját elrendezésű gyűjtemények: az elem oldalát blokkokból rakod össze, például mezőkből, képekből, jegyzetekből, ellenőrzőlistákból, emlékeztetős dokumentumokból, naplóból és mennyiségekből.
+    <value>Saját elrendezésű gyűjtemények: egy üres gyűjteményben az első elem hozzáadásakor válaszd az Egyedi lehetőséget, majd az elem oldalát blokkokból rakod össze, például mezőkből, képekből, jegyzetekből, ellenőrzőlistákból, emlékeztetős dokumentumokból, naplóból és mennyiségekből.
 A Testreszabás magán az elem oldalán ad hozzá, mozgat és nevez át blokkokat és mezőket, egymás mellé teszi a blokkokat, és legfeljebb három mezőt tesz a kártyákra. A Napi terv megmutatja az elemek dátumait.</value>
   </data>
   <data name="Tips.Title" xml:space="preserve">

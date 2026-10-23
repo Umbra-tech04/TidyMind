@@ -3690,7 +3690,7 @@ Nothing was changed.</value>
     <value>New in TidyMind {0}</value>
   </data>
   <data name="WhatsNew.Points" xml:space="preserve">
-    <value>Custom collections: build your own item page from blocks, such as fields, pictures, notes, checklists, documents with reminders, a log and quantities.
+    <value>Custom collections: in an empty collection, choose Custom when you add the first item, then build your own item page from blocks, such as fields, pictures, notes, checklists, documents with reminders, a log and quantities.
 Customize, on the item's page itself, adds, moves and renames blocks and fields, puts blocks side by side and picks up to three fields for the cards. The Day Plan shows the items' dates.</value>
   </data>
   <data name="Tips.Title" xml:space="preserve">
