@@ -59,7 +59,7 @@
                                VerticalAlignment="Center" />
                     <StackPanel Grid.Column="1">
                         <TextBlock Text="{local:Tr Entity.Type.Custom}" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextMain}"/>
-                        <TextBlock x:Name="CustomText" Text="{local:Tr Entity.Type.Custom.Text}" FontSize="12"
+                        <TextBlock Text="{local:Tr Entity.Type.Custom.Text}" FontSize="12"
                                    Foreground="{StaticResource TextSub}" TextWrapping="Wrap"/>
                     </StackPanel>
                 </Grid>

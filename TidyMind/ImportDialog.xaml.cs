@@ -24,10 +24,11 @@ namespace TidyMind
             hasTarget = !package.IsCollection;
 
             ProfileType kind = package.IsItem ? ProfileType.Collection : ProfileType.Project;
-            // A custom item goes only into a custom collection (or a new one, with its layout).
+            // A custom item goes into any collection: one with a layout merges the blocks it uses, one without gets a layout
+            // for it (a new collection gets the item's whole layout). Other items there are left as they are.
             customItem = package.IsItem && package.Layout != null && CustomTypes.IsCustom(package.Entities.FirstOrDefault()?.EntityType);
             List<Profile> memories = hasTarget
-                ? profiles.Where(p => p.Type == kind && (!customItem || System.IO.File.Exists(MemoryFiles.Layout(p)))).OrderBy(p => p.Order).ToList()
+                ? profiles.Where(p => p.Type == kind).OrderBy(p => p.Order).ToList()
                 : new List<Profile>();
             // Items of their own (the app's ComboBox look shows an item's content, not DisplayMemberPath), by name.
             foreach (Profile memory in memories)
@@ -126,11 +127,16 @@ namespace TidyMind
                 : (renamed ? Loc.F("Transfer.Import.NewProjectRenamed", name) : Loc.T("Transfer.Import.NewProject"));
         }
 
-        // A custom item into a custom collection whose layout lacks blocks or fields it holds something in: those are added
-        // to that layout (TransferPackage.CommitItem), said here first.
-        private string AddsBlocks(Profile target) =>
-            customItem && CustomLayoutStore.TryLoad(target, out CustomLayout? layout, out _) && layout?.Merged(package.Layout!, package.Entities[0]) != null
-                ? " " + Loc.F("Transfer.Import.AddsBlocks", target.Name) : "";
+        // A custom item into a collection whose layout lacks blocks or fields it holds something in: those are added to that
+        // layout (TransferPackage.CommitItem), or the collection gets a layout where it has none; said here first.
+        private string AddsBlocks(Profile target)
+        {
+            if (!customItem || !CustomLayoutStore.TryLoad(target, out CustomLayout? layout, out _))
+                return "";
+            if (layout == null)
+                return " " + Loc.F("Transfer.Import.AddsLayout", target.Name);
+            return layout.Merged(package.Layout!, package.Entities[0]) != null ? " " + Loc.F("Transfer.Import.AddsBlocks", target.Name) : "";
+        }
 
         private string UniqueCollectionName(string name) =>
             TransferPackage.UniqueName(name, profiles.Where(p => p.Type == ProfileType.Collection).Select(p => p.Name));

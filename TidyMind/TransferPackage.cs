@@ -773,11 +773,13 @@ namespace TidyMind
             TakePicture(staged, item, moves);
             TakeRecords(staged, item, moves);
 
-            // A custom item goes into a custom collection: that layout gains the blocks and fields the item holds something in
-            // and it lacks (CustomLayout.Merged, by Id: a copy of the same collection gains none), or a new collection gets
-            // the item's whole layout. The target's layout is written first and put back if anything after it fails.
+            // A custom item goes into any collection (whatever else it holds): a layout it has gains the blocks and fields the
+            // item holds something in and it lacks (CustomLayout.Merged, by Id: a copy of the same collection gains none); a
+            // collection without one gets a layout made of just those; a new collection gets the item's whole layout. Nothing
+            // existing is replaced. The layout is written first and put back (or removed, if it is new) if anything after fails.
             CustomLayout? layout = null;
             string? layoutBefore = null;
+            bool layoutNew = false;
             bool custom = package.Layout != null && CustomTypes.IsCustom(item.EntityType);
             if (custom)
             {
@@ -786,7 +788,10 @@ namespace TidyMind
                 else if (!CustomLayoutStore.TryLoad(memory, out layout, out problem))
                     throw new TransferException(Loc.F("Transfer.Error.TargetUnreadable", memory.Name, problem));
                 else if (layout == null)
-                    throw new TransferException(Loc.F("Transfer.Error.NotCustom", memory.Name));
+                {
+                    layoutNew = true;
+                    layout = CustomLayout.Starter().Merged(package.Layout!, item) ?? CustomLayout.Starter();
+                }
                 else if ((layout = layout.Merged(package.Layout!, item)) != null)
                     layoutBefore = File.ReadAllText(MemoryFiles.Layout(memory));
                 item.EntityType = CustomTypes.TypeOf(memory.Id);
@@ -821,6 +826,8 @@ namespace TidyMind
                     Undo(moves);
                     if (created)
                         MemoryFiles.DeleteFolder(memory);
+                    else if (layoutNew)
+                        CustomLayoutStore.TryDelete(memory.Id); // the layout this import made
                     else if (layoutBefore != null && AtomicFile.TryWriteAllText(MemoryFiles.Layout(memory), layoutBefore))
                         CustomTypes.Forget(memory.Id); // the definitions made from the merged layout
                 }

@@ -3892,7 +3892,7 @@ Javítva: az új egyedi gyűjtemény első oldala mostantól valódi elem, így 
     <value>Az elrendezés fájlja üres.</value>
   </data>
   <data name="Custom.Layout.NotCreated" xml:space="preserve">
-    <value>A gyűjtemény elrendezését nem sikerült ide menteni: {0}. A gyűjtemény nem jött létre.</value>
+    <value>Az elrendezést nem sikerült ide menteni: {0}. Nem változott semmi.</value>
   </data>
   <data name="Custom.Checklist.DoneLine" xml:space="preserve">
     <value>Kész: {0}</value>
@@ -4131,8 +4131,8 @@ Javítva: az új egyedi gyűjtemény első oldala mostantól valódi elem, így 
   <data name="Custom.Block.Unit" xml:space="preserve">
     <value>Az összegek mértékegysége</value>
   </data>
-  <data name="Transfer.Error.NotCustom" xml:space="preserve">
-    <value>A(z) „{0}” nem saját elrendezésű gyűjtemény, ezért ez az elem nem kerülhet bele.</value>
+  <data name="Transfer.Import.AddsLayout" xml:space="preserve">
+    <value>A(z) „{0}” gyűjteménynek még nincs elrendezése egyéni elemekhez: kap egyet, az elem által használt blokkokkal.</value>
   </data>
   <data name="Transfer.Import.AddsBlocks" xml:space="preserve">
     <value>Azok a blokkok, amelyeket használ, de a(z) „{0}” még nem tartalmaz, bekerülnek a gyűjtemény elrendezésébe.</value>
@@ -4153,7 +4153,7 @@ Javítva: az új egyedi gyűjtemény első oldala mostantól valódi elem, így 
     <value>⋯ &gt; Elrendezés testreszabása</value>
   </data>
   <data name="Tips.CustomLayout.Text" xml:space="preserve">
-    <value>Egy saját elrendezésű gyűjtemény elemeinek oldalát helyben módosítja: blokkok és mezők hozzáadása, mozgatása, átnevezése, törlése, fél vagy teljes szélesség.</value>
+    <value>Egy gyűjtemény egyéni elemeinek oldalát helyben módosítja: blokkok és mezők hozzáadása, mozgatása, átnevezése, törlése, fél vagy teljes szélesség. A ruhák és járművek változatlanok maradnak.</value>
   </data>
   <data name="Tips.ChecklistSelect.Keys" xml:space="preserve">
     <value>Ctrl+kattintás, Shift+kattintás</value>
@@ -4175,9 +4175,6 @@ Javítva: az új egyedi gyűjtemény első oldala mostantól valódi elem, így 
   </data>
   <data name="Entity.Type.Custom.Text" xml:space="preserve">
     <value>Saját elrendezés felépítése blokkokból.</value>
-  </data>
-  <data name="Entity.Type.Custom.NeedsEmpty" xml:space="preserve">
-    <value>Csak olyan gyűjteményben, amelyben még nincs elem.</value>
   </data>
   <data name="Entity.Type.Clothing.Text" xml:space="preserve">
     <value>Ruhadarabok mérettel, anyaggal és évszakkal.</value>

@@ -235,7 +235,12 @@ static partial class Program
         Check(cut.Count == 0, "nothing on the card cut without an ellipsis" + (cut.Count > 0 ? ": " + string.Join("; ", cut) : ""));
         Shot(main, "custom-cards");
 
-        Console.WriteLine("Add: no type to pick, the form asks for the card fields");
+        Console.WriteLine("Add: the picker, then the form asks for the card fields"); // changed: the picker is always shown
+        AnswerPicker(main, async picker =>
+        {
+            ClickNow((Button)picker.FindName("CustomButton"));
+            await Task.CompletedTask;
+        });
         DriveEntityForm(main, async form =>
         {
             await Wait(300);
@@ -255,6 +260,6 @@ static partial class Program
         Entity stove = EntityStore.Load(memory).FirstOrDefault(e => e.Name == "Stove");
         Check(stove != null && stove.EntityType == CustomTypes.TypeOf(memory.Id) && stove.Details?[ids["brand"]] == "Primus",
             "a custom item of this collection, its card field saved");
-        Check(Application.Current.Windows.OfType<EntityTypeSelector>().Count() == 0, "no type picker");
+        Check(Application.Current.Windows.OfType<EntityTypeSelector>().Count() == 0, "the picker is closed again");
     }
 }

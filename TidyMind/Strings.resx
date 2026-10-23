@@ -4046,7 +4046,7 @@ Fixed: the first page of a new custom collection is now a real item, so pictures
     <value>The layout file is empty.</value>
   </data>
   <data name="Custom.Layout.NotCreated" xml:space="preserve">
-    <value>The collection's layout couldn't be saved to {0}. The collection wasn't added.</value>
+    <value>The layout couldn't be saved to {0}. Nothing was changed.</value>
   </data>
   <data name="Custom.Checklist.DoneLine" xml:space="preserve">
     <value>Done: {0}</value>
@@ -4291,8 +4291,8 @@ Fixed: the first page of a new custom collection is now a real item, so pictures
   <data name="Custom.Block.Unit" xml:space="preserve">
     <value>Unit of the amounts</value>
   </data>
-  <data name="Transfer.Error.NotCustom" xml:space="preserve">
-    <value>“{0}” isn't a custom collection, so this item can't go into it.</value>
+  <data name="Transfer.Import.AddsLayout" xml:space="preserve">
+    <value>“{0}” has no layout for custom items yet: it gets one, with the blocks this item uses.</value>
   </data>
   <data name="Transfer.Import.AddsBlocks" xml:space="preserve">
     <value>The blocks it uses that “{0}” doesn't have yet are added to that collection's layout.</value>
@@ -4313,7 +4313,7 @@ Fixed: the first page of a new custom collection is now a real item, so pictures
     <value>⋯ &gt; Customize layout</value>
   </data>
   <data name="Tips.CustomLayout.Text" xml:space="preserve">
-    <value>Changes a custom collection's item page where it is: blocks and fields added, moved, renamed or removed, half or full width.</value>
+    <value>Changes the page of a collection's Custom items where it is: blocks and fields added, moved, renamed or removed, half or full width. Its clothing and vehicles stay as they are.</value>
   </data>
   <data name="Tips.ChecklistSelect.Keys" xml:space="preserve">
     <value>Ctrl+click, Shift+click</value>
@@ -4338,9 +4338,6 @@ Fixed: the first page of a new custom collection is now a real item, so pictures
   </data>
   <data name="Entity.Type.Custom.Text" xml:space="preserve">
     <value>Build your own layout from blocks.</value>
-  </data>
-  <data name="Entity.Type.Custom.NeedsEmpty" xml:space="preserve">
-    <value>Only in a collection that has no items yet.</value>
   </data>
   <data name="Entity.Type.Clothing.Text" xml:space="preserve">
     <value>Garments with sizes, material and season.</value>

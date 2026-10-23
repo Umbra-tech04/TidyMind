@@ -4200,7 +4200,7 @@ Ispravljeno: prva strana nove prilagođene kolekcije sada je prava stavka, pa se
     <value>Datoteka rasporeda je prazna.</value>
   </data>
   <data name="Custom.Layout.NotCreated" xml:space="preserve">
-    <value>Raspored kolekcije nije mogao da se sačuva u {0}. Kolekcija nije dodata.</value>
+    <value>Raspored nije mogao da se sačuva u {0}. Ništa nije promenjeno.</value>
   </data>
   <data name="Custom.Checklist.DoneLine" xml:space="preserve">
     <value>Gotovo: {0}</value>
@@ -4451,8 +4451,8 @@ Ispravljeno: prva strana nove prilagođene kolekcije sada je prava stavka, pa se
   <data name="Custom.Block.Unit" xml:space="preserve">
     <value>Jedinica iznosa</value>
   </data>
-  <data name="Transfer.Error.NotCustom" xml:space="preserve">
-    <value>„{0}” nije kolekcija sa sopstvenim rasporedom, pa ova stavka ne može u nju.</value>
+  <data name="Transfer.Import.AddsLayout" xml:space="preserve">
+    <value>„{0}” još nema raspored za sopstvene stavke: dobija ga, sa blokovima koje ova stavka koristi.</value>
   </data>
   <data name="Transfer.Import.AddsBlocks" xml:space="preserve">
     <value>Blokovi koje koristi, a „{0}” ih još nema, dodaju se rasporedu te kolekcije.</value>
@@ -4473,7 +4473,7 @@ Ispravljeno: prva strana nove prilagođene kolekcije sada je prava stavka, pa se
     <value>⋯ &gt; Prilagodi raspored</value>
   </data>
   <data name="Tips.CustomLayout.Text" xml:space="preserve">
-    <value>Menja stranu stavki kolekcije sa sopstvenim rasporedom na licu mesta: dodaj, pomeri, preimenuj ili ukloni blokove i polja, pola ili puna širina.</value>
+    <value>Menja stranu sopstvenih stavki kolekcije na licu mesta: dodaj, pomeri, preimenuj ili ukloni blokove i polja, pola ili puna širina. Odeća i vozila ostaju kakvi jesu.</value>
   </data>
   <data name="Tips.ChecklistSelect.Keys" xml:space="preserve">
     <value>Ctrl+klik, Shift+klik</value>
@@ -4501,9 +4501,6 @@ Ispravljeno: prva strana nove prilagođene kolekcije sada je prava stavka, pa se
   </data>
   <data name="Entity.Type.Custom.Text" xml:space="preserve">
     <value>Sam složi raspored od blokova.</value>
-  </data>
-  <data name="Entity.Type.Custom.NeedsEmpty" xml:space="preserve">
-    <value>Samo u kolekciji koja još nema stavki.</value>
   </data>
   <data name="Entity.Type.Clothing.Text" xml:space="preserve">
     <value>Odeća sa veličinama, materijalom i sezonom.</value>

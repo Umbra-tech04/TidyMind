@@ -3,21 +3,16 @@ using System.Windows.Controls;
 
 namespace TidyMind
 {
-    // Which kind of item to add: Clothing, Vehicle or Custom (the collection's own layout, CustomLayout). Custom is only
-    // there for a collection that has no items yet, so nothing in it is ever turned into something else.
+    // Which kind of item to add: Clothing, Vehicle or Custom (the collection's own layout, CustomLayout). Always the same
+    // choices, whatever the collection holds: a collection may mix the kinds, each item keeping its own.
     public partial class EntityTypeSelector : Window
     {
         public string SelectedType { get; private set; }
 
-        public EntityTypeSelector(bool customAllowed = true)
+        public EntityTypeSelector()
         {
             InitializeComponent();
             CustomButton.Tag = "Custom"; // the stored name CollectionView acts on
-            if (!customAllowed)
-            {
-                CustomButton.IsEnabled = false;
-                CustomText.Text = Loc.T("Entity.Type.Custom.NeedsEmpty");
-            }
         }
 
         // Esc closes, as in the other dialogs (nothing typed here to lose).

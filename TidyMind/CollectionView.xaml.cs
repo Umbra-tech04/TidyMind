@@ -26,7 +26,8 @@ namespace TidyMind
         // Its items or tabs file couldn't be read: shown read-only (ShowUnreadable), and never saved over.
         private bool unreadable;
 
-        // A custom collection (it has a layout, CustomLayout): Add makes an item of its layout, no type to pick.
+        // The collection has a layout (CustomLayout): the one its Custom items follow. Its other items (clothing, vehicles)
+        // are of their own types beside them.
         private bool custom;
         private string unreadableFile, unreadableProblem;
 
@@ -613,8 +614,8 @@ namespace TidyMind
                 CustomizeEmpty();
         }
 
-        // A new custom collection, or one with no item yet: the item window on the collection's first item, its layout being
-        // customized; the page an item will have, built in place. The item is a real draft (its own Id, held here, not in the
+        // A collection with no custom item yet: the item window on the first one, its layout being customized; the page a
+        // custom item will have, built in place. The item is a real draft (its own Id, held here, not in the
         // list): the first change to it (a value, a picture, a line, a name) stores it as an ordinary item, which the window
         // then keeps editing; closed without any, nothing was stored.
         private void CustomizeEmpty()
@@ -668,7 +669,10 @@ namespace TidyMind
         }
 
         // How many items hold something under any of the keys (a block's or a field's data, Entity.Details or Records).
-        private int ItemsHolding(IReadOnlyCollection<string> keys) => entities.Count(e => keys.Any(key => Holds(e, key)));
+        // Only the custom items follow the layout; a garment's or a vehicle's data is never touched by it.
+        private int ItemsHolding(IReadOnlyCollection<string> keys) => entities.Count(e => IsCustomItem(e) && keys.Any(key => Holds(e, key)));
+
+        private bool IsCustomItem(Entity entity) => entity.EntityType == CustomTypes.TypeOf(memory.Id);
 
         private static bool Holds(Entity entity, string key) =>
             entity.Details?.ContainsKey(key) == true || entity.Records?.GetValueOrDefault(key)?.Count > 0;
@@ -696,6 +700,8 @@ namespace TidyMind
             List<(Entity Before, Entity After)> changed = new List<(Entity, Entity)>();
             for (int i = 0; i < entities.Count; i++)
             {
+                if (!IsCustomItem(entities[i]))
+                    continue;
                 Entity after = JsonSerializer.Deserialize<Entity>(JsonSerializer.Serialize(entities[i]))!;
                 foreach (string key in change.Removed)
                 {
@@ -739,29 +745,29 @@ namespace TidyMind
         // How many items hold a value in the field that can't be read as `kind` (LayoutField.Fit): asked about before a
         // field's kind changes.
         private int Unfit(string field, string kind) =>
-            entities.Count(e => e.Details?.GetValueOrDefault(field) is string value && LayoutField.Fit(kind, value) == null);
+            entities.Count(e => IsCustomItem(e) && e.Details?.GetValueOrDefault(field) is string value && LayoutField.Fit(kind, value) == null);
 
         // ---- CRUD ---------------------------------------------------------
 
-        // A new item opens in its window straight away, for everything the short form doesn't ask. A custom collection's
-        // items are all of its layout; any other collection asks which kind (EntityTypeSelector), and "Custom" there turns an
-        // empty collection into a custom one: its layout is written and its empty page opens to be customized (the collection
-        // then adds items of that layout). A collection that has items never offers it, so nothing in it is turned into
-        // something else.
+        // A new item opens in its window straight away, for everything the short form doesn't ask. Always asks which kind
+        // (EntityTypeSelector), whatever the collection holds: a collection may mix Clothing, Vehicle and Custom items, each
+        // keeping its own type. "Custom" is the collection's one layout (layout.json): without one yet (or one nobody has
+        // built on: no blocks, no custom item) its first page opens to be customized (MakeCustom); with one, a new item of it
+        // is added like any other (the page's Customize switch changes the layout, only the custom items follow it).
         private void AddEntityButton_Click(object sender, RoutedEventArgs e)
         {
-            string type = CustomTypes.TypeOf(memory.Id);
-            if (!custom)
+            EntityTypeSelector selector = new EntityTypeSelector();
+            if (selector.ShowDialog() != true)
+                return;
+            string type = selector.SelectedType;
+            if (type == "Custom")
             {
-                EntityTypeSelector selector = new EntityTypeSelector(customAllowed: entities.Count == 0);
-                if (selector.ShowDialog() != true)
-                    return;
-                type = selector.SelectedType;
-                if (type == "Custom")
+                if (!custom || (!HasCustomItems && CustomTypes.OfMemory(memory)?.Layout.Blocks.Count == 0))
                 {
                     MakeCustom();
                     return;
                 }
+                type = CustomTypes.TypeOf(memory.Id);
             }
             EntityForm form = new EntityForm(type);
             if (form.ShowDialog() != true)
@@ -786,18 +792,23 @@ namespace TidyMind
             OpenItem(added);
         }
 
-        // The picker's "Custom": this empty collection gets an empty layout and its empty page opens, Customize on. No
-        // layout, no change: it stays an ordinary collection.
+        private bool HasCustomItems => entities.Any(e => CustomTypes.IsCustom(e.EntityType));
+
+        // The picker's "Custom" before the collection has a layout built: it gets an empty one (an existing layout file is
+        // never replaced) and the first page of a custom item opens, Customize on. No layout written, no change: the
+        // collection stays as it was and the items in it are not touched.
         private void MakeCustom()
         {
-            if (entities.Count > 0 || !CustomLayoutStore.TrySave(memory, CustomLayout.Starter()))
+            if (!custom)
             {
-                if (entities.Count == 0)
+                if (!CustomLayoutStore.TrySave(memory, CustomLayout.Starter()))
+                {
                     Msg.Show(Loc.F("Custom.Layout.NotCreated", MemoryFiles.Layout(memory)), Loc.T("Common.CouldntSave"), MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                    return;
+                }
+                custom = true;
+                LayoutCreated?.Invoke(); // the sidebar's menu for it gets Customize layout
             }
-            custom = true;
-            LayoutCreated?.Invoke(); // the sidebar's menu for it gets Customize layout
             CustomizeEmpty();
         }
 

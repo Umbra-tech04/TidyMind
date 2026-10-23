@@ -228,7 +228,8 @@ static partial class Program
         ImportDialog preview = new ImportDialog(item, Profiles(main), birds);
         ComboBox targets = (ComboBox)preview.FindName("TargetBox");
         List<string> offered = targets.Items.OfType<ComboBoxItem>().Select(i => (string)i.Content).ToList();
-        Check(offered.Contains("Bird book") && offered.Contains("Gear") && !offered.Contains("Plain shelf"), "only custom collections are offered: " + string.Join(", ", offered));
+        // changed: a collection without a layout is offered too (a custom item may go into any collection)
+        Check(offered.Contains("Bird book") && offered.Contains("Gear") && offered.Contains("Plain shelf"), "every collection is offered: " + string.Join(", ", offered));
         Check(((TextBlock)preview.FindName("WhereText")).Text.Contains(Loc.F("Transfer.Import.AddsBlocks", "Bird book")), "the preview says the layout gains blocks");
         preview.Close();
         using (StagedImport staged = TransferPackage.Stage(item, null, CancellationToken.None))
@@ -241,14 +242,25 @@ static partial class Program
         Check(birdLayout.Blocks.Count(b => b.Kind == BlockKinds.Gallery) == 1, "never a second gallery");
         Check(EntityTypes.Describe(tentBird).Any(l => l.Value.Contains("Seam sealed")), "everything it holds shows there");
 
-        // A standard collection can't take it; with no target a new custom collection gets its layout.
-        bool refused = false;
+        // A collection without a layout takes it too (changed: it used to be refused): it gets a layout of the blocks the
+        // item uses, and the clothing already there is left byte for byte as it was. With no target a new custom collection
+        // gets the whole layout.
+        EntityStore.TrySave(plain, new List<Entity> { new Entity { Id = Guid.NewGuid(), EntityType = EntityTypes.Clothing, Name = "Scarf", Brand = "Wool Co" } });
+        string plainBefore = File.ReadAllText(MemoryFiles.Items(plain));
+        ImportDialog plainPreview = new ImportDialog(item, Profiles(main), plain);
+        Check(((TextBlock)plainPreview.FindName("WhereText")).Text.Contains(Loc.F("Transfer.Import.AddsLayout", "Plain shelf")), "the preview says it gets a layout");
+        plainPreview.Close();
         using (StagedImport staged = TransferPackage.Stage(item, null, CancellationToken.None))
-        {
-            try { TransferPackage.CommitItem(staged, plain, Profiles(main), "#3498DB", "Imported"); }
-            catch (TransferException e) { refused = e.Message.Contains("Plain shelf"); }
-        }
-        Check(refused && EntityStore.LoadOrEmpty(plain).Count == 0, "a standard collection refuses a custom item, nothing added");
+            TransferPackage.CommitItem(staged, plain, Profiles(main), "#3498DB", "Imported");
+        CustomLayoutStore.TryLoad(plain, out CustomLayout plainLayout, out _);
+        List<Entity> plainItems = EntityStore.Load(plain);
+        Check(plainLayout != null && plainLayout.Blocks.Any(b => b.Id == GearIds(gear)["documents"]) && plainLayout.Blocks.All(b => b.Kind != "Timeline"),
+            "a layout made of the blocks it uses");
+        Check(plainItems.Count == 2 && plainItems.Single(e => e.Name == "Tent").EntityType == CustomTypes.TypeOf(plain.Id)
+              && plainItems.Single(e => e.Name == "Scarf").EntityType == EntityTypes.Clothing, "the custom item and the scarf side by side, each its own type");
+        Check(JsonSerializer.Serialize(plainItems.Single(e => e.Name == "Scarf")) == JsonSerializer.Serialize(JsonSerializer.Deserialize<List<Entity>>(plainBefore)![0]),
+            "the scarf is as it was");
+        Check(EntityTypes.Describe(plainItems.Single(e => e.Name == "Tent")).Any(l => l.Value.Contains("Seam sealed")), "everything the tent holds shows");
         RemoveMemory(main, plain);
         Profile created;
         using (StagedImport staged = TransferPackage.Stage(item, null, CancellationToken.None))

@@ -43,6 +43,7 @@ static partial class Program
             await CustomBuilder(main);
             await CustomReviewFixes(main);
             await CustomIntegration(main);
+            await CustomMixed(main);
         }
         finally
         {
@@ -364,20 +365,31 @@ static partial class Program
         ContextMenu sidebar = NavItem(main, birds).ContextMenu;
         Check(sidebar.Items.OfType<MenuItem>().Any(i => (string)i.Header == Loc.T("Custom.Menu.Customize")), "its sidebar menu has Customize layout");
 
-        // Now Add makes an item of the layout: no picker.
+        // Add always asks which kind (changed: it used to go straight to the form in a collection with a layout); with a
+        // layout Custom is a new item of it, Customize off.
+        AnswerPicker(main, async picker =>
+        {
+            Check(((Button)picker.FindName("CustomButton")).IsEnabled, "a collection with a layout still shows the picker, Custom enabled");
+            ClickNow((Button)picker.FindName("CustomButton"));
+            await Task.CompletedTask;
+        });
         DriveEntityForm(main, form =>
         {
-            Check(!Application.Current.Windows.OfType<EntityTypeSelector>().Any(), "a custom collection's Add goes straight to the item form");
             Field<TextBox>(form, "nameBox").Text = "Sparrow";
             return Task.CompletedTask;
         });
-        DriveTitled(main, "Sparrow", w => Task.CompletedTask);
+        DriveTitled(main, "Sparrow", async w =>
+        {
+            Check(!Customizing(w) && !Field<ItemWindow.Host>(w, "host").Preview, "the new custom item opens with Customize off");
+            await Task.CompletedTask;
+        });
         Invoke(view, "AddEntityButton_Click", null, null);
         await Wait(500);
         Entity sparrow = EntityStore.Load(birds).FirstOrDefault(e => e.Name == "Sparrow");
         Check(sparrow != null && sparrow.EntityType == CustomTypes.TypeOf(birds.Id), "an item of the custom layout");
 
-        // A collection that already has items: Custom isn't offered, nothing in it is turned into something else.
+        // A collection that already has items (changed: Custom used to be disabled there): Custom is offered; choosing it
+        // starts the first page, and the items already there are not touched. CustomMixed goes on from here.
         Profile shoes = AddMemory(main, "Shoe box", ProfileType.Collection);
         File.WriteAllText(MemoryFiles.Items(shoes), JsonSerializer.Serialize(new List<Entity> { new Entity { Id = Guid.NewGuid(), EntityType = EntityTypes.Clothing, Name = "Boot" } }));
         CollectionView shoeView = OpenCollectionView(main, shoes);
@@ -385,16 +397,19 @@ static partial class Program
         string itemsBefore = File.ReadAllText(MemoryFiles.Items(shoes)); // after the page's own first-open tidying
         AnswerPicker(main, async picker =>
         {
-            Button custom = (Button)picker.FindName("CustomButton");
-            Check(!custom.IsEnabled && Descendants(picker).OfType<TextBlock>().Any(t => t.Text == Loc.T("Entity.Type.Custom.NeedsEmpty")),
-                "with items in the collection Custom is disabled, and says why");
-            Check(((Button)Descendants(picker).OfType<Button>().First(b => (string)b.Tag == "Clothing")).IsEnabled, "Clothing and Vehicle stay");
-            picker.Close();
+            Check(((Button)picker.FindName("CustomButton")).IsEnabled, "with items in the collection Custom is enabled");
+            Check(((Button)Descendants(picker).OfType<Button>().First(b => (string)b.Tag == "Clothing")).IsEnabled, "Clothing and Vehicle too");
+            ClickNow((Button)picker.FindName("CustomButton"));
+            await Task.CompletedTask;
+        });
+        DriveTitled(main, "Shoe box", async w =>
+        {
+            Check(Customizing(w) && Field<ItemWindow.Host>(w, "host").Preview, "the first page opens, customizing");
             await Task.CompletedTask;
         });
         Invoke(shoeView, "AddEntityButton_Click", null, null);
-        await Wait(300);
-        Check(!File.Exists(MemoryFiles.Layout(shoes)) && File.ReadAllText(MemoryFiles.Items(shoes)) == itemsBefore, "no layout made, its items untouched");
+        await Wait(500);
+        Check(File.Exists(MemoryFiles.Layout(shoes)) && File.ReadAllText(MemoryFiles.Items(shoes)) == itemsBefore, "its layout made, its items untouched");
         RemoveMemory(main, shoes);
         Invoke(main, "NavigateHome");
     }
