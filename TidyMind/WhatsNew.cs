@@ -10,7 +10,7 @@ namespace TidyMind
     {
         // The version WhatsNew.Points describe. When a release gets new points, write them in all three Strings files and
         // set this to its <Version> (publish-release.ps1 warns if they differ; the note then simply isn't shown).
-        public const string NotesVersion = "1.5.0";
+        public const string NotesVersion = "1.5.1";
 
         public static string[] Points => Loc.T("WhatsNew.Points").Split('\n').Select(p => p.Trim()).Where(p => p.Length > 0).ToArray();
 

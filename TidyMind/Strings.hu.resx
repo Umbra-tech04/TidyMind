@@ -3534,7 +3534,8 @@ Semmi sem változott.</value>
   </data>
   <data name="WhatsNew.Points" xml:space="preserve">
     <value>Saját elrendezésű gyűjtemények: egy üres gyűjteményben az első elem hozzáadásakor válaszd az Egyedi lehetőséget, majd az elem oldalát blokkokból rakod össze, például mezőkből, képekből, jegyzetekből, ellenőrzőlistákból, emlékeztetős dokumentumokból, naplóból és mennyiségekből.
-A Testreszabás magán az elem oldalán ad hozzá, mozgat és nevez át blokkokat és mezőket, egymás mellé teszi a blokkokat, és legfeljebb három mezőt tesz a kártyákra. A Napi terv megmutatja az elemek dátumait.</value>
+A Testreszabás magán az elem oldalán ad hozzá, mozgat és nevez át blokkokat és mezőket, egymás mellé teszi a blokkokat, és legfeljebb három mezőt tesz a kártyákra. A Napi terv megmutatja az elemek dátumait.
+Javítva: az új egyedi gyűjtemény első oldala mostantól valódi elem, így képek, ellenőrzőlista-sorok és minden más rögtön hozzáadható.</value>
   </data>
   <data name="Tips.Title" xml:space="preserve">
     <value>Tippek és billentyűparancsok</value>
