@@ -613,14 +613,26 @@ namespace TidyMind
                 CustomizeEmpty();
         }
 
-        // A new custom collection, or one with no item yet: the item window on an empty item that is never stored, its
-        // layout being customized; the page an item will have, built in place.
+        // A new custom collection, or one with no item yet: the item window on the collection's first item, its layout being
+        // customized; the page an item will have, built in place. The item is a real draft (its own Id, held here, not in the
+        // list): the first change to it (a value, a picture, a line, a name) stores it as an ordinary item, which the window
+        // then keeps editing; closed without any, nothing was stored.
         private void CustomizeEmpty()
         {
-            Entity preview = new Entity { Id = Guid.Empty, EntityType = CustomTypes.TypeOf(memory.Id), Name = memory.Name };
-            ItemWindow window = new ItemWindow(preview, new ItemWindow.Host
+            Entity draft = new Entity
             {
-                Reread = id => preview,
+                Id = Guid.NewGuid(),
+                EntityType = CustomTypes.TypeOf(memory.Id),
+                Name = memory.Name,
+                TabId = tabStrip.ActiveTabId
+            };
+            ItemWindow window = new ItemWindow(draft, new ItemWindow.Host
+            {
+                Save = SaveDraft,
+                EditBasics = edited => EditEntityWith(edited, SaveDraft),
+                Delete = DeleteEntity,
+                Reread = id => Reread(id) ?? (id == draft.Id && !unreadable ? draft : null),
+                Stored = id => entities.Any(e => e.Id == id),
                 ChangeLayout = ChangeLayout,
                 ItemsHolding = ItemsHolding,
                 Unfit = Unfit,
@@ -631,6 +643,28 @@ namespace TidyMind
             window.Customize();
             window.ShowDialog();
             RenderEntities();
+        }
+
+        // A change to the first page's item: stored as the item once, then replaced like any item's (an item that went
+        // meanwhile isn't brought back by a later change: only the draft is added). Adding isn't an undo step.
+        private bool SaveDraft(Entity edited)
+        {
+            if (entities.Any(e => e.Id == edited.Id))
+                return Replace(edited);
+            if (unreadable)
+                return false;
+            edited.Order = entities.Count == 0 ? 0 : entities.Max(x => x.Order) + 1;
+            edited.CreatedDate = DateTime.Now;
+            if (string.IsNullOrWhiteSpace(edited.Name))
+                edited.Name = memory.Name;
+            entities.Add(edited);
+            if (!SaveEntities())
+            {
+                entities.Remove(edited);
+                return false;
+            }
+            WarnReminders(VehicleReminders.Follow(null, edited));
+            return true;
         }
 
         // How many items hold something under any of the keys (a block's or a field's data, Entity.Details or Records).
@@ -773,7 +807,10 @@ namespace TidyMind
         // The form edits a copy (Id, tab, place and fields it doesn't show come along). Newly picked pictures are
         // copied in; if the item can't be saved, it stays as it was and the new copies go again. Returns the item as
         // saved, or null.
-        private Entity EditEntity(Entity entity)
+        private Entity EditEntity(Entity entity) => EditEntityWith(entity, Replace);
+
+        // `save` stores the edited copy: Replace for an item, SaveDraft for the first page's item.
+        private Entity EditEntityWith(Entity entity, Func<Entity, bool> save)
         {
             EntityForm form = new EntityForm(entity);
             if (form.ShowDialog() != true)
@@ -781,7 +818,7 @@ namespace TidyMind
 
             Entity edited = form.ResultEntity;
             List<string> imported = ApplyPictures(edited, form.Pictures);
-            bool saved = Replace(edited);
+            bool saved = save(edited);
             if (!saved)
                 RemoveCopies(imported);
             RenderEntities();

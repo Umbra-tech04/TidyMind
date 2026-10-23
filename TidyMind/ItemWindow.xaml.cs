@@ -36,12 +36,14 @@ namespace TidyMind
 
             // A custom collection's layout (Customize): ChangeLayout saves a change for every item (false if it couldn't,
             // said), ItemsHolding counts the items with something under any of the keys, Unfit the items whose value of a
-            // field can't be read as another kind (LayoutField.Fit). Preview: the window shows the collection's empty page
-            // (an empty item that is never stored), to customize its layout before there is an item.
+            // field can't be read as another kind (LayoutField.Fit). Preview: the window is the collection's first page, to
+            // customize its layout before there is an item; the item on it is a draft (Stored says false until its first
+            // change stores it), and Esc closes it rather than turning Customize off.
             public Func<LayoutChange, bool> ChangeLayout { get; init; } = _ => false;
             public Func<IReadOnlyCollection<string>, int> ItemsHolding { get; init; } = _ => 0;
             public Func<string, string, int> Unfit { get; init; } = (_, _) => 0;
             public bool Preview { get; init; }
+            public Func<Guid, bool> Stored { get; init; } = _ => true;
 
             // The collection showing the item: its layout is edited here only when the item is of that collection's layout
             // (an item of another layout, imported without it, never writes its layout over this one).
@@ -57,6 +59,7 @@ namespace TidyMind
         private Entity item;
         private readonly Host host;
         private readonly PictureHero hero = new PictureHero();
+        private readonly Brush nameBrush;
         private string page;
         private IInlineEdit? editing;
 
@@ -85,6 +88,7 @@ namespace TidyMind
             InitializeComponent();
             this.item = item;
             this.host = host;
+            nameBrush = NameText.Foreground;
             Hero.Content = hero;
             hero.Picked += ShowPictures;
             page = Pages()[0].Key;
@@ -273,23 +277,25 @@ namespace TidyMind
             Actions.Children.Clear();
             if (CanEditLayout)
                 Actions.Children.Add(CustomizeSwitch());
-            if (host.Preview)
+            // A new custom collection's first page, before anything is stored: the collection over where an item's name
+            // goes, "Item name" in its place; nothing to delete yet.
+            bool draft = !host.Stored(item.Id);
+            NameText.Foreground = draft ? ItemLook.Res("TextSub") : nameBrush;
+            if (draft)
             {
-                // A new custom collection's empty page (never stored): the collection over where an item's name goes, and
-                // only the switch.
                 EyebrowText.Text = item.Name.ToUpper(Loc.Culture);
                 EyebrowText.Visibility = Visibility.Visible;
                 NameText.Text = Loc.T("Custom.Template.ItemName");
-                NameText.Foreground = ItemLook.Res("TextSub");
-                Hero.Visibility = Visibility.Collapsed;
-                return;
             }
             Actions.Children.Add(HeaderButton(Loc.T(EntityImages.Count(item) == 0 ? "Vehicle.AddPictures" : "Vehicle.EditBasics"), EditBasics));
             if (item.EntityType == EntityTypes.Vehicle)
                 Actions.Children.Add(HeaderButton(Loc.T("Vehicle.Odometer.Update"), UpdateOdometer));
-            Button delete = HeaderButton(Loc.T("Common.Delete"), Delete);
-            delete.Foreground = ItemLook.Res("Danger");
-            Actions.Children.Add(delete);
+            if (!draft)
+            {
+                Button delete = HeaderButton(Loc.T("Common.Delete"), Delete);
+                delete.Foreground = ItemLook.Res("Danger");
+                Actions.Children.Add(delete);
+            }
 
             ShowPictures(hero.Selected);
         }
@@ -451,8 +457,6 @@ namespace TidyMind
                 };
                 if (element == null)
                     continue;
-                if (host.Preview && !designer)
-                    Inert(element);
                 blocks.Add((customizing ? Shell(custom, block, element) : element, block.Half));
             }
             List<UIElement> rows = HalfRow.Rows(blocks);

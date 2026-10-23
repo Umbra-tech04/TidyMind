@@ -59,7 +59,7 @@ namespace TidyMind
                 Style = (Style)FindResource("ToggleSwitchStyle"),
                 IsChecked = customizing,
                 Height = 36,
-                Margin = new Thickness(0, 0, host.Preview ? 8 : 16, 8), // alone, in line with the page's right edge
+                Margin = new Thickness(0, 0, 16, 8),
                 ToolTip = Loc.T("Custom.Customize.Tip")
             };
             AutomationProperties.SetName(toggle, Loc.T("Custom.Customize"));
@@ -412,18 +412,6 @@ namespace TidyMind
             log.Unit = unit;
         }, Loc.T("Custom.Undo.Layout"));
 
-        // The empty page of a new custom collection (Host.Preview) is never stored: what its blocks would hold is shown as
-        // an item shows it, and nothing in it takes a click or the keyboard.
-        private static void Inert(UIElement element)
-        {
-            foreach (Control control in Descendants(element).OfType<Control>())
-            {
-                control.IsHitTestVisible = false;
-                control.Focusable = false;
-                control.IsTabStop = false;
-            }
-        }
-
         // After the page is drawn again: the keyboard back where the change was made (or the new block brought into view).
         private void RestoreLayoutFocus()
         {
@@ -463,7 +451,7 @@ namespace TidyMind
             {
                 Converted = converted ?? new Dictionary<string, string>()
             });
-            if (saved && !host.Preview && host.Reread(item.Id) is Entity stored)
+            if (saved && host.Reread(item.Id) is Entity stored)
                 item = stored; // the item as saved (a removed block's data gone from it)
             Redraw();
             return saved;

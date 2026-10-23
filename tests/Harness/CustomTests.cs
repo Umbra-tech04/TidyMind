@@ -36,6 +36,7 @@ static partial class Program
             await CustomDefinitions(main);
             await CustomUnreadable(main);
             await CustomCreate(main);
+            await CustomFirstPage(main);
             await CustomLayoutUndo(main);
             await CustomWindow(main);
             await CustomCardsAndForm(main);
@@ -302,8 +303,9 @@ static partial class Program
                 "the item's name at the top, the switch on");
             Check(GearLayout(birds).Blocks.Count == 0 && PageTexts(w).Contains(Loc.T("Custom.Layout.Start")) && ButtonNamed(w, Loc.T("Custom.Layout.Add")) != null,
                 "a blank page: what it is for, and + Add");
-            Check(!Descendants(w).OfType<Button>().Any(b => (b.Content as string) == Loc.T("Common.Delete") || (b.Content as string) == Loc.T("Vehicle.AddPictures")),
-                "no item actions on the empty page");
+            // The page is a real draft item now (CustomFirstPage): it can take pictures, but there is nothing to delete yet.
+            Check(!Descendants(w).OfType<Button>().Any(b => (b.Content as string) == Loc.T("Common.Delete")),
+                "nothing to delete on the first page until it holds something");
             w.Width = 760;
             await Wait(300);
             RenderWindow(w, "custom-empty");
@@ -336,13 +338,13 @@ static partial class Program
             List<string> cut = CutOff(w).Concat(Clipped(w)).ToList();
             Check(cut.Count == 0, "nothing cut off" + (cut.Count > 0 ? ": " + string.Join("; ", cut.Take(4)) : ""));
 
-            // What an item will hold is shown, never used: the empty page is no item.
-            Check(Descendants(PageOf(w)).OfType<Button>().Where(b => (b.Content as string) == Loc.T("Entity.Card.Fill")).All(b => !b.IsHitTestVisible && !b.Focusable),
-                "the notes' Fill in is shown and takes no click");
+            // The page is a draft of a real item: what it holds takes clicks and the keyboard (CustomFirstPage drives them).
+            Check(Descendants(PageOf(w)).OfType<Button>().Where(b => (b.Content as string) == Loc.T("Entity.Card.Fill")).All(b => b.IsHitTestVisible && b.Focusable),
+                "the notes' Fill in is live");
             Click(CustomizeSwitch(w));
             await Wait(300);
             Check(!Customizing(w) && Sections(w).Count == 2 && !Descendants(PageOf(w)).OfType<Button>().Any(b => System.Windows.Automation.AutomationProperties.GetName(b) == Loc.T("Custom.Layout.Add")), "off: the page an item will have");
-            Check(Descendants(PageOf(w)).OfType<Control>().All(c => !c.Focusable), "and nothing in it to type into");
+            Check(Descendants(PageOf(w)).OfType<Control>().Any(c => c.Focusable), "and it has boxes to type into");
             RenderWindow(w, "custom-empty-off");
             Click(CustomizeSwitch(w));
             await Wait(300);
@@ -395,6 +397,193 @@ static partial class Program
         Check(!File.Exists(MemoryFiles.Layout(shoes)) && File.ReadAllText(MemoryFiles.Items(shoes)) == itemsBefore, "no layout made, its items untouched");
         RemoveMemory(main, shoes);
         Invoke(main, "NavigateHome");
+    }
+
+    // ---- The first page of a new custom collection ----------------------------------------------------
+
+    // The first page is a real draft item (own Id, held by the collection view): left untouched it stores nothing, and
+    // the first change of any kind (pictures, a field, a checklist line, a quantity, a document, a log entry, notes)
+    // stores it as an ordinary item, with Customize on and off.
+    static async Task CustomFirstPage(MainWindow main)
+    {
+        Console.WriteLine("The first page of a new custom collection is a real item");
+        if (picWork == null)
+            picWork = Path.Combine(Path.GetDirectoryName(AppPaths.DataFolder), "pictures-work");
+        Directory.CreateDirectory(picWork);
+
+        AnswerPrompt(main, "First page");
+        Invoke(main, "AddProfile", ProfileType.Collection);
+        await Wait(500);
+        Profile memory = Profiles(main).First(p => p.Name == "First page");
+        CollectionView view = (CollectionView)Content(main);
+        AnswerPicker(main, async picker =>
+        {
+            ClickNow((Button)picker.FindName("CustomButton"));
+            await Task.CompletedTask;
+        });
+
+        // Build the layout on the page itself, then close it without any change to the item.
+        HashSet<string> filesBefore = ItemFiles();
+        DriveTitled(main, "First page", async w =>
+        {
+            ContextMenu Menu() => (ContextMenu)typeof(ItemWindow).GetMethod("AddMenu", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .Invoke(w, new object[] { new Button(), CustomTypes.OfMemory(memory) });
+            void Add(string kind) => Menu().Items.OfType<MenuItem>().First(i => System.Windows.Automation.AutomationProperties.GetName(i) == Loc.T("Custom.Kind." + kind))
+                .RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            Add(BlockKinds.Fields);
+            await Wait(400);
+            TypeAndEnter(LayoutTarget(w, GearLayout(memory).Blocks.Single().Id, "+"), "Wingspan");
+            await Wait(400);
+            foreach (string kind in new[] { BlockKinds.Gallery, BlockKinds.Notes, BlockKinds.Checklist, BlockKinds.Quantities, BlockKinds.Documents, BlockKinds.Log })
+            {
+                Add(kind);
+                await Wait(250);
+            }
+            Check(GearLayout(memory).Blocks.Count == 7, "a page with every kind of block");
+            Check(!Field<ItemWindow.Host>(w, "host").Stored(Field<Entity>(w, "item").Id), "the item on it is a draft: not stored");
+        });
+        Invoke(view, "AddEntityButton_Click", null, null);
+        await Wait(600);
+        Check(EntityStore.Load(memory).Count == 0 && ItemFiles().SetEquals(filesBefore),
+            "closed with nothing changed: no item stored, no picture file made (no empty phantom item)");
+        Check(((Panel)view.FindName("EntityPanel")).Children.Count == 0, "and no card");
+
+        string type = CustomTypes.TypeOf(memory.Id);
+        string Block(string kind) => GearLayout(memory).Blocks.First(b => b.Kind == kind).Id;
+
+        // The first page again (no item yet) with Customize on or off; `act` makes the first change.
+        async Task OnFirstPage(bool customize, string what, Func<ItemWindow, Task> act)
+        {
+            EntityStore.TrySave(memory, new List<Entity>());
+            view.ReloadAfterUndo();
+            DriveTitled(main, "First page", async w =>
+            {
+                Check(Field<ItemWindow.Host>(w, "host").Preview && Customizing(w), what + ": the first page opens customizing");
+                if (!customize)
+                {
+                    Click(CustomizeSwitch(w));
+                    await Wait(300);
+                }
+                await act(w);
+            });
+            view.CustomizeLayout();
+            await Wait(600);
+        }
+
+        // Pictures: Add pictures in the Pictures block, Customize on and off.
+        foreach (bool customize in new[] { true, false })
+        {
+            string what = "pictures, Customize " + (customize ? "on" : "off");
+            string[] own = OwnPictures(2, customize ? 60 : 70);
+            HashSet<string> before = ItemFiles();
+            DriveEntityForm(main, async f =>
+            {
+                await Wait(200);
+                f.AddPictures(own);
+            });
+            await OnFirstPage(customize, what, async w =>
+            {
+                Button add = Descendants(PageOf(w)).OfType<Button>().First(b => (b.Content as string) == Loc.T("Vehicle.AddPictures"));
+                Check(add.IsHitTestVisible && add.IsEnabled, what + ": Add pictures can be pressed");
+                ClickNow(add);
+                await Wait(600);
+                Entity stored = EntityStore.Load(memory).SingleOrDefault();
+                Check(stored != null && stored.EntityType == type && EntityImages.Names(stored).Count == 2 && EntityImages.Names(stored).All(Stored),
+                    what + ": the item is stored with its two pictures");
+                Check(ItemFiles().Count == before.Count + 2 && SameBytes(ImageStore.Items.PathOf(EntityImages.Names(stored)[0]), own[0]), what + ": copied into the picture folder");
+                Check(Descendants(PageOf(w)).OfType<PictureBrowser>().Count() == 1 && Field<ItemWindow.Host>(w, "host").Stored(stored.Id), what + ": the gallery shows them, the item is stored");
+                Check(Descendants(w).OfType<Button>().Any(b => (b.Content as string) == Loc.T("Common.Delete")), what + ": and can now be deleted");
+                // More pictures on the same item: no second item.
+                DriveEntityForm(main, async f =>
+                {
+                    await Wait(200);
+                    f.AddPictures(OwnPictures(1, 80));
+                });
+                Invoke(w, "EditBasics");
+                await Wait(500);
+                Check(EntityStore.Load(memory).Count == 1 && EntityImages.Names(EntityStore.Load(memory)[0]).Count == 3, what + ": a third picture goes on the same item");
+            });
+            Check(EntityStore.Load(memory).Count == 1, what + ": one item once closed");
+        }
+
+        // The other blocks: each one's first change stores the item with it.
+        foreach (bool customize in new[] { true, false })
+        {
+            string on = ", Customize " + (customize ? "on" : "off");
+
+            if (!customize) // a Fields block is the list of its fields while customizing
+                await OnFirstPage(customize, "field" + on, async w =>
+                {
+                    FieldsSection section = Sections(w).First(s => s.Definition.Fields.Any(f => f.Label == "Wingspan"));
+                    section.BeginEdit();
+                    await Wait(200);
+                    FieldEditor editor = Field<List<FieldEditor>>(section, "editors")[0];
+                    (Descendants(editor.Element).OfType<TextBox>().FirstOrDefault() ?? (TextBox)editor.Element).Text = "62";
+                    ClickNow(ButtonNamed(section, Loc.T("Common.Save")));
+                    await Wait(500);
+                    Check(EntityStore.Load(memory).SingleOrDefault()?.Details?.Values.Contains("62") == true, "a field value" + on + ": the item is stored with it");
+                });
+
+            await OnFirstPage(customize, "checklist" + on, async w =>
+            {
+                TextBox input = Descendants(Checklist(w)).OfType<TextBox>().Last();
+                input.Focus();
+                input.Text = "Binoculars";
+                PressKey(input, Key.Enter);
+                await Wait(500);
+                Check(StoredLines(memory, EntityStore.Load(memory).Single().Id, Block(BlockKinds.Checklist)).Select(r => r.Get("Text")).SequenceEqual(new[] { "Binoculars" }),
+                    "a checklist line" + on + ": the item is stored with it");
+                // and a second line goes on the same item
+                input = Descendants(Checklist(w)).OfType<TextBox>().Last();
+                input.Text = "Notebook";
+                PressKey(input, Key.Enter);
+                await Wait(400);
+                Check(EntityStore.Load(memory).Count == 1 && StoredLines(memory, EntityStore.Load(memory).Single().Id, Block(BlockKinds.Checklist)).Count == 2,
+                    "a second line" + on + ": still one item");
+            });
+
+            await OnFirstPage(customize, "quantities" + on, async w =>
+            {
+                CompactRecords table = Descendants(PageOf(w)).OfType<CompactRecords>().Single();
+                ClickNow(Descendants(table).OfType<Button>().First(b => b.Content is string s && s.StartsWith("+ ")));
+                await Wait(300);
+                FieldEditor editor = Field<List<FieldEditor>>(table, "editors")[0];
+                (Descendants(editor.Element).OfType<TextBox>().FirstOrDefault() ?? (TextBox)editor.Element).Text = "Feeders";
+                ClickNow(Descendants(table).OfType<Button>().First(b => b.Content as string == Loc.T("Common.Save")));
+                await Wait(500);
+                Check(StoredLines(memory, EntityStore.Load(memory).Single().Id, Block(BlockKinds.Quantities)).Count == 1, "a quantities line" + on + ": the item is stored with it");
+            });
+
+            await OnFirstPage(customize, "documents" + on, async w =>
+            {
+                RecordDefinition documents = EntityTypes.Records(type).First(r => r.Key == Block(BlockKinds.Documents));
+                await AddRecord(main, w, documents, async dialog =>
+                {
+                    List<FieldEditor> fields = dialog.Editors.ToList();
+                    (Descendants(fields[0].Element).OfType<TextBox>().FirstOrDefault() ?? (TextBox)fields[0].Element).Text = "Permit";
+                    (Descendants(fields[2].Element).OfType<DatePicker>().FirstOrDefault() ?? (DatePicker)fields[2].Element).SelectedDate = DateTime.Today.AddDays(90);
+                    await Wait(100);
+                });
+                Check(StoredLines(memory, EntityStore.Load(memory).Single().Id, Block(BlockKinds.Documents)).Any(r => r.Get("Name") == "Permit"), "a document" + on + ": the item is stored with it");
+                VehicleReminders.Remove(StoredLines(memory, EntityStore.Load(memory).Single().Id, Block(BlockKinds.Documents)).Select(r => r.Id));
+            });
+
+            await OnFirstPage(customize, "log" + on, async w =>
+            {
+                RecordDefinition log = EntityTypes.Records(type).First(r => r.Key == Block(BlockKinds.Log));
+                await AddRecord(main, w, log, async dialog =>
+                {
+                    List<FieldEditor> fields = dialog.Editors.ToList();
+                    (Descendants(fields[1].Element).OfType<TextBox>().FirstOrDefault() ?? (TextBox)fields[1].Element).Text = "Ringed";
+                    await Wait(100);
+                });
+                Check(StoredLines(memory, EntityStore.Load(memory).Single().Id, Block(BlockKinds.Log)).Count == 1, "a log entry" + on + ": the item is stored with it");
+            });
+        }
+
+        EntityStore.TrySave(memory, new List<Entity>());
+        view.ReloadAfterUndo();
+        RemoveMemory(main, memory);
     }
 
     // Drives the next item picker (EntityTypeSelector) that opens.
