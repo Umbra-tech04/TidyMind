@@ -21,14 +21,21 @@ namespace TidyMind
     {
         // A layout change for the collection view to save: the new layout, the blocks and fields whose data the items
         // lose with it (by the key it is stored under), the undo step's label and whether the toast offers to undo it.
-        public sealed record LayoutChange(CustomLayout Layout, IReadOnlyCollection<string> Removed, string Label, bool Destructive, Guid Target);
+        public sealed record LayoutChange(Guid Collection, CustomLayout Layout, IReadOnlyCollection<string> Removed, string Label, bool Destructive, Guid Target)
+        {
+            // Fields whose kind changed, by Id, with the new kind: their values are stored in its form (LayoutField.Fit).
+            public IReadOnlyDictionary<string, string> Converted { get; init; } = new Dictionary<string, string>();
+        }
 
         private bool layoutMode;
 
-        // Turns the page into the layout editor (a custom item only).
+        // A custom item of the collection showing it (Host.Collection): only then is its layout this collection's to change.
+        private bool CanEditLayout => Custom is CustomType custom && custom.MemoryId == host.Collection;
+
+        // Turns the page into the layout editor (a custom item of this collection only).
         public void EditLayout()
         {
-            if (Custom == null || !LeaveEdit())
+            if (!CanEditLayout || !LeaveEdit())
                 return;
             layoutMode = true;
             SearchBox.Text = "";
@@ -238,14 +245,25 @@ namespace TidyMind
 
         // The layout as `change` makes it from a copy, saved for the collection (and the data of `removed` taken from its
         // items) as one undo step. The page is drawn again from what was stored. False if it couldn't be saved (said).
-        private bool SaveLayout(Action<CustomLayout> change, string label, IReadOnlyCollection<string>? removed = null, bool destructive = false)
+        private bool SaveLayout(Action<CustomLayout> change, string label, IReadOnlyCollection<string>? removed = null, bool destructive = false,
+            IReadOnlyDictionary<string, string>? converted = null)
         {
             if (Custom is not CustomType custom)
+            {
+                // Its layout can't be read just now (CustomTypes reads it again next time): nothing is changed.
+                if (CustomTypes.MemoryOf(item.EntityType) is Guid memoryId)
+                    Msg.Show(this, Loc.F("Custom.Layout.CantRead", MemoryFiles.Layout(memoryId)), Loc.T("Common.CouldntSave"),
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                Redraw();
                 return false;
+            }
             CustomLayout layout = custom.Layout.Copy();
             change(layout);
             layout.Clean();
-            bool saved = host.ChangeLayout(new LayoutChange(layout, removed ?? Array.Empty<string>(), label, destructive, item.Id));
+            bool saved = host.ChangeLayout(new LayoutChange(custom.MemoryId, layout, removed ?? Array.Empty<string>(), label, destructive, item.Id)
+            {
+                Converted = converted ?? new Dictionary<string, string>()
+            });
             if (saved && !host.Preview && host.Reread(item.Id) is Entity stored)
                 item = stored; // the item as saved (a removed block's data gone from it)
             Redraw();
@@ -385,7 +403,8 @@ namespace TidyMind
         }
 
         // A field of a Fields block, new (fieldId null) or to change: its name, kind, choices (one per line), unit, and
-        // whether cards show it (three at most).
+        // whether cards show it (three at most). A kind change keeps each value in the new kind's form (LayoutField.Fit),
+        // asking first when some can't be read as it.
         private void OpenField(string blockId, string? fieldId)
         {
             CustomLayout current = Custom!.Layout;
@@ -446,6 +465,13 @@ namespace TidyMind
                     (problem == "Custom.Field.NeedsName" ? name : choices).Focus();
                     return Task.FromResult(false);
                 }
+                // Its kind changed while items hold values in it: each value is kept in the new kind's form; one that can't
+                // be read as that kind (a text that is no date) goes, which is asked first.
+                bool converts = fieldId != null && chosen != field.Kind;
+                int unfit = converts ? host.Unfit(field.Id, chosen) : 0;
+                if (unfit > 0 && Msg.Show(dialog, Loc.Plural("Custom.Layout.KindUnfit", unfit, name.Text.Trim(), Loc.T("Custom.FieldKind." + chosen)),
+                        Loc.T("Custom.Layout.EditField"), MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                    return Task.FromResult(false);
                 return Task.FromResult(SaveLayout(layout =>
                 {
                     List<LayoutField> fields = layout.Block(blockId)!.Fields ??= new List<LayoutField>();
@@ -460,7 +486,8 @@ namespace TidyMind
                     layout.CardFields.Remove(field.Id);
                     if (onCard.IsChecked == true)
                         layout.CardFields.Add(field.Id);
-                }, fieldId == null ? Loc.F("Undo.Added", name.Text.Trim()) : Loc.T("Custom.Undo.Layout")));
+                }, fieldId == null ? Loc.F("Undo.Added", name.Text.Trim()) : Loc.T("Custom.Undo.Layout"), destructive: unfit > 0,
+                    converted: converts ? new Dictionary<string, string> { [field.Id] = chosen } : null));
             }, () => State() != opened, width: 480);
             dialog.Loaded += (s, e) =>
             {

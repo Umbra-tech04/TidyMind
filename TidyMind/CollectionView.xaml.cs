@@ -582,7 +582,9 @@ namespace TidyMind
                 Delete = DeleteEntity,
                 Reread = Reread,
                 ChangeLayout = ChangeLayout,
-                ItemsHolding = ItemsHolding
+                ItemsHolding = ItemsHolding,
+                Unfit = Unfit,
+                Collection = memory.Id
             })
             { Owner = Window.GetWindow(this) };
             window.ShowDialog();
@@ -603,7 +605,9 @@ namespace TidyMind
                 Reread = id => preview,
                 ChangeLayout = ChangeLayout,
                 ItemsHolding = ItemsHolding,
-                Preview = true
+                Unfit = Unfit,
+                Preview = true,
+                Collection = memory.Id
             })
             { Owner = Window.GetWindow(this) };
             window.EditLayout();
@@ -618,11 +622,14 @@ namespace TidyMind
             entity.Details?.ContainsKey(key) == true || entity.Records?.GetValueOrDefault(key)?.Count > 0;
 
         // A layout change, saved for every item as one undo step: the layout, then the items without the data of the blocks
-        // and fields it removed, their files (once nothing uses them and no step can bring them back) and their documents'
-        // reminders. If the items can't be saved, the layout is put back. False if it couldn't be saved (said).
+        // and fields it removed and with a changed field's values in its new kind, their files (once nothing uses them and no
+        // step can bring them back) and their documents' reminders. If the items can't be saved, the layout is put back.
+        // False if it couldn't be saved (said).
         private bool ChangeLayout(ItemWindow.LayoutChange change)
         {
-            if (unreadable)
+            // Only this collection's own layout is changed here (an item of another layout, imported without it, never
+            // writes that one over this collection's).
+            if (unreadable || change.Collection != memory.Id)
                 return false;
             using UndoChange step = UndoChange.Begin(UndoService.Page, UndoParts.Layout(memory), UndoParts.Entities(memory), UndoParts.Reminders());
             CustomLayout? before = CustomTypes.OfMemory(memory)?.Layout;
@@ -632,11 +639,11 @@ namespace TidyMind
                 return false;
             }
 
-            List<(Entity Before, Entity After)> stripped = new List<(Entity, Entity)>();
+            // The items without the removed blocks' and fields' data, and with a field whose kind changed in its new kind's
+            // stored form (a value that can't be read as that kind goes: the editor asked first).
+            List<(Entity Before, Entity After)> changed = new List<(Entity, Entity)>();
             for (int i = 0; i < entities.Count; i++)
             {
-                if (!change.Removed.Any(key => Holds(entities[i], key)))
-                    continue;
                 Entity after = JsonSerializer.Deserialize<Entity>(JsonSerializer.Serialize(entities[i]))!;
                 foreach (string key in change.Removed)
                 {
@@ -644,22 +651,31 @@ namespace TidyMind
                     if (after.Records != null && after.Records.Remove(key) && after.Records.Count == 0)
                         after.Records = null;
                 }
-                stripped.Add((entities[i], after));
+                foreach ((string field, string kind) in change.Converted)
+                    if (after.Details?.GetValueOrDefault(field) is string value)
+                        FieldDefinition.WriteDetail(after, field, LayoutField.Fit(kind, value));
+                if (JsonSerializer.Serialize(after) == JsonSerializer.Serialize(entities[i]))
+                    continue;
+                changed.Add((entities[i], after));
                 entities[i] = after;
             }
-            if (stripped.Count > 0 && !SaveEntities())
+            if (changed.Count > 0 && !SaveEntities())
             {
-                foreach ((Entity was, Entity after) in stripped)
+                foreach ((Entity was, Entity after) in changed)
                     entities[entities.IndexOf(after)] = was;
-                if (before != null)
-                    CustomLayoutStore.TrySave(memory, before);
+                // The layout back as it was; if even that can't be written, the change stays a step Ctrl+Z can take back.
+                if (before == null || !CustomLayoutStore.TrySave(memory, before))
+                {
+                    Msg.Show(Loc.F("Custom.Layout.NotPutBack", MemoryFiles.Layout(memory)), Loc.T("Common.CouldntSave"), MessageBoxButton.OK, MessageBoxImage.Warning);
+                    step.Commit(change.Label, false, change.Target);
+                }
                 return false;
             }
-            if (stripped.Count > 0)
+            if (changed.Count > 0)
             {
-                EntityFiles.DeleteUnreferenced(stripped.Select(x => x.Before), entities);
+                EntityFiles.DeleteUnreferenced(changed.Select(x => x.Before), entities);
                 // The removed lists' records are no longer in the layout, so their reminders go by their Ids.
-                WarnReminders(VehicleReminders.Remove(stripped.SelectMany(x => change.Removed
+                WarnReminders(VehicleReminders.Remove(changed.SelectMany(x => change.Removed
                     .SelectMany(key => RecordTree.Walk(x.Before.Records?.GetValueOrDefault(key) ?? new List<EntityRecord>()))
                     .Select(r => r.Record.Id))));
             }
@@ -667,6 +683,11 @@ namespace TidyMind
             RenderEntities();
             return true;
         }
+
+        // How many items hold a value in the field that can't be read as `kind` (LayoutField.Fit): asked about before a
+        // field's kind changes.
+        private int Unfit(string field, string kind) =>
+            entities.Count(e => e.Details?.GetValueOrDefault(field) is string value && LayoutField.Fit(kind, value) == null);
 
         // ---- CRUD ---------------------------------------------------------
 

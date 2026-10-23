@@ -34,7 +34,7 @@ namespace TidyMind
             ("Notebook", new[] { "PageTurn", "PageSelect", "Format", "Paste" }),
             ("Todos", new[] { "TodoAdd", "TodoSelect", "WeekDay" }),
             ("Plan", new[] { "CalendarDay", "DialogSave", "PlanCreate", "PlanMove", "PlanEdit", "PlanTodo", "PlanSelect" }),
-            ("Items", new[] { "ItemSearch", "ItemPictures", "ItemEscape", "PictureDrag" })
+            ("Items", new[] { "ItemSearch", "ItemPictures", "ItemEscape", "PictureDrag", "CustomLayout", "ChecklistSelect" })
         }.SelectMany(g => g.Ids.Select(id => new Tip(g.Group, id))).ToList();
     }
 }

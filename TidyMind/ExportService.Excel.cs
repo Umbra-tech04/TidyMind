@@ -243,7 +243,7 @@ namespace TidyMind
             HashSet<string> used = new HashSet<string>(StringComparer.CurrentCultureIgnoreCase) { Loc.T("Export.Column.Name"), Loc.T("Entity.Field.Notes") };
             Dictionary<FieldDefinition, string> labels = CustomTypes.Of(entity.EntityType) is CustomType custom
                 ? custom.Tabs[0].Sections.SelectMany(s => s.Fields.Select(f => (Section: s, Field: f))).ToDictionary(x => x.Field,
-                    x => used.Add(XlLabel(x.Field, entity)) ? XlLabel(x.Field, entity) : x.Section.Label + " › " + XlLabel(x.Field, entity))
+                    x => Unique(used, XlLabel(x.Field, entity), x.Section.Label + " › " + XlLabel(x.Field, entity)))
                 : new Dictionary<FieldDefinition, string>();
             foreach (FieldDefinition field in definitions)
             {
@@ -252,6 +252,17 @@ namespace TidyMind
                     yield return (labels.GetValueOrDefault(field) ?? XlLabel(field, entity), XlValue(field, value, entity));
             }
             yield return (Loc.T("Entity.Field.Notes"), entity.Notes ?? "");
+        }
+
+        // The label as it is if no column has it yet, else `fuller` (with its block's name), numbered if that is taken too.
+        private static string Unique(HashSet<string> used, string label, string fuller)
+        {
+            if (used.Add(label))
+                return label;
+            string unique = fuller;
+            for (int n = 2; !used.Add(unique); n++)
+                unique = fuller + " (" + n + ")";
+            return unique;
         }
 
         private static string XlLabel(FieldDefinition field, Entity owner) =>

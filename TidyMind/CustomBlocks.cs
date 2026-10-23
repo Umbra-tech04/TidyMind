@@ -167,7 +167,7 @@ namespace TidyMind
             {
                 bool ticked = check.IsChecked == true;
                 keep(check.IsKeyboardFocused ? line.Id : null);
-                if (!change(stored => stored.First(r => r.Id == line.Id).Set(CustomType.DoneKey, ticked ? "true" : null)))
+                if (!change(stored => stored.FirstOrDefault(r => r.Id == line.Id)?.Set(CustomType.DoneKey, ticked ? "true" : null)))
                     check.IsChecked = !ticked; // not saved: the tick goes back
             };
             check.KeyDown += (s, e) =>
@@ -182,7 +182,7 @@ namespace TidyMind
             row.Children.Add(check);
 
             TextBox text = TextEditing.InlineEditor(() => list.Title(line),
-                edited => change(stored => stored.First(r => r.Id == line.Id).Set(CustomType.TextKey, edited)), () => input.Focus());
+                edited => change(stored => stored.FirstOrDefault(r => r.Id == line.Id)?.Set(CustomType.TextKey, edited)), () => input.Focus());
             text.FontSize = 14;
             text.VerticalAlignment = VerticalAlignment.Center;
             text.TextDecorations = done ? TextDecorations.Strikethrough : null;

@@ -35,11 +35,17 @@ namespace TidyMind
             public Func<Guid, Entity?> Reread { get; init; } = _ => null;
 
             // A custom collection's layout (the layout editor): ChangeLayout saves a change for every item (false if it
-            // couldn't, said), ItemsHolding counts the items with something under any of the keys. Preview: the window is
-            // opened on the layout alone (an empty item that is never stored), in the editor, and closes when that is done.
+            // couldn't, said), ItemsHolding counts the items with something under any of the keys, Unfit the items whose value
+            // of a field can't be read as another kind (LayoutField.Fit). Preview: the window is opened on the layout alone (an
+            // empty item that is never stored), in the editor, and closes when that is done.
             public Func<LayoutChange, bool> ChangeLayout { get; init; } = _ => false;
             public Func<IReadOnlyCollection<string>, int> ItemsHolding { get; init; } = _ => 0;
+            public Func<string, string, int> Unfit { get; init; } = (_, _) => 0;
             public bool Preview { get; init; }
+
+            // The collection showing the item: its layout is edited here only when the item is of that collection's layout
+            // (an item of another layout, imported without it, never writes its layout over this one).
+            public Guid? Collection { get; init; }
         }
 
         private const string OverviewKey = ItemSearch.OverviewTab;
@@ -280,7 +286,7 @@ namespace TidyMind
             Actions.Children.Add(HeaderButton(Loc.T(EntityImages.Count(item) == 0 ? "Vehicle.AddPictures" : "Vehicle.EditBasics"), EditBasics));
             if (item.EntityType == EntityTypes.Vehicle)
                 Actions.Children.Add(HeaderButton(Loc.T("Vehicle.Odometer.Update"), UpdateOdometer));
-            if (Custom != null)
+            if (CanEditLayout)
                 Actions.Children.Add(HeaderButton(Loc.T("Custom.EditLayout"), EditLayout));
             Button delete = HeaderButton(Loc.T("Common.Delete"), Delete);
             delete.Foreground = ItemLook.Res("Danger");
@@ -368,7 +374,8 @@ namespace TidyMind
             List<UIElement> blocks = query.Length > 0 ? SearchBlocks(query)
                 : Custom is CustomType custom ? (layoutMode ? LayoutBlocks(custom) : CustomBlocks(custom))
                 : page == OverviewKey ? OverviewBlocks()
-                : TabBlocks(EntityTypes.Tabs(item.EntityType).First(t => t.Key == page));
+                // A page its type no longer has (a custom layout that can't be read just now): what an unknown type shows.
+                : EntityTypes.Tabs(item.EntityType).FirstOrDefault(t => t.Key == page) is TabDefinition tab ? TabBlocks(tab) : OverviewBlocks();
             if (!SinglePage)
             {
                 Grid title = new Grid { MinHeight = PageTitleHeight };

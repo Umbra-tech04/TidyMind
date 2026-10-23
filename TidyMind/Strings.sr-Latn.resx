@@ -4510,4 +4510,19 @@ Uredi raspored slaže blokove jedan pored drugog ili jedan ispod drugog i bira d
   <data name="Tips.ChecklistSelect.Text" xml:space="preserve">
     <value>Bira više stavki kontrolne liste. Delete ih briše.</value>
   </data>
+  <data name="Custom.Layout.CantRead" xml:space="preserve">
+    <value>Raspored nije mogao da se pročita iz {0}, pa se sada ne može menjati. Ništa nije promenjeno.</value>
+  </data>
+  <data name="Custom.Layout.NotPutBack" xml:space="preserve">
+    <value>Stavke nisu mogle da se sačuvaju, a raspored nije mogao da se vrati kakav je bio u {0}. Ctrl+Z ga vraća čim datoteka bude mogla da se upiše.</value>
+  </data>
+  <data name="Custom.Layout.KindUnfit.One" xml:space="preserve">
+    <value>Promeniti „{1}” u {2}? U {0} stavci njegova vrednost ne može da se pročita tako i biće uklonjena. Može se poništiti.</value>
+  </data>
+  <data name="Custom.Layout.KindUnfit.Few" xml:space="preserve">
+    <value>Promeniti „{1}” u {2}? U {0} stavke njegova vrednost ne može da se pročita tako i biće uklonjena. Može se poništiti.</value>
+  </data>
+  <data name="Custom.Layout.KindUnfit.Other" xml:space="preserve">
+    <value>Promeniti „{1}” u {2}? U {0} stavki njegova vrednost ne može da se pročita tako i biće uklonjena. Može se poništiti.</value>
+  </data>
 </root>

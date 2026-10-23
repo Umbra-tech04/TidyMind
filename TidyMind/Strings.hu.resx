@@ -4184,4 +4184,13 @@ Az Elrendezés szerkesztése egymás mellé vagy egymás alá rendezi a blokkoka
   <data name="Tips.ChecklistSelect.Text" xml:space="preserve">
     <value>Egy elem ellenőrzőlistájának több sorát jelöli ki. A Delete törli őket.</value>
   </data>
+  <data name="Custom.Layout.CantRead" xml:space="preserve">
+    <value>Az elrendezést nem sikerült beolvasni innen: {0}, ezért most nem módosítható. Semmi sem változott.</value>
+  </data>
+  <data name="Custom.Layout.NotPutBack" xml:space="preserve">
+    <value>Az elemeket nem sikerült menteni, és az elrendezést sem sikerült visszaállítani ebben: {0}. A Ctrl+Z visszaállítja, amint a fájl írható.</value>
+  </data>
+  <data name="Custom.Layout.KindUnfit.Other" xml:space="preserve">
+    <value>Módosítod a(z) „{1}” típusát erre: {2}? {0} elemben az értéke így nem olvasható, ezért törlődik. Visszavonható.</value>
+  </data>
 </root>

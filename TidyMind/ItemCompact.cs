@@ -195,7 +195,7 @@ namespace TidyMind
             Button less = ItemLook.RowAction("", records.Text("Fewer"), () => Step(record, -1));
             Button more = ItemLook.RowAction("", records.Text("More"), () => Step(record, +1));
             less.IsEnabled = count > 0;
-            more.IsEnabled = count < MaxPieces;
+            more.IsEnabled = count + 1 <= MaxPieces;
             less.Opacity = less.IsEnabled ? 1 : 0.35; // the button style has no look of its own for a disabled one
             more.Opacity = more.IsEnabled ? 1 : 0.35;
             less.Margin = more.Margin = new Thickness(0);
@@ -236,8 +236,11 @@ namespace TidyMind
             change(stored =>
             {
                 EntityRecord target = stored.First(r => r.Id == record.Id);
-                double now = Values.Number(target.Get(step.Key)) ?? 0;
-                target.Set(step.Key, Math.Clamp(now + by, 0, MaxPieces).ToString("0.###", CultureInfo.InvariantCulture));
+                // One step from where it is (in decimals, so 2.3 - 1 is 1.3), never below none; an amount already past the top
+                // (typed in) only goes down, and its decimals stay as they were.
+                decimal now = (decimal)(Values.Number(target.Get(step.Key)) ?? 0);
+                if (by > 0 ? now + by <= (decimal)MaxPieces : now > 0)
+                    target.Set(step.Key, Math.Max(0, now + by).ToString(CultureInfo.InvariantCulture));
             });
         }
 

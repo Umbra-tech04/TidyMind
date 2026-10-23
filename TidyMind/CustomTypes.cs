@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 
 namespace TidyMind
@@ -15,6 +16,9 @@ namespace TidyMind
 
         private static readonly object gate = new object();
         private static readonly Dictionary<Guid, CustomType?> made = new Dictionary<Guid, CustomType?>();
+
+        // Fallback names (a block or field without one) are in the language shown: made again after a switch.
+        static CustomTypes() => Loc.LanguageChanged += ForgetAll;
 
         public static string TypeOf(Guid memoryId) => Prefix + memoryId.ToString("N");
 
@@ -33,7 +37,11 @@ namespace TidyMind
             {
                 if (made.TryGetValue(id, out CustomType? known))
                     return known;
-                CustomType? built = CustomLayoutStore.TryLoad(id, out CustomLayout? layout, out _) && layout != null ? new CustomType(id, layout) : null;
+                // A file that can't be read now (locked a moment by a backup or a virus scan) is read again next time:
+                // only a layout, or no file at all, is kept.
+                if (!CustomLayoutStore.TryLoad(id, out CustomLayout? layout, out _))
+                    return null;
+                CustomType? built = layout != null ? new CustomType(id, layout) : null;
                 made[id] = built;
                 return built;
             }
@@ -62,6 +70,9 @@ namespace TidyMind
     {
         public sealed record ItemDate(Profile Memory, Entity Item, string What);
 
+        // Each custom collection's items, kept while its items file is unchanged: the Day Plan asks after every change on it.
+        private static readonly Dictionary<Guid, (DateTime Written, List<Entity> Items)> read = new Dictionary<Guid, (DateTime, List<Entity>)>();
+
         public static List<ItemDate> On(IEnumerable<Profile> memories, DateTime day)
         {
             List<ItemDate> dates = new List<ItemDate>();
@@ -70,7 +81,7 @@ namespace TidyMind
                 if (CustomTypes.OfMemory(memory) is not CustomType custom)
                     continue;
                 List<FieldDefinition> dateFields = custom.Tabs[0].Sections.SelectMany(s => s.Fields).Where(f => f.Kind == ValueKind.Date).ToList();
-                foreach (Entity item in EntityStore.LoadOrEmpty(memory).Where(e => e.EntityType == custom.Type))
+                foreach (Entity item in ItemsOf(memory).Where(e => e.EntityType == custom.Type))
                 {
                     foreach (FieldDefinition field in dateFields.Where(f => Values.ParseDate(f.Read(item)) == day.Date))
                         dates.Add(new ItemDate(memory, item, field.Label));
@@ -79,6 +90,22 @@ namespace TidyMind
                 }
             }
             return dates;
+        }
+
+        // A file that can't be read gives none, and is read again next time.
+        private static List<Entity> ItemsOf(Profile memory)
+        {
+            string file = MemoryFiles.Items(memory);
+            DateTime written = File.Exists(file) ? File.GetLastWriteTimeUtc(file) : DateTime.MinValue;
+            lock (read)
+            {
+                if (read.TryGetValue(memory.Id, out var known) && known.Written == written)
+                    return known.Items;
+                if (!EntityStore.TryLoad(memory, out List<Entity> items, out _))
+                    return new List<Entity>();
+                read[memory.Id] = (written, items);
+                return items;
+            }
         }
     }
 
@@ -122,7 +149,9 @@ namespace TidyMind
             Layout = layout;
             HashSet<string> onCard = (layout.CardFields ?? new List<string>()).ToHashSet(StringComparer.Ordinal);
             List<CustomBlock> blocks = new List<CustomBlock>();
-            foreach (LayoutBlock block in layout.Blocks.Where(b => BlockKinds.Known(b.Kind)))
+            // An item has one set of pictures: a second gallery (from a file made elsewhere) is kept in the file, not shown.
+            LayoutBlock? gallery = layout.Blocks.FirstOrDefault(b => b.Kind == BlockKinds.Gallery);
+            foreach (LayoutBlock block in layout.Blocks.Where(b => BlockKinds.Known(b.Kind) && (b.Kind != BlockKinds.Gallery || b == gallery)))
             {
                 blocks.Add(block.Kind switch
                 {

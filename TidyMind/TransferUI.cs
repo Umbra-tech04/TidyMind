@@ -77,7 +77,14 @@ namespace TidyMind
         // collection's layout along.
         public static void ExportItem(Window? owner, Entity entity)
         {
-            CustomLayout? layout = CustomTypes.Of(entity.EntityType)?.Layout;
+            // A custom item's layout read now; one that can't be read stops the export (the item would go without its blocks).
+            CustomLayout? layout = null;
+            if (CustomTypes.MemoryOf(entity.EntityType) is Guid memoryId && !CustomLayoutStore.TryLoad(memoryId, out layout, out string problem))
+            {
+                Msg.Show(owner, Loc.F("Transfer.Export.Unreadable", MemoryFiles.Layout(memoryId), problem), Loc.T("Transfer.Export.Caption"),
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             string? path = AskWhere(owner, entity.Name);
             if (path != null)
                 Export(owner, entity.Name, path, (progress, cancel) => TransferPackage.ExportItem(entity, path, progress, cancel, layout));

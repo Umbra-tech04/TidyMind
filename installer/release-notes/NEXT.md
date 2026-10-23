@@ -1,0 +1,1 @@
+- Custom collections: build your own item layout from blocks (fields, pictures, notes, checklists, documents with reminders, a log, quantities), each full or half width, with up to three fields on the cards; their dates show in the Day Plan and they go along in exports, transfer packages and backups.

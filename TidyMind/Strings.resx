@@ -4347,4 +4347,16 @@ Edit layout arranges the blocks side by side or one under the other and picks up
   <data name="Tips.ChecklistSelect.Text" xml:space="preserve">
     <value>Selects several lines of an item's checklist. Delete deletes them.</value>
   </data>
+  <data name="Custom.Layout.CantRead" xml:space="preserve">
+    <value>The layout couldn't be read from {0}, so it can't be changed now. Nothing was changed.</value>
+  </data>
+  <data name="Custom.Layout.NotPutBack" xml:space="preserve">
+    <value>The items couldn't be saved, and the layout couldn't be put back as it was in {0}. Ctrl+Z puts it back once the file can be written.</value>
+  </data>
+  <data name="Custom.Layout.KindUnfit.One" xml:space="preserve">
+    <value>Change “{1}” to {2}? In {0} item its value can't be read as that and will be removed. You can undo this.</value>
+  </data>
+  <data name="Custom.Layout.KindUnfit.Other" xml:space="preserve">
+    <value>Change “{1}” to {2}? In {0} items its value can't be read as that and will be removed. You can undo this.</value>
+  </data>
 </root>

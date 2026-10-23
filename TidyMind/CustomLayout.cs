@@ -27,7 +27,7 @@ namespace TidyMind
     // The kinds of a Fields block's field, stored as these English names.
     public static class FieldKinds
     {
-        public const string Text = "Text", Number = "Number", Date = "Date", Flag = "Flag", Choice = "Choice";
+        public const string Text = nameof(Text), Number = nameof(Number), Date = nameof(Date), Flag = nameof(Flag), Choice = nameof(Choice);
 
         public static readonly string[] All = { Text, Number, Date, Flag, Choice };
 
@@ -73,20 +73,16 @@ namespace TidyMind
         public bool HasGallery => Blocks.Any(b => b.Kind == BlockKinds.Gallery);
 
         // What a file from elsewhere may hold that the views don't expect: nulls in lists, blocks or fields without an
-        // Id or sharing one (they would share their data), a second gallery, card fields that are no field. Such
-        // entries are dropped; everything else, unknown kinds included, stays.
+        // Id or sharing one (they would share their data), card fields that are no field. Such entries are dropped;
+        // everything else stays, unknown kinds and a second gallery included (CustomType shows the first gallery only).
         public CustomLayout Clean()
         {
             HashSet<string> ids = new HashSet<string>(StringComparer.Ordinal);
-            bool gallery = false;
             Blocks = (Blocks ?? new List<LayoutBlock>()).Where(b => b != null && !string.IsNullOrEmpty(b.Id) && ids.Add(b.Id)).ToList();
             foreach (LayoutBlock block in Blocks)
             {
                 block.Name ??= "";
                 block.Kind ??= "";
-                if (block.Kind == BlockKinds.Gallery && gallery)
-                    block.Kind = "";  // a second picture set the item doesn't have: an unknown block, left out
-                gallery |= block.Kind == BlockKinds.Gallery;
                 if (block.Fields != null)
                     block.Fields = block.Fields.Where(f => f != null && !string.IsNullOrEmpty(f.Id) && ids.Add(f.Id)).ToList();
                 foreach (LayoutField field in block.Fields ?? new List<LayoutField>())
@@ -202,6 +198,16 @@ namespace TidyMind
         public Dictionary<string, JsonElement>? ExtensionData { get; set; }
 
         public LayoutField Copy() => JsonSerializer.Deserialize<LayoutField>(JsonSerializer.Serialize(this))!;
+
+        // A stored value as a field of `kind` stores it (its kind changed): text and choices as they are, a number or a
+        // date in its invariant form (Values), a flag only as itself. Null: it can't be read as that kind.
+        public static string? Fit(string kind, string stored) => kind switch
+        {
+            FieldKinds.Number => Values.Normalize(ValueKind.Number, stored) is string number && number.Length > 0 ? number : null,
+            FieldKinds.Date => Values.Normalize(ValueKind.Date, stored) is string date && date.Length > 0 ? date : null,
+            FieldKinds.Flag => stored == "true" ? stored : null,
+            _ => stored
+        };
     }
 
     // A custom collection's layout file. No file: the collection isn't custom.

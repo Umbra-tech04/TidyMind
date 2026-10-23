@@ -39,6 +39,7 @@ static partial class Program
             await CustomWindow(main);
             await CustomCardsAndForm(main);
             await CustomBuilder(main);
+            await CustomReviewFixes(main);
             await CustomIntegration(main);
         }
         finally
@@ -151,7 +152,8 @@ static partial class Program
         File.WriteAllText(MemoryFiles.Layout(other), messy);
         Check(CustomLayoutStore.TryLoad(other, out CustomLayout clean, out _) && clean != null, "a messy layout is read");
         Check(clean.Blocks.Select(b => b.Id).SequenceEqual(new[] { "a", "b", "c" }), "nulls, a block without an Id and one sharing an Id dropped");
-        Check(clean.Blocks[1].Kind == "" && CustomTypes.OfMemory(other).Blocks.Count(b => b.Kind == BlockKinds.Gallery) == 1, "only the first gallery is a gallery");
+        Check(clean.Blocks[1].Kind == BlockKinds.Gallery && CustomTypes.OfMemory(other).Blocks.Count(b => b.Kind == BlockKinds.Gallery) == 1,
+            "a second gallery is kept as written, only the first is shown");
         Check(clean.Blocks[2].Name == "" && clean.Blocks[2].Fields.Select(f => f.Id).SequenceEqual(new[] { "f1", "f2", "f3", "f4" }), "a field sharing an Id dropped");
         Check(clean.Blocks[2].Fields[3].Choices.SequenceEqual(new[] { "x" }), "empty and repeated choices dropped");
         Check(clean.CardFields.SequenceEqual(new[] { "f1", "f2", "f3" }), "card fields: only fields, once each, at most three");
