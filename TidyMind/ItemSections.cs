@@ -84,7 +84,7 @@ namespace TidyMind
         // A section's heading (quiet: SectionLabelStyle) with its actions on the right.
         public static Grid Heading(string title, out StackPanel actions, bool compact = false)
         {
-            Grid heading = new Grid { MinHeight = HeadingHeight, Margin = HeadingMargin(compact) };
+            Grid heading = new Grid { MinHeight = HeadingHeight, Margin = HeadingMargin(compact), Tag = HeadingTag };
             heading.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             heading.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             heading.Children.Add(new TextBlock
@@ -99,6 +99,21 @@ namespace TidyMind
             Grid.SetColumn(actions, 1);
             heading.Children.Add(actions);
             return heading;
+        }
+
+        private static readonly object HeadingTag = new object();
+
+        // The first heading inside a section (customizing a custom item renames its block there) and its title.
+        public static (Grid Heading, TextBlock Title)? HeadingOf(DependencyObject section)
+        {
+            foreach (object child in LogicalTreeHelper.GetChildren(section))
+            {
+                if (child is Grid grid && grid.Tag == HeadingTag && grid.Children.OfType<TextBlock>().FirstOrDefault() is TextBlock title)
+                    return (grid, title);
+                if (child is DependencyObject inner && HeadingOf(inner) is var found && found != null)
+                    return found;
+            }
+            return null;
         }
 
         // A field's name in small muted text over its value.

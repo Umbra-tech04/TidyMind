@@ -4,15 +4,18 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Threading;
 using TidyMind;
 
-// Harness custom, M3: the layout editor in the item window. Blocks moved, made half width, renamed, a log's amounts
-// set, added and removed; fields added (on the card, at most three), changed and removed; a removal that takes items'
-// data asks first and goes with it in one step, which Ctrl+Z brings back byte for byte; Done and Esc; the editor on its
-// own from the collection's menu; nothing cut off at three widths.
+// Harness custom, M3: customizing the layout on the item's own page. The Customize switch, the blocks as the item shows
+// them with their toolbars (moves, half and full width, rename in place, a log's amounts, remove), a Fields block's
+// fields (added by typing a name, the kind from a dropdown, a number's unit, a choice's choices, On card with at most
+// three, moved, renamed, removed); a removal that takes items' data asks first and goes with it in one step, which Ctrl+Z
+// brings back byte for byte; "+ Add" and its menu; Esc; the collection's menu; nothing cut off at three widths.
 static partial class Program
 {
     static CustomLayout GearLayout(Profile memory)
@@ -25,7 +28,9 @@ static partial class Program
 
     // Like DriveItem, but for the item window about to open whose title is `title` (one closing meanwhile isn't taken for
     // it); whatever happens it is closed afterwards, so the caller's ShowDialog always returns.
-    static void DriveTitled(MainWindow main, string title, Func<ItemWindow, Task> act)
+    static void DriveTitled(MainWindow main, string title, Func<ItemWindow, Task> act) => DriveWindow(main, w => w.Title == title, "titled " + title, act);
+
+    static void DriveWindow(MainWindow main, Func<ItemWindow, bool> which, string what, Func<ItemWindow, Task> act)
     {
         _ = main.Dispatcher.BeginInvoke(new Action(async () =>
         {
@@ -33,11 +38,11 @@ static partial class Program
             for (int i = 0; i < 80 && window == null; i++)
             {
                 await Wait(100);
-                window = Application.Current.Windows.OfType<ItemWindow>().FirstOrDefault(w => w.IsVisible && w.Title == title);
+                window = Application.Current.Windows.OfType<ItemWindow>().FirstOrDefault(w => w.IsVisible && which(w));
             }
             if (window == null)
             {
-                Check(false, "a window titled " + title + " opened: " + string.Join(", ", Application.Current.Windows.OfType<ItemWindow>().Select(w => w.Title)));
+                Check(false, "a window " + what + " opened: " + string.Join(", ", Application.Current.Windows.OfType<ItemWindow>().Select(w => w.Title)));
                 foreach (ItemWindow other in Application.Current.Windows.OfType<ItemWindow>().ToList())
                     other.Close();
                 return;
@@ -56,30 +61,89 @@ static partial class Program
         }), DispatcherPriority.Background);
     }
 
-    // Fills the next block or field dialog (an EditDialog) with `fill`, then presses its Save.
-    static void AnswerLayoutDialog(MainWindow main, Func<EditDialog, Task> fill) => AnswerRecord(main, fill);
+    static bool Customizing(ItemWindow w) => Field<bool>(w, "customizing");
 
-    static TextBox DialogText(EditDialog dialog, int index) => Descendants(dialog).OfType<TextBox>().Where(t => t.IsVisible || index < 0).ElementAt(Math.Max(index, 0));
+    static CheckBox CustomizeSwitch(ItemWindow w) =>
+        Descendants(w).OfType<CheckBox>().FirstOrDefault(c => AutomationProperties.GetName(c) == Loc.T("Custom.Customize"));
+
+    // A block on the page while customizing (named by its block), and a button of its toolbar.
+    static Grid ShellOf(ItemWindow w, string block) =>
+        Descendants(PageOf(w)).OfType<Grid>().First(g => AutomationProperties.GetName(g) == block && Descendants(g).OfType<Button>().Any(b =>
+            AutomationProperties.GetName(b) == Loc.T("Custom.Layout.RemoveBlock")));
+
+    static Button Tool(ItemWindow w, string block, string name) =>
+        Descendants(ShellOf(w, block)).OfType<Button>().First(b => AutomationProperties.GetName(b) == Loc.T(name));
+
+    // A block's name, edited where it stands.
+    static TextBox NameBox(ItemWindow w, string block, string kind) =>
+        Descendants(ShellOf(w, block)).OfType<TextBox>().First(t => AutomationProperties.GetName(t) == Loc.F("Custom.Layout.NameOf", Loc.T("Custom.Kind." + kind)));
+
+    static TextBox LayoutTarget(ItemWindow w, string block, string field) =>
+        (TextBox)Field<Dictionary<(string, string), FrameworkElement>>(w, "layoutTargets")[(block, field)];
+
+    // An edit typed into a box that saves when it loses the keyboard (a name edited in place, a unit).
+    static void TypeAndLeave(TextBox box, string text)
+    {
+        box.Text = text;
+        box.RaiseEvent(new KeyboardFocusChangedEventArgs(Keyboard.PrimaryDevice, 0, box, null) { RoutedEvent = Keyboard.LostKeyboardFocusEvent });
+    }
+
+    static void TypeAndEnter(TextBox box, string text)
+    {
+        box.Text = text;
+        PressKey(box, Key.Enter);
+    }
+
+    static ComboBox KindBox(ItemWindow w, string field) =>
+        Descendants(PageOf(w)).OfType<ComboBox>().First(c => AutomationProperties.GetName(c) == Loc.F("Custom.Field.KindOf", field));
+
+    static void PickKind(ItemWindow w, string field, string kind)
+    {
+        ComboBox box = KindBox(w, field);
+        box.SelectedItem = box.Items.Cast<ComboBoxItem>().First(i => (string)i.Tag == kind);
+    }
+
+    static CheckBox OnCardBox(ItemWindow w, string field) =>
+        Descendants(PageOf(w)).OfType<CheckBox>().First(c => AutomationProperties.GetName(c) == Loc.F("Custom.Field.OnCardOf", field));
+
+    static void Click(ToggleButton box)
+    {
+        box.IsChecked = box.IsChecked != true;
+        box.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent, box));
+    }
 
     static async Task CustomBuilder(MainWindow main)
     {
-        Console.WriteLine("The layout editor");
+        Console.WriteLine("Customizing the layout on the item's page");
         Profile memory = Profiles(main).First(p => p.Name == "Gear");
         Dictionary<string, string> ids = GearIds(memory);
         CollectionView view = OpenCollectionView(main, memory);
         await Wait(400);
         Guid tentId = EntityStore.Load(memory).First(e => e.Name == "Tent").Id;
         string layoutFile = MemoryFiles.Layout(memory), itemsFile = MemoryFiles.Items(memory);
+        string Named(string block) => GearLayout(memory).Block(ids[block]).Name;
+        string specs = Named("fields"), packing = Named("checklist"), repairs = Named("log"), spares = Named("quantities");
 
         await WithVehicle(main, view, tentId, async w =>
         {
-            ClickNow(ButtonNamed(w, Loc.T("Custom.EditLayout")));
+            Check(CustomizeSwitch(w) is CheckBox off && off.IsChecked == false && !Customizing(w), "the item opens as always, Customize off");
+            Check(!Descendants(PageOf(w)).OfType<Button>().Any(b => AutomationProperties.GetName(b) == Loc.T("Custom.Layout.RemoveBlock")), "no toolbars while it is off");
+            Click(CustomizeSwitch(w));
             await Wait(400);
-            Check(Field<bool>(w, "layoutMode"), "Edit layout turns the page into the editor");
+            Check(Customizing(w) && CustomizeSwitch(w).IsChecked == true, "the switch turns it on");
             Check(PageTexts(w).Contains(Loc.T("Custom.Layout.Hint")), "it says changes apply to every item and can be undone");
-            Check(ButtonNamed(w, Loc.T("Custom.Layout.Done")) != null, "Done in place of the item's actions");
-            Check(Descendants(PageOf(w)).OfType<StackPanel>().Count(p => System.Windows.Automation.AutomationProperties.GetName(p) is string n
-                && GearLayout(memory).Blocks.Any(b => b.Name == n)) == 7, "a frame per known block");
+            Check(ButtonNamed(w, Loc.T("Custom.Layout.Add")) != null, "+ Add at the end");
+            Check(ButtonNamed(w, Loc.T("Common.Delete")) != null, "the item's own actions stay");
+            List<string> known = GearLayout(memory).Blocks.Where(b => BlockKinds.Known(b.Kind)).Select(b => b.Name).ToList();
+            List<Grid> shells = known.Select(n => ShellOf(w, n)).ToList();
+            Check(shells.Count == 7, "every known block on the page, with its toolbar");
+            Check(shells.All(s => Descendants(s).OfType<Button>().Where(b => AutomationProperties.GetName(b) == Loc.T("Custom.Layout.RemoveBlock"))
+                .All(b => ((FrameworkElement)VisualTreeParent(b)).Visibility == Visibility.Hidden || s.IsMouseOver || s.IsKeyboardFocusWithin)), "the toolbars are hidden until the pointer or the keyboard is on a block");
+            Check(Descendants(PageOf(w)).OfType<ChecklistSection>().Count() == 1 && Descendants(PageOf(w)).OfType<CompactRecords>().Count() == 1,
+                "the blocks are the item's own, still in use");
+            Check(!Sections(w).Any(s => s.Definition.Label == specs) && KindBox(w, "Brand") != null, "a Fields block lists its fields with their kind");
+            Check(NameBox(w, Named("notes"), BlockKinds.Notes).Text == Named("notes"), "a block's name is edited where it stands");
+
             foreach (double width in new[] { 560.0, 760, 1100 })
             {
                 w.Width = width;
@@ -87,96 +151,113 @@ static partial class Program
                 List<string> cut = CutOff(w).Concat(Clipped(w)).ToList();
                 Check(cut.Count == 0, "nothing cut off at " + width + " px" + (cut.Count > 0 ? ": " + string.Join("; ", cut.Take(4)) : ""));
             }
-            RenderWindow(w, "custom-layout");
+            w.Width = 1100;
+            await Wait(300);
+            ((FrameworkElement)VisualTreeParent(Tool(w, packing, "Custom.Layout.RemoveBlock"))).Visibility = Visibility.Visible; // as on hover
+            RenderWindow(w, "custom-customize");
 
             // Moves: one step each, undone and redone by the window's own Ctrl+Z.
             string start = File.ReadAllText(layoutFile);
             List<string> Order() => GearLayout(memory).Blocks.Select(b => b.Kind).ToList();
-            Invoke(w, "MoveBlock", ids["checklist"], -1);
+            ClickNow(Tool(w, packing, "Custom.Layout.Up"));
             await Wait(300);
-            Check(Order().IndexOf(BlockKinds.Checklist) == 2 && Order().IndexOf(BlockKinds.Notes) == 3, "a block moved up: " + string.Join(", ", Order()));
+            Check(Order().IndexOf(BlockKinds.Checklist) == 2 && Order().IndexOf(BlockKinds.Notes) == 3, "a block moved up from its toolbar: " + string.Join(", ", Order()));
             Check(UndoHost.Of(w).Undo() && File.ReadAllText(layoutFile) == start, "undone byte for byte");
             await Wait(200);
-            Check(Field<bool>(w, "layoutMode"), "still in the editor after an undo");
+            Check(Customizing(w), "still customizing after an undo");
             Check(UndoHost.Of(w).Redo() && Order().IndexOf(BlockKinds.Checklist) == 2, "redone");
             Invoke(w, "MoveBlock", ids["checklist"], +1);
             Invoke(w, "MoveBlock", ids["log"], +1);
             await Wait(300);
             Check(Order().Last() == "Timeline" && Order()[Order().Count - 2] == BlockKinds.Log, "a block moved past the last known one keeps the unknown one where it is");
+            Check(!Tool(w, repairs, "Custom.Layout.Down").IsEnabled && !Tool(w, specs, "Custom.Layout.Up").IsEnabled, "no move past either end");
             Invoke(w, "MoveBlock", ids["log"], -1);
             await Wait(300);
 
-            // Half and full width.
-            RadioButton half = Descendants(PageOf(w)).OfType<RadioButton>().First(r => r.GroupName == "Width" + ids["fields"] && (string)r.Content == Loc.T("Custom.Layout.Half"));
-            half.IsChecked = true;
+            // Half and full width: one small toggle.
+            ClickNow(Tool(w, specs, "Custom.Layout.ToHalf"));
             await Wait(300);
             Check(GearBlock(memory, BlockKinds.Fields).Half, "made half width");
-            Descendants(PageOf(w)).OfType<RadioButton>().First(r => r.GroupName == "Width" + ids["fields"] && (string)r.Content == Loc.T("Custom.Layout.Full")).IsChecked = true;
+            ClickNow(Tool(w, specs, "Custom.Layout.ToFull"));
             await Wait(300);
             Check(!GearBlock(memory, BlockKinds.Fields).Half, "and full again");
 
-            // A block renamed; a log's amounts made a number in km.
-            AnswerLayoutDialog(main, async dialog =>
-            {
-                DialogText(dialog, 0).Text = "Equipment";
-                await Task.CompletedTask;
-            });
-            Invoke(w, "EditBlock", ids["fields"]);
+            // A block renamed where its name stands; Esc in it puts the stored name back; an empty name is never saved.
+            TypeAndLeave(NameBox(w, GearBlock(memory, BlockKinds.Fields).Name, BlockKinds.Fields), "Equipment");
             await Wait(300);
-            Check(GearBlock(memory, BlockKinds.Fields).Name == "Equipment", "a block renamed");
-            AnswerLayoutDialog(main, async dialog =>
-            {
-                Descendants(dialog).OfType<CheckBox>().First().IsChecked = false;
-                await Wait(100);
-                DialogText(dialog, 1).Text = "km";
-                await Task.CompletedTask;
-            });
-            Invoke(w, "EditBlock", ids["log"]);
-            await Wait(300);
+            Check(GearBlock(memory, BlockKinds.Fields).Name == "Equipment" && ShellOf(w, "Equipment") != null, "a block renamed in place");
+            string named = File.ReadAllText(layoutFile);
+            TypeAndLeave(NameBox(w, GearBlock(memory, BlockKinds.Fields).Name, BlockKinds.Fields), "  ");
+            await Wait(200);
+            Check(File.ReadAllText(layoutFile) == named, "an empty name isn't saved");
+
+            // A log's amounts, from its toolbar: a number in km.
+            Button amounts = Tool(w, repairs, "Custom.Layout.Amounts");
+            ClickNow(amounts);
+            await Wait(200);
+            ContextMenu amountMenu = amounts.ContextMenu;
+            Check(amountMenu?.Items.Count == 3 && ((MenuItem)amountMenu.Items[0]).IsChecked, "money, plain numbers or a unit; money now");
+            amountMenu.IsOpen = false;
+            AnswerPrompt(main, "km");
+            ((MenuItem)amountMenu.Items[2]).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            await Wait(400);
             LayoutBlock log = GearBlock(memory, BlockKinds.Log);
             Check(log.Money == false && log.Unit == "km", "a log's amounts: a number in km");
             RecordDefinition logList = EntityTypes.Records(CustomTypes.TypeOf(memory.Id)).First(r => r.Key == ids["log"]);
             Check(logList.TotalKey == null && logList.Fields.First(f => f.Key == "Amount").Unit == Units.Own("km"), "no money totals, the amounts in km");
+            Check(!Descendants(ShellOf(w, packing)).OfType<Button>().Any(b => AutomationProperties.GetName(b) == Loc.T("Custom.Layout.Amounts")), "only a log has amounts");
 
-            // Fields: one added and put on the card (the third), a fourth can't go on it; one changed.
-            AnswerLayoutDialog(main, async dialog =>
-            {
-                DialogText(dialog, 0).Text = "Serial";
-                Descendants(dialog).OfType<CheckBox>().First().IsChecked = true;
-                await Task.CompletedTask;
-            });
-            Invoke(w, "OpenField", ids["fields"], null);
-            await Wait(300);
+            // Fields: one added by typing its name (text, at the end, the keyboard back in the box); on the card (the
+            // third), a fourth can't go on it.
+            TypeAndEnter(LayoutTarget(w, ids["fields"], "+"), "Serial");
+            await Wait(400);
             CustomLayout layout = GearLayout(memory);
-            LayoutField serial = layout.Blocks.First(b => b.Kind == BlockKinds.Fields).Fields.FirstOrDefault(f => f.Name == "Serial");
-            Check(serial != null && serial.Kind == FieldKinds.Text && layout.CardFields.Count == 3 && layout.CardFields[2] == serial.Id, "a field added at the end, on the card");
-            AnswerLayoutDialog(main, async dialog =>
-            {
-                Check(!Descendants(dialog).OfType<CheckBox>().First().IsEnabled, "a fourth field can't go on the card");
-                Check(Descendants(dialog).OfType<TextBlock>().Any(t => t.Text == Loc.T("Custom.Field.CardFull")), "and that is said");
-                DialogText(dialog, 0).Text = "Size";
-                ComboBox kind = Descendants(dialog).OfType<ComboBox>().First();
-                kind.SelectedItem = kind.Items.Cast<ComboBoxItem>().First(i => (string)i.Tag == FieldKinds.Choice);
-                await Wait(100);
-                DialogText(dialog, 1).Text = "S\nM\nL\nM";
-                await Task.CompletedTask;
-            });
-            Invoke(w, "OpenField", ids["fields"], null);
+            LayoutField serial = layout.Blocks.First(b => b.Kind == BlockKinds.Fields).Fields.LastOrDefault();
+            Check(serial?.Name == "Serial" && serial.Kind == FieldKinds.Text, "a field added by its name and Enter, text at the end");
+            Check(FocusManager.GetFocusedElement(w) == LayoutTarget(w, ids["fields"], "+") && LayoutTarget(w, ids["fields"], "+").Text == "",
+                "the keyboard back in the empty box for the next one");
+            Check(KindBox(w, "Serial") != null && (string)((ComboBoxItem)KindBox(w, "Serial").SelectedItem).Tag == FieldKinds.Text, "its kind beside it: text");
+            Click(OnCardBox(w, "Serial"));
             await Wait(300);
+            layout = GearLayout(memory);
+            Check(layout.CardFields.Count == 3 && layout.CardFields[2] == serial.Id, "put on the card");
+            TypeAndEnter(LayoutTarget(w, ids["fields"], "+"), "Size");
+            await Wait(400);
+            Check(!OnCardBox(w, "Size").IsEnabled && (string)OnCardBox(w, "Size").ToolTip == Loc.T("Custom.Field.CardFull"), "a fourth field can't go on the card, and that is said");
+
+            // A kind changed from the dropdown: a choice asks for its choices (closed: nothing changes).
+            string beforeChoice = File.ReadAllText(layoutFile);
+            AnswerPrompt(main, null);
+            PickKind(w, "Size", FieldKinds.Choice);
+            await Wait(700);
+            Check(File.ReadAllText(layoutFile) == beforeChoice && (string)((ComboBoxItem)KindBox(w, "Size").SelectedItem).Tag == FieldKinds.Text,
+                "no choices given: still text, the dropdown back");
+            AnswerPrompt(main, "S\nM\nL\nM");
+            PickKind(w, "Size", FieldKinds.Choice);
+            await Wait(700);
             LayoutField size = GearBlock(memory, BlockKinds.Fields).Fields.FirstOrDefault(f => f.Name == "Size");
             Check(size?.Kind == FieldKinds.Choice && size.Choices.SequenceEqual(new[] { "S", "M", "L" }), "a choice field, its choices once each");
-            AnswerLayoutDialog(main, async dialog =>
-            {
-                DialogText(dialog, 1).Text = "Red\nBlue\nGreen";
-                await Task.CompletedTask;
-            });
-            Invoke(w, "OpenField", ids["fields"], ids["colour"]);
+            Check(ButtonNamed(w, Loc.T("Custom.Field.EditChoices")) != null, "Choices… beside a choice field");
+            AnswerPrompt(main, "Red\nBlue\nGreen");
+            Invoke(w, "EditChoices", ids["fields"], GearBlock(memory, BlockKinds.Fields).Fields.First(f => f.Id == ids["colour"]));
             await Wait(300);
-            Check(GearBlock(memory, BlockKinds.Fields).Fields.First(f => f.Id == ids["colour"]).Choices.SequenceEqual(new[] { "Red", "Blue", "Green" }), "a field changed");
+            Check(GearBlock(memory, BlockKinds.Fields).Fields.First(f => f.Id == ids["colour"]).Choices.SequenceEqual(new[] { "Red", "Blue", "Green" }), "a field's choices changed");
+
+            // A number's unit, typed beside it; a field renamed in place.
+            TextBox unit = Descendants(PageOf(w)).OfType<TextBox>().First(t => AutomationProperties.GetName(t) == Loc.T("Custom.Field.Unit"));
+            Check(unit.Text == "kg", "a number shows its unit");
+            TypeAndLeave(unit, "lb");
+            await Wait(300);
+            Check(GearBlock(memory, BlockKinds.Fields).Fields.First(f => f.Id == ids["weight"]).Unit == "lb", "the unit changed");
+            TypeAndLeave(Descendants(PageOf(w)).OfType<TextBox>().First(t => AutomationProperties.GetName(t) == Loc.T("Custom.Field.Unit")), "kg");
+            await Wait(300);
+            TypeAndLeave(LayoutTarget(w, ids["fields"], size.Id), "Sizes");
+            await Wait(300);
+            Check(GearBlock(memory, BlockKinds.Fields).Fields.First(f => f.Id == size.Id).Name == "Sizes", "a field renamed in place");
             Invoke(w, "MoveField", ids["fields"], size.Id, -1);
             await Wait(300);
             List<string> fieldOrder = GearBlock(memory, BlockKinds.Fields).Fields.Select(f => f.Name).ToList();
-            Check(fieldOrder.IndexOf("Size") == fieldOrder.IndexOf("Serial") - 1, "a field moved up: " + string.Join(", ", fieldOrder));
+            Check(fieldOrder.IndexOf("Sizes") == fieldOrder.IndexOf("Serial") - 1, "a field moved up: " + string.Join(", ", fieldOrder));
 
             // A field the item has a value in: asked, then gone from the layout and the item in one step.
             string layoutBefore = File.ReadAllText(layoutFile), itemsBefore = File.ReadAllText(itemsFile);
@@ -188,63 +269,72 @@ static partial class Program
                 "gone from the layout and from the item");
             Check(UndoHost.Of(w).Undo() && File.ReadAllText(layoutFile) == layoutBefore && File.ReadAllText(itemsFile) == itemsBefore,
                 "Ctrl+Z: both files byte for byte");
+            await Wait(300);
 
             // Answered No: nothing changes.
             answerCancel = true;
-            Invoke(w, "RemoveBlock", ids["checklist"]);
+            ClickNow(Tool(w, packing, "Custom.Layout.RemoveBlock"));
             await Wait(400);
             answerCancel = false;
             Check(File.ReadAllText(layoutFile) == layoutBefore && File.ReadAllText(itemsFile) == itemsBefore, "No: nothing removed");
 
-            // A block with data: its records go from the item (one step with the layout); its files only once nothing can
-            // bring them back.
+            // A block with data: its records go from the item (one step with the layout).
             Invoke(w, "RemoveBlock", ids["checklist"]);
             await Wait(400);
             Check(GearLayout(memory).Blocks.All(b => b.Id != ids["checklist"]) && StoredItem(memory, tentId).Records.ContainsKey(ids["checklist"]) == false,
                 "a block removed with its lines");
             Check(UndoHost.Of(w).Undo() && File.ReadAllText(layoutFile) == layoutBefore && File.ReadAllText(itemsFile) == itemsBefore, "and brought back");
-
-            // A block nothing is in goes without a question; one added lands at the end.
-            boxes = selectBoxes.Count;
-            Invoke(w, "AddBlock", BlockKinds.Quantities);
             await Wait(300);
-            Check(GearLayout(memory).Blocks.Last().Kind == BlockKinds.Quantities && GearLayout(memory).Blocks.Last().Name == Loc.T("Custom.Block.Quantities"),
-                "a block added at the end, named by its kind");
-            Invoke(w, "RemoveBlock", GearLayout(memory).Blocks.Last().Id);
+
+            // "+ Add": every kind by its plain name, the gallery not twice; one added lands at the end, full width, named by
+            // its kind; an empty one goes without a question.
+            ContextMenu menu = (ContextMenu)typeof(ItemWindow).GetMethod("AddMenu", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .Invoke(w, new object[] { new Button(), CustomTypes.OfMemory(memory) });
+            Check(menu.Items.Count == 7 && BlockKinds.All.All(k => menu.Items.OfType<MenuItem>().Any(i => AutomationProperties.GetName(i) == Loc.T("Custom.Kind." + k)))
+                && !menu.Items.OfType<MenuItem>().First(i => AutomationProperties.GetName(i) == Loc.T("Custom.Kind.Gallery")).IsEnabled,
+                "every kind to add, the gallery not twice");
+            boxes = selectBoxes.Count;
+            ((MenuItem)menu.Items[BlockKinds.All.ToList().IndexOf(BlockKinds.Quantities)]).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            await Wait(300);
+            LayoutBlock added = GearLayout(memory).Blocks.Last();
+            Check(added.Kind == BlockKinds.Quantities && added.Name == Loc.T("Custom.Block.Quantities") && !added.Half, "a block added at the end, full width, named by its kind");
+            Check(ShellOf(w, added.Name) != null && Descendants(PageOf(w)).OfType<CompactRecords>().Count() == 2, "on the page at once, ready to use");
+            Invoke(w, "RemoveBlock", added.Id);
             await Wait(300);
             Check(selectBoxes.Count == boxes && GearLayout(memory).Blocks.Count(b => b.Kind == BlockKinds.Quantities) == 1, "an empty block removed without a question");
 
-            ContextMenu menu = (ContextMenu)typeof(ItemWindow).GetMethod("AddBlockMenu", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
-                .Invoke(w, new object[] { new Button(), CustomTypes.OfMemory(memory) });
-            Check(menu.Items.Count == 7 && !menu.Items.OfType<MenuItem>().First(i => System.Windows.Automation.AutomationProperties.GetName(i) == Loc.T("Custom.Kind.Gallery")).IsEnabled,
-                "every kind to add, the gallery not twice");
-
-            ClickNow(ButtonNamed(w, Loc.T("Custom.Layout.Done")));
+            // Off: the page is the item again, with the new layout.
+            Click(CustomizeSwitch(w));
             await Wait(300);
-            Check(!Field<bool>(w, "layoutMode") && Sections(w).Any(s => s.Definition.Label == "Equipment"), "Done: the item, with its renamed block");
-            Check(Sections(w).First().Definition.Fields.Any(f => f.Label == "Serial"), "and its new field");
+            Check(!Customizing(w) && Sections(w).Any(s => s.Definition.Label == "Equipment"), "switched off: the item, with its renamed block");
+            Check(Sections(w).First().Definition.Fields.Any(f => f.Label == "Serial") && !PageTexts(w).Contains(Loc.T("Custom.Layout.Hint")), "its new field, no toolbars or + Add");
+            Invoke(w, "Customize", true);
+            await Wait(200);
+            PressKey(w, Key.Escape);
+            await Wait(300);
+            Check(w.IsVisible && !Customizing(w), "Esc turns Customize off first");
         });
 
-        Console.WriteLine("The editor on its own: the collection's menu");
+        Console.WriteLine("Customize layout from the collection's menu");
         ContextMenu memoryMenu = (ContextMenu)typeof(MainWindow).GetMethod("MemoryMenu", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
             .Invoke(main, new object[] { memory });
-        Check(memoryMenu.Items.OfType<MenuItem>().Any(i => (string)i.Header == Loc.T("Custom.Menu.EditLayout")), "Edit layout… in a custom collection's menu");
+        Check(memoryMenu.Items.OfType<MenuItem>().Any(i => (string)i.Header == Loc.T("Custom.Menu.Customize")), "Customize layout in a custom collection's menu");
         Profile shoes = AddMemory(main, "Plain box", ProfileType.Collection);
         ContextMenu plainMenu = (ContextMenu)typeof(MainWindow).GetMethod("MemoryMenu", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
             .Invoke(main, new object[] { shoes });
-        Check(!plainMenu.Items.OfType<MenuItem>().Any(i => (string)i.Header == Loc.T("Custom.Menu.EditLayout")), "not in a standard collection's");
+        Check(!plainMenu.Items.OfType<MenuItem>().Any(i => (string)i.Header == Loc.T("Custom.Menu.Customize")), "not in a standard collection's");
         RemoveMemory(main, shoes);
-        DriveTitled(main, Loc.F("Custom.Layout.Title", "Gear"), async w =>
+        DriveWindow(main, w => true, "of the collection", async w =>
         {
-            Check(Field<bool>(w, "layoutMode"), "opened on the layout, in the editor");
+            Check(Customizing(w) && !Field<ItemWindow.Host>(w, "host").Preview && EntityStore.Load(memory).Any(e => e.Name == w.Title),
+                "an item of the collection opens, customizing: " + w.Title);
             Invoke(w, "MoveBlock", ids["log"], -1);
             await Wait(300);
-            Check(UndoHost.Of(w).Undo() && w.IsVisible && Field<bool>(w, "layoutMode"), "its own Ctrl+Z, and it stays open");
-            PressKey(w, System.Windows.Input.Key.Escape);
-            await Wait(300);
-            Check(!w.IsVisible, "Esc closes it");
+            Check(UndoHost.Of(w).Undo() && w.IsVisible && Customizing(w), "its own Ctrl+Z, and it stays open");
         });
-        Invoke(main, "EditLayout", memory);
+        Invoke(main, "CustomizeLayout", memory);
         await Wait(400);
     }
+
+    static DependencyObject VisualTreeParent(DependencyObject child) => System.Windows.Media.VisualTreeHelper.GetParent(child) ?? LogicalTreeHelper.GetParent(child);
 }

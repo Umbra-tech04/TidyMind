@@ -11,7 +11,7 @@ namespace TidyMind
 {
     // Two half-width blocks of a custom item (LayoutBlock.Half) side by side with a thin line between them, or one under
     // the other when the row is narrower than two of them need. A half block with no half block beside it keeps its half
-    // of the row (the other half stays empty), as the layout editor shows it.
+    // of the row (the other half stays empty).
     public sealed class HalfRow : Panel
     {
         public const double MinHalf = 320;

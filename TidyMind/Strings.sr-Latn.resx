@@ -3845,7 +3845,7 @@ Ništa nije promenjeno.</value>
   </data>
   <data name="WhatsNew.Points" xml:space="preserve">
     <value>Kolekcije sa sopstvenim rasporedom: stranu stavke slažeš od blokova, kao što su polja, slike, beleške, kontrolne liste, dokumenti sa podsetnikom, dnevnik i količine.
-Uredi raspored slaže blokove jedan pored drugog ili jedan ispod drugog i bira do tri polja za kartice. Dnevni plan prikazuje datume stavki.</value>
+Prilagodi, na samoj strani stavke, dodaje, pomera i preimenuje blokove i polja, stavlja blokove jedan pored drugog i bira do tri polja za kartice. Dnevni plan prikazuje datume stavki.</value>
   </data>
   <data name="Tips.Title" xml:space="preserve">
     <value>Saveti i prečice</value>
@@ -4192,9 +4192,6 @@ Uredi raspored slaže blokove jedan pored drugog ili jedan ispod drugog i bira d
   <data name="Custom.Block.Quantities" xml:space="preserve">
     <value>Količine</value>
   </data>
-  <data name="Custom.Starter.Details" xml:space="preserve">
-    <value>Podaci</value>
-  </data>
   <data name="Custom.Field.Untitled" xml:space="preserve">
     <value>Polje bez naziva</value>
   </data>
@@ -4282,35 +4279,59 @@ Uredi raspored slaže blokove jedan pored drugog ili jedan ispod drugog i bira d
   <data name="Bulk.Delete.Lines.Other" xml:space="preserve">
     <value>Obrisati {0} stavki?</value>
   </data>
-  <data name="Custom.EditLayout" xml:space="preserve">
-    <value>Uredi raspored</value>
-  </data>
-  <data name="Custom.Menu.EditLayout" xml:space="preserve">
-    <value>Uredi raspored…</value>
-  </data>
-  <data name="Custom.Layout.Title" xml:space="preserve">
-    <value>Raspored: {0}</value>
-  </data>
-  <data name="Custom.Layout.Done" xml:space="preserve">
-    <value>Gotovo</value>
-  </data>
   <data name="Custom.Layout.Hint" xml:space="preserve">
-    <value>Izmene se odmah čuvaju i važe za sve stavke ove kolekcije. Ctrl+Z ih poništava.</value>
+    <value>Izmene važe za sve stavke ove kolekcije. Ctrl+Z ih poništava.</value>
   </data>
-  <data name="Custom.Layout.AddBlock" xml:space="preserve">
-    <value>Dodaj blok</value>
+  <data name="Custom.Customize" xml:space="preserve">
+    <value>Prilagodi</value>
   </data>
-  <data name="Custom.Layout.Full" xml:space="preserve">
-    <value>Puna</value>
+  <data name="Custom.Customize.Tip" xml:space="preserve">
+    <value>Menja stranu koju imaju sve stavke ove kolekcije: blokove, polja i njihov redosled.</value>
   </data>
-  <data name="Custom.Layout.Half" xml:space="preserve">
-    <value>Pola</value>
+  <data name="Custom.Menu.Customize" xml:space="preserve">
+    <value>Prilagodi raspored</value>
   </data>
-  <data name="Custom.Layout.FullTip" xml:space="preserve">
+  <data name="Custom.Template.ItemName" xml:space="preserve">
+    <value>Naziv stavke</value>
+  </data>
+  <data name="Custom.Layout.Add" xml:space="preserve">
+    <value>Dodaj</value>
+  </data>
+  <data name="Custom.Layout.Start" xml:space="preserve">
+    <value>Ovo će biti strana svake stavke u ovoj kolekciji. Dodaj ono što treba da sadrži.</value>
+  </data>
+  <data name="Custom.Layout.ToHalf" xml:space="preserve">
+    <value>Pola širine</value>
+  </data>
+  <data name="Custom.Layout.ToFull" xml:space="preserve">
     <value>Puna širina</value>
   </data>
-  <data name="Custom.Layout.HalfTip" xml:space="preserve">
-    <value>Pola širine: pored polovičnog bloka pre ili posle njega</value>
+  <data name="Custom.Layout.Rename" xml:space="preserve">
+    <value>Preimenuj</value>
+  </data>
+  <data name="Custom.Layout.RenameTip" xml:space="preserve">
+    <value>Klikni da preimenuješ</value>
+  </data>
+  <data name="Custom.Layout.NameOf" xml:space="preserve">
+    <value>Naziv bloka: {0}</value>
+  </data>
+  <data name="Custom.Layout.Amounts" xml:space="preserve">
+    <value>Iznosi</value>
+  </data>
+  <data name="Custom.Layout.LogUnitPick" xml:space="preserve">
+    <value>Brojevi sa jedinicom…</value>
+  </data>
+  <data name="Custom.Field.KindOf" xml:space="preserve">
+    <value>Vrsta: {0}</value>
+  </data>
+  <data name="Custom.Field.OnCardOf" xml:space="preserve">
+    <value>{0} na kartici</value>
+  </data>
+  <data name="Custom.Field.EditChoices" xml:space="preserve">
+    <value>Izbori…</value>
+  </data>
+  <data name="Custom.Field.ChangeKind" xml:space="preserve">
+    <value>Promena vrste</value>
   </data>
   <data name="Custom.Layout.Up" xml:space="preserve">
     <value>Pomeri gore</value>
@@ -4318,17 +4339,11 @@ Uredi raspored slaže blokove jedan pored drugog ili jedan ispod drugog i bira d
   <data name="Custom.Layout.Down" xml:space="preserve">
     <value>Pomeri dole</value>
   </data>
-  <data name="Custom.Layout.EditBlock" xml:space="preserve">
-    <value>Uredi blok</value>
-  </data>
   <data name="Custom.Layout.RemoveBlock" xml:space="preserve">
     <value>Ukloni blok</value>
   </data>
   <data name="Custom.Layout.AddField" xml:space="preserve">
     <value>Dodaj polje</value>
-  </data>
-  <data name="Custom.Layout.EditField" xml:space="preserve">
-    <value>Uredi polje</value>
   </data>
   <data name="Custom.Layout.RemoveField" xml:space="preserve">
     <value>Ukloni polje</value>
@@ -4336,26 +4351,14 @@ Uredi raspored slaže blokove jedan pored drugog ili jedan ispod drugog i bira d
   <data name="Custom.Layout.OnCard" xml:space="preserve">
     <value>Na kartici</value>
   </data>
-  <data name="Custom.Layout.NoFields" xml:space="preserve">
-    <value>Još nema polja.</value>
-  </data>
-  <data name="Custom.Layout.FieldCount.One" xml:space="preserve">
-    <value>{0} polje</value>
-  </data>
-  <data name="Custom.Layout.FieldCount.Few" xml:space="preserve">
-    <value>{0} polja</value>
-  </data>
-  <data name="Custom.Layout.FieldCount.Other" xml:space="preserve">
-    <value>{0} polja</value>
-  </data>
   <data name="Custom.Layout.LogMoney" xml:space="preserve">
-    <value>Iznosi: novac</value>
+    <value>Novac</value>
   </data>
   <data name="Custom.Layout.LogUnit" xml:space="preserve">
-    <value>Iznosi: {0}</value>
+    <value>Brojevi ({0})</value>
   </data>
   <data name="Custom.Layout.LogPlain" xml:space="preserve">
-    <value>Iznosi: brojevi</value>
+    <value>Obični brojevi</value>
   </data>
   <data name="Custom.Layout.SaveFailed" xml:space="preserve">
     <value>Raspored nije mogao da se sačuva u {0}. Ostao je kakav je bio.</value>
@@ -4376,7 +4379,7 @@ Uredi raspored slaže blokove jedan pored drugog ili jedan ispod drugog i bira d
     <value>Polja</value>
   </data>
   <data name="Custom.Kind.Gallery" xml:space="preserve">
-    <value>Galerija</value>
+    <value>Slike</value>
   </data>
   <data name="Custom.Kind.Notes" xml:space="preserve">
     <value>Beleška</value>
@@ -4394,7 +4397,7 @@ Uredi raspored slaže blokove jedan pored drugog ili jedan ispod drugog i bira d
     <value>Količine</value>
   </data>
   <data name="Custom.Kind.Fields.Text" xml:space="preserve">
-    <value>Imenovane vrednosti: tekst, broj, datum, da/ne, izbor</value>
+    <value>Tekst, brojevi, datumi, da/ne i izbori</value>
   </data>
   <data name="Custom.Kind.Gallery.Text" xml:space="preserve">
     <value>Slike stavke, do 20</value>
@@ -4430,16 +4433,13 @@ Uredi raspored slaže blokove jedan pored drugog ili jedan ispod drugog i bira d
     <value>Izbor</value>
   </data>
   <data name="Custom.Field.Name" xml:space="preserve">
-    <value>Naziv</value>
-  </data>
-  <data name="Custom.Field.Kind" xml:space="preserve">
-    <value>Vrsta</value>
+    <value>Naziv polja</value>
   </data>
   <data name="Custom.Field.Choices" xml:space="preserve">
     <value>Izbori, jedan po redu</value>
   </data>
   <data name="Custom.Field.Unit" xml:space="preserve">
-    <value>Jedinica (nije obavezno)</value>
+    <value>Jedinica</value>
   </data>
   <data name="Custom.Field.ShowOnCard" xml:space="preserve">
     <value>Prikaži na kartici</value>
@@ -4447,23 +4447,8 @@ Uredi raspored slaže blokove jedan pored drugog ili jedan ispod drugog i bira d
   <data name="Custom.Field.CardFull" xml:space="preserve">
     <value>Kartica prikazuje najviše 3 polja.</value>
   </data>
-  <data name="Custom.Field.NeedsName" xml:space="preserve">
-    <value>Daj naziv polju.</value>
-  </data>
-  <data name="Custom.Field.NeedsChoices" xml:space="preserve">
-    <value>Upiši bar jedan izbor.</value>
-  </data>
-  <data name="Custom.Block.Name" xml:space="preserve">
-    <value>Naziv</value>
-  </data>
-  <data name="Custom.Block.Money" xml:space="preserve">
-    <value>Iznosi su novac</value>
-  </data>
   <data name="Custom.Block.Unit" xml:space="preserve">
     <value>Jedinica iznosa</value>
-  </data>
-  <data name="Custom.Block.NeedsName" xml:space="preserve">
-    <value>Daj naziv bloku.</value>
   </data>
   <data name="Transfer.Error.NotCustom" xml:space="preserve">
     <value>„{0}” nije kolekcija sa sopstvenim rasporedom, pa ova stavka ne može u nju.</value>
@@ -4484,10 +4469,10 @@ Uredi raspored slaže blokove jedan pored drugog ili jedan ispod drugog i bira d
     <value>{0} ističe</value>
   </data>
   <data name="Tips.CustomLayout.Keys" xml:space="preserve">
-    <value>⋯ &gt; Uredi raspored…</value>
+    <value>⋯ &gt; Prilagodi raspored</value>
   </data>
   <data name="Tips.CustomLayout.Text" xml:space="preserve">
-    <value>Menja raspored stavki kolekcije sa sopstvenim rasporedom: dodaj, pomeri ili ukloni blokove i polja, pola ili puna širina.</value>
+    <value>Menja stranu stavki kolekcije sa sopstvenim rasporedom na licu mesta: dodaj, pomeri, preimenuj ili ukloni blokove i polja, pola ili puna širina.</value>
   </data>
   <data name="Tips.ChecklistSelect.Keys" xml:space="preserve">
     <value>Ctrl+klik, Shift+klik</value>

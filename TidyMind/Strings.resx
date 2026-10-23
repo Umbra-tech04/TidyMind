@@ -3691,7 +3691,7 @@ Nothing was changed.</value>
   </data>
   <data name="WhatsNew.Points" xml:space="preserve">
     <value>Custom collections: build your own item page from blocks, such as fields, pictures, notes, checklists, documents with reminders, a log and quantities.
-Edit layout arranges the blocks side by side or one under the other and picks up to three fields for the cards. The Day Plan shows the items' dates.</value>
+Customize, on the item's page itself, adds, moves and renames blocks and fields, puts blocks side by side and picks up to three fields for the cards. The Day Plan shows the items' dates.</value>
   </data>
   <data name="Tips.Title" xml:space="preserve">
     <value>Tips &amp; shortcuts</value>
@@ -4038,9 +4038,6 @@ Edit layout arranges the blocks side by side or one under the other and picks up
   <data name="Custom.Block.Quantities" xml:space="preserve">
     <value>Quantities</value>
   </data>
-  <data name="Custom.Starter.Details" xml:space="preserve">
-    <value>Details</value>
-  </data>
   <data name="Custom.Field.Untitled" xml:space="preserve">
     <value>Untitled field</value>
   </data>
@@ -4125,35 +4122,59 @@ Edit layout arranges the blocks side by side or one under the other and picks up
   <data name="Bulk.Delete.Lines.Other" xml:space="preserve">
     <value>Delete {0} lines?</value>
   </data>
-  <data name="Custom.EditLayout" xml:space="preserve">
-    <value>Edit layout</value>
-  </data>
-  <data name="Custom.Menu.EditLayout" xml:space="preserve">
-    <value>Edit layout…</value>
-  </data>
-  <data name="Custom.Layout.Title" xml:space="preserve">
-    <value>Layout of {0}</value>
-  </data>
-  <data name="Custom.Layout.Done" xml:space="preserve">
-    <value>Done</value>
-  </data>
   <data name="Custom.Layout.Hint" xml:space="preserve">
-    <value>Changes are saved at once and apply to every item in this collection. Ctrl+Z undoes them.</value>
+    <value>Changes apply to every item in this collection. Ctrl+Z undoes them.</value>
   </data>
-  <data name="Custom.Layout.AddBlock" xml:space="preserve">
-    <value>Add block</value>
+  <data name="Custom.Customize" xml:space="preserve">
+    <value>Customize</value>
   </data>
-  <data name="Custom.Layout.Full" xml:space="preserve">
-    <value>Full</value>
+  <data name="Custom.Customize.Tip" xml:space="preserve">
+    <value>Change the page every item of this collection has: its blocks, fields and their order.</value>
   </data>
-  <data name="Custom.Layout.Half" xml:space="preserve">
-    <value>Half</value>
+  <data name="Custom.Menu.Customize" xml:space="preserve">
+    <value>Customize layout</value>
   </data>
-  <data name="Custom.Layout.FullTip" xml:space="preserve">
+  <data name="Custom.Template.ItemName" xml:space="preserve">
+    <value>Item name</value>
+  </data>
+  <data name="Custom.Layout.Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Custom.Layout.Start" xml:space="preserve">
+    <value>This is the page every item in this collection will have. Add what it should hold.</value>
+  </data>
+  <data name="Custom.Layout.ToHalf" xml:space="preserve">
+    <value>Half width</value>
+  </data>
+  <data name="Custom.Layout.ToFull" xml:space="preserve">
     <value>Full width</value>
   </data>
-  <data name="Custom.Layout.HalfTip" xml:space="preserve">
-    <value>Half width: beside the half block before or after it</value>
+  <data name="Custom.Layout.Rename" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="Custom.Layout.RenameTip" xml:space="preserve">
+    <value>Click to rename</value>
+  </data>
+  <data name="Custom.Layout.NameOf" xml:space="preserve">
+    <value>Block name: {0}</value>
+  </data>
+  <data name="Custom.Layout.Amounts" xml:space="preserve">
+    <value>Amounts</value>
+  </data>
+  <data name="Custom.Layout.LogUnitPick" xml:space="preserve">
+    <value>Numbers with a unit…</value>
+  </data>
+  <data name="Custom.Field.KindOf" xml:space="preserve">
+    <value>Kind of {0}</value>
+  </data>
+  <data name="Custom.Field.OnCardOf" xml:space="preserve">
+    <value>Show {0} on the card</value>
+  </data>
+  <data name="Custom.Field.EditChoices" xml:space="preserve">
+    <value>Choices…</value>
+  </data>
+  <data name="Custom.Field.ChangeKind" xml:space="preserve">
+    <value>Change the kind</value>
   </data>
   <data name="Custom.Layout.Up" xml:space="preserve">
     <value>Move up</value>
@@ -4161,17 +4182,11 @@ Edit layout arranges the blocks side by side or one under the other and picks up
   <data name="Custom.Layout.Down" xml:space="preserve">
     <value>Move down</value>
   </data>
-  <data name="Custom.Layout.EditBlock" xml:space="preserve">
-    <value>Edit block</value>
-  </data>
   <data name="Custom.Layout.RemoveBlock" xml:space="preserve">
     <value>Remove block</value>
   </data>
   <data name="Custom.Layout.AddField" xml:space="preserve">
-    <value>Add field</value>
-  </data>
-  <data name="Custom.Layout.EditField" xml:space="preserve">
-    <value>Edit field</value>
+    <value>Add a field</value>
   </data>
   <data name="Custom.Layout.RemoveField" xml:space="preserve">
     <value>Remove field</value>
@@ -4179,23 +4194,14 @@ Edit layout arranges the blocks side by side or one under the other and picks up
   <data name="Custom.Layout.OnCard" xml:space="preserve">
     <value>On card</value>
   </data>
-  <data name="Custom.Layout.NoFields" xml:space="preserve">
-    <value>No fields yet.</value>
-  </data>
-  <data name="Custom.Layout.FieldCount.One" xml:space="preserve">
-    <value>{0} field</value>
-  </data>
-  <data name="Custom.Layout.FieldCount.Other" xml:space="preserve">
-    <value>{0} fields</value>
-  </data>
   <data name="Custom.Layout.LogMoney" xml:space="preserve">
-    <value>Amounts: money</value>
+    <value>Money</value>
   </data>
   <data name="Custom.Layout.LogUnit" xml:space="preserve">
-    <value>Amounts: {0}</value>
+    <value>Numbers in {0}</value>
   </data>
   <data name="Custom.Layout.LogPlain" xml:space="preserve">
-    <value>Amounts: plain numbers</value>
+    <value>Plain numbers</value>
   </data>
   <data name="Custom.Layout.SaveFailed" xml:space="preserve">
     <value>The layout couldn't be saved to {0}. It is as it was.</value>
@@ -4213,7 +4219,7 @@ Edit layout arranges the blocks side by side or one under the other and picks up
     <value>Fields</value>
   </data>
   <data name="Custom.Kind.Gallery" xml:space="preserve">
-    <value>Gallery</value>
+    <value>Pictures</value>
   </data>
   <data name="Custom.Kind.Notes" xml:space="preserve">
     <value>Notes</value>
@@ -4231,7 +4237,7 @@ Edit layout arranges the blocks side by side or one under the other and picks up
     <value>Quantities</value>
   </data>
   <data name="Custom.Kind.Fields.Text" xml:space="preserve">
-    <value>Labelled values: text, numbers, dates, yes/no, choices</value>
+    <value>Text, numbers, dates, yes/no and choices</value>
   </data>
   <data name="Custom.Kind.Gallery.Text" xml:space="preserve">
     <value>The item's pictures, up to 20</value>
@@ -4267,16 +4273,13 @@ Edit layout arranges the blocks side by side or one under the other and picks up
     <value>Choice</value>
   </data>
   <data name="Custom.Field.Name" xml:space="preserve">
-    <value>Name</value>
-  </data>
-  <data name="Custom.Field.Kind" xml:space="preserve">
-    <value>Kind</value>
+    <value>Field name</value>
   </data>
   <data name="Custom.Field.Choices" xml:space="preserve">
     <value>Choices, one per line</value>
   </data>
   <data name="Custom.Field.Unit" xml:space="preserve">
-    <value>Unit (optional)</value>
+    <value>Unit</value>
   </data>
   <data name="Custom.Field.ShowOnCard" xml:space="preserve">
     <value>Show on the card</value>
@@ -4284,23 +4287,8 @@ Edit layout arranges the blocks side by side or one under the other and picks up
   <data name="Custom.Field.CardFull" xml:space="preserve">
     <value>A card shows at most 3 fields.</value>
   </data>
-  <data name="Custom.Field.NeedsName" xml:space="preserve">
-    <value>Give the field a name.</value>
-  </data>
-  <data name="Custom.Field.NeedsChoices" xml:space="preserve">
-    <value>Write at least one choice.</value>
-  </data>
-  <data name="Custom.Block.Name" xml:space="preserve">
-    <value>Name</value>
-  </data>
-  <data name="Custom.Block.Money" xml:space="preserve">
-    <value>Amounts are money</value>
-  </data>
   <data name="Custom.Block.Unit" xml:space="preserve">
     <value>Unit of the amounts</value>
-  </data>
-  <data name="Custom.Block.NeedsName" xml:space="preserve">
-    <value>Give the block a name.</value>
   </data>
   <data name="Transfer.Error.NotCustom" xml:space="preserve">
     <value>“{0}” isn't a custom collection, so this item can't go into it.</value>
@@ -4321,10 +4309,10 @@ Edit layout arranges the blocks side by side or one under the other and picks up
     <value>{0} runs out</value>
   </data>
   <data name="Tips.CustomLayout.Keys" xml:space="preserve">
-    <value>⋯ &gt; Edit layout…</value>
+    <value>⋯ &gt; Customize layout</value>
   </data>
   <data name="Tips.CustomLayout.Text" xml:space="preserve">
-    <value>Changes a custom collection's item layout: blocks and fields added, moved or removed, half or full width.</value>
+    <value>Changes a custom collection's item page where it is: blocks and fields added, moved, renamed or removed, half or full width.</value>
   </data>
   <data name="Tips.ChecklistSelect.Keys" xml:space="preserve">
     <value>Ctrl+click, Shift+click</value>

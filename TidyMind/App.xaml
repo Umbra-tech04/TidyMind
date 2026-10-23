@@ -337,6 +337,39 @@
             </Style.Triggers>
         </Style>
 
+        <!-- ===== On/off switch (a CheckBox): a pill with a knob, accent when on; its Content, if any, before it
+             (Settings' switches, an item window's Customize) ===== -->
+        <Style x:Key="ToggleSwitchStyle" TargetType="CheckBox">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="{StaticResource TextMain}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <StackPanel Orientation="Horizontal" Background="Transparent">
+                            <ContentPresenter x:Name="label" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <Border x:Name="track" Width="40" Height="22" CornerRadius="11" Background="#C9C9C6" VerticalAlignment="Center">
+                                <Ellipse x:Name="knob" Width="16" Height="16" Fill="#FFFFFF" HorizontalAlignment="Left" Margin="3,0"/>
+                            </Border>
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="HasContent" Value="False">
+                                <Setter TargetName="label" Property="Visibility" Value="Collapsed"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="track" Property="Background" Value="{StaticResource Accent}"/>
+                                <Setter TargetName="knob" Property="HorizontalAlignment" Value="Right"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="track" Property="Opacity" Value="0.88"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- ===== Pages with a list of sections on the left (Settings, an item's window) ===== -->
         <!-- A category's heading, at the top of its page -->
         <Style x:Key="PageTitleStyle" TargetType="TextBlock">

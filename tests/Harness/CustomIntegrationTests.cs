@@ -94,10 +94,10 @@ static partial class Program
             Check(ReminderOf(passport.Id) != null, "and the reminder is back");
         });
 
-        // The whole Documents block removed in the layout editor: its reminders go too; Ctrl+Z brings them back.
+        // The whole Documents block removed while customizing: its reminders go too; Ctrl+Z brings them back.
         await WithVehicle(main, view, tentId, async w =>
         {
-            Invoke(w, "EditLayout");
+            Invoke(w, "Customize", true);
             Invoke(w, "RemoveBlock", ids["documents"]);
             await Wait(400);
             Check(ReminderOf(passport.Id) == null, "its block removed: the reminder is gone");

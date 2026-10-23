@@ -137,17 +137,8 @@ namespace TidyMind
 
         public static string NewId() => Guid.NewGuid().ToString("N");
 
-        // What a new custom collection starts with: its pictures, a block for its details and one for notes, named in the
-        // current language (the user's own from then on, like the vehicle parts template).
-        public static CustomLayout Starter() => new CustomLayout
-        {
-            Blocks = new List<LayoutBlock>
-            {
-                new LayoutBlock { Id = NewId(), Kind = BlockKinds.Gallery, Name = Loc.T("Custom.Block.Gallery") },
-                new LayoutBlock { Id = NewId(), Kind = BlockKinds.Fields, Name = Loc.T("Custom.Starter.Details"), Fields = new List<LayoutField>() },
-                new LayoutBlock { Id = NewId(), Kind = BlockKinds.Notes, Name = Loc.T("Custom.Block.Notes") }
-            }
-        };
+        // What a new custom collection starts with: no blocks (its empty page opens with Customize on, to add them).
+        public static CustomLayout Starter() => new CustomLayout();
     }
 
     // One block of a layout. Id names its data in every item (Entity.Details or Entity.Records); Name is the user's.

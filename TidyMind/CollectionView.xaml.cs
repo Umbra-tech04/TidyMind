@@ -573,7 +573,8 @@ namespace TidyMind
         }
 
         // The item's own window (ItemWindow), saving through this view; the cards show the result once it closes.
-        private void OpenItem(Entity entity)
+        // Customize: the window opens with its layout being customized (a custom item of this collection only).
+        private void OpenItem(Entity entity, bool customize = false)
         {
             ItemWindow window = new ItemWindow(entity, new ItemWindow.Host
             {
@@ -587,18 +588,35 @@ namespace TidyMind
                 Collection = memory.Id
             })
             { Owner = Window.GetWindow(this) };
+            if (customize)
+                window.Customize();
             window.ShowDialog();
             RenderEntities();
         }
 
         // ---- A custom collection's layout ---------------------------------------------------------
 
-        // The layout editor on its own (the memory's menu, a new custom collection): the item window on an empty item that
-        // is never stored, in its editor; it closes when that is done.
-        public void EditLayout()
+        // The memory's menu: the layout is customized on an item's page, the first one of the tab shown (else of any tab);
+        // with no item yet, on the empty page.
+        public void CustomizeLayout()
         {
             if (unreadable || !custom)
                 return;
+            string type = CustomTypes.TypeOf(memory.Id);
+            Entity? first = entities.Where(e => e.EntityType == type).OrderBy(e => e.TabId == tabStrip.ActiveTabId ? 0 : 1).ThenBy(e => e.Order).FirstOrDefault();
+            if (first != null)
+            {
+                tabStrip.Select(first.TabId);
+                OpenItem(first, customize: true);
+            }
+            else
+                CustomizeEmpty();
+        }
+
+        // A new custom collection, or one with no item yet: the item window on an empty item that is never stored, its
+        // layout being customized; the page an item will have, built in place.
+        private void CustomizeEmpty()
+        {
             Entity preview = new Entity { Id = Guid.Empty, EntityType = CustomTypes.TypeOf(memory.Id), Name = memory.Name };
             ItemWindow window = new ItemWindow(preview, new ItemWindow.Host
             {
@@ -610,7 +628,7 @@ namespace TidyMind
                 Collection = memory.Id
             })
             { Owner = Window.GetWindow(this) };
-            window.EditLayout();
+            window.Customize();
             window.ShowDialog();
             RenderEntities();
         }
@@ -693,8 +711,9 @@ namespace TidyMind
 
         // A new item opens in its window straight away, for everything the short form doesn't ask. A custom collection's
         // items are all of its layout; any other collection asks which kind (EntityTypeSelector), and "Custom" there turns an
-        // empty collection into a custom one: its layout is written and its editor opens (the collection then adds items of
-        // that layout). A collection that has items never offers it, so nothing in it is turned into something else.
+        // empty collection into a custom one: its layout is written and its empty page opens to be customized (the collection
+        // then adds items of that layout). A collection that has items never offers it, so nothing in it is turned into
+        // something else.
         private void AddEntityButton_Click(object sender, RoutedEventArgs e)
         {
             string type = CustomTypes.TypeOf(memory.Id);
@@ -733,8 +752,8 @@ namespace TidyMind
             OpenItem(added);
         }
 
-        // The picker's "Custom": this empty collection gets the starter layout (blocks for pictures, details and notes) and
-        // its editor opens. No layout, no change: it stays an ordinary collection.
+        // The picker's "Custom": this empty collection gets an empty layout and its empty page opens, Customize on. No
+        // layout, no change: it stays an ordinary collection.
         private void MakeCustom()
         {
             if (entities.Count > 0 || !CustomLayoutStore.TrySave(memory, CustomLayout.Starter()))
@@ -744,8 +763,8 @@ namespace TidyMind
                 return;
             }
             custom = true;
-            LayoutCreated?.Invoke(); // the sidebar's menu for it gets Edit layout…
-            EditLayout();
+            LayoutCreated?.Invoke(); // the sidebar's menu for it gets Customize layout
+            CustomizeEmpty();
         }
 
         // Set by the main window: the memory is a custom collection now.

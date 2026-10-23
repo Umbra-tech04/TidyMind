@@ -7,6 +7,7 @@ using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Threading;
 using TidyMind;
 
@@ -287,25 +288,79 @@ static partial class Program
         await Wait(300);
         Check(!File.Exists(MemoryFiles.Layout(birds)), "closing the picker adds no layout");
 
-        // Custom: the layout is written, the editor opens on the blank starter, the collection is custom from then on.
+        // Custom: the layout is written and the collection's empty page opens, Customize on; what is added there is the
+        // page every item gets. The collection is custom from then on.
         AnswerPicker(main, async picker =>
         {
             ClickNow((Button)picker.FindName("CustomButton"));
             await Task.CompletedTask;
         });
-        DriveTitled(main, Loc.F("Custom.Layout.Title", "Bird book"), async w =>
+        DriveTitled(main, "Bird book", async w =>
         {
-            Check(Field<bool>(w, "layoutMode"), "choosing Custom opens the layout editor straight away");
-            await Task.CompletedTask;
+            Check(Customizing(w) && Field<ItemWindow.Host>(w, "host").Preview, "choosing Custom opens the collection's empty page, customizing");
+            Check(CustomizeSwitch(w)?.IsChecked == true && ((TextBox)w.FindName("NameText")).Text == Loc.T("Custom.Template.ItemName"),
+                "the item's name at the top, the switch on");
+            Check(GearLayout(birds).Blocks.Count == 0 && PageTexts(w).Contains(Loc.T("Custom.Layout.Start")) && ButtonNamed(w, Loc.T("Custom.Layout.Add")) != null,
+                "a blank page: what it is for, and + Add");
+            Check(!Descendants(w).OfType<Button>().Any(b => (b.Content as string) == Loc.T("Common.Delete") || (b.Content as string) == Loc.T("Vehicle.AddPictures")),
+                "no item actions on the empty page");
+            w.Width = 760;
+            await Wait(300);
+            RenderWindow(w, "custom-empty");
+
+            // + Add > Fields: on the page at once, the keyboard in its add box; a name and Enter add a text field.
+            ContextMenu Menu() => (ContextMenu)typeof(ItemWindow).GetMethod("AddMenu", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .Invoke(w, new object[] { new Button(), CustomTypes.OfMemory(birds) });
+            void Add(string kind) => Menu().Items.OfType<MenuItem>().First(i => System.Windows.Automation.AutomationProperties.GetName(i) == Loc.T("Custom.Kind." + kind))
+                .RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            Add(BlockKinds.Fields);
+            await Wait(400);
+            LayoutBlock fields = GearLayout(birds).Blocks.Single();
+            Check(fields.Kind == BlockKinds.Fields && fields.Name == Loc.T("Custom.Block.Fields") && !fields.Half && fields.Fields.Count == 0,
+                "a Fields block, full width, named by its kind, no question asked");
+            TextBox addField = LayoutTarget(w, fields.Id, "+");
+            Check(FocusManager.GetFocusedElement(w) == addField, "the keyboard in its Add a field box");
+            TypeAndEnter(addField, "Wingspan");
+            await Wait(400);
+            Check(GearLayout(birds).Blocks.Single().Fields.Single() is LayoutField wing && wing.Name == "Wingspan" && wing.Kind == FieldKinds.Text, "a text field, by its name");
+            PickKind(w, "Wingspan", FieldKinds.Number);
+            await Wait(500);
+            Check(GearLayout(birds).Blocks.Single().Fields.Single().Kind == FieldKinds.Number
+                  && Descendants(PageOf(w)).OfType<TextBox>().Any(t => System.Windows.Automation.AutomationProperties.GetName(t) == Loc.T("Custom.Field.Unit")),
+                "its kind from the dropdown: a number, with a unit beside it");
+            Add(BlockKinds.Gallery);
+            Add(BlockKinds.Notes);
+            await Wait(400);
+            Check(GearLayout(birds).Blocks.Select(b => b.Kind).SequenceEqual(new[] { BlockKinds.Fields, BlockKinds.Gallery, BlockKinds.Notes }), "pictures and notes after it");
+            Check(!Menu().Items.OfType<MenuItem>().First(i => System.Windows.Automation.AutomationProperties.GetName(i) == Loc.T("Custom.Kind.Gallery")).IsEnabled, "one gallery");
+            List<string> cut = CutOff(w).Concat(Clipped(w)).ToList();
+            Check(cut.Count == 0, "nothing cut off" + (cut.Count > 0 ? ": " + string.Join("; ", cut.Take(4)) : ""));
+
+            // What an item will hold is shown, never used: the empty page is no item.
+            Check(Descendants(PageOf(w)).OfType<Button>().Where(b => (b.Content as string) == Loc.T("Entity.Card.Fill")).All(b => !b.IsHitTestVisible && !b.Focusable),
+                "the notes' Fill in is shown and takes no click");
+            Click(CustomizeSwitch(w));
+            await Wait(300);
+            Check(!Customizing(w) && Sections(w).Count == 2 && !Descendants(PageOf(w)).OfType<Button>().Any(b => System.Windows.Automation.AutomationProperties.GetName(b) == Loc.T("Custom.Layout.Add")), "off: the page an item will have");
+            Check(Descendants(PageOf(w)).OfType<Control>().All(c => !c.Focusable), "and nothing in it to type into");
+            RenderWindow(w, "custom-empty-off");
+            Click(CustomizeSwitch(w));
+            await Wait(300);
+
+            // Its own Ctrl+Z; Esc closes it.
+            Check(UndoHost.Of(w).Undo() && GearLayout(birds).Blocks.Count == 2 && w.IsVisible && Customizing(w), "Ctrl+Z takes the last block back");
+            Check(UndoHost.Of(w).Redo() && GearLayout(birds).Blocks.Count == 3, "and redo");
+            PressKey(w, Key.Escape);
+            await Wait(300);
+            Check(!w.IsVisible, "Esc closes the empty page");
         });
-        Invoke(view, "AddEntityButton_Click", null, null); // returns once the editor is closed
+        Invoke(view, "AddEntityButton_Click", null, null); // returns once the page is closed
         await Wait(600);
-        Check(CustomLayoutStore.TryLoad(birds, out CustomLayout starter, out _) && starter != null, "the collection has a layout");
-        Check(starter.Blocks.Select(b => b.Kind).SequenceEqual(new[] { BlockKinds.Gallery, BlockKinds.Fields, BlockKinds.Notes }), "it starts with pictures, details and notes");
-        Check(starter.Blocks.All(b => b.Name.Length > 0), "named in the current language");
+        Check(CustomLayout.Starter().Blocks.Count == 0, "a new layout starts empty");
+        Check(CustomLayoutStore.TryLoad(birds, out CustomLayout starter, out _) && starter?.Blocks.Count == 3, "the collection has the layout built on its page");
         Check(Content(main) is CollectionView, "its page is shown");
         ContextMenu sidebar = NavItem(main, birds).ContextMenu;
-        Check(sidebar.Items.OfType<MenuItem>().Any(i => (string)i.Header == Loc.T("Custom.Menu.EditLayout")), "its sidebar menu has Edit layout…");
+        Check(sidebar.Items.OfType<MenuItem>().Any(i => (string)i.Header == Loc.T("Custom.Menu.Customize")), "its sidebar menu has Customize layout");
 
         // Now Add makes an item of the layout: no picker.
         DriveEntityForm(main, form =>

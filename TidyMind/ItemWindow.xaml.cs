@@ -34,10 +34,10 @@ namespace TidyMind
             public Func<Entity, bool> Delete { get; init; } = _ => false;
             public Func<Guid, Entity?> Reread { get; init; } = _ => null;
 
-            // A custom collection's layout (the layout editor): ChangeLayout saves a change for every item (false if it
-            // couldn't, said), ItemsHolding counts the items with something under any of the keys, Unfit the items whose value
-            // of a field can't be read as another kind (LayoutField.Fit). Preview: the window is opened on the layout alone (an
-            // empty item that is never stored), in the editor, and closes when that is done.
+            // A custom collection's layout (Customize): ChangeLayout saves a change for every item (false if it couldn't,
+            // said), ItemsHolding counts the items with something under any of the keys, Unfit the items whose value of a
+            // field can't be read as another kind (LayoutField.Fit). Preview: the window shows the collection's empty page
+            // (an empty item that is never stored), to customize its layout before there is an item.
             public Func<LayoutChange, bool> ChangeLayout { get; init; } = _ => false;
             public Func<IReadOnlyCollection<string>, int> ItemsHolding { get; init; } = _ => 0;
             public Func<string, string, int> Unfit { get; init; } = (_, _) => 0;
@@ -130,7 +130,7 @@ namespace TidyMind
 
         private void Redraw()
         {
-            Title = host.Preview ? Loc.F("Custom.Layout.Title", item.Name) : item.Name;
+            Title = item.Name;
             ShowHeader();
             ShowNav();
             ShowPage();
@@ -254,8 +254,6 @@ namespace TidyMind
 
             string type = Loc.Find("Entity.Type." + item.EntityType) ?? "";
             EyebrowText.Text = string.Join(" · ", new[] { type, headline.Eyebrow == null ? "" : Shown(headline.Eyebrow) }.Where(t => t.Length > 0)).ToUpper(Loc.Culture);
-            if (layoutMode)
-                EyebrowText.Text = Loc.T("Custom.EditLayout").ToUpper(Loc.Culture);
             EyebrowText.Visibility = EyebrowText.Text.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
             NameText.Text = item.Name;
             SubtitleText.Text = string.Join(" ", headline.Subtitle.Select(Shown).Where(t => t.Length > 0));
@@ -270,24 +268,25 @@ namespace TidyMind
                     Chips.Children.Add(Chip(fact));
             foreach (Due due in Dues().Where(d => d.Level != ExpiryLevel.Later).Take(3))
                 Chips.Children.Add(DueChip(due));
-            Chips.Visibility = Chips.Children.Count == 0 || layoutMode ? Visibility.Collapsed : Visibility.Visible;
+            Chips.Visibility = Chips.Children.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
 
             Actions.Children.Clear();
-            if (layoutMode)
+            if (CanEditLayout)
+                Actions.Children.Add(CustomizeSwitch());
+            if (host.Preview)
             {
-                // The layout editor: Done goes back to the item (or closes a window opened on the layout alone).
-                Button done = HeaderButton(Loc.T("Custom.Layout.Done"), LeaveLayout);
-                done.Style = (Style)Application.Current.FindResource(typeof(Button));
-                done.Padding = new Thickness(20, 0, 20, 0);
-                Actions.Children.Add(done);
+                // A new custom collection's empty page (never stored): the collection over where an item's name goes, and
+                // only the switch.
+                EyebrowText.Text = item.Name.ToUpper(Loc.Culture);
+                EyebrowText.Visibility = Visibility.Visible;
+                NameText.Text = Loc.T("Custom.Template.ItemName");
+                NameText.Foreground = ItemLook.Res("TextSub");
                 Hero.Visibility = Visibility.Collapsed;
                 return;
             }
             Actions.Children.Add(HeaderButton(Loc.T(EntityImages.Count(item) == 0 ? "Vehicle.AddPictures" : "Vehicle.EditBasics"), EditBasics));
             if (item.EntityType == EntityTypes.Vehicle)
                 Actions.Children.Add(HeaderButton(Loc.T("Vehicle.Odometer.Update"), UpdateOdometer));
-            if (CanEditLayout)
-                Actions.Children.Add(HeaderButton(Loc.T("Custom.EditLayout"), EditLayout));
             Button delete = HeaderButton(Loc.T("Common.Delete"), Delete);
             delete.Foreground = ItemLook.Res("Danger");
             Actions.Children.Add(delete);
@@ -368,11 +367,12 @@ namespace TidyMind
         {
             editing = null;
             Page.Children.Clear();
+            layoutTargets.Clear();
             string query = SearchBox.Text.Trim();
             titleAction = null;
             gallery = null;
             List<UIElement> blocks = query.Length > 0 ? SearchBlocks(query)
-                : Custom is CustomType custom ? (layoutMode ? LayoutBlocks(custom) : CustomBlocks(custom))
+                : Custom is CustomType custom ? CustomBlocks(custom)
                 : page == OverviewKey ? OverviewBlocks()
                 // A page its type no longer has (a custom layout that can't be read just now): what an unknown type shows.
                 : EntityTypes.Tabs(item.EntityType).FirstOrDefault(t => t.Key == page) is TabDefinition tab ? TabBlocks(tab) : OverviewBlocks();
@@ -397,6 +397,7 @@ namespace TidyMind
                 Page.Children.Add(title);
             }
             Page.Children.Add(Card(blocks));
+            RestoreLayoutFocus();
         }
 
         // A heading over rows that run edge to edge: the rows pad themselves by 12 below, so the block adds the rest of
@@ -431,52 +432,63 @@ namespace TidyMind
 
         // A custom item (CustomType): its blocks in the layout's order, two half blocks side by side (HalfRow), each in the
         // look of the sections and lists every type has; the checklist and the gallery are blocks of their own. The item's
-        // own notes, if it has any from elsewhere, last.
+        // own notes, if it has any from elsewhere, last. Customizing: each block in its Shell (a Fields block lists its
+        // fields to change them), "+ Add" at the end.
         private List<UIElement> CustomBlocks(CustomType custom)
         {
             List<(UIElement Element, bool Half)> blocks = new List<(UIElement, bool)>();
             foreach (CustomBlock block in custom.Blocks)
             {
+                bool designer = customizing && block.Kind == BlockKinds.Fields;
                 UIElement? element = block.Kind switch
                 {
+                    BlockKinds.Fields when designer => FieldsDesigner(custom, block),
                     BlockKinds.Fields when block.Section!.Fields.Length == 0 => NoFields(block),
                     BlockKinds.Fields or BlockKinds.Notes => Section(block.Section!, beside: block.Half),
                     BlockKinds.Gallery => GalleryBlock(block),
                     BlockKinds.Checklist => ChecklistBlock(block.Records!),
                     _ => block.Records == null ? null : RecordsBlock(block.Records, titled: true)
                 };
-                if (element != null)
-                    blocks.Add((element, block.Half));
+                if (element == null)
+                    continue;
+                if (host.Preview && !designer)
+                    Inert(element);
+                blocks.Add((customizing ? Shell(custom, block, element) : element, block.Half));
             }
             List<UIElement> rows = HalfRow.Rows(blocks);
             if (!string.IsNullOrWhiteSpace(item.Notes))
                 rows.Add(Section(EntityTypes.Notes));
-            if (rows.Count == 0)
+            if (customizing)
+                rows.Add(AddRow(custom));
+            else if (rows.Count == 0)
             {
-                // Every block removed: what the window shows and where blocks are added.
+                // Every block removed: what the window shows, and the way to add some.
                 StackPanel empty = new StackPanel { Margin = new Thickness(ItemLook.Gap, 32, ItemLook.Gap, 32) };
                 empty.Children.Add(ItemLook.Muted(Loc.T("Custom.Item.NoBlocks"), 14));
-                Button edit = ItemLook.Link(Loc.T("Custom.EditLayout"), EditLayout);
-                edit.Margin = new Thickness(0, 8, 0, 0);
-                edit.HorizontalAlignment = HorizontalAlignment.Left;
-                empty.Children.Add(edit);
+                if (CanEditLayout)
+                {
+                    Button edit = ItemLook.Link(Loc.T("Custom.Customize"), () => Customize());
+                    edit.Margin = new Thickness(0, 8, 0, 0);
+                    edit.HorizontalAlignment = HorizontalAlignment.Left;
+                    empty.Children.Add(edit);
+                }
                 rows.Add(empty);
             }
             return rows;
         }
 
-        // A Fields block without fields yet: its name, and where fields are added.
+        // A Fields block without fields yet: its name, and the way to add them (Customize, the keyboard in its add box).
         private UIElement NoFields(CustomBlock block)
         {
             StackPanel section = new StackPanel();
             section.Children.Add(ItemLook.Heading(block.Section!.Label, out StackPanel actions, compact: !block.Half));
             actions.Children.Add(ItemLook.Muted(Loc.T("Custom.Fields.None")));
-            actions.Children.Add(ItemLook.Link(Loc.T("Custom.Layout.AddField"), () =>
-            {
-                EditLayout();
-                if (layoutMode)
-                    OpenField(block.Id, null);
-            }));
+            if (CanEditLayout)
+                actions.Children.Add(ItemLook.Link(Loc.T("Custom.Layout.AddField"), () =>
+                {
+                    layoutFocus = (block.Id, AddTarget);
+                    Customize();
+                }));
             return section;
         }
 
@@ -1245,7 +1257,7 @@ namespace TidyMind
         }
 
         // Ctrl+F goes to the search box. Esc empties the search (back to the page), or stops an edit (asking first if
-        // something was typed), or closes. An open dropdown takes its own Esc first.
+        // something was typed), or turns Customize off, or closes. An open dropdown takes its own Esc first.
         protected override void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);
@@ -1262,8 +1274,8 @@ namespace TidyMind
                 SearchBox.Clear();
             else if (editing != null && editing.IsEditing)
                 LeaveEdit();
-            else if (layoutMode)
-                LeaveLayout();
+            else if (customizing && !host.Preview)
+                Customize(false);
             else
                 Close();
         }

@@ -9,9 +9,9 @@ using System.Windows.Controls;
 using ClosedXML.Excel;
 using TidyMind;
 
-// Harness custom, after the review: a field's kind changed while items hold values in it (kept in the new form, an
-// unreadable one asked about and removed, No changes nothing, undone byte for byte); the quantities stepper past its top
-// and with decimals; a layout that couldn't be read once is read again; an item of another collection's layout can't
+// Harness custom, after the review: a field's kind changed from its dropdown while items hold values in it (kept in the
+// new form, an unreadable one asked about and removed, No changes nothing, undone byte for byte); the quantities stepper
+// past its top and with decimals; a layout that couldn't be read once is read again; an item of another collection's layout can't
 // change this one's; Excel columns of fields named alike; fallback names after a language switch.
 static partial class Program
 {
@@ -26,58 +26,33 @@ static partial class Program
         Guid tentId = EntityStore.Load(memory).First(e => e.Name == "Tent").Id;
         string layoutFile = MemoryFiles.Layout(memory), itemsFile = MemoryFiles.Items(memory);
 
-        // The field dialog about to open: its kind set to `kind`, then Save (the question it may ask answered No when
-        // sayNo); one left open by that No is closed (its "discard changes?" answered Yes).
-        void ChangeKind(ItemWindow w, string field, string kind, bool sayNo = false) =>
-            _ = main.Dispatcher.BeginInvoke(new Action(async () =>
-            {
-                EditDialog dialog = null;
-                for (int i = 0; i < 50 && dialog == null; i++)
-                {
-                    await Wait(100);
-                    dialog = Application.Current.Windows.OfType<EditDialog>().FirstOrDefault();
-                }
-                if (dialog == null)
-                {
-                    Check(false, "the field dialog opened");
-                    return;
-                }
-                await Wait(200);
-                ComboBox box = Descendants(dialog).OfType<ComboBox>().First();
-                box.SelectedItem = box.Items.Cast<ComboBoxItem>().First(i => (string)i.Tag == kind);
-                await Wait(100);
-                answerCancel = sayNo;
-                ClickNow(ButtonNamed(dialog, Loc.T("Common.Save")));
-                await Wait(800);
-                answerCancel = false;
-                if (dialog.IsVisible)
-                    dialog.Close();
-            }), System.Windows.Threading.DispatcherPriority.Background);
 
         await WithVehicle(main, view, tentId, async w =>
         {
-            Invoke(w, "EditLayout");
+            Invoke(w, "Customize", true);
+            await Wait(300);
             string layoutBefore = File.ReadAllText(layoutFile), itemsBefore = File.ReadAllText(itemsFile);
 
-            // Number to Text: every value fits, nothing is asked, the value stays.
+            // Number to Text, from the field's dropdown: every value fits, nothing is asked, the value stays.
             int boxes = selectBoxes.Count;
-            ChangeKind(w, ids["weight"], FieldKinds.Text);
-            Invoke(w, "OpenField", ids["fields"], ids["weight"]);
-            await Wait(400);
+            PickKind(w, "Weight", FieldKinds.Text);
+            await Wait(500);
+            Check(GearBlock(memory, BlockKinds.Fields).Fields.First(f => f.Id == ids["weight"]).Kind == FieldKinds.Text, "the kind changed from the dropdown");
             Check(selectBoxes.Count == boxes && StoredItem(memory, tentId).Details[ids["weight"]] == "3.25", "Number to Text: kept as it was, nothing asked");
             Check(UndoHost.Of(w).Undo() && File.ReadAllText(layoutFile) == layoutBefore, "undone");
             await Wait(300);
 
-            // Choice to Number: "Blue" can't be a number: asked; No changes nothing.
-            ChangeKind(w, ids["colour"], FieldKinds.Number, sayNo: true);
-            Invoke(w, "OpenField", ids["fields"], ids["colour"]); // returns once the dialog is closed
-            await Wait(300);
+            // Choice to Number: "Blue" can't be a number: asked; No changes nothing (the dropdown goes back).
+            answerCancel = true;
+            PickKind(w, "Colour", FieldKinds.Number);
+            await Wait(500);
+            answerCancel = false;
             Check(selectBoxes.Skip(boxes).Any(b => b.Contains("Colour")), "asked first, naming it: " + selectBoxes.LastOrDefault());
             Check(File.ReadAllText(layoutFile) == layoutBefore && File.ReadAllText(itemsFile) == itemsBefore, "No: nothing changed");
+            Check((string)((ComboBoxItem)KindBox(w, "Colour").SelectedItem).Tag == FieldKinds.Choice, "and the dropdown shows the kind it has");
 
             // Yes: the kind changes, the value that can't be read as it goes, in one step.
-            ChangeKind(w, ids["colour"], FieldKinds.Number);
-            Invoke(w, "OpenField", ids["fields"], ids["colour"]);
+            PickKind(w, "Colour", FieldKinds.Number);
             await Wait(500);
             Check(GearBlock(memory, BlockKinds.Fields).Fields.First(f => f.Id == ids["colour"]).Kind == FieldKinds.Number
                   && !StoredItem(memory, tentId).Details.ContainsKey(ids["colour"]), "Yes: a number field, the value that wasn't one removed");
@@ -86,7 +61,7 @@ static partial class Program
             await Wait(300);
             Check(LayoutField.Fit(FieldKinds.Date, "2025-4-1") == "2025-04-01" && LayoutField.Fit(FieldKinds.Number, "1,5") == "1.5"
                   && LayoutField.Fit(FieldKinds.Flag, "yes") == null && LayoutField.Fit(FieldKinds.Text, "true") == "true", "values in a new kind's stored form");
-            Invoke(w, "LeaveLayout");
+            Invoke(w, "Customize", false);
         });
 
         Console.WriteLine("Review fixes: the stepper past its top and with decimals");
@@ -134,9 +109,9 @@ static partial class Program
         await Wait(300);
         await WithVehicle(main, birdView, stray.Id, async w =>
         {
-            Check(!Descendants(w).OfType<Button>().Any(b => b.Content as string == Loc.T("Custom.EditLayout")), "no Edit layout for it here");
-            Invoke(w, "EditLayout");
-            Check(!Field<bool>(w, "layoutMode"), "and no editor");
+            Check(CustomizeSwitch(w) == null, "no Customize for it here");
+            Invoke(w, "Customize", true);
+            Check(!Customizing(w), "and no customizing");
             CustomLayout other = GearLayout(memory);
             bool changed = (bool)typeof(CollectionView).GetMethod("ChangeLayout", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
                 .Invoke(birdView, new object[] { new ItemWindow.LayoutChange(memory.Id, other, Array.Empty<string>(), "x", false, stray.Id) });

@@ -36,30 +36,10 @@
             <Setter Property="SnapsToDevicePixels" Value="True"/>
         </Style>
 
-        <!-- On/off switch (a CheckBox): a pill with a knob, accent when on -->
-        <Style x:Key="SwitchStyle" TargetType="CheckBox">
+        <!-- On/off switch (ToggleSwitchStyle) at a setting row's right end -->
+        <Style x:Key="SwitchStyle" TargetType="CheckBox" BasedOn="{StaticResource ToggleSwitchStyle}">
             <Setter Property="Grid.Column" Value="1"/>
             <Setter Property="Margin" Value="16,0,0,0"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="CheckBox">
-                        <Border x:Name="track" Width="40" Height="22" CornerRadius="11" Background="#C9C9C6">
-                            <Ellipse x:Name="knob" Width="16" Height="16" Fill="#FFFFFF" HorizontalAlignment="Left" Margin="3,0"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="track" Property="Background" Value="{StaticResource Accent}"/>
-                                <Setter TargetName="knob" Property="HorizontalAlignment" Value="Right"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="track" Property="Opacity" Value="0.88"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
         </Style>
     </Window.Resources>
 

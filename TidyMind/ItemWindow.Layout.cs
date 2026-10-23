@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
@@ -11,12 +10,15 @@ using System.Windows.Media;
 
 namespace TidyMind
 {
-    // The layout editor of a custom collection (CustomLayout), in the item window: "Edit layout" turns the page into the
-    // layout's blocks, top to bottom, half blocks side by side as on the item. Each block can be moved, made full or half
-    // width, renamed (a log's amounts set) or removed; a Fields block's fields are added, changed (name, kind, choices,
-    // unit, shown on cards), moved and removed; blocks are added at the end. Every change is saved at once for the whole
-    // collection, as one undo step; one that takes away a block or field some item has something in says so first, and
-    // its data goes from those items in the same step (Ctrl+Z brings both back). Done (or Esc) goes back to the item.
+    // Customizing a custom collection's item page (CustomLayout) on the page itself. The Customize switch in the title
+    // block turns it on (a new custom collection opens with it on, on an empty page that is never stored). The blocks stay
+    // as an item shows them; each gets a quiet toolbar over its heading while the pointer or the keyboard is on it (up,
+    // down, half or full width, rename, a log's amounts, remove), and its name is edited where it stands. A Fields block
+    // lists its fields instead of their values: a field's name, its kind in a dropdown (a number's unit, a choice's
+    // choices), whether cards show it, and a box at the end that adds one (Enter; it is text until its kind is changed).
+    // "+ Add" at the end adds a block, full width. Every change is saved at once for the whole collection, as one undo
+    // step; one that takes away a block or field some item has something in asks first, and its data goes from those
+    // items in the same step (Ctrl+Z brings both back). Switched off, the page is the item as always.
     public partial class ItemWindow
     {
         // A layout change for the collection view to save: the new layout, the blocks and fields whose data the items
@@ -27,218 +29,415 @@ namespace TidyMind
             public IReadOnlyDictionary<string, string> Converted { get; init; } = new Dictionary<string, string>();
         }
 
-        private bool layoutMode;
+        private bool customizing;
+        private CheckBox? customizeSwitch;
+
+        // What gets the keyboard once the page is drawn again after a change, by block and field: a field's name, a Fields
+        // block's add box (AddTarget), or a block only brought into view (ViewTarget). Filled while the page is drawn.
+        private const string AddTarget = "+", ViewTarget = "";
+        private (string Block, string Field)? layoutFocus;
+        private readonly Dictionary<(string Block, string Field), FrameworkElement> layoutTargets = new Dictionary<(string, string), FrameworkElement>();
 
         // A custom item of the collection showing it (Host.Collection): only then is its layout this collection's to change.
         private bool CanEditLayout => Custom is CustomType custom && custom.MemoryId == host.Collection;
 
-        // Turns the page into the layout editor (a custom item of this collection only).
-        public void EditLayout()
+        // Customize on or off (the switch, Esc, the collection's menu). A section being edited is left first (asked if
+        // something was typed); if it stays, so does the switch.
+        public void Customize(bool on = true)
         {
-            if (!CanEditLayout || !LeaveEdit())
-                return;
-            layoutMode = true;
-            SearchBox.Text = "";
-            Redraw();
-            PageScroll.ScrollToTop();
-        }
-
-        // Back to the item; a window opened on the layout alone closes.
-        private void LeaveLayout()
-        {
-            if (host.Preview)
-            {
-                Close();
-                return;
-            }
-            layoutMode = false;
+            if (on != customizing && (!on || CanEditLayout) && LeaveEdit())
+                customizing = on;
             Redraw();
         }
 
-        private static readonly Dictionary<string, string> KindGlyphs = new Dictionary<string, string>
+        // The switch in the title block's actions.
+        private CheckBox CustomizeSwitch()
         {
-            [BlockKinds.Fields] = "",      // Tag
-            [BlockKinds.Gallery] = "",     // Photo2
-            [BlockKinds.Notes] = "",       // QuickNote
-            [BlockKinds.Checklist] = "",   // CheckboxComposite
-            [BlockKinds.Documents] = "",   // Document
-            [BlockKinds.Log] = "",         // History
-            [BlockKinds.Quantities] = ""   // Calculator
-        };
-
-        // ---- The editor's page -----------------------------------------------------------------------------
-
-        private List<UIElement> LayoutBlocks(CustomType custom)
-        {
-            List<UIElement> rows = new List<UIElement>();
-            TextBlock hint = ItemLook.Muted(Loc.T("Custom.Layout.Hint"), 13);
-            hint.Margin = new Thickness(ItemLook.Gap, 16, ItemLook.Gap, 16);
-            rows.Add(hint);
-            rows.AddRange(HalfRow.Rows(custom.Blocks.Select(b => ((UIElement)BlockFrame(custom, b), b.Half)).ToList()));
-
-            Button add = new Button
+            CheckBox toggle = new CheckBox
             {
-                Content = "+  " + Loc.T("Custom.Layout.AddBlock"),
-                Style = (Style)FindResource("GhostButtonStyle"),
+                Content = Loc.T("Custom.Customize"),
+                Style = (Style)FindResource("ToggleSwitchStyle"),
+                IsChecked = customizing,
                 Height = 36,
-                Padding = new Thickness(16, 0, 16, 0),
-                HorizontalAlignment = HorizontalAlignment.Left
+                Margin = new Thickness(0, 0, host.Preview ? 8 : 16, 8), // alone, in line with the page's right edge
+                ToolTip = Loc.T("Custom.Customize.Tip")
             };
-            add.Click += (s, e) => AddBlockMenu(add, custom).IsOpen = true;
-            rows.Add(new Border { Padding = new Thickness(ItemLook.Gap, 16, ItemLook.Gap, 16), Child = add });
-            return rows;
+            AutomationProperties.SetName(toggle, Loc.T("Custom.Customize"));
+            toggle.Click += (s, e) =>
+            {
+                bool keyboard = toggle.IsKeyboardFocused;
+                Customize(toggle.IsChecked == true);
+                if (keyboard) // the header was drawn again: the keyboard stays on the switch
+                    Dispatcher.BeginInvoke(new Action(() => customizeSwitch?.Focus()), System.Windows.Threading.DispatcherPriority.Input);
+            };
+            customizeSwitch = toggle;
+            return toggle;
         }
 
-        // A block: its kind's icon, its name over what it is, its controls (full or half, up, down, edit, remove); a Fields
-        // block's fields under it.
-        private UIElement BlockFrame(CustomType custom, CustomBlock block)
-        {
-            StackPanel frame = new StackPanel { Margin = new Thickness(ItemLook.Gap, 16, ItemLook.Gap, 16) };
-            AutomationProperties.SetName(frame, block.Name);
+        // ---- The page while customizing --------------------------------------------------------------------
 
-            Grid head = new Grid();
-            head.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            head.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            Border icon = ItemLook.Icon(KindGlyphs.GetValueOrDefault(block.Kind, ""));
-            icon.Margin = new Thickness(0, 0, 16, 0);
-            head.Children.Add(icon);
-            StackPanel text = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-            text.Children.Add(new TextBlock { Text = block.Name, FontSize = 14, FontWeight = FontWeights.SemiBold, Foreground = ItemLook.Res("TextMain"), TextWrapping = TextWrapping.Wrap });
-            text.Children.Add(ItemLook.Muted(BlockSummary(block), 12));
-            Grid.SetColumn(text, 1);
-            head.Children.Add(text);
-            frame.Children.Add(head);
+        // A block as the item shows it, its name made editable in place and its toolbar in the space over its heading,
+        // shown while the pointer or the keyboard is on the block (its room is always kept, so nothing moves).
+        private UIElement Shell(CustomType custom, CustomBlock block, UIElement element)
+        {
+            Grid shell = new Grid { Background = Brushes.Transparent };
+            AutomationProperties.SetName(shell, block.Name);
+            TextBox? name = null;
+            if (ItemLook.HeadingOf(element) is (Grid heading, TextBlock title))
+            {
+                name = NameEditor(() => block.Name, title, edited => SaveLayout(layout => layout.Block(block.Id)!.Name = edited, Loc.T("Custom.Undo.Layout")));
+                AutomationProperties.SetName(name, Loc.F("Custom.Layout.NameOf", Loc.T("Custom.Kind." + block.Kind)));
+                int at = heading.Children.IndexOf(title);
+                heading.Children.RemoveAt(at);
+                heading.Children.Insert(at, name);
+            }
+            shell.Children.Add(new Border { Padding = new Thickness(0, ToolbarRoom, 0, 0), Child = element });
 
             List<CustomBlock> blocks = custom.Blocks.ToList();
-            int at = blocks.IndexOf(block);
-            WrapPanel controls = new WrapPanel { Margin = new Thickness(48, 10, 0, 0) };
-            controls.Children.Add(WidthSwitch(block));
-            controls.Children.Add(LayoutAction("", Loc.T("Custom.Layout.Up"), at > 0, () => MoveBlock(block.Id, -1)));
-            controls.Children.Add(LayoutAction("", Loc.T("Custom.Layout.Down"), at < blocks.Count - 1, () => MoveBlock(block.Id, +1)));
-            controls.Children.Add(LayoutAction("", Loc.T("Custom.Layout.EditBlock"), true, () => EditBlock(block.Id)));
-            controls.Children.Add(LayoutAction("", Loc.T("Custom.Layout.RemoveBlock"), true, () => RemoveBlock(block.Id), danger: true));
-            frame.Children.Add(controls);
-
-            if (block.Kind == BlockKinds.Fields)
-                frame.Children.Add(FieldList(custom, block));
-            return frame;
-        }
-
-        // "Fields · 5 fields", "Log · Amounts: money".
-        private static string BlockSummary(CustomBlock block)
-        {
-            string kind = Loc.T("Custom.Kind." + block.Kind);
-            string? more = block.Kind switch
+            int index = blocks.IndexOf(block);
+            StackPanel bar = new StackPanel
             {
-                BlockKinds.Fields => Loc.Plural("Custom.Layout.FieldCount", block.Section!.Fields.Length),
-                BlockKinds.Log => block.Layout.IsMoney ? Loc.T("Custom.Layout.LogMoney")
-                    : string.IsNullOrWhiteSpace(block.Layout.Unit) ? Loc.T("Custom.Layout.LogPlain") : Loc.F("Custom.Layout.LogUnit", block.Layout.Unit.Trim()),
-                _ => null
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = new Thickness(0, 2, ItemLook.Gap - 6, 0),
+                Visibility = Visibility.Hidden
             };
-            return more == null ? kind : kind + " · " + more;
-        }
-
-        // Full | Half, as the filters' segments.
-        private UIElement WidthSwitch(CustomBlock block)
-        {
-            StackPanel pair = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 12, 4), VerticalAlignment = VerticalAlignment.Center };
-            foreach (bool half in new[] { false, true })
+            bar.Children.Add(ToolButton("", Loc.T("Custom.Layout.Up"), index > 0, () => MoveBlock(block.Id, -1)));
+            bar.Children.Add(ToolButton("", Loc.T("Custom.Layout.Down"), index < blocks.Count - 1, () => MoveBlock(block.Id, +1)));
+            bar.Children.Add(ToolButton(block.Half ? "" : "", Loc.T(block.Half ? "Custom.Layout.ToFull" : "Custom.Layout.ToHalf"), true,
+                () => SaveLayout(layout => layout.Block(block.Id)!.Half = !block.Half, Loc.T("Custom.Undo.Layout"))));
+            if (name != null)
+                bar.Children.Add(ToolButton("", Loc.T("Custom.Layout.Rename"), true, () =>
+                {
+                    name.Focus();
+                    name.SelectAll();
+                }));
+            if (block.Kind == BlockKinds.Log)
             {
-                RadioButton option = new RadioButton
-                {
-                    Content = Loc.T(half ? "Custom.Layout.Half" : "Custom.Layout.Full"),
-                    Style = (Style)FindResource("SegmentStyle"),
-                    GroupName = "Width" + block.Id,
-                    Height = 28,
-                    Margin = new Thickness(0, 0, 4, 0),
-                    IsChecked = block.Half == half,
-                    ToolTip = Loc.T(half ? "Custom.Layout.HalfTip" : "Custom.Layout.FullTip")
-                };
-                option.Checked += (s, e) =>
-                {
-                    if (block.Half != half)
-                        SaveLayout(layout => layout.Block(block.Id)!.Half = half, Loc.T("Custom.Undo.Layout"));
-                };
-                pair.Children.Add(option);
+                Button amounts = null!;
+                amounts = ToolButton("", Loc.T("Custom.Layout.Amounts"), true, () => AmountsMenu(amounts, block));
+                bar.Children.Add(amounts);
             }
-            return pair;
+            bar.Children.Add(ToolButton("", Loc.T("Custom.Layout.RemoveBlock"), true, () => RemoveBlock(block.Id), danger: true));
+            shell.Children.Add(bar);
+
+            void Show() => bar.Visibility = shell.IsMouseOver || shell.IsKeyboardFocusWithin ? Visibility.Visible : Visibility.Hidden;
+            shell.MouseEnter += (s, e) => Show();
+            shell.MouseLeave += (s, e) => Show();
+            shell.IsKeyboardFocusWithinChanged += (s, e) => Show();
+            layoutTargets[(block.Id, ViewTarget)] = shell;
+            return shell;
         }
 
-        private Button LayoutAction(string glyph, string name, bool enabled, Action click, bool danger = false)
+        // The space a block gains on top while customizing, so its toolbar fits over its heading.
+        private const double ToolbarRoom = 8;
+
+        private static Button ToolButton(string glyph, string name, bool enabled, Action click, bool danger = false)
         {
             Button button = ItemLook.RowAction(glyph, name, click, danger);
+            button.Width = 26;
+            button.Height = 26;
+            button.FontSize = 12;
+            button.Margin = new Thickness(2, 0, 0, 0);
             button.IsEnabled = enabled;
             button.Opacity = enabled ? 1 : 0.35; // the button style has no look of its own for a disabled one
-            button.Margin = new Thickness(0, 0, 4, 4);
             return button;
         }
 
-        // A Fields block's fields: name over kind (and unit, "On card"), each with its moves, Edit and Remove; Add field.
-        private UIElement FieldList(CustomType custom, CustomBlock block)
+        // A name edited where it is shown, in the look of the text it stands for: Enter or clicking away saves, Esc puts
+        // the stored one back, an empty one is never saved.
+        private TextBox NameEditor(Func<string> stored, TextBlock look, Func<string, bool> save)
         {
-            StackPanel list = new StackPanel { Margin = new Thickness(48, 8, 0, 0) };
-            List<LayoutField> fields = block.Layout.Fields ?? new List<LayoutField>();
-            List<LayoutField> known = fields.Where(f => FieldKinds.ValueKindOf(f.Kind) != null).ToList();
-            HashSet<string> onCard = (custom.Layout.CardFields ?? new List<string>()).ToHashSet();
-            foreach (LayoutField field in known)
-            {
-                Grid row = new Grid { Margin = new Thickness(0, 0, 0, 8) };
-                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-                StackPanel names = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-                names.Children.Add(new TextBlock { Text = field.Name, FontSize = 14, Foreground = ItemLook.Res("TextMain"), TextTrimming = TextTrimming.CharacterEllipsis });
-                List<string> about = new List<string> { Loc.T("Custom.FieldKind." + field.Kind) };
-                if (field.Kind == FieldKinds.Number && !string.IsNullOrWhiteSpace(field.Unit))
-                    about.Add(field.Unit.Trim());
-                if (field.Kind == FieldKinds.Choice)
-                    about.Add(string.Join(", ", field.Choices ?? new List<string>()));
-                if (onCard.Contains(field.Id))
-                    about.Add(Loc.T("Custom.Layout.OnCard"));
-                TextBlock kind = ItemLook.Muted(string.Join(" · ", about), 12);
-                kind.TextWrapping = TextWrapping.NoWrap;
-                kind.TextTrimming = TextTrimming.CharacterEllipsis;
-                names.Children.Add(kind);
-                row.Children.Add(names);
-
-                int at = known.IndexOf(field);
-                StackPanel actions = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 0, 0) };
-                actions.Children.Add(LayoutAction("", Loc.T("Custom.Layout.Up"), at > 0, () => MoveField(block.Id, field.Id, -1)));
-                actions.Children.Add(LayoutAction("", Loc.T("Custom.Layout.Down"), at < known.Count - 1, () => MoveField(block.Id, field.Id, +1)));
-                actions.Children.Add(LayoutAction("", Loc.T("Custom.Layout.EditField"), true, () => OpenField(block.Id, field.Id)));
-                actions.Children.Add(LayoutAction("", Loc.T("Custom.Layout.RemoveField"), true, () => RemoveField(block.Id, field.Id), danger: true));
-                Grid.SetColumn(actions, 1);
-                row.Children.Add(actions);
-                list.Children.Add(row);
-            }
-            if (known.Count == 0)
-                list.Children.Add(new TextBlock { Text = Loc.T("Custom.Layout.NoFields"), FontSize = 13, Foreground = ItemLook.Res("TextSub"), Margin = new Thickness(0, 0, 0, 8) });
-            Button add = ItemLook.Link("+ " + Loc.T("Custom.Layout.AddField"), () => OpenField(block.Id, null));
-            add.Margin = new Thickness(0);
-            add.HorizontalAlignment = HorizontalAlignment.Left;
-            list.Children.Add(add);
-            return list;
+            TextBox name = TextEditing.InlineEditor(stored, save, () => PageScroll.Focus());
+            name.FontSize = look.FontSize;
+            name.FontWeight = look.FontWeight;
+            name.Foreground = look.Foreground;
+            name.VerticalAlignment = VerticalAlignment.Center;
+            name.ToolTip = Loc.T("Custom.Layout.RenameTip");
+            Grid.SetColumn(name, Grid.GetColumn(look));
+            return name;
         }
 
-        // Every kind of block, with what it is for; there is one gallery at most (an item has one set of pictures).
-        private ContextMenu AddBlockMenu(Button button, CustomType custom)
+        // A Fields block while customizing: a row per field (unknown kinds are kept and not shown), then the add box.
+        private UIElement FieldsDesigner(CustomType custom, CustomBlock block)
+        {
+            StackPanel section = new StackPanel();
+            section.Children.Add(ItemLook.Heading(block.Name, out _));
+            StackPanel list = new StackPanel { Margin = ItemLook.FieldsMargin };
+            Grid.SetIsSharedSizeScope(list, true); // the names in one column, the kinds lined up after them
+            List<LayoutField> known = (block.Layout.Fields ?? new List<LayoutField>()).Where(f => FieldKinds.ValueKindOf(f.Kind) != null).ToList();
+            List<string> card = custom.Layout.CardFields ?? new List<string>();
+            foreach (LayoutField field in known)
+                list.Children.Add(FieldRow(block, field, known, card));
+            list.Children.Add(AddFieldBox(block));
+            section.Children.Add(list);
+            return section;
+        }
+
+        // Its name (edited in place), its kind, a number's unit or a choice's choices, On card; up, down and remove at its
+        // end while the pointer or the keyboard is on it. Narrow, the kind and the rest go under the name.
+        private UIElement FieldRow(CustomBlock block, LayoutField field, List<LayoutField> known, List<string> card)
+        {
+            Grid row = new Grid { Background = Brushes.Transparent, MinHeight = 32, Margin = new Thickness(0, 0, 0, 8) };
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto, SharedSizeGroup = "Name" });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            row.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            row.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            TextBlock look = new TextBlock { FontSize = 14, Foreground = ItemLook.Res("TextMain") };
+            TextBox name = NameEditor(() => field.Name, look, edited => SaveLayout(layout => FieldOf(layout, block.Id, field.Id).Name = edited, Loc.T("Custom.Undo.Layout")));
+            name.Margin = new Thickness(0, 0, 12, 0);
+            name.MinWidth = 140;
+            name.MaxWidth = 280;
+            AutomationProperties.SetName(name, Loc.T("Custom.Field.Name"));
+            row.Children.Add(name);
+            layoutTargets[(block.Id, field.Id)] = name;
+
+            WrapPanel settings = new WrapPanel { VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Left };
+            ComboBox kind = new ComboBox { Height = 28, MinWidth = 112, FontSize = 13, Margin = new Thickness(0, 2, 12, 2), VerticalContentAlignment = VerticalAlignment.Center };
+            foreach (string k in FieldKinds.All)
+                kind.Items.Add(new ComboBoxItem { Content = Loc.T("Custom.FieldKind." + k), Tag = k });
+            kind.SelectedItem = kind.Items.Cast<ComboBoxItem>().First(i => (string)i.Tag == field.Kind);
+            AutomationProperties.SetName(kind, Loc.F("Custom.Field.KindOf", field.Name));
+            kind.SelectionChanged += (s, e) =>
+            {
+                string chosen = (string)((ComboBoxItem)kind.SelectedItem).Tag;
+                if (chosen != field.Kind) // once the dropdown has closed: the page is drawn again from what was saved
+                    Dispatcher.BeginInvoke(new Action(() => ChangeKind(block.Id, field, chosen)), System.Windows.Threading.DispatcherPriority.Input);
+            };
+            settings.Children.Add(kind);
+            if (field.Kind == FieldKinds.Number)
+            {
+                UIElement unit = HintBox(field.Unit ?? "", Loc.T("Custom.Field.Unit"), 88, out TextBox box, height: 28);
+                box.KeyDown += (s, e) =>
+                {
+                    if (e.Key == Key.Enter)
+                    {
+                        e.Handled = true;
+                        PageScroll.Focus(); // leaving the box saves (below)
+                    }
+                };
+                box.LostKeyboardFocus += (s, e) =>
+                {
+                    string typed = box.Text.Trim();
+                    if (typed != (field.Unit ?? "").Trim())
+                        SaveLayout(layout => FieldOf(layout, block.Id, field.Id).Unit = typed.Length == 0 ? null : typed, Loc.T("Custom.Undo.Layout"));
+                };
+                ((FrameworkElement)unit).Margin = new Thickness(0, 2, 12, 2);
+                settings.Children.Add(unit);
+            }
+            if (field.Kind == FieldKinds.Choice)
+            {
+                Button choices = ItemLook.Link(Loc.T("Custom.Field.EditChoices"), () => EditChoices(block.Id, field));
+                choices.Margin = new Thickness(0, 2, 12, 2);
+                choices.FontSize = 13;
+                choices.ToolTip = string.Join(", ", field.Choices ?? new List<string>());
+                settings.Children.Add(choices);
+            }
+            bool onCard = card.Contains(field.Id);
+            CheckBox cardBox = new CheckBox
+            {
+                Content = Loc.T("Custom.Layout.OnCard"),
+                FontSize = 12,
+                Foreground = ItemLook.Res("TextSub"),
+                VerticalAlignment = VerticalAlignment.Center,
+                VerticalContentAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 2, 0, 2),
+                IsChecked = onCard,
+                IsEnabled = onCard || card.Count < CustomLayout.MaxCardFields,
+                ToolTip = Loc.T(onCard || card.Count < CustomLayout.MaxCardFields ? "Custom.Field.ShowOnCard" : "Custom.Field.CardFull")
+            };
+            ToolTipService.SetShowOnDisabled(cardBox, true);
+            AutomationProperties.SetName(cardBox, Loc.F("Custom.Field.OnCardOf", field.Name));
+            cardBox.Click += (s, e) => SaveLayout(layout =>
+            {
+                layout.CardFields ??= new List<string>();
+                layout.CardFields.Remove(field.Id);
+                if (cardBox.IsChecked == true)
+                    layout.CardFields.Add(field.Id);
+            }, Loc.T("Custom.Undo.Layout"));
+            settings.Children.Add(cardBox);
+            Grid.SetColumn(settings, 1);
+            row.Children.Add(settings);
+
+            int at = known.IndexOf(field);
+            StackPanel icons = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Visibility = Visibility.Hidden,
+                Margin = new Thickness(8, 0, -6, 0) };
+            icons.Children.Add(ToolButton("", Loc.T("Custom.Layout.Up"), at > 0, () => MoveField(block.Id, field.Id, -1)));
+            icons.Children.Add(ToolButton("", Loc.T("Custom.Layout.Down"), at < known.Count - 1, () => MoveField(block.Id, field.Id, +1)));
+            icons.Children.Add(ToolButton("", Loc.T("Custom.Layout.RemoveField"), true, () => RemoveField(block.Id, field.Id), danger: true));
+            Grid.SetColumn(icons, 2);
+            row.Children.Add(icons);
+            void Show() => icons.Visibility = row.IsMouseOver || row.IsKeyboardFocusWithin ? Visibility.Visible : Visibility.Hidden;
+            row.MouseEnter += (s, e) => Show();
+            row.MouseLeave += (s, e) => Show();
+            row.IsKeyboardFocusWithinChanged += (s, e) => Show();
+
+            // Wide: one line. Narrow: the settings on a line of their own under the name.
+            row.SizeChanged += (s, e) =>
+            {
+                bool narrow = e.NewSize.Width < 560;
+                name.MaxWidth = narrow ? Math.Max(80, e.NewSize.Width - 110) : 280; // room for the icons beside it
+                name.MinWidth = Math.Min(140, name.MaxWidth);
+                Grid.SetRow(settings, narrow ? 1 : 0);
+                Grid.SetColumn(settings, narrow ? 0 : 1);
+                Grid.SetColumnSpan(settings, narrow ? 3 : 1);
+            };
+            return row;
+        }
+
+        // The box at the end of a Fields block: a name and Enter add a text field; the keyboard stays there for the next.
+        private UIElement AddFieldBox(CustomBlock block)
+        {
+            UIElement add = HintBox("", Loc.T("Custom.Layout.AddField"), 260, out TextBox input);
+            ((FrameworkElement)add).HorizontalAlignment = HorizontalAlignment.Left;
+            input.KeyDown += (s, e) =>
+            {
+                if (e.Key == Key.Escape && input.Text.Length > 0)
+                {
+                    input.Clear();
+                    e.Handled = true;
+                    return;
+                }
+                if (e.Key != Key.Enter)
+                    return;
+                e.Handled = true;
+                string name = input.Text.Trim();
+                if (name.Length == 0)
+                    return;
+                layoutFocus = (block.Id, AddTarget);
+                if (!SaveLayout(layout => (layout.Block(block.Id)!.Fields ??= new List<LayoutField>())
+                        .Add(new LayoutField { Id = CustomLayout.NewId(), Name = name, Kind = FieldKinds.Text }), Loc.F("Undo.Added", name)))
+                    layoutFocus = null; // not saved: the text stays to try again
+            };
+            layoutTargets[(block.Id, AddTarget)] = input;
+            return add;
+        }
+
+        // A box with its hint inside it while it is empty.
+        private static UIElement HintBox(string text, string hint, double width, out TextBox box, double height = 32)
+        {
+            TextBox input = new TextBox { Text = text, Height = height, Width = width, VerticalContentAlignment = VerticalAlignment.Center };
+            AutomationProperties.SetName(input, hint);
+            TextBlock shown = new TextBlock { Text = hint, Foreground = ItemLook.Res("TextSub"), Margin = new Thickness(11, 0, 0, 0), FontSize = 13,
+                VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false, TextTrimming = TextTrimming.CharacterEllipsis,
+                Visibility = text.Length == 0 ? Visibility.Visible : Visibility.Collapsed };
+            input.TextChanged += (s, e) => shown.Visibility = input.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+            Grid grid = new Grid();
+            grid.Children.Add(input);
+            grid.Children.Add(shown);
+            box = input;
+            return grid;
+        }
+
+        // The last row while customizing: "+ Add" with its menu of blocks, and what changes do. An empty page says what
+        // it is for first.
+        private UIElement AddRow(CustomType custom)
+        {
+            StackPanel row = new StackPanel { Margin = new Thickness(ItemLook.Gap, 20, ItemLook.Gap, 20) };
+            if (custom.Blocks.Count == 0)
+            {
+                TextBlock start = ItemLook.Muted(Loc.T("Custom.Layout.Start"), 14);
+                start.Margin = new Thickness(0, 4, 0, 16);
+                row.Children.Add(start);
+            }
+            DockPanel line = new DockPanel();
+            Button add = new Button
+            {
+                Content = "+  " + Loc.T("Custom.Layout.Add"),
+                Style = (Style)FindResource("GhostButtonStyle"),
+                Height = 32,
+                Padding = new Thickness(14, 0, 14, 0),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            AutomationProperties.SetName(add, Loc.T("Custom.Layout.Add"));
+            add.Click += (s, e) => AddMenu(add, custom).IsOpen = true;
+            DockPanel.SetDock(add, Dock.Left);
+            line.Children.Add(add);
+            TextBlock hint = ItemLook.Muted(Loc.T("Custom.Layout.Hint"), 12);
+            hint.VerticalAlignment = VerticalAlignment.Center;
+            hint.Margin = new Thickness(16, 0, 0, 0);
+            line.Children.Add(hint);
+            row.Children.Add(line);
+            return row;
+        }
+
+        // Every kind of block by its plain name, with a line on what it holds; one gallery at most (an item has one set of
+        // pictures).
+        private ContextMenu AddMenu(Button button, CustomType custom)
         {
             ContextMenu menu = new ContextMenu { PlacementTarget = button, Placement = PlacementMode.Bottom };
             foreach (string kind in BlockKinds.All)
             {
-                StackPanel header = new StackPanel();
-                header.Children.Add(new TextBlock { Text = Loc.T("Custom.Kind." + kind), FontWeight = FontWeights.SemiBold });
+                StackPanel header = new StackPanel { Margin = new Thickness(0, 3, 0, 3) };
+                header.Children.Add(new TextBlock { Text = Loc.T("Custom.Kind." + kind), FontSize = 13, Foreground = ItemLook.Res("TextMain") });
                 header.Children.Add(new TextBlock { Text = Loc.T("Custom.Kind." + kind + ".Text"), FontSize = 12, Foreground = ItemLook.Res("TextSub") });
-                MenuItem item = new MenuItem
-                {
-                    Header = header,
-                    Icon = new TextBlock { Text = KindGlyphs[kind], FontFamily = new FontFamily("Segoe MDL2 Assets"), FontSize = 14, Foreground = ItemLook.Res("Accent") },
-                    IsEnabled = kind != BlockKinds.Gallery || !custom.Layout.HasGallery
-                };
+                MenuItem item = new MenuItem { Header = header, IsEnabled = kind != BlockKinds.Gallery || !custom.Layout.HasGallery };
                 AutomationProperties.SetName(item, Loc.T("Custom.Kind." + kind));
                 item.Click += (s, e) => AddBlock(kind);
                 menu.Items.Add(item);
             }
             return menu;
+        }
+
+        // A log's amounts: money (with the currency, totals per year), plain numbers, or numbers in a unit of the user's.
+        private void AmountsMenu(Button button, CustomBlock block)
+        {
+            LayoutBlock log = block.Layout;
+            string? unit = string.IsNullOrWhiteSpace(log.Unit) ? null : log.Unit.Trim();
+            ContextMenu menu = new ContextMenu { PlacementTarget = button, Placement = PlacementMode.Bottom };
+            button.ContextMenu = menu; // a right-click opens it too
+            void Option(string header, bool chosen, Action pick)
+            {
+                MenuItem option = new MenuItem { Header = header, IsChecked = chosen };
+                option.Click += (s, e) => pick();
+                menu.Items.Add(option);
+            }
+            Option(Loc.T("Custom.Layout.LogMoney"), log.IsMoney, () => SetAmounts(block.Id, null, null));
+            Option(Loc.T("Custom.Layout.LogPlain"), !log.IsMoney && unit == null, () => SetAmounts(block.Id, false, null));
+            Option(!log.IsMoney && unit != null ? Loc.F("Custom.Layout.LogUnit", unit) : Loc.T("Custom.Layout.LogUnitPick"), !log.IsMoney && unit != null, () =>
+            {
+                if (InputDialog.Prompt(this, block.Name, Loc.T("Custom.Block.Unit"), unit ?? "", Loc.T("Common.Save")) is string typed)
+                    SetAmounts(block.Id, false, typed);
+            });
+            menu.IsOpen = true;
+        }
+
+        private void SetAmounts(string id, bool? money, string? unit) => SaveLayout(layout =>
+        {
+            LayoutBlock log = layout.Block(id)!;
+            log.Money = money;
+            log.Unit = unit;
+        }, Loc.T("Custom.Undo.Layout"));
+
+        // The empty page of a new custom collection (Host.Preview) is never stored: what its blocks would hold is shown as
+        // an item shows it, and nothing in it takes a click or the keyboard.
+        private static void Inert(UIElement element)
+        {
+            foreach (Control control in Descendants(element).OfType<Control>())
+            {
+                control.IsHitTestVisible = false;
+                control.Focusable = false;
+                control.IsTabStop = false;
+            }
+        }
+
+        // After the page is drawn again: the keyboard back where the change was made (or the new block brought into view).
+        private void RestoreLayoutFocus()
+        {
+            if (layoutFocus is not (string, string) wanted)
+                return;
+            layoutFocus = null;
+            if (!layoutTargets.TryGetValue(wanted, out FrameworkElement? target))
+                return;
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                target.BringIntoView();
+                if (wanted.Field != ViewTarget)
+                    target.Focus();
+            }), System.Windows.Threading.DispatcherPriority.Input);
         }
 
         // ---- Changes -------------------------------------------------------------------------------------------
@@ -270,6 +469,8 @@ namespace TidyMind
             return saved;
         }
 
+        private static LayoutField FieldOf(CustomLayout layout, string blockId, string fieldId) => layout.Block(blockId)!.Fields!.First(f => f.Id == fieldId);
+
         private void MoveBlock(string id, int step) => SaveLayout(layout =>
         {
             // Past its known neighbour: a block of a kind this version doesn't know stays where it is.
@@ -281,9 +482,11 @@ namespace TidyMind
                 (layout.Blocks[at], layout.Blocks[to]) = (layout.Blocks[to], layout.Blocks[at]);
         }, Loc.T("Custom.Undo.Layout"));
 
+        // At the end, full width, named by its kind; a Fields block has the keyboard in its add box for the first field.
         private void AddBlock(string kind)
         {
             string id = CustomLayout.NewId();
+            layoutFocus = (id, kind == BlockKinds.Fields ? AddTarget : ViewTarget);
             if (!SaveLayout(layout => layout.Blocks.Add(new LayoutBlock
                 {
                     Id = id,
@@ -291,11 +494,7 @@ namespace TidyMind
                     Name = Loc.T("Custom.Block." + kind),
                     Fields = kind == BlockKinds.Fields ? new List<LayoutField>() : null
                 }), Loc.F("Undo.Added", Loc.T("Custom.Block." + kind))))
-                return;
-            Dispatcher.BeginInvoke(new Action(() => Descendants(Page).OfType<StackPanel>()
-                .LastOrDefault(p => AutomationProperties.GetName(p) == Loc.T("Custom.Block." + kind))?.BringIntoView()), System.Windows.Threading.DispatcherPriority.Loaded);
-            if (kind == BlockKinds.Fields)
-                OpenField(id, null); // a Fields block is for its fields: the first one straight away
+                layoutFocus = null;
         }
 
         // What an item holds of a block, by the keys it is stored under: a Fields block's fields, a Notes block's text, a
@@ -323,7 +522,7 @@ namespace TidyMind
 
         private void RemoveField(string blockId, string fieldId)
         {
-            LayoutField field = Custom!.Layout.Block(blockId)!.Fields!.First(f => f.Id == fieldId);
+            LayoutField field = FieldOf(Custom!.Layout, blockId, fieldId);
             if (!ConfirmRemove(field.Name, new[] { fieldId }))
                 return;
             SaveLayout(layout =>
@@ -352,159 +551,42 @@ namespace TidyMind
                 (fields[at], fields[to]) = (fields[to], fields[at]);
         }, Loc.T("Custom.Undo.Layout"));
 
-        // ---- The block's and the field's dialogs --------------------------------------------------------------
-
-        // Its name; a log's amounts: money, or numbers in a unit of the user's.
-        private void EditBlock(string id)
+        // A field's new kind. Each value items hold in it is kept in the new kind's form (LayoutField.Fit); one that can't
+        // be read as that kind (a text that is no date) goes, which is asked first. A choice asks for its choices; no
+        // answer, no change.
+        private void ChangeKind(string blockId, LayoutField field, string kind)
         {
-            LayoutBlock block = Custom!.Layout.Block(id)!;
-            StackPanel content = new StackPanel();
-            TextBox name = DialogBox(block.Name);
-            content.Children.Add(DialogCell(Loc.T("Custom.Block.Name"), name));
-            CheckBox? money = null;
-            TextBox? unit = null;
-            if (block.Kind == BlockKinds.Log)
+            List<string>? choices = null;
+            if (kind == FieldKinds.Choice && (choices = AskChoices(field)) == null)
             {
-                money = new CheckBox { Content = Loc.T("Custom.Block.Money"), IsChecked = block.IsMoney, Margin = new Thickness(0, 0, 0, 16) };
-                content.Children.Add(money);
-                unit = DialogBox(block.Unit ?? "");
-                unit.IsEnabled = !block.IsMoney;
-                money.Checked += (s, e) => unit.IsEnabled = false;
-                money.Unchecked += (s, e) => unit.IsEnabled = true;
-                content.Children.Add(DialogCell(Loc.T("Custom.Block.Unit"), unit));
+                Redraw(); // the dropdown back to the kind it has
+                return;
             }
-            string opened = name.Text + "|" + money?.IsChecked + "|" + unit?.Text;
-            EditDialog dialog = null!;
-            dialog = new EditDialog(this, Loc.T("Custom.Layout.EditBlock"), content, () =>
+            int unfit = host.Unfit(field.Id, kind);
+            if (unfit > 0 && Msg.Show(this, Loc.Plural("Custom.Layout.KindUnfit", unfit, field.Name, Loc.T("Custom.FieldKind." + kind)),
+                    Loc.T("Custom.Field.ChangeKind"), MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
             {
-                if (name.Text.Trim().Length == 0)
-                {
-                    Msg.Show(dialog, Loc.T("Custom.Block.NeedsName"), Loc.T("Common.Error"), MessageBoxButton.OK, MessageBoxImage.Warning);
-                    name.Focus();
-                    return Task.FromResult(false);
-                }
-                return Task.FromResult(SaveLayout(layout =>
-                {
-                    LayoutBlock target = layout.Block(id)!;
-                    target.Name = name.Text.Trim();
-                    if (money != null)
-                    {
-                        target.Money = money.IsChecked == true ? null : false;
-                        target.Unit = money.IsChecked == true || string.IsNullOrWhiteSpace(unit!.Text) ? null : unit.Text.Trim();
-                    }
-                }, Loc.T("Custom.Undo.Layout")));
-            }, () => name.Text + "|" + money?.IsChecked + "|" + unit?.Text != opened, width: 480);
-            dialog.Loaded += (s, e) =>
-            {
-                name.Focus();
-                name.SelectAll();
-            };
-            dialog.ShowDialog();
-        }
-
-        // A field of a Fields block, new (fieldId null) or to change: its name, kind, choices (one per line), unit, and
-        // whether cards show it (three at most). A kind change keeps each value in the new kind's form (LayoutField.Fit),
-        // asking first when some can't be read as it.
-        private void OpenField(string blockId, string? fieldId)
-        {
-            CustomLayout current = Custom!.Layout;
-            LayoutField field = fieldId == null ? new LayoutField { Id = CustomLayout.NewId(), Kind = FieldKinds.Text }
-                : current.Block(blockId)!.Fields!.First(f => f.Id == fieldId).Copy();
-            List<string> card = current.CardFields ?? new List<string>();
-
-            StackPanel content = new StackPanel();
-            TextBox name = DialogBox(field.Name);
-            content.Children.Add(DialogCell(Loc.T("Custom.Field.Name"), name));
-            ComboBox kind = new ComboBox { Height = 36 };
-            foreach (string k in FieldKinds.All)
-                kind.Items.Add(new ComboBoxItem { Content = Loc.T("Custom.FieldKind." + k), Tag = k });
-            kind.SelectedItem = kind.Items.Cast<ComboBoxItem>().FirstOrDefault(i => (string)i.Tag == field.Kind) ?? kind.Items[0];
-            AutomationProperties.SetName(kind, Loc.T("Custom.Field.Kind"));
-            content.Children.Add(DialogCell(Loc.T("Custom.Field.Kind"), kind));
-            TextBox choices = DialogBox(string.Join("\n", field.Choices ?? new List<string>()));
-            choices.AcceptsReturn = true;
-            choices.Height = 96;
-            choices.TextWrapping = TextWrapping.Wrap;
-            choices.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
-            UIElement choicesCell = DialogCell(Loc.T("Custom.Field.Choices"), choices);
-            content.Children.Add(choicesCell);
-            TextBox unit = DialogBox(field.Unit ?? "");
-            UIElement unitCell = DialogCell(Loc.T("Custom.Field.Unit"), unit);
-            content.Children.Add(unitCell);
-            bool wasOnCard = card.Contains(field.Id);
-            CheckBox onCard = new CheckBox
-            {
-                Content = Loc.T("Custom.Field.ShowOnCard"),
-                IsChecked = wasOnCard,
-                IsEnabled = wasOnCard || card.Count < CustomLayout.MaxCardFields
-            };
-            content.Children.Add(onCard);
-            if (!onCard.IsEnabled)
-                content.Children.Add(new TextBlock { Text = Loc.T("Custom.Field.CardFull"), FontSize = 12, Foreground = ItemLook.Res("TextSub"), Margin = new Thickness(0, 4, 0, 0), TextWrapping = TextWrapping.Wrap });
-            void ShowKind()
-            {
-                string chosen = (string)((ComboBoxItem)kind.SelectedItem).Tag;
-                choicesCell.Visibility = chosen == FieldKinds.Choice ? Visibility.Visible : Visibility.Collapsed;
-                unitCell.Visibility = chosen == FieldKinds.Number ? Visibility.Visible : Visibility.Collapsed;
+                Redraw();
+                return;
             }
-            kind.SelectionChanged += (s, e) => ShowKind();
-            ShowKind();
-
-            string State() => string.Join("|", name.Text, ((ComboBoxItem)kind.SelectedItem).Tag, choices.Text, unit.Text, onCard.IsChecked);
-            string opened = State();
-            EditDialog dialog = null!;
-            dialog = new EditDialog(this, Loc.T(fieldId == null ? "Custom.Layout.AddField" : "Custom.Layout.EditField"), content, () =>
+            SaveLayout(layout =>
             {
-                string chosen = (string)((ComboBoxItem)kind.SelectedItem).Tag;
-                List<string> values = choices.Text.Split('\n').Select(c => c.Trim()).Where(c => c.Length > 0).Distinct(StringComparer.Ordinal).ToList();
-                string? problem = name.Text.Trim().Length == 0 ? "Custom.Field.NeedsName"
-                    : chosen == FieldKinds.Choice && values.Count == 0 ? "Custom.Field.NeedsChoices" : null;
-                if (problem != null)
-                {
-                    Msg.Show(dialog, Loc.T(problem), Loc.T("Common.Error"), MessageBoxButton.OK, MessageBoxImage.Warning);
-                    (problem == "Custom.Field.NeedsName" ? name : choices).Focus();
-                    return Task.FromResult(false);
-                }
-                // Its kind changed while items hold values in it: each value is kept in the new kind's form; one that can't
-                // be read as that kind (a text that is no date) goes, which is asked first.
-                bool converts = fieldId != null && chosen != field.Kind;
-                int unfit = converts ? host.Unfit(field.Id, chosen) : 0;
-                if (unfit > 0 && Msg.Show(dialog, Loc.Plural("Custom.Layout.KindUnfit", unfit, name.Text.Trim(), Loc.T("Custom.FieldKind." + chosen)),
-                        Loc.T("Custom.Layout.EditField"), MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
-                    return Task.FromResult(false);
-                return Task.FromResult(SaveLayout(layout =>
-                {
-                    List<LayoutField> fields = layout.Block(blockId)!.Fields ??= new List<LayoutField>();
-                    LayoutField target = fields.FirstOrDefault(f => f.Id == field.Id) ?? field;
-                    target.Name = name.Text.Trim();
-                    target.Kind = chosen;
-                    target.Choices = chosen == FieldKinds.Choice ? values : null;
-                    target.Unit = chosen == FieldKinds.Number && unit.Text.Trim().Length > 0 ? unit.Text.Trim() : null;
-                    if (!fields.Contains(target))
-                        fields.Add(target);
-                    layout.CardFields ??= new List<string>();
-                    layout.CardFields.Remove(field.Id);
-                    if (onCard.IsChecked == true)
-                        layout.CardFields.Add(field.Id);
-                }, fieldId == null ? Loc.F("Undo.Added", name.Text.Trim()) : Loc.T("Custom.Undo.Layout"), destructive: unfit > 0,
-                    converted: converts ? new Dictionary<string, string> { [field.Id] = chosen } : null));
-            }, () => State() != opened, width: 480);
-            dialog.Loaded += (s, e) =>
-            {
-                name.Focus();
-                name.SelectAll();
-            };
-            dialog.ShowDialog();
+                LayoutField target = FieldOf(layout, blockId, field.Id);
+                target.Kind = kind;
+                target.Choices = kind == FieldKinds.Choice ? choices : null;
+                target.Unit = kind == FieldKinds.Number ? target.Unit : null;
+            }, Loc.T("Custom.Undo.Layout"), destructive: unfit > 0, converted: new Dictionary<string, string> { [field.Id] = kind });
         }
 
-        private static TextBox DialogBox(string text) => new TextBox { Text = text, Height = 36, VerticalContentAlignment = VerticalAlignment.Center };
-
-        private static UIElement DialogCell(string label, FrameworkElement input)
+        private void EditChoices(string blockId, LayoutField field)
         {
-            AutomationProperties.SetName(input, label);
-            StackPanel cell = ItemLook.Cell(label, input);
-            cell.Margin = new Thickness(0, 0, 0, 16);
-            return cell;
+            if (AskChoices(field) is List<string> choices)
+                SaveLayout(layout => FieldOf(layout, blockId, field.Id).Choices = choices, Loc.T("Custom.Undo.Layout"));
         }
+
+        // A choice field's choices, one per line, each once; null if the question was closed.
+        private List<string>? AskChoices(LayoutField field) =>
+            InputDialog.Prompt(this, field.Name, Loc.T("Custom.Field.Choices"), string.Join("\n", field.Choices ?? new List<string>()), Loc.T("Common.Save"), multiline: true)
+                is string typed ? typed.Split('\n').Select(c => c.Trim()).Where(c => c.Length > 0).Distinct(StringComparer.Ordinal).ToList() : null;
     }
 }

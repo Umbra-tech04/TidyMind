@@ -3534,7 +3534,7 @@ Semmi sem változott.</value>
   </data>
   <data name="WhatsNew.Points" xml:space="preserve">
     <value>Saját elrendezésű gyűjtemények: az elem oldalát blokkokból rakod össze, például mezőkből, képekből, jegyzetekből, ellenőrzőlistákból, emlékeztetős dokumentumokból, naplóból és mennyiségekből.
-Az Elrendezés szerkesztése egymás mellé vagy egymás alá rendezi a blokkokat, és legfeljebb három mezőt tesz a kártyákra. A Napi terv megmutatja az elemek dátumait.</value>
+A Testreszabás magán az elem oldalán ad hozzá, mozgat és nevez át blokkokat és mezőket, egymás mellé teszi a blokkokat, és legfeljebb három mezőt tesz a kártyákra. A Napi terv megmutatja az elemek dátumait.</value>
   </data>
   <data name="Tips.Title" xml:space="preserve">
     <value>Tippek és billentyűparancsok</value>
@@ -3884,9 +3884,6 @@ Az Elrendezés szerkesztése egymás mellé vagy egymás alá rendezi a blokkoka
   <data name="Custom.Block.Quantities" xml:space="preserve">
     <value>Mennyiségek</value>
   </data>
-  <data name="Custom.Starter.Details" xml:space="preserve">
-    <value>Adatok</value>
-  </data>
   <data name="Custom.Field.Untitled" xml:space="preserve">
     <value>Névtelen mező</value>
   </data>
@@ -3968,35 +3965,59 @@ Az Elrendezés szerkesztése egymás mellé vagy egymás alá rendezi a blokkoka
   <data name="Bulk.Delete.Lines.Other" xml:space="preserve">
     <value>Törölsz {0} sort?</value>
   </data>
-  <data name="Custom.EditLayout" xml:space="preserve">
-    <value>Elrendezés szerkesztése</value>
-  </data>
-  <data name="Custom.Menu.EditLayout" xml:space="preserve">
-    <value>Elrendezés szerkesztése…</value>
-  </data>
-  <data name="Custom.Layout.Title" xml:space="preserve">
-    <value>{0} – elrendezés</value>
-  </data>
-  <data name="Custom.Layout.Done" xml:space="preserve">
-    <value>Kész</value>
-  </data>
   <data name="Custom.Layout.Hint" xml:space="preserve">
-    <value>A változások azonnal mentődnek, és a gyűjtemény minden elemére vonatkoznak. A Ctrl+Z visszavonja őket.</value>
+    <value>A változások a gyűjtemény minden elemére vonatkoznak. A Ctrl+Z visszavonja őket.</value>
   </data>
-  <data name="Custom.Layout.AddBlock" xml:space="preserve">
-    <value>Blokk hozzáadása</value>
+  <data name="Custom.Customize" xml:space="preserve">
+    <value>Testreszabás</value>
   </data>
-  <data name="Custom.Layout.Full" xml:space="preserve">
-    <value>Teljes</value>
+  <data name="Custom.Customize.Tip" xml:space="preserve">
+    <value>A gyűjtemény minden elemének közös oldalát módosítja: a blokkokat, a mezőket és a sorrendjüket.</value>
   </data>
-  <data name="Custom.Layout.Half" xml:space="preserve">
-    <value>Fél</value>
+  <data name="Custom.Menu.Customize" xml:space="preserve">
+    <value>Elrendezés testreszabása</value>
   </data>
-  <data name="Custom.Layout.FullTip" xml:space="preserve">
+  <data name="Custom.Template.ItemName" xml:space="preserve">
+    <value>Elem neve</value>
+  </data>
+  <data name="Custom.Layout.Add" xml:space="preserve">
+    <value>Hozzáadás</value>
+  </data>
+  <data name="Custom.Layout.Start" xml:space="preserve">
+    <value>Ez lesz a gyűjtemény minden elemének oldala. Add hozzá, ami kell rá.</value>
+  </data>
+  <data name="Custom.Layout.ToHalf" xml:space="preserve">
+    <value>Fél szélesség</value>
+  </data>
+  <data name="Custom.Layout.ToFull" xml:space="preserve">
     <value>Teljes szélesség</value>
   </data>
-  <data name="Custom.Layout.HalfTip" xml:space="preserve">
-    <value>Fél szélesség: az előtte vagy utána álló fél blokk mellett</value>
+  <data name="Custom.Layout.Rename" xml:space="preserve">
+    <value>Átnevezés</value>
+  </data>
+  <data name="Custom.Layout.RenameTip" xml:space="preserve">
+    <value>Kattints az átnevezéshez</value>
+  </data>
+  <data name="Custom.Layout.NameOf" xml:space="preserve">
+    <value>Blokk neve: {0}</value>
+  </data>
+  <data name="Custom.Layout.Amounts" xml:space="preserve">
+    <value>Összegek</value>
+  </data>
+  <data name="Custom.Layout.LogUnitPick" xml:space="preserve">
+    <value>Számok mértékegységgel…</value>
+  </data>
+  <data name="Custom.Field.KindOf" xml:space="preserve">
+    <value>{0} típusa</value>
+  </data>
+  <data name="Custom.Field.OnCardOf" xml:space="preserve">
+    <value>{0} a kártyán</value>
+  </data>
+  <data name="Custom.Field.EditChoices" xml:space="preserve">
+    <value>Választások…</value>
+  </data>
+  <data name="Custom.Field.ChangeKind" xml:space="preserve">
+    <value>Típus módosítása</value>
   </data>
   <data name="Custom.Layout.Up" xml:space="preserve">
     <value>Feljebb</value>
@@ -4004,17 +4025,11 @@ Az Elrendezés szerkesztése egymás mellé vagy egymás alá rendezi a blokkoka
   <data name="Custom.Layout.Down" xml:space="preserve">
     <value>Lejjebb</value>
   </data>
-  <data name="Custom.Layout.EditBlock" xml:space="preserve">
-    <value>Blokk szerkesztése</value>
-  </data>
   <data name="Custom.Layout.RemoveBlock" xml:space="preserve">
     <value>Blokk eltávolítása</value>
   </data>
   <data name="Custom.Layout.AddField" xml:space="preserve">
     <value>Mező hozzáadása</value>
-  </data>
-  <data name="Custom.Layout.EditField" xml:space="preserve">
-    <value>Mező szerkesztése</value>
   </data>
   <data name="Custom.Layout.RemoveField" xml:space="preserve">
     <value>Mező eltávolítása</value>
@@ -4022,20 +4037,14 @@ Az Elrendezés szerkesztése egymás mellé vagy egymás alá rendezi a blokkoka
   <data name="Custom.Layout.OnCard" xml:space="preserve">
     <value>A kártyán</value>
   </data>
-  <data name="Custom.Layout.NoFields" xml:space="preserve">
-    <value>Még nincs mező.</value>
-  </data>
-  <data name="Custom.Layout.FieldCount.Other" xml:space="preserve">
-    <value>{0} mező</value>
-  </data>
   <data name="Custom.Layout.LogMoney" xml:space="preserve">
-    <value>Összegek: pénz</value>
+    <value>Pénz</value>
   </data>
   <data name="Custom.Layout.LogUnit" xml:space="preserve">
-    <value>Összegek: {0}</value>
+    <value>Számok ({0})</value>
   </data>
   <data name="Custom.Layout.LogPlain" xml:space="preserve">
-    <value>Összegek: számok</value>
+    <value>Egyszerű számok</value>
   </data>
   <data name="Custom.Layout.SaveFailed" xml:space="preserve">
     <value>Az elrendezést nem sikerült ide menteni: {0}. Változatlan maradt.</value>
@@ -4050,7 +4059,7 @@ Az Elrendezés szerkesztése egymás mellé vagy egymás alá rendezi a blokkoka
     <value>Mezők</value>
   </data>
   <data name="Custom.Kind.Gallery" xml:space="preserve">
-    <value>Galéria</value>
+    <value>Képek</value>
   </data>
   <data name="Custom.Kind.Notes" xml:space="preserve">
     <value>Jegyzet</value>
@@ -4068,7 +4077,7 @@ Az Elrendezés szerkesztése egymás mellé vagy egymás alá rendezi a blokkoka
     <value>Mennyiségek</value>
   </data>
   <data name="Custom.Kind.Fields.Text" xml:space="preserve">
-    <value>Megnevezett értékek: szöveg, szám, dátum, igen/nem, választás</value>
+    <value>Szöveg, szám, dátum, igen/nem és választás</value>
   </data>
   <data name="Custom.Kind.Gallery.Text" xml:space="preserve">
     <value>Az elem képei, legfeljebb 20</value>
@@ -4104,16 +4113,13 @@ Az Elrendezés szerkesztése egymás mellé vagy egymás alá rendezi a blokkoka
     <value>Választás</value>
   </data>
   <data name="Custom.Field.Name" xml:space="preserve">
-    <value>Név</value>
-  </data>
-  <data name="Custom.Field.Kind" xml:space="preserve">
-    <value>Típus</value>
+    <value>Mező neve</value>
   </data>
   <data name="Custom.Field.Choices" xml:space="preserve">
     <value>Választási lehetőségek, soronként egy</value>
   </data>
   <data name="Custom.Field.Unit" xml:space="preserve">
-    <value>Mértékegység (nem kötelező)</value>
+    <value>Mértékegység</value>
   </data>
   <data name="Custom.Field.ShowOnCard" xml:space="preserve">
     <value>Megjelenik a kártyán</value>
@@ -4121,23 +4127,8 @@ Az Elrendezés szerkesztése egymás mellé vagy egymás alá rendezi a blokkoka
   <data name="Custom.Field.CardFull" xml:space="preserve">
     <value>Egy kártyán legfeljebb 3 mező fér el.</value>
   </data>
-  <data name="Custom.Field.NeedsName" xml:space="preserve">
-    <value>Adj nevet a mezőnek.</value>
-  </data>
-  <data name="Custom.Field.NeedsChoices" xml:space="preserve">
-    <value>Írj be legalább egy választási lehetőséget.</value>
-  </data>
-  <data name="Custom.Block.Name" xml:space="preserve">
-    <value>Név</value>
-  </data>
-  <data name="Custom.Block.Money" xml:space="preserve">
-    <value>Az összegek pénzben</value>
-  </data>
   <data name="Custom.Block.Unit" xml:space="preserve">
     <value>Az összegek mértékegysége</value>
-  </data>
-  <data name="Custom.Block.NeedsName" xml:space="preserve">
-    <value>Adj nevet a blokknak.</value>
   </data>
   <data name="Transfer.Error.NotCustom" xml:space="preserve">
     <value>A(z) „{0}” nem saját elrendezésű gyűjtemény, ezért ez az elem nem kerülhet bele.</value>
@@ -4158,10 +4149,10 @@ Az Elrendezés szerkesztése egymás mellé vagy egymás alá rendezi a blokkoka
     <value>{0} lejár</value>
   </data>
   <data name="Tips.CustomLayout.Keys" xml:space="preserve">
-    <value>⋯ &gt; Elrendezés szerkesztése…</value>
+    <value>⋯ &gt; Elrendezés testreszabása</value>
   </data>
   <data name="Tips.CustomLayout.Text" xml:space="preserve">
-    <value>Módosítja egy saját elrendezésű gyűjtemény elemeinek elrendezését: blokkok és mezők hozzáadása, mozgatása, törlése, fél vagy teljes szélesség.</value>
+    <value>Egy saját elrendezésű gyűjtemény elemeinek oldalát helyben módosítja: blokkok és mezők hozzáadása, mozgatása, átnevezése, törlése, fél vagy teljes szélesség.</value>
   </data>
   <data name="Tips.ChecklistSelect.Keys" xml:space="preserve">
     <value>Ctrl+kattintás, Shift+kattintás</value>
